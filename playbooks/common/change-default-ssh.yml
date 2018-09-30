@@ -2,7 +2,7 @@
 - hosts: all
   remote_user: root
   vars: 
-    ansible_ssh_pass: raspberry
+    ansible_ssh_pass: raspberry # Only used for initial use
     ansible_host_key_checking: False 
   tasks:
     - name: Set authorized key took from file
