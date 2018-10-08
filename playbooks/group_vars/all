@@ -1,0 +1,8 @@
+---
+target_user: basraven
+home_dir: /home/{{ansible_ssh_user}}
+noip_dir: "{{home_dir}}/noip-2.1.9-1"
+noip: "/usr/local/bin/noip2"
+noip_conf: /usr/local/etc/no-ip2.conf
+noip_pid: /var/run/noip2.pid
+noip_initd: /etc/init.d/noip

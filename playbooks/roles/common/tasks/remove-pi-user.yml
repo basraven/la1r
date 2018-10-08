@@ -1,0 +1,10 @@
+---
+- hosts: all
+  remote_user: basraven
+  tasks:
+    - name: Remove the user 'pi'
+      user:
+        name: pi
+        state: absent
+        remove: yes
+      become: yes

@@ -1,0 +1,26 @@
+---
+- hosts: all
+  remote_user: "{{ target_user }}"
+  tasks:
+      - name: Download Docker install script
+        get_url:
+          url: https://get.docker.com
+          dest: ~/install_docker.sh
+
+      - name: Install Docker
+        command: sh ./install_docker.sh
+        become: True
+        # args:
+        #   creates: /usr/bin/docker
+
+      # - name: Install docker-py
+      #   pip:
+      #     name: docker-py
+      #   become: True
+
+      - name: Add {{ target_user }} to docker group
+        user:
+          name: "{{ target_user }}"
+          groups: docker
+          append: yes
+        become: True

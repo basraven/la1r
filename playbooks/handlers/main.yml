@@ -1,0 +1,30 @@
+---
+- name: reload monit
+  systemd:
+    name: monit
+    state: reloaded
+  become: True
+
+- name: restart samba
+  service: name=samba state=restarted
+  become: True
+
+- name: restart avahi
+  service: name=avahi-daemon state=restarted
+  become: True
+
+- name: stop deluged
+  service: name=deluge-daemon state=stopped
+  become: True
+
+- name: restart deluged
+  service: name=deluge-daemon state=restarted
+  become: True
+
+- name: start nginx
+  service: name=nginx state=started
+  become: True
+
+- name: reload nginx
+  service: name=nginx state=reloaded
+  become: True

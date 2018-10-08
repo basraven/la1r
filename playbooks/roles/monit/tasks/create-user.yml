@@ -1,0 +1,59 @@
+---
+- hosts: all
+  remote_user: pi
+  tasks:
+    - name: Add the user '{{target_user}}' with a specific uid and a primary group of 'sudo'
+      user:
+        name: "{{target_user}}"
+        # password: "{{ root_password }}"
+        groups: sudo
+        append: yes
+      # sudo: yes
+      become: yes
+      # become_user: root
+    - name: Add {{ target_user }} user to the sudoers
+      copy:
+          dest: "/etc/sudoers.d/{{ target_user }}"
+          content: "{{ target_user }}  ALL=(ALL)  NOPASSWD: ALL"
+      become: yes
+    - name: Set authorized key took from file
+      authorized_key:
+        user: "{{target_user}}"
+        key: "{{ lookup('file', '/credentials/ssh/id_rsa.pub') }}"
+        state: present
+      become: yes
+      # become_user: root
+    - name: Disable Password Authentication
+      lineinfile:
+        dest=/etc/ssh/sshd_config
+        regexp='^PasswordAuthentication'
+        line="PasswordAuthentication no"
+        state=present
+        backup=yes
+      become: yes
+      notify:
+        - restart ssh
+    - name: Disable Root Login
+      lineinfile:
+        dest=/etc/ssh/sshd_config
+        regexp='^PermitRootLogin'
+        line="PermitRootLogin no"
+        state=present
+        backup=yes
+      become: yes
+      notify:
+        - restart ssh
+    - name: Remove the user 'pi'
+      user:
+        name: pi
+        state: absent
+        remove: yes
+      become: yes
+
+  handlers:
+    - name: restart ssh
+      service:
+        name=ssh
+        state=restarted
+      become: 
+        yes
