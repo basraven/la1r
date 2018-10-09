@@ -24,3 +24,8 @@
           groups: docker
           append: yes
         become: True
+      - name: Start service docker, if not started
+        service:
+          name: docker
+          state: started
+        become: True
