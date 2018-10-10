@@ -1,16 +1,13 @@
-[raspis]
-raspi1
-raspi2
-raspi3
-
 [wessel1]
-raspi1
-
-[wessel2]
-raspi2
+169.254.184.125
 
 [kalff1]
-raspi3
+169.254.201.65
+
+[raspis]
+169.254.201.65
+169.254.184.125
+
 
 [raspis:vars]
 ansible_ssh_private_key_file=~/.ssh/id_rsa

@@ -1,4 +1,4 @@
-all: prep docker
+all: prep no-ip
 
 #Based on: https://github.com/ramontayag/rpi-playbooks
 
@@ -19,7 +19,7 @@ ssh-clean:
 	ansible-playbook -i /playbooks/hosts /playbooks/roles/common/tasks/remove-pi-user.yml 
 
 .PHONY: prep
-prep: ssh-copy-key ssh-set ssh-clean
+prep: ssh-copy-key ssh-set
 
 
 ##### Docker #####
