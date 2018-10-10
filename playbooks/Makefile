@@ -1,3 +1,5 @@
+ 
+export ANSIBLE_HOST_KEY_CHECKING = False
 all: prep no-ip
 
 #Based on: https://github.com/ramontayag/rpi-playbooks
@@ -9,9 +11,8 @@ ssh-copy-key:
 	cp /credentials/ssh/id_rsa ~/.ssh/id_rsa
 	chmod 600 ~/.ssh/id_rsa
 	
-.PHONY: ssh-set
-ssh-set:
-	ANSIBLE_HOST_KEY_CHECKING=False \
+.PHONY: create-user
+create-user:
 	ansible-playbook -i /playbooks/hosts /playbooks/roles/common/tasks/create-user.yml --ask-pass --ask-become-pass
 	
 .PHONY: ssh-clean
@@ -19,7 +20,7 @@ ssh-clean:
 	ansible-playbook -i /playbooks/hosts /playbooks/roles/common/tasks/remove-pi-user.yml 
 
 .PHONY: prep
-prep: ssh-copy-key ssh-set
+prep: ssh-copy-key
 
 
 ##### Docker #####

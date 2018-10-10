@@ -5,6 +5,7 @@
     - name: Add the user '{{target_user}}' with a specific uid and a primary group of 'sudo'
       user:
         name: "{{target_user}}"
+        shell: /bin/bash
         groups: sudo
         append: yes
       become: yes

@@ -8,7 +8,7 @@
           dest: ~/install_docker.sh
 
       - name: Install Docker
-        command: sh ./install_docker.sh
+        command: bash ./install_docker.sh
         become: True
         # args:
         #   creates: /usr/bin/docker
