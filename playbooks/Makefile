@@ -1,12 +1,12 @@
  
 export ANSIBLE_HOST_KEY_CHECKING = False
-all: prep no-ip
+all: prep create-user docker kubernetes-slave no-ip
 
 #Based on: https://github.com/ramontayag/rpi-playbooks
 
 ##### Init Setup #####
-.PHONY: ssh-copy-key
-ssh-copy-key:
+.PHONY: prep
+prep:
 	mkdir -p ~/.ssh 
 	cp /credentials/ssh/id_rsa ~/.ssh/id_rsa
 	chmod 600 ~/.ssh/id_rsa
@@ -19,8 +19,6 @@ create-user:
 ssh-clean:
 	ansible-playbook -i /playbooks/hosts /playbooks/roles/common/tasks/remove-pi-user.yml 
 
-.PHONY: prep
-prep: ssh-copy-key
 
 
 ##### Docker #####
