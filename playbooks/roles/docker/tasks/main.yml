@@ -2,61 +2,67 @@
 - hosts: all
   remote_user: "{{ target_user }}"
   tasks:
-      - name: Update and upgrade apt packages
-        become: true
-        apt:
-          upgrade: yes
-          update_cache: yes
-          cache_valid_time: 86400 #One day
-      - name: Install required packages 
-        apt: name={{item}} state=installed
-        with_items:
-            - apt-transport-https
-            - ca-certificates
-            - software-properties-common
-        become: True
-      - name: Add an Apt signing key, uses whichever key is at the URL
-        apt_key:
-          url: https://yum.dockerproject.org/gpg
-          state: present
-        become: True
-      - name: Add key to repo
-        apt_repository:
-            repo: deb https://apt.dockerproject.org/repo/ raspbian-stretch main
-            state: present
-        become: True
-      - name: Install docker 
-        apt:
-          name: docker-engine
-          state: present
-        become: True
-      
-      # - name: Download Docker install script
-      #   get_url:
-      #     url: https://get.docker.com
-      #     dest: ~/install_docker.sh
+  - name: Ensure legacy packages are absent
+    apt:
+      pkg: "{{ item }}"
+      state: absent
+      purge: yes
+    with_items:
+      - lxc-docker
+      - docker.io
+      - docker
+      - docker-engine
+    become: True
 
-      # - name: Install Docker
-      #   command: bash ./install_docker.sh
-      #   become: True
-        # args:
-        #   creates: /usr/bin/docker
+  - name: Ensure the system can use the HTTPS transport for APT
+    stat:
+      path: /usr/lib/apt/methods/https
+    register: apt_https_transport
+    become: True
 
-      # - name: Install docker-py
-      #   pip:
-      #     name: docker-py
-      #   become: True
+  - name: Install HTTPS transport for APT
+    apt:
+      pkg: apt-transport-https
+      state: installed
+    when: not apt_https_transport.stat.exists
+    become: True
 
-      - name: Add {{ target_user }} to docker group
-        user:
-          name: "{{ target_user }}"
-          groups: docker
-          append: yes
-        become: True
-      - name: Start service docker, if not started
-        service:
-          name: docker
-          state: started
-        become: True
+  - name: Import docker GPG key to apt
+    apt_key:
+      url: "{{ docker_apt_key_url }}"
+      state: present
+    become: True
 
-# TODO: remove hardcoded raspbian-stretch with $(lsb_release -cs) somehow
+  - name: Add docker repository
+    apt_repository:
+      repo: 'deb {{ docker_apt_repository_url }}/{{ docker_distribution }} {{ docker_distribution_release }} stable'
+      state: present
+    become: True
+
+  - name: Add docker repository preferences
+    template:
+      src: apt_docker.pref.2
+      dest: /etc/apt/preferences.d/docker.pref
+    become: True
+
+  - name: Install docker
+    apt:
+      pkg: "{{ docker_package }}={{ docker_debian_version }}"
+      state: installed
+    become: True
+
+  - name: Create docker.service.d directory
+    file:
+      path: "{{ docker_override_path }}"
+      state: directory
+    when: docker_override_options
+    become: True
+
+  - name: Configure docker
+    template:
+      src: service_override.conf
+      dest: "{{ docker_override_path }}/override.conf"
+      owner: root
+      mode: 0644
+    when: docker_override_options
+    become: True
