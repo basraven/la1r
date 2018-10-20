@@ -1,8 +1,8 @@
  
-export ANSIBLE_HOST_KEY_CHECKING = False
-all: prep create-user docker kubernetes-slave no-ip
-
 #Based on: https://github.com/ramontayag/rpi-playbooks
+export ANSIBLE_HOST_KEY_CHECKING = False
+all: prep create-user prep-host docker k8s
+
 
 ##### Init Setup #####
 .PHONY: prep
@@ -11,6 +11,10 @@ prep:
 	cp /credentials/ssh/id_rsa ~/.ssh/id_rsa
 	chmod 600 ~/.ssh/id_rsa
 	
+.PHONY: prep-host
+prep-host:
+	ansible-playbook -i /playbooks/hosts /playbooks/roles/common/tasks/prep-host.yml --ask-pass --ask-become-pass
+
 .PHONY: create-user
 create-user:
 	ansible-playbook -i /playbooks/hosts /playbooks/roles/common/tasks/create-user.yml --ask-pass --ask-become-pass
