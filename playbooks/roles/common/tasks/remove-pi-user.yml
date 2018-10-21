@@ -1,6 +1,6 @@
 ---
 - hosts: all
-  remote_user: basraven
+  remote_user: "{{ target_user }}"
   tasks:
     - name: Remove the user 'pi'
       user:

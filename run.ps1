@@ -1,3 +1,3 @@
-docker rm -f ansible-control
-docker build . -t ansible-control
-docker run -it --name ansible-control --hostname control  -v $pwd/playbooks/:/playbooks -v $pwd/credentials:/credentials ansible-control /bin/bash
+docker rm -f ansible-client
+docker build ./ansible-client -t ansible-client
+docker run -it --rm --name ansible-client --hostname ansible-client  -v $pwd/playbooks/:/playbooks -v $pwd/credentials:/credentials ansible-client /bin/bash

@@ -1,7 +1,8 @@
  
 #Based on: https://github.com/ramontayag/rpi-playbooks
 export ANSIBLE_HOST_KEY_CHECKING = False
-all: prep create-user prep-host docker k8s
+all: prep create-user docker k8s-install k8s-configure
+install: prep docker k8s-install k8s-configure
 
 
 ##### Init Setup #####
@@ -11,10 +12,6 @@ prep:
 	cp /credentials/ssh/id_rsa ~/.ssh/id_rsa
 	chmod 600 ~/.ssh/id_rsa
 	
-.PHONY: prep-host
-prep-host:
-	ansible-playbook -i /playbooks/hosts /playbooks/roles/common/tasks/prep-host.yml --ask-pass --ask-become-pass
-
 .PHONY: create-user
 create-user:
 	ansible-playbook -i /playbooks/hosts /playbooks/roles/common/tasks/create-user.yml --ask-pass --ask-become-pass
@@ -28,13 +25,17 @@ ssh-clean:
 ##### Docker #####
 .PHONY: docker
 docker: 
-	ansible-playbook -i /playbooks/hosts /playbooks/roles/docker/tasks/main.yml 
+	ansible-playbook -i /playbooks/hosts /playbooks/roles/docker/tasks/install.yml 
 
 
 ##### K8s #####
-.PHONY: k8s
-k8s: 
-	ansible-playbook -i /playbooks/hosts /playbooks/roles/k8s/tasks/main.yml 
+.PHONY: k8s-install
+k8s-install: 
+	ansible-playbook -i /playbooks/hosts /playbooks/roles/k8s/tasks/install.yml 
+
+.PHONY: k8s-configure
+k8s-configure: 
+	ansible-playbook -i /playbooks/hosts /playbooks/roles/k8s/tasks/configure.yml 
 
 
 

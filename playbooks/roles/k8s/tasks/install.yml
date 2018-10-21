@@ -12,8 +12,12 @@
             repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
             state: present
         become: True
-      - name: Install k8s 
-        apt:
-          name: kubeadm
-          state: present
+      - name: Update apt-get
+        command: apt-get update -q 
+        become: True
+      - name: Install K8s
+        command: apt-get install -yq kubeadm kubectl kubelet
+        become: True
+      - name: Remove swap
+        command: swapoff -a
         become: True

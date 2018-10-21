@@ -1,0 +1,25 @@
+---
+- hosts: all
+  remote_user: "{{ target_user }}"
+  tasks:
+    # - name: Init K8s
+    #   command: kubeadm init --token-ttl=0
+    #   become: True
+    - file: 
+        path: ~/.kube
+        state: directory
+        recurse: yes
+      become: True
+    - name: copy admin.conf as default conf
+      command: cp -P /etc/kubernetes/admin.conf /home/{{ target_user }}/.kube/config
+      become: True
+    - fetch:
+        src: /home/{{ target_user }}/.kube/config
+        dest: /home/root/.kube/config
+        flat: True
+      become: True
+    - fetch:
+        src: /home/{{ target_user }}/.kube/config
+        dest: config
+        flat: True
+      become: True

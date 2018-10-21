@@ -1,0 +1,17 @@
+---
+- hosts: all
+  remote_user: "{{ target_user }}"
+  tasks:
+    - fetch:
+        src: /etc/kubernetes/admin.conf
+        dest: ./
+        flat: True
+      become: True
+
+
+# sudo cp /etc/kubernetes/admin.conf $HOME/
+# sudo chown $(id -u):$(id -g) $HOME/admin.conf
+# export KUBECONFIG=$HOME/admin.conf
+
+
+# export KUBECONFIG=$HOME/.kube/config
