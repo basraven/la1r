@@ -36,6 +36,7 @@ k8s-install:
 .PHONY: k8s-configure
 k8s-configure: 
 	ansible-playbook -i /playbooks/hosts /playbooks/roles/k8s/tasks/configure.yml 
+	$(MAKE) -C /kubernetes all 
 
 
 

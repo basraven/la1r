@@ -6,7 +6,7 @@
     #   command: kubeadm init --token-ttl=0
     #   become: True
     - file: 
-        path: ~/.kube
+        path: /root/.kube
         state: directory
         recurse: yes
       become: True
@@ -15,11 +15,11 @@
       become: True
     - fetch:
         src: /home/{{ target_user }}/.kube/config
-        dest: /home/root/.kube/config
+        dest: /root/.kube/config
         flat: True
       become: True
     - fetch:
         src: /home/{{ target_user }}/.kube/config
-        dest: config
+        dest: /credentials/kubernetes/
         flat: True
       become: True
