@@ -2,56 +2,59 @@
 - hosts: all
   remote_user: "{{ target_user }}"
   tasks:
+
       - name: "Set '/etc/os-release'"
         copy:
           src: ../files/os-release
           dest: /etc/os-release
-        tags: [docker]
-        become: True
-
-      # - name: Add an Apt signing key, uses whichever key is at the URL
-      #   apt_key:
-      #     url: https://yum.dockerproject.org/gpg
-      #     state: present
-      #   become: True
+        when:
+          - ansible_distribution == "Debian"
+          - ansible_architecture.find('arm') == -1
         
       - name: Import docker GPG key to apt
         apt_key:
           url: "https://download.docker.com/linux/ubuntu/gpg"
           state: present
-        become: True
-
-      # - name: Import docker GPG key to apt
-      #   apt_key:
-      #     url: "https://download.docker.com/linux/raspbian/gpg"
-      #     state: present
-      #   become: True
+        when:
+          - ansible_distribution == "Debian"
+          - ansible_architecture.find('arm') == -1
 
       - name: Add docker repository
         apt_repository:
           repo: 'deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial edge'
           state: present
-        become: True
+        when:
+          - ansible_distribution == "Debian"
+          - ansible_architecture.find('arm') == -1
 
-      # - name: Add docker repository
-      #   apt_repository:
-      #     repo: 'deb https://download.docker.com/linux/raspbian stretch stable'
-      #     state: present
-      #   become: True
 
+
+      - name: Import docker GPG key to apt
+        apt_key:
+          url: "https://download.docker.com/linux/raspbian/gpg"
+          state: present
+        when:
+          - ansible_distribution == "Debian"
+          - ansible_architecture.find('arm') != -1
+
+      - name: Add docker repository
+        apt_repository:
+          repo: 'deb https://download.docker.com/linux/raspbian stretch stable'
+          state: present
+        when:
+          - ansible_distribution == "Debian"
+          - ansible_architecture.find('arm') != -1
 
       - name: Download Docker install script
         get_url:
           url: https://get.docker.com
-          dest: ~/install_docker.sh
-
-
+          dest: /home/{{ target_user}}/install_docker.sh
           
       - name: Install Docker
-        command: bash ./install_docker.sh
-        become: True
-        args:
-          creates: /usr/bin/docker
+        command: bash /home/{{ target_user}}/install_docker.sh
+
+        # args:
+        #   creates: /usr/bin/docker
 
       # - name: Install docker-py
       #   pip:
@@ -63,11 +66,11 @@
           name: "{{ target_user }}"
           groups: docker
           append: yes
-        become: True
+
       - name: Start service docker, if not started
         service:
           name: docker
           state: started
-        become: True
+
 
 # TODO: remove hardcoded raspbian-stretch with $(lsb_release -cs) somehow

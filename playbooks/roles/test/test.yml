@@ -1,0 +1,13 @@
+---
+- hosts: all
+  remote_user: "{{ target_user }}"
+  tasks:               
+      # https://docs.ansible.com/ansible/devel/user_guide/playbooks_variables.html 
+      - name: echo test
+        shell: echo '{{ ansible_architecture }}' > /tmp/arch.txt
+      - name: echo test
+        shell: echo '{{ ansible_distribution }}' >> /tmp/arch.txt
+      - name: echo test
+        shell: echo '{{ ansible_architecture.find('arm') }}' >> /tmp/arch.txt
+      - name: echo test
+        shell: echo '{{  ansible_default_ipv4.address }}' >> /tmp/arch.txt

@@ -39,6 +39,9 @@ k8s-configure:
 	$(MAKE) -C /kubernetes all 
 
 
+.PHONY: test
+test: prep
+	ansible-playbook -i /playbooks/local /playbooks/roles/test/test.yml 
 
 ##### No-IP #####
 .PHONY: no-ip

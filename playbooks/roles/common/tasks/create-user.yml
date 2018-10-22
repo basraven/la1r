@@ -8,18 +8,15 @@
         shell: /bin/bash
         groups: sudo
         append: yes
-      become: yes
     - name: Add {{ target_user }} user to the sudoers
       copy:
           dest: "/etc/sudoers.d/{{ target_user }}"
           content: "{{ target_user }}  ALL=(ALL)  NOPASSWD: ALL"
-      become: yes
     - name: Set authorized key took from file
       authorized_key:
         user: "{{target_user}}"
         key: "{{ lookup('file', '/credentials/ssh/id_rsa.pub') }}"
         state: present
-      become: yes
     - name: Disable Password Authentication
       lineinfile:
         dest=/etc/ssh/sshd_config
@@ -27,7 +24,6 @@
         line="PasswordAuthentication no"
         state=present
         backup=yes
-      become: yes
       notify:
         - restart ssh
     - name: Disable Root Login
@@ -37,7 +33,6 @@
         line="PermitRootLogin no"
         state=present
         backup=yes
-      become: yes
       notify:
         - restart ssh
 
@@ -46,5 +41,3 @@
       service:
         name=ssh
         state=restarted
-      become: 
-        yes
