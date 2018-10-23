@@ -5,9 +5,17 @@
       # https://docs.ansible.com/ansible/devel/user_guide/playbooks_variables.html 
       - name: echo test
         shell: echo '{{ ansible_architecture }}' > /tmp/arch.txt
+      # - name: echo test
+      #   shell: echo '{{ ansible_distribution }}' >> /tmp/arch.txt
+      # - name: echo test
+      #   shell: echo '{{ ansible_architecture.find('arm') }}' >> /tmp/arch.txt
+      # - name: echo test
+      #   shell: echo '{{  ansible_default_ipv4.address }}' >> /tmp/arch.txt
+      # - name: echo test
+      #   shell: echo '{{  inventory_hostname }}' >> /tmp/arch.txt
+      - name: Include vars of stuff.yaml into the 'stuff' variable (2.2).
+        include_vars:
+          file: "{{credentials_dir}}/noip/noip-credentials.yaml"
+
       - name: echo test
-        shell: echo '{{ ansible_distribution }}' >> /tmp/arch.txt
-      - name: echo test
-        shell: echo '{{ ansible_architecture.find('arm') }}' >> /tmp/arch.txt
-      - name: echo test
-        shell: echo '{{  ansible_default_ipv4.address }}' >> /tmp/arch.txt
+        shell: echo '{{  noip_username }}' >> /tmp/arch.txt

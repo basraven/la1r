@@ -1,17 +1,22 @@
 ---
-- name: Copy install script
-  template: src=install.sh.j2 dest={{home_dir}}/noip_install.sh mode=0755
+- hosts: all
+  remote_user: "{{ target_user }}"
+  tasks:
+    - name: Copy install script
+      template: src=install.sh.j2 dest={{home_dir}}/noip_install.sh mode=0755
 
-- name: Install noip
-  command: sh ./noip_install.sh
-  become: True
+    - name: Check if expect is installed
+      apt: name={{item}} state=present
+      with_items:
+          - expect
 
-- name: Install noip init.d
-  template: src=initd.j2 dest={{noip_initd}} mode=0700
-  sudo: True
+    - name: Install noip
+      command: sh ./noip_install.sh
 
-- name: Copy monit config
-  template: src=noip2.monitrc.j2 dest=/etc/monit/conf.d/noip2.monitrc
-  sudo: True
-  notify:
-    - reload monit
+    - name: Install noip init.d
+      template: src=initd.j2 dest={{noip_initd}} mode=0700
+
+# - name: Copy monit config
+#   template: src=noip2.monitrc.j2 dest=/etc/monit/conf.d/noip2.monitrc
+#   notify:
+#     - reload monit

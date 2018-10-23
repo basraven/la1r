@@ -14,7 +14,7 @@ prep:
 	
 .PHONY: create-user
 create-user:
-	ansible-playbook -i /playbooks/hosts /playbooks/roles/common/tasks/create-user.yml --ask-pass --ask-become-pass
+	ansible-playbook -i /playbooks/hosts /playbooks/roles/common/tasks/create-user.yml --ask-pass
 	
 .PHONY: ssh-clean
 ssh-clean:
@@ -31,19 +31,20 @@ docker:
 ##### K8s #####
 .PHONY: k8s-install
 k8s-install: 
-	ansible-playbook -i /playbooks/hosts /playbooks/roles/k8s/tasks/install.yml 
+	ansible-playbook -i /playbooks/hosts /playbooks/roles/k8s/tasks/install.yml
 
 .PHONY: k8s-configure
 k8s-configure: 
-	ansible-playbook -i /playbooks/hosts /playbooks/roles/k8s/tasks/configure.yml 
+	ansible-playbook -i /playbooks/hosts /playbooks/roles/k8s/tasks/configure.yml
 	$(MAKE) -C /kubernetes all 
+
+
+##### No-IP #####
+.PHONY: no-ip
+no-ip:
+	ansible-playbook -i /playbooks/hosts /playbooks/noip.yml
 
 
 .PHONY: test
 test: prep
 	ansible-playbook -i /playbooks/local /playbooks/roles/test/test.yml 
-
-##### No-IP #####
-.PHONY: no-ip
-no-ip:
-	ansible-playbook /playbooks/noip.yml -i /playbooks/hosts --extra-vars="noip_username=someusername noip_password=somepassword"

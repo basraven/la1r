@@ -35,6 +35,9 @@
         backup=yes
       notify:
         - restart ssh
+    - name: Set hostname of Raspberry pi to the hostname marked on the inventory file
+      command: raspi-config nonint do_hostname {{  inventory_hostname }}
+      become: True
 
   handlers:
     - name: restart ssh

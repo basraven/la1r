@@ -1,8 +1,9 @@
 ---
+credentials_dir: /credentials
 target_user: basraven
 home_dir: /home/{{ansible_ssh_user}}
 ansible_become: True
-noip_dir: "{{home_dir}}/noip-2.1.9-1"
+noip_dir: "{{home_dir}}/noip"
 noip: "/usr/local/bin/noip2"
 noip_conf: /usr/local/etc/no-ip2.conf
 noip_pid: /var/run/noip2.pid

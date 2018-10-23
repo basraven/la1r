@@ -2,8 +2,7 @@
 - hosts: all
   remote_user: "{{ target_user }}"
   tasks:
-
-      - name: "Set '/etc/os-release'"
+      - name: "Set '/etc/os-release' for non-ARM"
         copy:
           src: ../files/os-release
           dest: /etc/os-release
@@ -11,7 +10,7 @@
           - ansible_distribution == "Debian"
           - ansible_architecture.find('arm') == -1
         
-      - name: Import docker GPG key to apt
+      - name: Import docker GPG key to apt for non-ARM
         apt_key:
           url: "https://download.docker.com/linux/ubuntu/gpg"
           state: present
@@ -19,7 +18,7 @@
           - ansible_distribution == "Debian"
           - ansible_architecture.find('arm') == -1
 
-      - name: Add docker repository
+      - name: Add docker repository for non-ARM
         apt_repository:
           repo: 'deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial edge'
           state: present
@@ -29,7 +28,7 @@
 
 
 
-      - name: Import docker GPG key to apt
+      - name: Import docker GPG key to apt for ARM
         apt_key:
           url: "https://download.docker.com/linux/raspbian/gpg"
           state: present
@@ -37,7 +36,7 @@
           - ansible_distribution == "Debian"
           - ansible_architecture.find('arm') != -1
 
-      - name: Add docker repository
+      - name: Add docker repository for ARM
         apt_repository:
           repo: 'deb https://download.docker.com/linux/raspbian stretch stable'
           state: present
