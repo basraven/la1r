@@ -1,0 +1,8 @@
+---
+#FIXME: Not working!
+- hosts: all
+  remote_user: "{{ target_user }}"
+  roles:
+    - create-user
+    # - remove-user
+    - 

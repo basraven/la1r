@@ -2,6 +2,9 @@
 - hosts: all
   remote_user: pi
   tasks:
+    - name: Check if openvpn_user is set 
+      meta: end_play
+      when: '{{openvpn_user}} == ""'
     - name: Add the user '{{target_user}}' with a specific uid and a primary group of 'sudo'
       user:
         name: "{{target_user}}"

@@ -1,5 +1,6 @@
 ---
 - hosts: all
+  # Source: http://www.noip.com/support/knowledgebase/install-ip-duc-onto-raspberry-pi/
   remote_user: "{{ target_user }}"
   tasks:
     - name: Copy install script

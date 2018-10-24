@@ -2,9 +2,30 @@
 credentials_dir: /credentials
 target_user: basraven
 home_dir: /home/{{ansible_ssh_user}}
+home_dir_target_user: /home/{{ansible_ssh_user}}
 ansible_become: True
+
 noip_dir: "{{home_dir}}/noip"
 noip: "/usr/local/bin/noip2"
 noip_conf: /usr/local/etc/no-ip2.conf
 noip_pid: /var/run/noip2.pid
 noip_initd: /etc/init.d/noip
+
+openvpn_ca_dir: "{{ home_dir_target_user }}/openvpn-ca"
+openvpn_client_configs_dir: "{{ home_dir_target_user }}/client-configs"
+openvpn_KEY_COUNTRY: "NL"
+openvpn_KEY_PROVINCE: "NH"
+openvpn_KEY_CITY: "Amsterdam"
+openvpn_KEY_ORG: "basraven"
+openvpn_KEY_EMAIL: "vpn@basraven.nl"
+openvpn_KEY_OU: "basraven.nl"
+openvpn_KEY_NAME: "server"
+openvpn_cipher: "AES-128-CBC"
+openvpn_auth: "SHA256"
+openvpn_port: 55111
+openvpn_proto: udp
+
+openvpn_server_url: "192.168.2.38"
+
+openvpn_user: ""
+openvpn_password: ""

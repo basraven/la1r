@@ -1,0 +1,67 @@
+---
+- hosts: all
+  # Source: https://www.digitalocean.com/community/tutorials/how-to-set-up-an-openvpn-server-on-ubuntu-16-04
+  remote_user: "{{ target_user }}"
+  tasks:
+    - name: Install expect if needed
+      apt: name={{item}} state=present
+      with_items:
+        - expect
+    - name: Create client certificate with password #FIXME: This won't work, needs expect
+      shell: ". ./vars ; ./build-key-pass {{ openvpn_user }}"
+      args:
+        chdir: "{{openvpn_ca_dir}}"
+        executable: /bin/bash
+      when:
+        - openvpn_password != ""
+    # The default "build-key.sh" uses --interact, we don't want that"
+    - name: Create client certificate without password
+      shell: '. ./vars ; export EASY_RSA="${EASY_RSA:-.}" ; "$EASY_RSA/pkitool"  {{ openvpn_user }}'
+      args:
+        chdir: "{{openvpn_ca_dir}}"
+        executable: /bin/bash
+      when:
+        - openvpn_password == ""
+    - name: Create {{ openvpn_client_configs_dir }}/files
+      file:
+        path: "{{ openvpn_client_configs_dir }}/files"
+        state: directory
+        mode: 0644
+    - name: Copy base configuration
+      copy:
+        src: /usr/share/doc/openvpn/examples/sample-config-files/client.conf
+        dest: "{{ openvpn_client_configs_dir }}/base.conf"
+        force: True
+        remote_src: yes
+    - name: "Adjust {{ openvpn_client_configs_dir }}/base.conf with custom configuration"
+      lineinfile:
+        dest: "{{ openvpn_client_configs_dir }}/base.conf"
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+      with_items:
+        - { regexp: '^remote ',             line: 'remote {{ openvpn_server_url }} {{ openvpn_port }}' }
+        - { regexp: '^;remote ',            line: 'remote {{ openvpn_server_url }} {{ openvpn_port }}' }
+        - { regexp: '^;?key-direction',     line: 'key-direction 1' }
+        - { regexp: '^;?cipher',            line: 'cipher {{ openvpn_cipher }}' }
+        - { regexp: '^;?auth',              line: 'auth {{ openvpn_auth }}' }
+        - { regexp: '^;?user',              line: 'user nobody' }
+        - { regexp: '^;?group',             line: 'group nogroup' }
+        - { regexp: '^;?proto',             line: 'proto {{ openvpn_proto }} ' }
+        - { regexp: '^;?ca ',               line: '# ca' }
+        - { regexp: '^;?cert ',             line: '# cert' }
+        - { regexp: '^;?key ',              line: '# key' }
+        - { regexp: '^;?script-security',   line: '# script-security 2' }
+        - { regexp: '^;?up /etc/openvpn/update-resolv-conf ', line: '# up /etc/openvpn/update-resolv-conf' }
+        - { regexp: '^;?down /etc/openvpn/update-resolv-conf ', line: '# down /etc/openvpn/update-resolv-conf' }
+    - name: Copy make_config.sh script
+      template: src=make_config.sh.j2 dest={{ openvpn_client_configs_dir }}/make_config.sh mode=0700
+    - name: Create client connection file {{ openvpn_client_configs_dir }}/files/{{ openvpn_user }}.ovpn
+      shell: "./make_config.sh {{ openvpn_user }}"
+      args:
+        chdir: "{{ openvpn_client_configs_dir }}"
+        executable: /bin/bash
+    - name: Copying {{ openvpn_user }}.ovpn to /credentials/ovpn/{{ openvpn_user }}.ovpn
+      fetch:
+        src: "{{ openvpn_client_configs_dir }}/files/{{ openvpn_user }}.ovpn"
+        dest: /credentials/ovpn/{{ openvpn_user }}.ovpn
+        flat: True

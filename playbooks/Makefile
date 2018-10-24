@@ -45,6 +45,12 @@ no-ip:
 	ansible-playbook -i /playbooks/hosts /playbooks/noip.yml
 
 
+##### OVPN #####
+.PHONY: ovpn
+ovpn: prep
+	ansible-playbook -i /playbooks/local /playbooks/roles/ovpn/tasks/install.yml
+	ansible-playbook -i /playbooks/local /playbooks/roles/ovpn/tasks/create-user.yml --extra-vars "openvpn_user=basraven"
+
 .PHONY: test
 test: prep
 	ansible-playbook -i /playbooks/local /playbooks/roles/test/test.yml 

@@ -9,7 +9,8 @@
       async: 600
       poll: 5
 
-    - file: 
+    - name: Create /root/.kube directory
+      file: 
         path: /root/.kube
         state: directory
         recurse: yes
@@ -20,12 +21,14 @@
     - name: chown config
       command: chown {{ target_user }}:{{ target_user }} /home/{{ target_user }}/.kube/config
 
-    - fetch:
+    - name: Fetch new kubeconfig to /root/.kube/config
+      fetch:
         src: /home/{{ target_user }}/.kube/config
         dest: /root/.kube/config
         flat: True
 
-    - fetch:
+    - name: Fetch new kubeconfig to /credentials/kubernetes/
+      fetch:
         src: /home/{{ target_user }}/.kube/config
         dest: /credentials/kubernetes/
         flat: True

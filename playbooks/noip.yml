@@ -1,5 +1,0 @@
----
-- hosts: all
-  remote_user: "{{ target_user }}"
-  roles:
-    - noip
