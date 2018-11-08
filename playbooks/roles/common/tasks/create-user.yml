@@ -2,14 +2,11 @@
 - hosts: all
   remote_user: pi
   tasks:
-    - name: Check if openvpn_user is set 
-      meta: end_play
-      when: '{{openvpn_user}} == ""'
     - name: Add the user '{{target_user}}' with a specific uid and a primary group of 'sudo'
       user:
         name: "{{target_user}}"
         shell: /bin/bash
-        groups: sudo
+        groups: sudo,adm,dialout,cdrom,audio,video,plugdev,games,users,input,netdev,gpio,i2c,spi
         append: yes
     - name: Add {{ target_user }} user to the sudoers
       copy:
@@ -38,10 +35,12 @@
         backup=yes
       notify:
         - restart ssh
-    - name: Set hostname of Raspberry pi to the hostname marked on the inventory file
-      command: raspi-config nonint do_hostname {{  inventory_hostname }}
-      become: True
 
+    # FIXME: contains an error
+    - name: Set hostname of Raspberry pi to the hostname marked on the inventory file
+      shell: raspi-config nonint do_hostname {{  inventory_hostname }}
+      args:
+          executable: /bin/bash
   handlers:
     - name: restart ssh
       service:

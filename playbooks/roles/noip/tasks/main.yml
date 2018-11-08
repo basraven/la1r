@@ -3,6 +3,9 @@
   # Source: http://www.noip.com/support/knowledgebase/install-ip-duc-onto-raspberry-pi/
   remote_user: "{{ target_user }}"
   tasks:
+    - name: Include noip credentials
+      include_vars:
+        file: "{{credentials_dir}}/noip/noip-credentials.yaml"
     - name: Copy install script
       template: src=install.sh.j2 dest={{home_dir}}/noip_install.sh mode=0755
 

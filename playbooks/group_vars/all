@@ -4,6 +4,8 @@ target_user: basraven
 home_dir: /home/{{ansible_ssh_user}}
 home_dir_target_user: /home/{{ansible_ssh_user}}
 ansible_become: True
+dhcp_interface: "wlan0"
+dhcp_router: 192.168.2.254"
 
 noip_dir: "{{home_dir}}/noip"
 noip: "/usr/local/bin/noip2"
@@ -25,7 +27,7 @@ openvpn_auth: "SHA256"
 openvpn_port: 55111
 openvpn_proto: udp
 
-openvpn_server_url: "192.168.2.38"
+openvpn_server_url: "192.168.2.2"
 
 openvpn_user: ""
 openvpn_password: ""

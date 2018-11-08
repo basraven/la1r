@@ -1,9 +1,9 @@
  
 #Based on: https://github.com/ramontayag/rpi-playbooks
 export ANSIBLE_HOST_KEY_CHECKING = False
-all: prep create-user docker k8s-install k8s-configure
-install: prep docker k8s-install k8s-configure
-
+all: prep create-user all-steps
+install: prep all-steps
+all-steps: docker k8s-install k8s-config k8s-load
 
 ##### Init Setup #####
 .PHONY: prep
@@ -25,7 +25,7 @@ ssh-clean:
 ##### Docker #####
 .PHONY: docker
 docker: 
-	ansible-playbook -i /playbooks/hosts /playbooks/roles/docker/tasks/install.yml 
+	ansible-playbook -i /playbooks/hosts /playbooks/roles/docker/tasks/main.yml 
 
 
 ##### K8s #####
@@ -33,22 +33,28 @@ docker:
 k8s-install: 
 	ansible-playbook -i /playbooks/hosts /playbooks/roles/k8s/tasks/install.yml
 
-.PHONY: k8s-configure
-k8s-configure: 
+.PHONY: k8s-config
+k8s-config: 
 	ansible-playbook -i /playbooks/hosts /playbooks/roles/k8s/tasks/configure.yml
+
+.PHONY: k8s-load
+k8s-load:
 	$(MAKE) -C /kubernetes all 
+
+k8s-token:
+	kubectl get secret | grep cluster-admin-dashboard-sa | cut -d " " -f 1 | kubectl describe secret $1
 
 
 ##### No-IP #####
 .PHONY: no-ip
 no-ip:
-	ansible-playbook -i /playbooks/hosts /playbooks/noip.yml
+	ansible-playbook -i /playbooks/hosts /playbooks/roles/noip/tasks/main.yml
 
 
 ##### OVPN #####
 .PHONY: ovpn
 ovpn: prep
-	ansible-playbook -i /playbooks/local /playbooks/roles/ovpn/tasks/install.yml
+	# ansible-playbook -i /playbooks/local /playbooks/roles/ovpn/tasks/install.yml
 	ansible-playbook -i /playbooks/local /playbooks/roles/ovpn/tasks/create-user.yml --extra-vars "openvpn_user=basraven"
 
 .PHONY: test

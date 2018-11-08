@@ -2,27 +2,34 @@
 - hosts: all
   remote_user: "{{ target_user }}"
   tasks:
+      # - name: "new method: install k8s"
+      #   shell:  'curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add - && echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list'
+      #   args:
+      #     executable: /bin/bash
+
+      - name: DHCP template
+        template: src=dhcpcd.conf.j2 dest=/etc/dhcpcd.conf mode=0755
       - name: Add an Apt signing key, uses whichever key is at the URL
         apt_key:
           url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
           state: present
           validate_certs: no
-      - name: Add key to repo
+      - name: Add kubernetes key to repo
         apt_repository:
             repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
             state: present
 
-      # - name: Update apt-get
-      #   command: apt-get update -q 
-      #   become: True
-      - name: Update and upgrade apt packages
-
-        apt:
-          upgrade: yes
-          update_cache: yes
-          cache_valid_time: 86400 #One day
-      - name: Install K8s
-        command: apt-get install -yq kubeadm kubectl kubelet
+      - name: Update apt-get
+        command: apt-get update -q 
+        become: True
+      # - name: Update and upgrade apt packages
+      #   apt:
+      #     upgrade: yes
+      #     update_cache: yes
+      #     cache_valid_time: 86400 #One day
+        
+      - name: Install kubeadm
+        command: apt-get install -yq kubeadm
 
       - name: Remove swap 1/3
         command: swapoff -a
@@ -35,7 +42,8 @@
         ignore_errors: yes
       
       # FIXME: ugly
-      - replace:
+      - name: Ugly fix for /boot/cmdline.txt
+        replace:
             path: /boot/cmdline.txt
             regexp: '(\s+)rootwait(\s+.*)?$'
             replace: '\1rootwait cgroup_enable=cpuset cgroup_enable=memory cgroup_memory=1 \2'
@@ -51,5 +59,13 @@
         wait_for_connection:
             delay: 30
             timeout: 10
+            
+      - name: Init K8s
+        # command: kubeadm init --pod-network-cidr=10.244.0.0/16 
+        command: kubeadm init --pod-network-cidr=10.244.0.0/16 --apiserver-advertise-address {{ ansible_default_ipv4.address }}
+        # command: kubeadm init --token-ttl=0
+        ignore_errors: yes
+        async: 600
+        poll: 5
 
-      
+        

@@ -2,55 +2,65 @@
 - hosts: all
   remote_user: "{{ target_user }}"
   tasks:
-      - name: "Set '/etc/os-release' for non-ARM"
-        copy:
-          src: ../files/os-release
-          dest: /etc/os-release
-        when:
-          - ansible_distribution == "Debian"
-          - ansible_architecture.find('arm') == -1
+
+      - name: "new method: install docker"
+        shell:  'curl -sSL get.docker.com | sh && usermod {{ target_user }} -aG docker && newgrp docker'
+        args:
+          executable: /bin/bash
+      - name: "new method: change docker version"
+        shell:  'apt-get remove docker-ce && apt-get install docker-ce=18.06.1~ce~3-0~raspbian'
+        args:
+          executable: /bin/bash
+        # become: true
+      # - name: "Set '/etc/os-release' for non-ARM"
+      #   copy:
+      #     src: ../files/os-release
+      #     dest: /etc/os-release
+      #   when:
+      #     - ansible_distribution == "Debian"
+      #     - ansible_architecture.find('arm') == -1
         
-      - name: Import docker GPG key to apt for non-ARM
-        apt_key:
-          url: "https://download.docker.com/linux/ubuntu/gpg"
-          state: present
-        when:
-          - ansible_distribution == "Debian"
-          - ansible_architecture.find('arm') == -1
+      # - name: Import docker GPG key to apt for non-ARM
+      #   apt_key:
+      #     url: "https://download.docker.com/linux/ubuntu/gpg"
+      #     state: present
+      #   when:
+      #     - ansible_distribution == "Debian"
+      #     - ansible_architecture.find('arm') == -1
 
-      - name: Add docker repository for non-ARM
-        apt_repository:
-          repo: 'deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial edge'
-          state: present
-        when:
-          - ansible_distribution == "Debian"
-          - ansible_architecture.find('arm') == -1
+      # - name: Add docker repository for non-ARM
+      #   apt_repository:
+      #     repo: 'deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial edge'
+      #     state: present
+      #   when:
+      #     - ansible_distribution == "Debian"
+      #     - ansible_architecture.find('arm') == -1
 
 
 
-      - name: Import docker GPG key to apt for ARM
-        apt_key:
-          url: "https://download.docker.com/linux/raspbian/gpg"
-          state: present
-        when:
-          - ansible_distribution == "Debian"
-          - ansible_architecture.find('arm') != -1
+      # - name: Import docker GPG key to apt for ARM
+      #   apt_key:
+      #     url: "https://download.docker.com/linux/raspbian/gpg"
+      #     state: present
+      #   when:
+      #     - ansible_distribution == "Debian"
+      #     - ansible_architecture.find('arm') != -1
 
-      - name: Add docker repository for ARM
-        apt_repository:
-          repo: 'deb https://download.docker.com/linux/raspbian stretch stable'
-          state: present
-        when:
-          - ansible_distribution == "Debian"
-          - ansible_architecture.find('arm') != -1
+      # - name: Add docker repository for ARM
+      #   apt_repository:
+      #     repo: 'deb https://download.docker.com/linux/raspbian stretch stable'
+      #     state: present
+      #   when:
+      #     - ansible_distribution == "Debian"
+      #     - ansible_architecture.find('arm') != -1
 
-      - name: Download Docker install script
-        get_url:
-          url: https://get.docker.com
-          dest: /home/{{ target_user}}/install_docker.sh
+      # - name: Download Docker install script
+      #   get_url:
+      #     url: https://get.docker.com
+      #     dest: /home/{{ target_user}}/install_docker.sh
           
-      - name: Install Docker
-        command: bash /home/{{ target_user}}/install_docker.sh
+      # - name: Install Docker
+      #   command: bash /home/{{ target_user}}/install_docker.sh
 
         # args:
         #   creates: /usr/bin/docker
