@@ -10,7 +10,7 @@ COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN yum update -y && \
     yum install -y ansible git openssh openssh-clients curl which \
     kubectl && \
-    mkdir -p ~/.ssh && \
-    curl https://raw.githubusercontent.com/helm/helm/master/scripts/get | bash 
+    mkdir -p ~/.ssh 
+    # curl https://raw.githubusercontent.com/helm/helm/master/scripts/get | bash 
 # ENTRYPOINT [ "/docker-entrypoint.sh" ]
 WORKDIR /playbooks

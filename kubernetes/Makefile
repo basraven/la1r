@@ -17,10 +17,12 @@ dashboard:
 	- kubectl create serviceaccount cluster-admin-dashboard-sa
 	- kubectl create clusterrolebinding cluster-admin-dashboard-sa --clusterrole=cluster-admin --serviceaccount=default:cluster-admin-dashboard-sa
 
+# Enable containers on the master node
 config: 
 	- kubectl taint nodes --all node-role.kubernetes.io/master-
 
 faas:
-	- git clone https://github.com/openfaas/faas-netes
 	- kubectl apply -f https://raw.githubusercontent.com/openfaas/faas-netes/master/namespaces.yml
-	- cd faas-netes && kubectl apply -f ./yaml_armhf
+	- git clone https://github.com/openfaas/faas-netes /tmp/faas-netes
+	- kubectl apply -f /tmp/faas-netes/yaml_armhf
+	- rm -rf /tmp/faas-netes
