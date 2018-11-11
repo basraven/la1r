@@ -7,10 +7,6 @@
         shell:  'curl -sSL get.docker.com | sh && usermod {{ target_user }} -aG docker && newgrp docker'
         args:
           executable: /bin/bash
-      - name: "new method: change docker version"
-        shell:  'apt-get remove docker-ce && apt-get install docker-ce=18.06.1~ce~3-0~raspbian'
-        args:
-          executable: /bin/bash
         # become: true
       # - name: "Set '/etc/os-release' for non-ARM"
       #   copy:

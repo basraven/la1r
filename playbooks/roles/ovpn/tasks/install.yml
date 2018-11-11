@@ -44,7 +44,7 @@
     # The default "build-key-server.sh uses --interact, we don't want that"
     - name: Create server key and Diffie-Hellman keys (might take a while)
       shell: '. ./vars ; export EASY_RSA="${EASY_RSA:-.}" ; "$EASY_RSA/pkitool" --server server ; ./build-dh '
-      async: 600
+      async: 2000
       poll: 10
       args:
         chdir: "{{openvpn_ca_dir}}"

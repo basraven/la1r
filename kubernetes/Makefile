@@ -1,4 +1,4 @@
-all: network-overlay dashboard helm kubeless
+all: network-overlay dashboard config faas 
 
 # Prefix all commands with - to ignore errors (already exists errors)
 
@@ -17,11 +17,10 @@ dashboard:
 	- kubectl create serviceaccount cluster-admin-dashboard-sa
 	- kubectl create clusterrolebinding cluster-admin-dashboard-sa --clusterrole=cluster-admin --serviceaccount=default:cluster-admin-dashboard-sa
 
-helm:
-	- helm init --tiller-image=peterhuene/tiller-arm
+config: 
+	- kubectl taint nodes --all node-role.kubernetes.io/master-
 
-kubeless:
-	- helm repo add incubator https://kubernetes-charts-incubator.storage.googleapis.com/
-	- helm install --namespace kubeless incubator/kubeless
-	- kubectl create -f https://raw.githubusercontent.com/kubeless/kubeless-ui/master/k8s.yaml
-
+faas:
+	- git clone https://github.com/openfaas/faas-netes
+	- kubectl apply -f https://raw.githubusercontent.com/openfaas/faas-netes/master/namespaces.yml
+	- cd faas-netes && kubectl apply -f ./yaml_armhf

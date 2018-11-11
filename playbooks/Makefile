@@ -3,7 +3,7 @@
 export ANSIBLE_HOST_KEY_CHECKING = False
 all: prep create-user all-steps
 install: prep all-steps
-all-steps: docker k8s-install k8s-config k8s-load
+all-steps: docker k8s-install k8s-fetch k8s-load no-ip ovpn
 
 ##### Init Setup #####
 .PHONY: prep
@@ -33,13 +33,13 @@ docker:
 k8s-install: 
 	ansible-playbook -i /playbooks/hosts /playbooks/roles/k8s/tasks/install.yml
 
-.PHONY: k8s-config
-k8s-config: 
-	ansible-playbook -i /playbooks/hosts /playbooks/roles/k8s/tasks/configure.yml
+.PHONY: k8s-fetch
+k8s-fetch: 
+	ansible-playbook -i /playbooks/hosts /playbooks/roles/k8s/tasks/fetch.yml
 
 .PHONY: k8s-load
 k8s-load:
-	$(MAKE) -C /kubernetes all 
+	@$(MAKE) -C /kubernetes all 
 
 k8s-token:
 	kubectl get secret | grep cluster-admin-dashboard-sa | cut -d " " -f 1 | kubectl describe secret $1
@@ -54,8 +54,12 @@ no-ip:
 ##### OVPN #####
 .PHONY: ovpn
 ovpn: prep
-	# ansible-playbook -i /playbooks/local /playbooks/roles/ovpn/tasks/install.yml
-	ansible-playbook -i /playbooks/local /playbooks/roles/ovpn/tasks/create-user.yml --extra-vars "openvpn_user=basraven"
+	ansible-playbook -i /playbooks/hosts /playbooks/roles/ovpn/tasks/install.yml
+	ansible-playbook -i /playbooks/hosts /playbooks/roles/ovpn/tasks/create-user.yml --extra-vars "openvpn_user=basraven"
+
+.PHONY: ovpn-create-user
+ovpn-create-user: prep
+	ansible-playbook -i /playbooks/hosts /playbooks/roles/ovpn/tasks/create-user.yml --extra-vars "openvpn_user=basraven"
 
 .PHONY: test
 test: prep
