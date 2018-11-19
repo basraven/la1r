@@ -4,8 +4,8 @@ target_user: basraven
 home_dir: /home/{{ansible_ssh_user}}
 home_dir_target_user: /home/{{ansible_ssh_user}}
 ansible_become: True
-dhcp_interface: "wlan0"
-dhcp_router: 192.168.2.254"
+dhcp_interface: "eth0"
+dhcp_router: 192.168.2.254
 
 noip_dir: "{{home_dir}}/noip"
 noip: "/usr/local/bin/noip2"

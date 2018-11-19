@@ -1,1 +1,1 @@
-echo $(kubectl describe secret $(kubectl -n kube-system get secret | awk '/^cluster-admin-dashboard-sa-token-/{print $1}') | awk '$1=="token:"{print $2}')
+echo $(kubectl --insecure-skip-tls-verify describe secret $(kubectl --insecure-skip-tls-verify -n kube-system get secret | awk '/^cluster-admin-dashboard-sa-token-/{print $1}') | awk '$1=="token:"{print $2}')

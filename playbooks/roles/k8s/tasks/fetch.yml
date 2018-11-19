@@ -7,22 +7,25 @@
         path: /home/basraven/.kube
         state: directory
         recurse: yes
+        force: yes
 
     - name: copy admin.conf as default conf
-      command: cp /etc/kubernetes/admin.conf /home/{{ target_user }}/.kube/config
+      command: cp -f /etc/kubernetes/admin.conf /home/{{ target_user }}/.kube/config
 
     - name: chown config
-      command: chown {{ target_user }}:{{ target_user }} /home/{{ target_user }}/.kube/config
+      command: chown -f {{ target_user }}:{{ target_user }} /home/{{ target_user }}/.kube/config
 
     - name: Fetch new kubeconfig to /root/.kube/config
       fetch:
         src: /home/{{ target_user }}/.kube/config
         dest: /root/.kube/config
         flat: True
+        force: yes
 
     - name: Fetch new kubeconfig to /credentials/kubernetes/
       fetch:
         src: /home/{{ target_user }}/.kube/config
         dest: /credentials/kubernetes/
         flat: True
+        force: yes
 

@@ -34,7 +34,8 @@ k8s-install:
 	ansible-playbook -i /playbooks/hosts /playbooks/roles/k8s/tasks/install.yml
 
 .PHONY: k8s-fetch
-k8s-fetch: 
+k8s-fetch: prep
+	rm -f ~/.kube/config
 	ansible-playbook -i /playbooks/hosts /playbooks/roles/k8s/tasks/fetch.yml
 
 .PHONY: k8s-load
