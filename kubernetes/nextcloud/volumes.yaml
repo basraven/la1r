@@ -8,6 +8,33 @@ volumeBindingMode: WaitForFirstConsumer
 kind: PersistentVolume
 apiVersion: v1
 metadata:
+  name: nextcloud-pv-db
+  labels:
+    contenttype: "db"
+spec:
+  capacity:
+    storage: 5Gi
+  # volumeMode field requires BlockVolume Alpha feature gate to be enabled.
+  volumeMode: Filesystem
+  accessModes:
+  - ReadWriteMany
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: local-storage
+  local:
+    path: /host_mnt/c/Users/bas_r/Documents/Projects/server-configs/.tmp/db
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - docker-for-desktop
+          - raspi1
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
   name: nextcloud-pv-web
   labels:
     contenttype: "web"

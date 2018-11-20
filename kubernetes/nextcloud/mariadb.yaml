@@ -1,0 +1,73 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: nextcloud
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: nextcloud-db-claim
+  namespace: nextcloud
+spec:
+  accessModes:
+  - ReadWriteMany
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "db"
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mariadb
+  namespace: nextcloud
+  labels:
+    app: mariadb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mariadb
+  template:
+    metadata:
+      labels:
+        app: mariadb
+    spec:
+      volumes:
+      - name: nextcloud-db
+        persistentVolumeClaim:
+          claimName: nextcloud-db-claim
+      containers:
+      - name: mariadb
+        image: mariadb
+        ports:
+        - containerPort: 3306
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mariadbsecret
+              key: username
+        volumeMounts:
+          - mountPath: "/data/"
+            name: nextcloud-db
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: nextcloud
+  name: nextcloud-service
+  namespace: nextcloud
+spec:
+  ports:
+  - name: db
+    port: 3306
+    targetPort: 3306
+    nodePort: 32306
+  selector:
+    app: nextcloud
+  type: NodePort
