@@ -1,5 +1,8 @@
 .PHONY: all
-all: network-overlay dashboard config traefik
+all: network-overlay dashboard config faas traefik
+
+.PHONY: local
+local: dashboard nextcloud
 
 # Prefix all commands with - to ignore errors (already exists errors)
 
@@ -13,7 +16,6 @@ dashboard:
 	# - curl -sSL https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml | sed "s/amd64/arm/g" | kubectl create -f -
 	kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml
 
-	# Create service account
 	- kubectl create serviceaccount cluster-admin-dashboard-sa
 	- kubectl create clusterrolebinding cluster-admin-dashboard-sa --clusterrole=cluster-admin --serviceaccount=default:cluster-admin-dashboard-sa
 
@@ -30,7 +32,12 @@ faas:
 
 .PHONY: traefik
 traefik:
-	- kubectl create configmap traefik-config -n kube-system --from-file=traefik/traefik.toml
 	- kubectl apply -f https://raw.githubusercontent.com/containous/traefik/master/examples/k8s/traefik-rbac.yaml
 	- kubectl apply -f https://raw.githubusercontent.com/containous/traefik/master/examples/k8s/traefik-ds.yaml
 	- kubectl apply -f https://raw.githubusercontent.com/containous/traefik/master/examples/k8s/ui.yaml
+# 	- kubectl create configmap traefik-config -n kube-system --from-file=traefik/traefik.toml
+
+.PHONY: nextcloud
+nextcloud:
+	- kubectl apply -f nextcloud/volume.yaml
+	- kubectl apply -f nextcloud/deployment.yaml

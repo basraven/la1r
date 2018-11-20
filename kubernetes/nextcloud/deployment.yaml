@@ -1,0 +1,89 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: nextcloud
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: nextcloud-data-claim
+  namespace: nextcloud
+spec:
+  accessModes:
+  - ReadWriteMany
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "data"
+  resources:
+    requests:
+      storage: 1Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: nextcloud-web-claim
+  namespace: nextcloud
+spec:
+  accessModes:
+  - ReadWriteMany
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "web"
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nextcloud
+  namespace: nextcloud
+  labels:
+    app: nextcloud
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nextcloud
+  template:
+    metadata:
+      labels:
+        app: nextcloud
+    spec:
+      volumes:
+      - name: nextcloud-web
+        persistentVolumeClaim:
+          claimName: nextcloud-web-claim
+      - name: nextcloud-data
+        persistentVolumeClaim:
+          claimName: nextcloud-data-claim
+      containers:
+      - name: nextcloud
+        image: php:7-apache
+        ports:
+        - containerPort: 80
+        volumeMounts:
+          - mountPath: "/var/www/html/"
+            name: nextcloud-web
+          - mountPath: "/data/"
+            name: nextcloud-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: nextcloud
+  name: nextcloud-service
+  namespace: nextcloud
+spec:
+  ports:
+  - name: web
+    port: 80
+    protocol: TCP
+    targetPort: 80
+    nodePort: 31000
+  selector:
+    app: nextcloud
+  type: NodePort
