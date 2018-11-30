@@ -22,6 +22,7 @@ dashboard:
 .PHONY: config 
 config: 
 	- kubectl taint nodes --all node-role.kubernetes.io/master-
+	- kubectl label nodes raspi2 disktype=hdd
 
 .PHONY: faas
 faas:
@@ -39,5 +40,10 @@ traefik:
 
 .PHONY: nextcloud
 nextcloud:
-	- kubectl apply -f nextcloud/volume.yaml
-	- kubectl apply -f nextcloud/deployment.yaml
+	- kubectl apply -f nextcloud/namespace.yaml
+	- kubectl create configmap mysqlini --namespace nextcloud --from-file=nextcloud/config/mysql.ini
+	- kubectl create configmap mycnf --namespace nextcloud --from-file=nextcloud/config/my.cnf
+	- kubectl create configmap initsql --namespace nextcloud --from-file=nextcloud/config/init.sql
+	- kubectl apply -f nextcloud/dbsecret.yaml
+	- kubectl apply -f nextcloud/mariadb.yaml
+	- kubectl apply -f nextcloud/nextcloud.yaml

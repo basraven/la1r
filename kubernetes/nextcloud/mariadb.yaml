@@ -1,7 +1,29 @@
+kind: PersistentVolume
 apiVersion: v1
-kind: Namespace
 metadata:
-  name: nextcloud
+  name: nextcloud-pv-db
+  labels:
+    contenttype: "db"
+spec:
+  capacity:
+    storage: 5Gi
+  # volumeMode field requires BlockVolume Alpha feature gate to be enabled.
+  volumeMode: Filesystem
+  accessModes:
+  - ReadWriteMany
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: local-storage
+  local:
+    path: /host_mnt/c/Users/bas_r/Documents/Projects/server-configs/.tmp/db
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - docker-for-desktop
+          - raspi2
 ---
 kind: PersistentVolumeClaim
 apiVersion: v1
@@ -37,6 +59,18 @@ spec:
         app: mariadb
     spec:
       volumes:
+      - name: mycnf-volume
+        configMap:
+          name: mycnf
+          items:
+          - key: my.cnf
+            path: my.cnf
+      - name: initsql-volume
+        configMap:
+          name: initsql
+          items:
+          - key: init.sql
+            path: init.sql
       - name: nextcloud-db
         persistentVolumeClaim:
           claimName: nextcloud-db-claim
@@ -52,8 +86,15 @@ spec:
               name: mariadbsecret
               key: username
         volumeMounts:
+          - mountPath: /docker-entrypoint-initdb.d/init.sql
+            subPath: init.sql
+            name: initsql-volume
+          - mountPath: /etc/mysql/conf.d
+            subPath: custom.cnf
+            name: mycnf-volume
           - mountPath: "/data/"
             name: nextcloud-db
+          # - mountPath: "/var/lib/mysql/"
 ---
 apiVersion: v1
 kind: Service

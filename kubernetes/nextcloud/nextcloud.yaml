@@ -1,7 +1,57 @@
+---
+kind: PersistentVolume
 apiVersion: v1
-kind: Namespace
 metadata:
-  name: nextcloud
+  name: nextcloud-pv-web
+  labels:
+    contenttype: "web"
+spec:
+  capacity:
+    storage: 5Gi
+  # volumeMode field requires BlockVolume Alpha feature gate to be enabled.
+  volumeMode: Filesystem
+  accessModes:
+  - ReadWriteMany
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: local-storage
+  local:
+    path: /host_mnt/c/Users/bas_r/Documents/Projects/server-configs/.tmp/web
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - docker-for-desktop
+          - raspi2
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: nextcloud-pv-data
+  labels:
+    contenttype: "data"
+spec:
+  capacity:
+    storage: 5Gi
+  # volumeMode field requires BlockVolume Alpha feature gate to be enabled.
+  volumeMode: Filesystem
+  accessModes:
+  - ReadWriteMany
+  persistentVolumeReclaimPolicy: Delete
+  storageClassName: local-storage
+  local:
+    path: /host_mnt/c/Users/bas_r/Documents/Projects/server-configs/.tmp/data
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - docker-for-desktop
+          - raspi2
 ---
 kind: PersistentVolumeClaim
 apiVersion: v1
@@ -53,6 +103,12 @@ spec:
         app: nextcloud
     spec:
       volumes:
+      - name: mysqlini-volume
+        configMap:
+          name: mysqlini
+          items:
+          - key: mysql.ini
+            path: mysql.ini
       - name: nextcloud-web
         persistentVolumeClaim:
           claimName: nextcloud-web-claim
@@ -65,6 +121,9 @@ spec:
         ports:
         - containerPort: 80
         volumeMounts:
+          - mountPath: /usr/local/etc/php/conf.d/mysql.ini
+            subPath: mysql.ini
+            name: mysqlini-volume
           - mountPath: "/var/www/html/"
             name: nextcloud-web
           - mountPath: "/data/"
