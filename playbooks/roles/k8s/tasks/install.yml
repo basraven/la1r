@@ -7,8 +7,9 @@
       #   args:
       #     executable: /bin/bash
 
-      - name: DHCP template
-        template: src=dhcpcd.conf.j2 dest=/etc/dhcpcd.conf mode=0755
+      # - name: DHCP template
+      #   template: src=dhcpcd.conf.j2 dest=/etc/dhcpcd.conf mode=0755
+      #   backup: yes
       - name: Add an Apt signing key, uses whichever key is at the URL
         apt_key:
           url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
@@ -59,20 +60,13 @@
         wait_for_connection:
             delay: 30
             timeout: 10
-      - name: "new method: kubeadm config images pull"
-        shell:  'kubeadm config images pull'
-        args:
-          executable: /bin/bash
+      # - name: "new method: kubeadm config images pull"
+      #   shell:  'kubeadm config images pull'
+      #   args:
+      #     executable: /bin/bash
       - name: "allow kubernetes through ufw"
         shell:  'ufw allow 6443'
         args:
           executable: /bin/bash
-      - name: Init K8s
-        # command: kubeadm init --pod-network-cidr=10.244.0.0/16 
-        command: kubeadm init --pod-network-cidr=10.244.0.0/16 --ignore-preflight-errors=all --apiserver-advertise-address {{ ansible_default_ipv4.address }}
-        # command: kubeadm init --token-ttl=0
-        ignore_errors: yes
-        async: 600
-        poll: 5
 
         

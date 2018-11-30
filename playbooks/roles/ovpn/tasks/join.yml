@@ -1,0 +1,23 @@
+---
+- hosts: all
+  remote_user: "{{ target_user }}"
+  tasks:
+    - name: Install OpenVPN
+      apt: name={{item}} state=present
+      with_items:
+        - openvpn
+    - name: copy .ovpn file
+      copy:
+        src: "{{credentials_dir}}/ovpn/{{  inventory_hostname }}.ovpn"
+        dest: /etc/openvpn/{{  inventory_hostname }}.conf
+    - name: Enable autostart
+      lineinfile:
+        dest=/etc/default/openvpn
+        regexp='^AUTOSTART'
+        line='AUTOSTART="{{  inventory_hostname }}"'
+        state=present
+        backup=yes
+    - name: Start service openvpn, if not started
+      service:
+        name: openvpn
+        state: started

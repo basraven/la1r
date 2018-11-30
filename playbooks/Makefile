@@ -1,9 +1,12 @@
  
 #Based on: https://github.com/ramontayag/rpi-playbooks
 export ANSIBLE_HOST_KEY_CHECKING = False
-all: prep create-user all-steps
-install: prep all-steps
-all-steps: docker k8s-install k8s-fetch k8s-load no-ip ovpn
+
+.PHONY: build-master
+build-master: prep security docker k8s-install k8s-init k8s-fetch k8s-load no-ip ovpn-install
+
+.PHONY: build-slave
+build-slave: prep security docker k8s-install ovpn-join k8s-join
 
 ##### Init Setup #####
 .PHONY: prep
@@ -11,10 +14,16 @@ prep:
 	mkdir -p ~/.ssh 
 	cp /credentials/ssh/id_rsa ~/.ssh/id_rsa
 	chmod 600 ~/.ssh/id_rsa
+	mkdir -p ~/.kube
+	cp /credentials/kubernetes/config ~/.kube/config
 	
-.PHONY: create-user
-create-user:
+.PHONY: user
+user:
 	ansible-playbook -i /playbooks/hosts /playbooks/roles/common/tasks/create-user.yml --ask-pass
+	
+.PHONY: security
+security:
+	ansible-playbook -i /playbooks/hosts /playbooks/roles/common/tasks/security.yml
 	
 .PHONY: ssh-clean
 ssh-clean:
@@ -28,11 +37,21 @@ docker:
 	ansible-playbook -i /playbooks/hosts /playbooks/roles/docker/tasks/main.yml 
 
 
-##### K8s #####
+##### K8S Setup #####
 .PHONY: k8s-install
 k8s-install: 
 	ansible-playbook -i /playbooks/hosts /playbooks/roles/k8s/tasks/install.yml
 
+.PHONY: k8s-init
+k8s-init: 
+	ansible-playbook -i /playbooks/hosts /playbooks/roles/k8s/tasks/init.yml
+
+.PHONY: k8s-join
+k8s-join:
+	ansible-playbook -i /playbooks/hosts /playbooks/roles/k8s/tasks/join.yml
+
+
+##### K8S config #####
 .PHONY: k8s-fetch
 k8s-fetch: prep
 	rm -f ~/.kube/config
@@ -42,8 +61,6 @@ k8s-fetch: prep
 k8s-load:
 	@$(MAKE) -C /kubernetes all 
 
-k8s-token:
-	kubectl get secret | grep cluster-admin-dashboard-sa | cut -d " " -f 1 | kubectl describe secret $1
 
 
 ##### No-IP #####
@@ -53,14 +70,19 @@ no-ip:
 
 
 ##### OVPN #####
-.PHONY: ovpn
-ovpn: prep
+.PHONY: ovpn-install
+ovpn-install: prep
 	ansible-playbook -i /playbooks/hosts /playbooks/roles/ovpn/tasks/install.yml
 	ansible-playbook -i /playbooks/hosts /playbooks/roles/ovpn/tasks/create-user.yml --extra-vars "openvpn_user=basraven"
 
 .PHONY: ovpn-create-user
 ovpn-create-user: prep
 	ansible-playbook -i /playbooks/hosts /playbooks/roles/ovpn/tasks/create-user.yml --extra-vars "openvpn_user=basraven"
+
+.PHONY: ovpn-join
+ovpn-join:
+	# ansible-playbook -i /playbooks/hosts /playbooks/roles/ovpn/tasks/create-user.yml --extra-vars "openvpn_user=raspi2"
+	ansible-playbook -i /playbooks/hosts /playbooks/roles/ovpn/tasks/join.yml
 
 .PHONY: test
 test: prep
