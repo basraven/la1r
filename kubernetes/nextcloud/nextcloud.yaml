@@ -102,7 +102,29 @@ spec:
       labels:
         app: nextcloud
     spec:
+      # initContainers:
+      # - name: init-builder
+      #   image: docker
+      #   command: ['sh', '-c', 'docker build --file /builder/Dockerfile -t custom-nextcloud /builder']
+      #   volumeMounts:
+      #   - mountPath: /builder/Dockerfile
+      #     subPath: Dockerfile
+      #     name: dockerfile-volume
+      #   - mountPath: /var/run/docker.sock
+      #     name: docker-socket-volume
+      #   securityContext:
+      #     privileged: true
       volumes:
+      # - name: docker-socket-volume
+      #   hostPath:
+      #     path: /var/run/docker.sock
+      #     type: File
+      # - name: dockerfile-volume
+      #   configMap:
+      #     name: dockerfile
+      #     items:
+      #     - key: Dockerfile
+      #       path: Dockerfile
       - name: mysqlini-volume
         configMap:
           name: mysqlini
@@ -117,17 +139,19 @@ spec:
           claimName: nextcloud-data-claim
       containers:
       - name: nextcloud
-        image: php:7-apache
+        # image: php:7-apache
+        image: nextcloud:15-rc-apache
+        # imagePullPolicy: Never
         ports:
         - containerPort: 80
-        volumeMounts:
-          - mountPath: /usr/local/etc/php/conf.d/mysql.ini
-            subPath: mysql.ini
-            name: mysqlini-volume
-          - mountPath: "/var/www/html/"
-            name: nextcloud-web
-          - mountPath: "/data/"
-            name: nextcloud-data
+        # volumeMounts:
+        #   - mountPath: /usr/local/etc/php/conf.d/mysql.ini
+        #     subPath: mysql.ini
+        #     name: mysqlini-volume
+        #   - mountPath: "/var/www/html/"
+        #     name: nextcloud-web
+        #   - mountPath: "/data/"
+        #     name: nextcloud-data
 ---
 apiVersion: v1
 kind: Service
