@@ -14,14 +14,19 @@ network-overlay:
 .PHONY: dashboard
 dashboard:
 	# - curl -sSL https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml | sed "s/amd64/arm/g" | kubectl create -f -
-	kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml
+	# kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml
+	kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v1.10.1/src/deploy/recommended/kubernetes-dashboard.yaml
 
 	- kubectl create serviceaccount cluster-admin-dashboard-sa
 	- kubectl create clusterrolebinding cluster-admin-dashboard-sa --clusterrole=cluster-admin --serviceaccount=default:cluster-admin-dashboard-sa
 
 .PHONY: config 
 config: 
-	- kubectl taint nodes --all node-role.kubernetes.io/master-
+	- kubectl taint nodes big-raver node-role.kubernetes.io/master-
+	- kubectl taint nodes raspi1 pi=true:NoSchedule
+	- kubectl taint nodes raspi2 pi=true:NoSchedule
+	- kubectl label nodes big-raver disktype=hdd
+	- kubectl label nodes raspi1 disktype=hdd
 	- kubectl label nodes raspi2 disktype=hdd
 
 .PHONY: faas
