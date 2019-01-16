@@ -14,7 +14,7 @@ spec:
   persistentVolumeReclaimPolicy: Delete
   storageClassName: local-storage
   local:
-    path: /host_mnt/c/Users/bas_r/Documents/Projects/server-configs/.tmp/db
+    path: /host_mnt/d/Bas/Documents/Projects/server-configs/.tmp/db
   nodeAffinity:
     required:
       nodeSelectorTerms:

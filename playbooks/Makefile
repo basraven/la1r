@@ -2,6 +2,9 @@
 #Based on: https://github.com/ramontayag/rpi-playbooks
 export ANSIBLE_HOST_KEY_CHECKING = False
 
+PHONY: build-ubuntu
+build-master: prep security-ubuntu docker k8s-install-ubuntu k8s-init 
+
 .PHONY: build-master
 build-master: prep security docker k8s-install k8s-init k8s-fetch k8s-load no-ip ovpn-install
 
@@ -20,10 +23,18 @@ prep:
 .PHONY: user
 user:
 	ansible-playbook -i /playbooks/hosts /playbooks/roles/common/tasks/create-user.yml --ask-pass
+
+.PHONY: user-ubuntu
+user-ubuntu:
+	ansible-playbook -i /playbooks/hosts /playbooks/roles/common/tasks/create-user-ubuntu.yml --ask-pass --ask-sudo-pass
 	
 .PHONY: security
 security:
 	ansible-playbook -i /playbooks/hosts /playbooks/roles/common/tasks/security.yml
+
+.PHONY: security
+security:
+	ansible-playbook -i /playbooks/hosts /playbooks/roles/common/tasks/security-ubuntu.yml
 	
 .PHONY: ssh-clean
 ssh-clean:
@@ -38,6 +49,10 @@ docker:
 
 
 ##### K8S Setup #####
+.PHONY: k8s-install-ubuntu
+k8s-install-ubuntu: 
+	ansible-playbook -i /playbooks/hosts /playbooks/roles/k8s/tasks/install-ubuntu.yml
+
 .PHONY: k8s-install
 k8s-install: 
 	ansible-playbook -i /playbooks/hosts /playbooks/roles/k8s/tasks/install.yml

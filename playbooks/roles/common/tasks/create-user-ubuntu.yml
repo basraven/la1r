@@ -1,0 +1,17 @@
+---
+- hosts: all
+  remote_user: basraven
+  tasks:
+    - name: Check if python is installed
+      apt: name={{item}} state=present
+      with_items:
+          - python
+    - name: Add {{ target_user }} user to the sudoers
+      copy:
+          dest: "/etc/sudoers.d/{{ target_user }}"
+          content: "{{ target_user }}  ALL=(ALL)  NOPASSWD: ALL"
+    - name: Set authorized key took from file
+      authorized_key:
+        user: "{{target_user}}"
+        key: "{{ lookup('file', '/credentials/ssh/id_rsa.pub') }}"
+        state: present
