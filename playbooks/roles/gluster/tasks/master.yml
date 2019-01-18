@@ -1,0 +1,8 @@
+# TODO: Document
+# source: https://www.howtoforge.com/tutorial/high-availability-storage-with-glusterfs-on-ubuntu-1804/
+# source: http://embaby.com/blog/using-glusterfs-docker-swarm-cluster/
+# sudo apt install software-properties-common -y
+curl -s https://download.gluster.org/pub/gluster/glusterfs/4.0/rsa.pub | sudo apt-key add -
+sudo add-apt-repository ppa:gluster/glusterfs-4.0
+sudo systemctl start glusterd
+sudo systemctl enable glusterd

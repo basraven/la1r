@@ -1,0 +1,24 @@
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: mariadb-pv
+  labels:
+    contenttype: "db"
+spec:
+  capacity:
+    storage: 30Gi
+  storageClassName: local-storage
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteMany
+  local:
+    path: /mnt/largehdd/mariadb
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - big-raver

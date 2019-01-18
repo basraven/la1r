@@ -46,10 +46,9 @@ traefik:
 .PHONY: nextcloud
 nextcloud:
 	- kubectl apply -f nextcloud/namespace.yaml
-	- kubectl create configmap mysqlini --namespace nextcloud --from-file=nextcloud/config/mysql.ini
 	- kubectl create configmap mycnf --namespace nextcloud --from-file=nextcloud/config/my.cnf
-	- kubectl create configmap initsql --namespace nextcloud --from-file=nextcloud/config/init.sql
-	- kubectl create configmap dockerfile --namespace nextcloud --from-file=nextcloud/config/Dockerfile
 	- kubectl apply -f nextcloud/dbsecret.yaml
+	- kubectl apply -f nextcloud/mariadb-pv.yaml
 	- kubectl apply -f nextcloud/mariadb.yaml
+	- kubectl apply -f nextcloud/nextcloud-pv.yaml
 	- kubectl apply -f nextcloud/nextcloud.yaml

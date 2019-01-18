@@ -1,57 +1,19 @@
 ---
-kind: PersistentVolume
+kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: nextcloud-pv-web
-  labels:
-    contenttype: "web"
+  name: nextcloud-web-claim
+  namespace: nextcloud
 spec:
-  capacity:
-    storage: 5Gi
-  # volumeMode field requires BlockVolume Alpha feature gate to be enabled.
-  volumeMode: Filesystem
   accessModes:
-  - ReadWriteMany
-  persistentVolumeReclaimPolicy: Delete
+  - ReadWriteMany 
   storageClassName: local-storage
-  local:
-    path: /host_mnt/d/Bas/Documents/Projects/server-configs/.tmp/web
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-      - matchExpressions:
-        - key: kubernetes.io/hostname
-          operator: In
-          values:
-          - docker-for-desktop
-          - raspi2
----
-kind: PersistentVolume
-apiVersion: v1
-metadata:
-  name: nextcloud-pv-data
-  labels:
-    contenttype: "data"
-spec:
-  capacity:
-    storage: 5Gi
-  # volumeMode field requires BlockVolume Alpha feature gate to be enabled.
-  volumeMode: Filesystem
-  accessModes:
-  - ReadWriteMany
-  persistentVolumeReclaimPolicy: Delete
-  storageClassName: local-storage
-  local:
-    path: /host_mnt/d/Bas/Documents/Projects/server-configs/.tmp/data
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-      - matchExpressions:
-        - key: kubernetes.io/hostname
-          operator: In
-          values:
-          - docker-for-desktop
-          - raspi2
+  selector:
+    matchLabels:
+      contenttype: "web"
+  resources:
+    requests:
+      storage: 5Gi
 ---
 kind: PersistentVolumeClaim
 apiVersion: v1
@@ -60,30 +22,14 @@ metadata:
   namespace: nextcloud
 spec:
   accessModes:
-  - ReadWriteMany
+  - ReadWriteMany  
   storageClassName: local-storage
   selector:
     matchLabels:
       contenttype: "data"
   resources:
     requests:
-      storage: 1Gi
----
-kind: PersistentVolumeClaim
-apiVersion: v1
-metadata:
-  name: nextcloud-web-claim
-  namespace: nextcloud
-spec:
-  accessModes:
-  - ReadWriteMany
-  storageClassName: local-storage
-  selector:
-    matchLabels:
-      contenttype: "web"
-  resources:
-    requests:
-      storage: 1Gi
+      storage: 800Gi
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -102,29 +48,7 @@ spec:
       labels:
         app: nextcloud
     spec:
-      # initContainers:
-      # - name: init-builder
-      #   image: docker
-      #   command: ['sh', '-c', 'docker build --file /builder/Dockerfile -t custom-nextcloud /builder']
-      #   volumeMounts:
-      #   - mountPath: /builder/Dockerfile
-      #     subPath: Dockerfile
-      #     name: dockerfile-volume
-      #   - mountPath: /var/run/docker.sock
-      #     name: docker-socket-volume
-      #   securityContext:
-      #     privileged: true
       volumes:
-      # - name: docker-socket-volume
-      #   hostPath:
-      #     path: /var/run/docker.sock
-      #     type: File
-      # - name: dockerfile-volume
-      #   configMap:
-      #     name: dockerfile
-      #     items:
-      #     - key: Dockerfile
-      #       path: Dockerfile
       - name: mysqlini-volume
         configMap:
           name: mysqlini
@@ -139,18 +63,32 @@ spec:
           claimName: nextcloud-data-claim
       containers:
       - name: nextcloud
-        # image: php:7-apache
-        image: nextcloud:15-rc-apache
-        # imagePullPolicy: Never
+        image: nextcloud
         ports:
         - containerPort: 80
+        env:
+        - name: NEXTCLOUD_TABLE_PREFIX
+          value: ""
+        - name: NEXTCLOUD_DATA_DIR
+          value: "/var/www/html/data"
+        - name: MYSQL_HOST
+          value: "mariadb"
+        - name: MYSQL_DATABASE
+          value: "nextcloud"
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              name: mariadbsecret
+              key: username
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mariadbsecret
+              key: password
         # volumeMounts:
-        #   - mountPath: /usr/local/etc/php/conf.d/mysql.ini
-        #     subPath: mysql.ini
-        #     name: mysqlini-volume
-        #   - mountPath: "/var/www/html/"
+        #   - mountPath: "/var/www/html"
         #     name: nextcloud-web
-        #   - mountPath: "/data/"
+        #   - mountPath: "/var/www/html/data"
         #     name: nextcloud-data
 ---
 apiVersion: v1
@@ -158,7 +96,7 @@ kind: Service
 metadata:
   labels:
     app: nextcloud
-  name: nextcloud-service
+  name: nextcloud-external
   namespace: nextcloud
 spec:
   ports:

@@ -1,34 +1,8 @@
-kind: PersistentVolume
-apiVersion: v1
-metadata:
-  name: nextcloud-pv-db
-  labels:
-    contenttype: "db"
-spec:
-  capacity:
-    storage: 5Gi
-  # volumeMode field requires BlockVolume Alpha feature gate to be enabled.
-  volumeMode: Filesystem
-  accessModes:
-  - ReadWriteMany
-  persistentVolumeReclaimPolicy: Delete
-  storageClassName: local-storage
-  local:
-    path: /host_mnt/d/Bas/Documents/Projects/server-configs/.tmp/db
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-      - matchExpressions:
-        - key: kubernetes.io/hostname
-          operator: In
-          values:
-          - docker-for-desktop
-          - raspi2
 ---
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: nextcloud-db-claim
+  name: mariadb-claim
   namespace: nextcloud
 spec:
   accessModes:
@@ -39,7 +13,7 @@ spec:
       contenttype: "db"
   resources:
     requests:
-      storage: 1Gi
+      storage: 30Gi
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -65,18 +39,13 @@ spec:
           items:
           - key: my.cnf
             path: my.cnf
-      - name: initsql-volume
-        configMap:
-          name: initsql
-          items:
-          - key: init.sql
-            path: init.sql
-      - name: nextcloud-db
+      - name: mariadb
         persistentVolumeClaim:
-          claimName: nextcloud-db-claim
+          claimName: mariadb-claim
       containers:
       - name: mariadb
         image: mariadb
+        args: ["--transaction-isolation=READ-COMMITTED", "--binlog-format=ROW", "--log-bin=mysqld-bin"]
         ports:
         - containerPort: 3306
         env:
@@ -84,24 +53,47 @@ spec:
           valueFrom:
             secretKeyRef:
               name: mariadbsecret
+              key: password
+        - name: MYSQL_DATABASE
+          value: nextcloud
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              name: mariadbsecret
               key: username
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mariadbsecret
+              key: password
         volumeMounts:
-          - mountPath: /docker-entrypoint-initdb.d/init.sql
-            subPath: init.sql
-            name: initsql-volume
           - mountPath: /etc/mysql/conf.d
             subPath: custom.cnf
             name: mycnf-volume
-          - mountPath: "/data/"
-            name: nextcloud-db
-          # - mountPath: "/var/lib/mysql/"
+          # - name: mariadb
+          #   mountPath: "/var/lib/mysql/"
 ---
 apiVersion: v1
 kind: Service
 metadata:
   labels:
     app: mariadb
-  name: mariadb-service
+  name: mariadb
+  namespace: nextcloud
+spec:
+  ports:
+  - name: db
+    port: 3306
+  selector:
+    app: mariadb
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: mariadb
+  name: mariadb-external
   namespace: nextcloud
 spec:
   ports:
