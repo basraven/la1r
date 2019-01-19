@@ -49,12 +49,13 @@ spec:
         app: nextcloud
     spec:
       volumes:
-      - name: mysqlini-volume
+      - name: set-nextcloud-volume
         configMap:
-          name: mysqlini
+          name: set-nextcloud
           items:
-          - key: mysql.ini
-            path: mysql.ini
+          - key: set-nextcloud.sh
+            path: set-nextcloud.sh
+          defaultMode: 0744
       - name: nextcloud-web
         persistentVolumeClaim:
           claimName: nextcloud-web-claim
@@ -64,6 +65,8 @@ spec:
       containers:
       - name: nextcloud
         image: nextcloud
+        command:
+          - "/set-nextcloud/set-nextcloud.sh"
         ports:
         - containerPort: 80
         env:
@@ -85,7 +88,11 @@ spec:
             secretKeyRef:
               name: mariadbsecret
               key: password
-        # volumeMounts:
+        volumeMounts:
+          - name: set-nextcloud-volume
+            mountPath: /set-nextcloud
+            
+            # subPath: set-nextcloud.sh
         #   - mountPath: "/var/www/html"
         #     name: nextcloud-web
         #   - mountPath: "/var/www/html/data"

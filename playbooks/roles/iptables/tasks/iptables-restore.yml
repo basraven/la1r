@@ -1,0 +1,10 @@
+---
+- hosts: all
+  remote_user: "{{ target_user }}"
+  tasks:
+      - name: "iptables-restore"
+        shell:  'iptables-restore < /opt/iptables.backup'
+        args:
+          executable: /bin/bash
+
+        

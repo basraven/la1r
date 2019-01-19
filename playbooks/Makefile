@@ -11,6 +11,20 @@ build-master: prep security docker k8s-install k8s-init k8s-fetch k8s-load no-ip
 .PHONY: build-slave
 build-slave: prep security docker k8s-install ovpn-join k8s-join
 
+.PHONY: ip-backup
+ip-backup: 
+	ansible-playbook -i /playbooks/hosts /playbooks/roles/iptables/tasks/iptables-backup.yml
+
+.PHONY: ip-restore
+ip-restore: 
+	ansible-playbook -i /playbooks/hosts /playbooks/roles/iptables/tasks/iptables-restore.yml
+
+.PHONY: ip-forward
+ip-forward: 
+	ansible-playbook -i /playbooks/hosts /playbooks/roles/iptables/tasks/iptables-forward.yml --extra-vars "from=80 to=31000"
+
+
+
 ##### Init Setup #####
 .PHONY: prep
 prep:

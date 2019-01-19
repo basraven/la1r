@@ -1,0 +1,10 @@
+---
+- hosts: all
+  remote_user: "{{ target_user }}"
+  tasks:
+      - name: "iptables-forward"
+        shell:  'iptables -t nat -A PREROUTING -p tcp --dport {{ from }} -j REDIRECT --to-port {{ to }} '
+        args:
+          executable: /bin/bash
+        when: (from is defined) and
+              (to is defined)

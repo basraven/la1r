@@ -1,0 +1,53 @@
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  namespace: nextcloud
+spec:
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.7.9
+        ports:
+        - containerPort: 80
+        env:
+        - name: NGINX_PORT
+          value: "80"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: nextcloud
+  name: nextcloudservice
+  namespace: nextcloud
+spec:
+  ports:
+  - name: http
+    port: 80
+  selector:
+    app: nginx
+  type: ClusterIP
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: nextcloudingress
+  namespace: nextcloud
+  # annotations:
+  #   kubernetes.io/ingress.class: traefik
+spec:
+  rules:
+  - host: raafbox
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: nextcloudservice
+          servicePort: 80
