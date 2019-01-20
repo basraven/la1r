@@ -41,7 +41,6 @@ traefik:
 	- kubectl apply -f https://raw.githubusercontent.com/containous/traefik/master/examples/k8s/traefik-rbac.yaml
 	- kubectl apply -f https://raw.githubusercontent.com/containous/traefik/master/examples/k8s/traefik-ds.yaml
 	- kubectl apply -f https://raw.githubusercontent.com/containous/traefik/master/examples/k8s/ui.yaml
-# 	- kubectl create configmap traefik-config -n kube-system --from-file=traefik/traefik.toml
 
 .PHONY: nextcloud
 nextcloud:
@@ -53,3 +52,12 @@ nextcloud:
 	- kubectl apply -f nextcloud/mariadb.yaml
 	- kubectl apply -f nextcloud/nextcloud-pv.yaml
 	- kubectl apply -f nextcloud/nextcloud.yaml
+	
+	# FOR SSL
+	# - openssl req -newkey rsa:2048 -nodes -CA /credentials/nextcloud/rootCA.crt -CAkey /credentials/nextcloud/rootCA.key -CAcreateserial -keyout /credentials/nextcloud/tls.key -x509 -days 365 -out /credentials/nextcloud/tls.crt
+	- openssl genrsa -out /credentials/nextcloud/cloud.bas.key 2048
+	- openssl req -new -sha256 -key /credentials/nextcloud/cloud.bas.key -subj "/C=NL/ST=NH/O=basraven.nl/CN=cloud.bas/subjectAltName=DNS.1=cloud.bas/" -out /credentials/nextcloud/cloud.bas.csr
+	- openssl x509 -req -in /credentials/nextcloud/cloud.bas.csr -CA /credentials/nextcloud/rootCA.crt -CAkey /credentials/nextcloud/rootCA.key -CAcreateserial -out /credentials/nextcloud/cloud.bas.crt -days 500 -sha256
+	- kubectl create secret generic traefik-cert --namespace kube-system --from-file=/credentials/nextcloud/cloud.bas.crt --from-file=/credentials/nextcloud/cloud.bas.key
+	- kubectl create configmap traefik-conf --namespace kube-system --from-file=/kubernetes/nextcloud/config/traefik.toml
+	- 

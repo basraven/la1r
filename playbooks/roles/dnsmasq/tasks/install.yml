@@ -16,6 +16,10 @@
         line="10.8.0.1 *.bas"
         state=present
         backup=yes
+    - name: Restart service dnsmasq, in all cases
+      service:
+        name: dnsmasq
+        state: restarted
     # - name: Copy jail file
     #   shell: 'echo test'
     #   args:
