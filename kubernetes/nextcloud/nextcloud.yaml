@@ -133,13 +133,30 @@ spec:
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: nextcloudingress
+  name: nextcloudingress-raafbox
   namespace: nextcloud
   # annotations:
   #   kubernetes.io/ingress.class: traefik
 spec:
   rules:
   - host: raafbox.bas
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: nextcloudservice
+          servicePort: 80
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: nextcloudingress
+  namespace: nextcloud
+  # annotations:
+  #   kubernetes.io/ingress.class: traefik
+spec:
+  rules:
+  - host: cloud.bas
     http:
       paths:
       - path: /
