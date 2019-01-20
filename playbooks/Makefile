@@ -6,10 +6,10 @@ PHONY: build-ubuntu
 build-master: prep security-ubuntu docker k8s-install-ubuntu k8s-init 
 
 .PHONY: build-master
-build-master: prep security docker k8s-install k8s-init k8s-fetch k8s-load no-ip ovpn-install
+build-master: prep security-pi docker k8s-install k8s-init k8s-fetch k8s-load no-ip ovpn-install
 
 .PHONY: build-slave
-build-slave: prep security docker k8s-install ovpn-join k8s-join
+build-slave: prep security-pi docker k8s-install ovpn-join k8s-join
 
 .PHONY: ip-backup
 ip-backup: 
@@ -42,11 +42,11 @@ user:
 user-ubuntu:
 	ansible-playbook -i /playbooks/hosts /playbooks/roles/common/tasks/create-user-ubuntu.yml --ask-pass --ask-sudo-pass
 	
-.PHONY: security
-security:
+.PHONY: security-pi
+security-pi:
 	ansible-playbook -i /playbooks/hosts /playbooks/roles/common/tasks/security.yml
 
-.PHONY: security
+.PHONY: security-ubuntu
 security:
 	ansible-playbook -i /playbooks/hosts /playbooks/roles/common/tasks/security-ubuntu.yml
 	
@@ -96,6 +96,11 @@ k8s-load:
 .PHONY: no-ip
 no-ip:
 	ansible-playbook -i /playbooks/hosts /playbooks/roles/noip/tasks/main.yml
+
+##### No-IP #####
+.PHONY: dnsmasq
+dnsmasq:
+	ansible-playbook -i /playbooks/hosts /playbooks/roles/dnsmasq/tasks/install.yml
 
 
 ##### OVPN #####

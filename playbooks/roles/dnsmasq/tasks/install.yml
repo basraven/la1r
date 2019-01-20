@@ -1,0 +1,22 @@
+---
+- hosts: all
+  remote_user: "{{ target_user }}"
+  tasks:
+    - name: Install dnsmasq
+      apt: name={{item}} state=present
+      with_items:
+        - dnsmasq
+    - name: DHCP template
+      template: src=dnsmasq.conf.j2 dest=/etc/dnsmasq.conf mode=0755
+      backup: yes
+    - name: update /etc/hosts
+      lineinfile:
+        dest=/etc/hosts
+        regexp='^10.8.0.1 *.bas'
+        line="10.8.0.1 *.bas"
+        state=present
+        backup=yes
+    # - name: Copy jail file
+    #   shell: 'echo test'
+    #   args:
+    #       executable: /bin/bash

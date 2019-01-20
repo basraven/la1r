@@ -114,3 +114,35 @@ spec:
   selector:
     app: nextcloud
   type: NodePort
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: nextcloud
+  name: nextcloudservice
+  namespace: nextcloud
+spec:
+  ports:
+  - name: http
+    port: 80
+  selector:
+    app: nextcloud
+  type: ClusterIP
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: nextcloudingress
+  namespace: nextcloud
+  # annotations:
+  #   kubernetes.io/ingress.class: traefik
+spec:
+  rules:
+  - host: raafbox.bas
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: nextcloudservice
+          servicePort: 80
