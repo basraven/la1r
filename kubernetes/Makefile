@@ -54,10 +54,5 @@ nextcloud:
 	- kubectl apply -f nextcloud/nextcloud.yaml
 	
 	# FOR SSL
-	# - openssl req -newkey rsa:2048 -nodes -CA /credentials/nextcloud/rootCA.crt -CAkey /credentials/nextcloud/rootCA.key -CAcreateserial -keyout /credentials/nextcloud/tls.key -x509 -days 365 -out /credentials/nextcloud/tls.crt
-	- openssl genrsa -out /credentials/nextcloud/cloud.bas.key 2048
-	- openssl req -new -sha256 -key /credentials/nextcloud/cloud.bas.key -subj "/C=NL/ST=NH/O=basraven.nl/CN=cloud.bas/subjectAltName=DNS.1=cloud.bas/" -out /credentials/nextcloud/cloud.bas.csr
-	- openssl x509 -req -in /credentials/nextcloud/cloud.bas.csr -CA /credentials/nextcloud/rootCA.crt -CAkey /credentials/nextcloud/rootCA.key -CAcreateserial -out /credentials/nextcloud/cloud.bas.crt -days 500 -sha256
+	- /bin/bash /credentials/nextcloud/make-cert.sh cloud.bas && mv ./cloud.bas.cert.pem /credentials/nextcloud/cloud.bas.crt && mv ./cloud.bas.key.pem /credentials/nextcloud/cloud.bas.key
 	- kubectl create secret generic traefik-cert --namespace kube-system --from-file=/credentials/nextcloud/cloud.bas.crt --from-file=/credentials/nextcloud/cloud.bas.key
-	- kubectl create configmap traefik-conf --namespace kube-system --from-file=/kubernetes/nextcloud/config/traefik.toml
-	- 
