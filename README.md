@@ -8,7 +8,7 @@ A personal collection of server configs with Ansible, enjoy!
 * id_rsa and id_rsa.pub in ```/credentials/ssh/``` (generate them yourself)
 
 ## How to run
-Run the control (Ansible) client with:
+Run the control (Ansible) client with (in Powershell or cmd.exe with docker-for-windows running):
 ```powershell
 .\run.ps1
 ```
