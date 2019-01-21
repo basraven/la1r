@@ -12,10 +12,21 @@
     - name: update /etc/hosts
       lineinfile:
         dest=/etc/hosts
-        regexp='^10.8.0.1 *.bas'
+        regexp='^10.8.0.1'
         line="10.8.0.1 *.bas"
         state=present
         backup=yes
+    - name: Let UFW allow port 53 udp
+      ufw:
+        rule: allow
+        port: 53
+        proto: udp
+    - name: Let UFW allow port 53 tcp
+      ufw:
+        rule: allow
+        port: 53
+        proto: tcp
+
     - name: Restart service dnsmasq, in all cases
       service:
         name: dnsmasq

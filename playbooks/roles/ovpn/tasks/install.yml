@@ -93,17 +93,17 @@
         rule: allow
         port: "{{ openvpn_port }}"
 
-    - name: Allow out UFW passthrough for tun0 interface
-      ufw:
-        rule: allow
-        direction: out
-        interface: tun0
+    # - name: Allow out UFW passthrough for tun0 interface
+    #   ufw:
+    #     rule: allow
+    #     direction: out
+    #     interface: tun0
 
-    - name: Allow in UFW passthrough for tun0 interface
-      ufw:
-        rule: allow
-        direction: in
-        interface: tun0
+    # - name: Allow in UFW passthrough for tun0 interface
+    #   ufw:
+    #     rule: allow
+    #     direction: in
+    #     interface: tun0
 
     #TODO: Adjust the UFW Rules to Masquerade Client Connections
 

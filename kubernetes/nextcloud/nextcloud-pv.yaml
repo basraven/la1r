@@ -13,7 +13,7 @@ spec:
   accessModes:
   - ReadWriteMany 
   local:
-    path: /mnt/largehdd/nextcloud
+    path: /mnt/largessd/nextcloud
   nodeAffinity:
     required:
       nodeSelectorTerms:

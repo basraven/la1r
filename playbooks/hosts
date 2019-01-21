@@ -1,5 +1,5 @@
 [raspis]
-big-raver ansible_host=192.168.2.15
+big-raver ansible_host=10.8.0.1
 
 
 [raspis:vars]

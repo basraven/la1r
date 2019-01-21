@@ -52,7 +52,8 @@ nextcloud:
 	- kubectl apply -f nextcloud/mariadb.yaml
 	- kubectl apply -f nextcloud/nextcloud-pv.yaml
 	- kubectl apply -f nextcloud/nextcloud.yaml
-	
-	# FOR SSL
+
+.PHONY: ssl-certs
+ssl-certs:
 	- /bin/bash /credentials/nextcloud/make-cert.sh cloud.bas && mv ./cloud.bas.cert.pem /credentials/nextcloud/cloud.bas.crt && mv ./cloud.bas.key.pem /credentials/nextcloud/cloud.bas.key
 	- kubectl create secret generic traefik-cert --namespace kube-system --from-file=/credentials/nextcloud/cloud.bas.crt --from-file=/credentials/nextcloud/cloud.bas.key

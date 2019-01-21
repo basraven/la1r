@@ -70,8 +70,8 @@ spec:
           - mountPath: /etc/mysql/conf.d
             subPath: custom.cnf
             name: mycnf-volume
-          # - name: mariadb
-          #   mountPath: "/var/lib/mysql/"
+          - name: mariadb
+            mountPath: "/var/lib/mysql/"
 ---
 apiVersion: v1
 kind: Service

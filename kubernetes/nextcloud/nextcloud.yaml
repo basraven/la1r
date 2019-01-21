@@ -91,12 +91,10 @@ spec:
         volumeMounts:
           - name: set-nextcloud-volume
             mountPath: /set-nextcloud
-            
-            # subPath: set-nextcloud.sh
-        #   - mountPath: "/var/www/html"
-        #     name: nextcloud-web
-        #   - mountPath: "/var/www/html/data"
-        #     name: nextcloud-data
+          - mountPath: "/var/www/html"
+            name: nextcloud-web
+          - mountPath: "/var/www/html/data"
+            name: nextcloud-data
 ---
 apiVersion: v1
 kind: Service
