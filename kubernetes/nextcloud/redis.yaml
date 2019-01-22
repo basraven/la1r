@@ -1,0 +1,61 @@
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: redis-claim
+  namespace: nextcloud
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "cache"
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: nextcloud
+  labels:
+    app: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      volumes:
+      - name: redis
+        persistentVolumeClaim:
+          claimName: redis-claim
+      containers:
+      - name: redis
+        image: redis
+        ports:
+        - containerPort: 6379        
+        volumeMounts:
+          - name: redis
+            mountPath: "/data"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: redis
+  name: redis
+  namespace: nextcloud
+spec:
+  ports:
+  - name: cache
+    port: 6379
+  selector:
+    app: redis
+  type: ClusterIP

@@ -56,6 +56,13 @@ spec:
           - key: set-nextcloud.sh
             path: set-nextcloud.sh
           defaultMode: 0744
+      - name: apcu-config-volume
+        configMap:
+          name: apcu-config
+          items:
+          - key: apcu.config.php
+            path: apcu.config.php
+          defaultMode: 0744
       - name: nextcloud-web
         persistentVolumeClaim:
           claimName: nextcloud-web-claim
@@ -89,36 +96,22 @@ spec:
               name: mariadbsecret
               key: password
         volumeMounts:
+          - name: nextcloud-web
+            mountPath: "/var/www/html"
+          - name: nextcloud-data
+            mountPath: "/var/www/html/data"
           - name: set-nextcloud-volume
             mountPath: /set-nextcloud
-          - mountPath: "/var/www/html"
-            name: nextcloud-web
-          - mountPath: "/var/www/html/data"
-            name: nextcloud-data
+          # - name: apcu-config-volume
+          #   mountPath: /var/www/html/config
+          #   subPath: apcu.config.php
 ---
 apiVersion: v1
 kind: Service
 metadata:
   labels:
     app: nextcloud
-  name: nextcloud-external
-  namespace: nextcloud
-spec:
-  ports:
-  - name: web
-    port: 80
-    targetPort: 80
-    nodePort: 31000
-  selector:
-    app: nextcloud
-  type: NodePort
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    app: nextcloud
-  name: nextcloudservice
+  name: nextcloud
   namespace: nextcloud
 spec:
   ports:
@@ -142,7 +135,7 @@ spec:
       paths:
       - path: /
         backend:
-          serviceName: nextcloudservice
+          serviceName: nextcloud
           servicePort: 80
 ---
 apiVersion: extensions/v1beta1
@@ -159,5 +152,5 @@ spec:
       paths:
       - path: /
         backend:
-          serviceName: nextcloudservice
+          serviceName: nextcloud
           servicePort: 80

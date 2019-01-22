@@ -67,9 +67,9 @@ spec:
               name: mariadbsecret
               key: password
         volumeMounts:
-          - mountPath: /etc/mysql/conf.d
+          - name: mycnf-volume
+            mountPath: /etc/mysql/conf.d
             subPath: custom.cnf
-            name: mycnf-volume
           - name: mariadb
             mountPath: "/var/lib/mysql/"
 ---
@@ -87,20 +87,3 @@ spec:
   selector:
     app: mariadb
   type: ClusterIP
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    app: mariadb
-  name: mariadb-external
-  namespace: nextcloud
-spec:
-  ports:
-  - name: db
-    port: 3306
-    targetPort: 3306
-    nodePort: 32306
-  selector:
-    app: mariadb
-  type: NodePort

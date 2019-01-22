@@ -47,6 +47,7 @@ nextcloud:
 	- kubectl apply -f nextcloud/namespace.yaml
 	- kubectl create configmap mycnf --namespace nextcloud --from-file=nextcloud/config/my.cnf
 	- kubectl create configmap set-nextcloud --namespace nextcloud --from-file=nextcloud/config/set-nextcloud.sh
+	- kubectl create configmap apcu-config --namespace nextcloud --from-file=nextcloud/config/apcu.config.php
 	- kubectl apply -f nextcloud/dbsecret.yaml
 	- kubectl apply -f nextcloud/mariadb-pv.yaml
 	- kubectl apply -f nextcloud/mariadb.yaml
