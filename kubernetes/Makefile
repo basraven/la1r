@@ -67,6 +67,7 @@ helm:
 # TODO: refresh claimToken from https://www.plex.tv/claim/
 .PHONE: plex
 plex:
+	- cp -R /kubernetes/plex/kube-plex-custom /kubernetes/plex/kube-plex
 	- kubectl apply -f /kubernetes/plex/plex-pv.yaml
 	- helm install plex/kube-plex/charts/kube-plex --name plex \
     	--namespace torrent \
