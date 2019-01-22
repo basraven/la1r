@@ -1,19 +1,20 @@
+---
 kind: PersistentVolume
 apiVersion: v1
 metadata:
-  name: mariadb-pv
+  name: torrent-pv
   labels:
-    contenttype: "db"
+    contenttype: "torrent"
 spec:
   capacity:
-    storage: 5Gi
+    storage: 500Gi
   # volumeMode field requires BlockVolume Alpha feature gate to be enabled.
   storageClassName: local-storage
   persistentVolumeReclaimPolicy: Retain
   accessModes:
   - ReadWriteMany
   local:
-    path: /mnt/largehdd/mariadb
+    path: /mnt/largehdd/torrent
   nodeAffinity:
     required:
       nodeSelectorTerms:
