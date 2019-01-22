@@ -54,7 +54,34 @@ nextcloud:
 	- kubectl apply -f nextcloud/nextcloud-pv.yaml
 	- kubectl apply -f nextcloud/nextcloud.yaml
 
+.PHONE: helm
+helm:
+	- kubectl apply -f namespaces/tiller.yaml
+	- kubectl create serviceaccount --namespace tiller tiller
+	- kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=tiller:tiller
+	- kubectl patch deploy --namespace tiller tiller-deploy -p'{"spec":{"template":{"spec":{"serviceAccount":"tiller"}}}}'
+	- rm -rf /root/.helm
+	- helm init --tiller-namespace tiller
+	
+
+# TODO: refresh claimToken from https://www.plex.tv/claim/
+.PHONE: plex
+plex:
+	- kubectl apply -f /kubernetes/plex/plex-pv.yaml
+	- helm install plex/kube-plex/charts/kube-plex --name plex \
+    	--namespace torrent \
+		--tiller-namespace tiller \
+    	--set claimToken="claim-W2sZDdLix6cULwZ5nfpK" \
+    	--set ingress.enabled=true
+	# To delete:
+	# helm del --purge plex --tiller-namespace tiller
+
 .PHONY: ssl-certs
 ssl-certs:
+	# FIXME: doesn't accept the CA: Create CA
+	- openssl genrsa -des3 -out ravenCA.key 2048
+	- openssl req -x509 -new -nodes -key ravenCA.key -sha256 -days 1825 -out ravenCA.pem
+	
+	# Create crt (works)
 	- /bin/bash /credentials/nextcloud/make-cert.sh cloud.bas && mv ./cloud.bas.cert.pem /credentials/nextcloud/cloud.bas.crt && mv ./cloud.bas.key.pem /credentials/nextcloud/cloud.bas.key
 	- kubectl create secret generic traefik-cert --namespace kube-system --from-file=/credentials/nextcloud/cloud.bas.crt --from-file=/credentials/nextcloud/cloud.bas.key

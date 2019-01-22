@@ -54,7 +54,8 @@ spec:
             add:
             - NET_BIND_SERVICE
         args:
-        - --configfile=/config/traefik.toml
+        # FIXME: fix it with plex
+        # - --configfile=/config/traefik.toml
         - --api
         - --kubernetes
         - --logLevel=INFO

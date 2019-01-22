@@ -13,4 +13,4 @@ spec:
       contenttype: "torrent"
   resources:
     requests:
-      storage: 500Gi
+      storage: 2000Gi
