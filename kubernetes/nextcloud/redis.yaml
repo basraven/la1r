@@ -38,7 +38,7 @@ spec:
           claimName: redis-claim
       containers:
       - name: redis
-        image: redis
+        image: redis:alpine
         ports:
         - containerPort: 6379        
         volumeMounts:
