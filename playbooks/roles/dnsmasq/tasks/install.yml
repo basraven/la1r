@@ -26,6 +26,16 @@
         rule: allow
         port: 53
         proto: tcp
+    - name: UFW passthrough for tun0 interface
+      ufw:
+        rule: allow
+        direction: out
+        interface: cni0
+    - name: Allow in UFW passthrough for tun0 interface
+      ufw:
+        rule: allow
+        direction: in
+        interface: cni0
 
     - name: Restart service dnsmasq, in all cases
       service:
