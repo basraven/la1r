@@ -1,0 +1,102 @@
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: rutorrent-torrent-claim
+  namespace: torrent
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "rutorrent-torrent"
+  resources:
+    requests:
+      storage: 2000Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: rutorrent-config-claim
+  namespace: torrent
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "rutorrent-config"
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rutorrent
+  namespace: torrent
+  labels:
+    app: rutorrent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rutorrent
+  template:
+    metadata:
+      labels:
+        app: rutorrent
+    spec:
+      volumes:
+      - name: torrent
+        persistentVolumeClaim:
+          claimName: rutorrent-torrent-claim
+      - name: config
+        persistentVolumeClaim:
+          claimName: rutorrent-config-claim
+      containers:
+      - name: rutorrent
+        image: romancin/rutorrent-flood:latest
+        ports:
+        - containerPort: 80
+        env:
+        - name: TZ
+          value: Europe/Amsterdam
+        volumeMounts:
+          - name: torrent
+            mountPath: /downloads
+          - name: config
+            mountPath: /config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: rutorrent
+  name: rutorrent
+  namespace: torrent
+spec:
+  ports:
+  - name: http
+    port: 80
+  selector:
+    app: rutorrent
+  type: ClusterIP
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: rutorrentingress
+  namespace: torrent
+  # annotations:
+  #   kubernetes.io/ingress.class: traefik
+spec:
+  rules:
+  - host: torrent.bas
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: rutorrent
+          servicePort: 80

@@ -54,7 +54,7 @@ nextcloud:
 	- kubectl apply -f nextcloud/nextcloud-pv.yaml
 	- kubectl apply -f nextcloud/nextcloud.yaml
 
-.PHONE: helm
+.PHONY: helm
 helm:
 	- kubectl apply -f namespaces/tiller.yaml
 	- kubectl create serviceaccount --namespace tiller tiller
@@ -65,17 +65,19 @@ helm:
 	
 
 # TODO: refresh claimToken from https://www.plex.tv/claim/
-.PHONE: plex
+.PHONY: plex
 plex:
-	- cp -R /kubernetes/plex/kube-plex-custom /kubernetes/plex/kube-plex
+	- cp -rf /kubernetes/plex/kube-plex-custom/* /kubernetes/plex/kube-plex
 	- kubectl apply -f /kubernetes/plex/plex-pv.yaml
+	- kubectl apply -f /kubernetes/plex/plex-pv-claim.yaml
 	- helm install plex/kube-plex/charts/kube-plex --name plex \
     	--namespace torrent \
 		--tiller-namespace tiller \
-    	--set claimToken="claim-W2sZDdLix6cULwZ5nfpK" \
+    	--set claimToken="claim-XWRGNGH1bCAZatrFnqfW" \
     	--set ingress.enabled=true
 	# To delete:
 	# helm del --purge plex --tiller-namespace tiller
+	# kubectl delete -f /kubernetes/plex/plex-pv.yaml
 
 .PHONY: ssl-certs
 ssl-certs:

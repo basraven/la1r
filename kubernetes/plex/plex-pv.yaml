@@ -24,13 +24,38 @@ spec:
           values:
           - big-raver
 ---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: plex-data
+  labels:
+    contenttype: "plex-data"
+spec:
+  capacity:
+    storage: 50Gi
+  # volumeMode field requires BlockVolume Alpha feature gate to be enabled.
+  storageClassName: local-storage
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteMany
+  local:
+    path: /mnt/largehdd/plex/data
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - big-raver
+---
 # FIXME: check if ssd gives a speedup (might not be because we're copying from hdd)
 kind: PersistentVolume
 apiVersion: v1
 metadata:
   name: plex-transcoder
   labels:
-    contenttype: "transcoder"
+    contenttype: "plex-transcoder"
 spec:
   capacity:
     storage: 50Gi
@@ -55,7 +80,7 @@ apiVersion: v1
 metadata:
   name: plex-config
   labels:
-    contenttype: "config"
+    contenttype: "plex-config"
 spec:
   capacity:
     storage: 20Gi

@@ -1,0 +1,64 @@
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: plex-kube-plex-torrent
+  namespace: torrent
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "torrent"
+  resources:
+    requests:
+      storage: 2000Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: plex-kube-plex-data
+  namespace: torrent
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "plex-data"
+  resources:
+    requests:
+      storage: 50Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: plex-kube-plex-transcoder
+  namespace: torrent
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "plex-transcoder"
+  resources:
+    requests:
+      storage: 50Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: plex-kube-plex-config
+  namespace: torrent
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "plex-config"
+  resources:
+    requests:
+      storage: 20Gi
