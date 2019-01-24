@@ -24,7 +24,10 @@ make all
 * [/playbooks](/playbooks): The playbooks collection to manage servers
 * [/credentials](/credentials): Place your credentials here (and ```.gitignore``` them)
 
-## Running on Windows with Powershell
+## Roadmap
+Find the project roadmap on [ROADMAP.md](ROADMAP.md)
+
+### Running on Windows with Powershell
 Sometimes Powershell gives the error "run.ps1 is not digitally signed. You cannot run this script on the current system."
 Please use the following command in a Powershell window as Administrator to (permanently solve this)
 ```powershell
