@@ -111,7 +111,7 @@ ovpn-install: prep
 
 .PHONY: ovpn-create-user
 ovpn-create-user: prep
-	ansible-playbook -i /playbooks/hosts /playbooks/roles/ovpn/tasks/create-user.yml --extra-vars "openvpn_user=basraven"
+	ansible-playbook -i /playbooks/hosts /playbooks/roles/ovpn/tasks/create-user.yml --extra-vars "openvpn_user=raspi2"
 
 .PHONY: ovpn-join
 ovpn-join:

@@ -49,6 +49,27 @@ spec:
         app: rutorrent
     spec:
       volumes:
+      - name: goose-credentials-volume
+        secret:
+          secretName: goose
+          items:
+          - key: login.conf
+            path: login.conf
+          defaultMode: 0600
+      - name: set-goose-ovpn-volume
+        secret:
+          secretName: goose
+          items:
+          - key: ro-10.ovpn
+            path: ro-10.ovpn
+          defaultMode: 0744
+      - name: set-goose-config-volume
+        configMap:
+          name: set-goose
+          items:
+          - key: set-goose.sh
+            path: set-goose.sh
+          defaultMode: 0744
       - name: torrent
         persistentVolumeClaim:
           claimName: rutorrent-torrent-claim
@@ -57,17 +78,48 @@ spec:
           claimName: rutorrent-config-claim
       containers:
       - name: rutorrent
-        image: romancin/rutorrent-flood:latest
+        image:  linuxserver/rutorrent
+        # command: [ "/init"]
+        command: [ "/goose/set-goose.sh"]
+        securityContext:
+          allowPrivilegeEscalation: true
+          privileged: true
+          capabilities:
+            add:
+              - NET_ADMIN
         ports:
-        - containerPort: 80
+        - name: http
+          containerPort: 80
+        - name: scgi
+          containerPort: 5000
+        - name: bittorent
+          containerPort: 31219
+        - name: bittorent2
+          containerPort: 6881
+          protocol: UDP
         env:
         - name: TZ
           value: Europe/Amsterdam
+        - name: PGID
+          value: "1000"
+        - name: PUID
+          value: "1000"
         volumeMounts:
+          # - mountPath: /dev/snd
+          #   name: dev-snd
           - name: torrent
             mountPath: /downloads
           - name: config
             mountPath: /config
+          - name: set-goose-config-volume
+            mountPath: /goose/set-goose.sh
+            subPath: set-goose.sh
+          - name: set-goose-ovpn-volume
+            mountPath: /etc/openvpn/ro-10.ovpn
+            subPath: ro-10.ovpn
+          - name: goose-credentials-volume
+            mountPath: /etc/openvpn/login.conf
+            subPath: login.conf
 ---
 apiVersion: v1
 kind: Service
@@ -79,6 +131,7 @@ metadata:
 spec:
   ports:
   - name: http
+    targetPort: 80
     port: 80
   selector:
     app: rutorrent
@@ -100,3 +153,15 @@ spec:
         backend:
           serviceName: rutorrent
           servicePort: 80
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: uploadport-rutorrent
+spec:
+  type: NodePort
+  ports:
+    - port: 31219
+      nodePort: 31219
+  selector:
+    name: rutorrent          

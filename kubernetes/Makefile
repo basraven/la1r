@@ -28,6 +28,9 @@ config:
 	- kubectl label nodes big-raver disktype=hdd
 	- kubectl label nodes raspi1 disktype=hdd
 	- kubectl label nodes raspi2 disktype=hdd
+	- kubectl label node raspi1 node-role.kubernetes.io/worker=worker
+	- kubectl label node raspi2 node-role.kubernetes.io/worker=worker
+
 
 .PHONY: faas
 faas:
@@ -63,6 +66,12 @@ helm:
 	- rm -rf /root/.helm
 	- helm init --tiller-namespace tiller
 	
+.PHONY: rutorrent
+rutorrent:
+	- kubectl create secret generic goose --namespace torrent --from-file=/credentials/ovpn/login.conf --from-file=/credentials/ovpn/ro-10.ovpn
+	- kubectl create configmap set-goose --namespace torrent --from-file=rutorrent/config/set-goose.sh 
+	- kubectl apply -f rutorrent
+
 
 # TODO: refresh claimToken from https://www.plex.tv/claim/
 .PHONY: plex
