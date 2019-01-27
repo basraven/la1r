@@ -80,6 +80,7 @@ plex:
 	- cp -rf torrent/plex/kube-plex-custom/* torrent/plex/kube-plex
 	- kubectl apply -f torrent/plex/plex-pv.yaml
 	- kubectl apply -f torrent/plex/plex-pv-claim.yaml
+	- kubectl apply -f torrent/plex/plex-local-service.yaml
 	- helm install torrent/plex/kube-plex/charts/kube-plex --name plex \
     	--namespace torrent \
 		--tiller-namespace tiller \
