@@ -2,9 +2,9 @@
 kind: PersistentVolume
 apiVersion: v1
 metadata:
-  name: torrent-pv
+  name: plex-torrent-pv
   labels:
-    contenttype: "torrent"
+    contenttype: "plex-torrent"
 spec:
   capacity:
     storage: 2000Gi
@@ -53,9 +53,9 @@ spec:
 kind: PersistentVolume
 apiVersion: v1
 metadata:
-  name: plex-transcoder
+  name: plex-transcode
   labels:
-    contenttype: "plex-transcoder"
+    contenttype: "plex-transcode"
 spec:
   capacity:
     storage: 50Gi
@@ -65,7 +65,7 @@ spec:
   accessModes:
   - ReadWriteMany
   local:
-    path: /mnt/largehdd/plex/transcoder
+    path: /mnt/largehdd/plex/transcode
   nodeAffinity:
     required:
       nodeSelectorTerms:

@@ -100,6 +100,8 @@ spec:
           value: "{{ template "fullname" . }}-config"
 {{- end }}
         volumeMounts:
+        - name: torrent
+          mountPath: /torrent
         - name: data
           mountPath: /data
         {{- if .Values.persistence.data.subPath }}
@@ -149,6 +151,7 @@ spec:
 {{- else }}
         emptyDir: {}
 {{- end }}
+      - name: torrent
 {{- if .Values.persistence.torrent.enabled }}
         persistentVolumeClaim:
 {{- if .Values.persistence.torrent.claimName }}

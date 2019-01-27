@@ -48,14 +48,14 @@ traefik:
 .PHONY: nextcloud
 nextcloud:
 	- kubectl apply -f nextcloud/namespace.yaml
-	- kubectl create configmap mycnf --namespace nextcloud --from-file=torrent/nextcloud/config/my.cnf
-	- kubectl create configmap set-nextcloud --namespace nextcloud --from-file=torrent/nextcloud/config/set-nextcloud.sh
-	- kubectl create configmap apcu-config --namespace nextcloud --from-file=torrent/nextcloud/config/apcu.config.php
-	- kubectl apply -f torrent/nextcloud/dbsecret.yaml
-	- kubectl apply -f torrent/nextcloud/mariadb-pv.yaml
-	- kubectl apply -f torrent/nextcloud/mariadb.yaml
-	- kubectl apply -f torrent/nextcloud/nextcloud-pv.yaml
-	- kubectl apply -f torrent/nextcloud/nextcloud.yaml
+	- kubectl create configmap mycnf --namespace nextcloud --from-file=nextcloud/config/my.cnf
+	- kubectl create configmap set-nextcloud --namespace nextcloud --from-file=nextcloud/config/set-nextcloud.sh
+	- kubectl create configmap apcu-config --namespace nextcloud --from-file=nextcloud/config/apcu.config.php
+	- kubectl apply -f nextcloud/dbsecret.yaml
+	- kubectl apply -f nextcloud/mariadb-pv.yaml
+	- kubectl apply -f nextcloud/mariadb.yaml
+	- kubectl apply -f nextcloud/nextcloud-pv.yaml
+	- kubectl apply -f nextcloud/nextcloud.yaml
 
 .PHONY: helm
 helm:
@@ -80,14 +80,20 @@ plex:
 	- cp -rf torrent/plex/kube-plex-custom/* torrent/plex/kube-plex
 	- kubectl apply -f torrent/plex/plex-pv.yaml
 	- kubectl apply -f torrent/plex/plex-pv-claim.yaml
-	- helm install plex/kube-plex/charts/kube-plex --name plex \
+	- helm install torrent/plex/kube-plex/charts/kube-plex --name plex \
     	--namespace torrent \
 		--tiller-namespace tiller \
-    	--set claimToken="claim-XWRGNGH1bCAZatrFnqfW" \
+		--set claimToken="claim-ivDxHj1ujjV7qGbYsQdF" \
     	--set ingress.enabled=true
 	# To delete:
 	# helm del --purge plex --tiller-namespace tiller
 	# kubectl delete -f /kubernetes/plex/plex-pv.yaml
+.PHONY: unplex
+unplex:
+	helm del --purge plex --tiller-namespace tiller
+	kubectl delete -f torrent/plex/plex-pv-claim.yaml
+	kubectl delete -f torrent/plex/plex-pv.yaml
+
 
 .PHONY: ssl-certs
 ssl-certs:

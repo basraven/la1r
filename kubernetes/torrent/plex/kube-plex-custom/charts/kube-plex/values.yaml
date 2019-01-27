@@ -66,7 +66,7 @@ nodeSelector:
 persistence:
   torrent:
     enabled: true
-    claimName: "plex-kube-plex-torrent"
+    claimName: "plex-torrent-pv-claim"
     # Optionally specify claimName to manually override the PVC to be used for
     # the data directory. If claimName is specified, storageClass and size are
     # ignored.
@@ -80,7 +80,7 @@ persistence:
     # PersistentVolumeClaim.
     selector:
     matchLabels:
-      contenttype: "torrent"
+      contenttype: "plex-torrent"
     size: 2000Gi
   data:
     enabled: true
@@ -116,7 +116,7 @@ persistence:
     # PersistentVolumeClaim.
     selector:
     matchLabels:
-      contenttype: "transcoder"
+      contenttype: "transcode"
     size: 50Gi
   config:
     enabled: true

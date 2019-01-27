@@ -2,7 +2,7 @@
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: plex-kube-plex-torrent
+  name: plex-torrent-pv-claim
   namespace: torrent
 spec:
   accessModes:
@@ -10,7 +10,7 @@ spec:
   storageClassName: local-storage
   selector:
     matchLabels:
-      contenttype: "torrent"
+      contenttype: "plex-torrent"
   resources:
     requests:
       storage: 2000Gi
@@ -34,7 +34,7 @@ spec:
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: plex-kube-plex-transcoder
+  name: plex-kube-plex-transcode
   namespace: torrent
 spec:
   accessModes:
@@ -42,7 +42,7 @@ spec:
   storageClassName: local-storage
   selector:
     matchLabels:
-      contenttype: "plex-transcoder"
+      contenttype: "plex-transcode"
   resources:
     requests:
       storage: 50Gi
