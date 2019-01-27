@@ -66,11 +66,12 @@ helm:
 	- rm -rf /root/.helm
 	- helm init --tiller-namespace tiller
 	
-.PHONY: rutorrent
-rutorrent:
-	- kubectl create secret generic goose --namespace torrent --from-file=/credentials/ovpn/login.conf --from-file=/credentials/ovpn/ro-10.ovpn
-	- kubectl create configmap set-goose --namespace torrent --from-file=rutorrent/config/set-goose.sh 
-	- kubectl apply -f rutorrent
+
+.PHONY: qbittorrent
+qbittorrent:
+	- kubectl create secret generic goose-credentials --namespace torrent --from-file=/credentials/ovpn/login.conf --from-file=/credentials/ovpn/ro-10.conf
+	- kubectl create configmap qbittorrent-config --namespace torrent --from-file=qbittorrent/config/set-goose.sh --from-file=qbittorrent/config/qBittorrent.conf
+	- kubectl apply -f qbittorrent
 
 
 # TODO: refresh claimToken from https://www.plex.tv/claim/

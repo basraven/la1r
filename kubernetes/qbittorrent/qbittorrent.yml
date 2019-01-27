@@ -2,7 +2,7 @@
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: rutorrent-torrent-claim
+  name: qbittorrent-torrent-claim
   namespace: torrent
 spec:
   accessModes:
@@ -10,76 +10,63 @@ spec:
   storageClassName: local-storage
   selector:
     matchLabels:
-      contenttype: "rutorrent-torrent"
+      contenttype: "qbittorrent-torrent"
   resources:
     requests:
       storage: 2000Gi
 ---
-kind: PersistentVolumeClaim
-apiVersion: v1
-metadata:
-  name: rutorrent-config-claim
-  namespace: torrent
-spec:
-  accessModes:
-  - ReadWriteMany 
-  storageClassName: local-storage
-  selector:
-    matchLabels:
-      contenttype: "rutorrent-config"
-  resources:
-    requests:
-      storage: 20Gi
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: rutorrent
+  name: qbittorrent
   namespace: torrent
   labels:
-    app: rutorrent
+    app: qbittorrent
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: rutorrent
+      app: qbittorrent
   template:
     metadata:
       labels:
-        app: rutorrent
+        app: qbittorrent
     spec:
       volumes:
       - name: goose-credentials-volume
         secret:
-          secretName: goose
+          secretName: goose-credentials
           items:
           - key: login.conf
             path: login.conf
           defaultMode: 0600
       - name: set-goose-ovpn-volume
         secret:
-          secretName: goose
+          secretName: goose-credentials
           items:
-          - key: ro-10.ovpn
-            path: ro-10.ovpn
+          - key: ro-10.conf
+            path: ro-10.conf
+          defaultMode: 0744
+      - name: qbittorrent-config-volume
+        configMap:
+          name: qbittorrent-config
+          items:
+          - key: qBittorrent.conf
+            path: qBittorrent.conf
           defaultMode: 0744
       - name: set-goose-config-volume
         configMap:
-          name: set-goose
+          name: qbittorrent-config
           items:
           - key: set-goose.sh
             path: set-goose.sh
           defaultMode: 0744
       - name: torrent
         persistentVolumeClaim:
-          claimName: rutorrent-torrent-claim
-      - name: config
-        persistentVolumeClaim:
-          claimName: rutorrent-config-claim
+          claimName: qbittorrent-torrent-claim
       containers:
-      - name: rutorrent
-        image:  linuxserver/rutorrent
-        # command: [ "/init"]
+      - name: qbittorrent
+        image: linuxserver/qbittorrent
         command: [ "/goose/set-goose.sh"]
         securityContext:
           allowPrivilegeEscalation: true
@@ -89,14 +76,9 @@ spec:
               - NET_ADMIN
         ports:
         - name: http
-          containerPort: 80
-        - name: scgi
-          containerPort: 5000
-        - name: bittorent
-          containerPort: 31219
-        - name: bittorent2
+          containerPort: 8080
+        - name: bittorrent-port
           containerPort: 6881
-          protocol: UDP
         env:
         - name: TZ
           value: Europe/Amsterdam
@@ -104,43 +86,44 @@ spec:
           value: "1000"
         - name: PUID
           value: "1000"
+        - name: WEBUI_PORT
+          value: "8080"
         volumeMounts:
-          # - mountPath: /dev/snd
-          #   name: dev-snd
           - name: torrent
             mountPath: /downloads
-          - name: config
-            mountPath: /config
+          - name: qbittorrent-config-volume
+            mountPath: /config/qBittorrent/qBittorrent.conf
+            subPath: qBittorrent.conf
           - name: set-goose-config-volume
             mountPath: /goose/set-goose.sh
             subPath: set-goose.sh
           - name: set-goose-ovpn-volume
-            mountPath: /etc/openvpn/ro-10.ovpn
-            subPath: ro-10.ovpn
+            mountPath: /etc/openvpn/ro-10.conf
+            subPath: ro-10.conf
           - name: goose-credentials-volume
-            mountPath: /etc/openvpn/login.conf
+            mountPath: /goose/login.conf
             subPath: login.conf
 ---
 apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: rutorrent
-  name: rutorrent
+    app: qbittorrent
+  name: qbittorrent
   namespace: torrent
 spec:
   ports:
   - name: http
-    targetPort: 80
+    targetPort: 8080
     port: 80
   selector:
-    app: rutorrent
+    app: qbittorrent
   type: ClusterIP
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: rutorrentingress
+  name: qbittorrentingress
   namespace: torrent
   # annotations:
   #   kubernetes.io/ingress.class: traefik
@@ -151,17 +134,5 @@ spec:
       paths:
       - path: /
         backend:
-          serviceName: rutorrent
+          serviceName: qbittorrent
           servicePort: 80
----
-kind: Service
-apiVersion: v1
-metadata:
-  name: uploadport-rutorrent
-spec:
-  type: NodePort
-  ports:
-    - port: 31219
-      nodePort: 31219
-  selector:
-    name: rutorrent          
