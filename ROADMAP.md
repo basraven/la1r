@@ -1,7 +1,7 @@
 # Project ROADMAP
 This project roadmap is ordered on priority
 
-* Fix rutorrent
+* Fix openvpn script with push dns option 
 * Pihole
 * Samba
 * FaaS
