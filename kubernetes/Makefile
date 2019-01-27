@@ -48,14 +48,14 @@ traefik:
 .PHONY: nextcloud
 nextcloud:
 	- kubectl apply -f nextcloud/namespace.yaml
-	- kubectl create configmap mycnf --namespace nextcloud --from-file=nextcloud/config/my.cnf
-	- kubectl create configmap set-nextcloud --namespace nextcloud --from-file=nextcloud/config/set-nextcloud.sh
-	- kubectl create configmap apcu-config --namespace nextcloud --from-file=nextcloud/config/apcu.config.php
-	- kubectl apply -f nextcloud/dbsecret.yaml
-	- kubectl apply -f nextcloud/mariadb-pv.yaml
-	- kubectl apply -f nextcloud/mariadb.yaml
-	- kubectl apply -f nextcloud/nextcloud-pv.yaml
-	- kubectl apply -f nextcloud/nextcloud.yaml
+	- kubectl create configmap mycnf --namespace nextcloud --from-file=torrent/nextcloud/config/my.cnf
+	- kubectl create configmap set-nextcloud --namespace nextcloud --from-file=torrent/nextcloud/config/set-nextcloud.sh
+	- kubectl create configmap apcu-config --namespace nextcloud --from-file=torrent/nextcloud/config/apcu.config.php
+	- kubectl apply -f torrent/nextcloud/dbsecret.yaml
+	- kubectl apply -f torrent/nextcloud/mariadb-pv.yaml
+	- kubectl apply -f torrent/nextcloud/mariadb.yaml
+	- kubectl apply -f torrent/nextcloud/nextcloud-pv.yaml
+	- kubectl apply -f torrent/nextcloud/nextcloud.yaml
 
 .PHONY: helm
 helm:
@@ -70,16 +70,16 @@ helm:
 .PHONY: qbittorrent
 qbittorrent:
 	- kubectl create secret generic goose-credentials --namespace torrent --from-file=/credentials/ovpn/login.conf --from-file=/credentials/ovpn/ro-10.conf
-	- kubectl create configmap qbittorrent-config --namespace torrent --from-file=qbittorrent/config/set-goose.sh --from-file=qbittorrent/config/qBittorrent.conf
+	- kubectl create configmap qbittorrent-config --namespace torrent --from-file=torrent/qbittorrent/config/set-goose.sh --from-file=torrent/qbittorrent/config/qBittorrent.conf
 	- kubectl apply -f qbittorrent
 
 
 # TODO: refresh claimToken from https://www.plex.tv/claim/
 .PHONY: plex
 plex:
-	- cp -rf /kubernetes/plex/kube-plex-custom/* /kubernetes/plex/kube-plex
-	- kubectl apply -f /kubernetes/plex/plex-pv.yaml
-	- kubectl apply -f /kubernetes/plex/plex-pv-claim.yaml
+	- cp -rf torrent/plex/kube-plex-custom/* torrent/plex/kube-plex
+	- kubectl apply -f torrent/plex/plex-pv.yaml
+	- kubectl apply -f torrent/plex/plex-pv-claim.yaml
 	- helm install plex/kube-plex/charts/kube-plex --name plex \
     	--namespace torrent \
 		--tiller-namespace tiller \
