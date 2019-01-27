@@ -1,0 +1,99 @@
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: couchpotato-config-claim
+  namespace: torrent
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "couchpotato-config"
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: couchpotato
+  namespace: torrent
+  labels:
+    app: couchpotato
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: couchpotato
+  template:
+    metadata:
+      labels:
+        app: couchpotato
+    spec:
+      volumes:
+        - name: couchpotato-config-volume
+          persistentVolumeClaim:
+            claimName: couchpotato-config-claim
+      containers:
+      - name: couchpotato
+        image: linuxserver/couchpotato
+        ports:
+        - name: http
+          containerPort: 5050
+        env:
+        - name: TZ
+          value: Europe/Amsterdam
+        - name: PGID
+          value: "1000"
+        - name: PUID
+          value: "1000"
+        volumeMounts:
+          - name: couchpotato-config-volume
+            mountPath: /config
+        #   - name: couchpotato-config-volume
+        #     mountPath: /config/couchpotato/couchpotato.conf
+        #     subPath: couchpotato.conf
+        #   - name: set-goose-config-volume
+        #     mountPath: /goose/set-goose.sh
+        #     subPath: set-goose.sh
+        #   - name: set-goose-ovpn-volume
+        #     mountPath: /etc/openvpn/ro-10.conf
+        #     subPath: ro-10.conf
+        #   - name: goose-credentials-volume
+        #     mountPath: /goose/login.conf
+        #     subPath: login.conf
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: couchpotato
+  name: couchpotato
+  namespace: torrent
+spec:
+  ports:
+  - name: http
+    targetPort: 5050
+    port: 80
+  selector:
+    app: couchpotato
+  type: ClusterIP
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: couchpotatoingress
+  namespace: torrent
+  # annotations:
+  #   kubernetes.io/ingress.class: traefik
+spec:
+  rules:
+  - host: couch.bas
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: couchpotato
+          servicePort: 80

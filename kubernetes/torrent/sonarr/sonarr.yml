@@ -1,0 +1,120 @@
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: sonarr-torrent-claim
+  namespace: torrent
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "sonarr-torrent"
+  resources:
+    requests:
+      storage: 2000Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: sonarr-config-claim
+  namespace: torrent
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "sonarr-config"
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sonarr
+  namespace: torrent
+  labels:
+    app: sonarr
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sonarr
+  template:
+    metadata:
+      labels:
+        app: sonarr
+    spec:
+      volumes:
+        - name: sonarr-config-volume
+          persistentVolumeClaim:
+            claimName: sonarr-config-claim
+        - name: sonarr-torrent-volume
+          persistentVolumeClaim:
+            claimName: sonarr-torrent-claim
+      containers:
+      - name: sonarr
+        image: linuxserver/sonarr
+        ports:
+        - name: http
+          containerPort: 8989
+        env:
+        - name: TZ
+          value: Europe/Amsterdam
+        - name: PGID
+          value: "1000"
+        - name: PUID
+          value: "1000"
+        volumeMounts:
+          - name: sonarr-torrent-volume
+            mountPath: /downloads
+          - name: sonarr-config-volume
+            mountPath: /config
+        #   - name: sonarr-config-volume
+        #     mountPath: /config/sonarr/sonarr.conf
+        #     subPath: sonarr.conf
+        #   - name: set-goose-config-volume
+        #     mountPath: /goose/set-goose.sh
+        #     subPath: set-goose.sh
+        #   - name: set-goose-ovpn-volume
+        #     mountPath: /etc/openvpn/ro-10.conf
+        #     subPath: ro-10.conf
+        #   - name: goose-credentials-volume
+        #     mountPath: /goose/login.conf
+        #     subPath: login.conf
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: sonarr
+  name: sonarr
+  namespace: torrent
+spec:
+  ports:
+  - name: http
+    targetPort: 8989
+    port: 80
+  selector:
+    app: sonarr
+  type: ClusterIP
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: sonarringress
+  namespace: torrent
+  # annotations:
+  #   kubernetes.io/ingress.class: traefik
+spec:
+  rules:
+  - host: sonarr.bas
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: sonarr
+          servicePort: 80

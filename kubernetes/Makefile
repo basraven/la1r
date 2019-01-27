@@ -74,7 +74,7 @@ qbittorrent:
 	- kubectl apply -f qbittorrent
 
 
-# TODO: refresh claimToken from https://www.plex.tv/claim/
+# Refresh claimToken from https://www.plex.tv/claim/
 .PHONY: plex
 plex:
 	- cp -rf torrent/plex/kube-plex-custom/* torrent/plex/kube-plex
