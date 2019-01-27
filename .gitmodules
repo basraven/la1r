@@ -1,3 +1,6 @@
 [submodule "kubernetes/torrent/plex/kube-plex"]
 	path = kubernetes/torrent/plex/kube-plex
 	url = https://github.com/munnerz/kube-plex.git
+[submodule "kubernetes/helm/helm"]
+	path = kubernetes/helm/helm
+	url = https://github.com/helm/charts.git
