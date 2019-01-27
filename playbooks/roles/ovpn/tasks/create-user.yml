@@ -51,6 +51,7 @@
         - { regexp: '^;?cert ',             line: '# cert' }
         - { regexp: '^;?key ',              line: '# key' }
         - { regexp: '^;?script-security',   line: '# script-security 2' }
+        - { regexp: '^;?dhcp-option',       line: 'dhcp-option DNS 10.8.0.1' }
         - { regexp: '^;?up /etc/openvpn/update-resolv-conf ', line: '# up /etc/openvpn/update-resolv-conf' }
         - { regexp: '^;?down /etc/openvpn/update-resolv-conf ', line: '# down /etc/openvpn/update-resolv-conf' }
     - name: Copy make_config.sh script
