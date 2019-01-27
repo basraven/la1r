@@ -15,6 +15,22 @@ spec:
     requests:
       storage: 2000Gi
 ---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: qbittorrent-config-claim
+  namespace: torrent
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "qbittorrent-config"
+  resources:
+    requests:
+      storage: 2Gi
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -48,12 +64,8 @@ spec:
             path: ro-10.conf
           defaultMode: 0744
       - name: qbittorrent-config-volume
-        configMap:
-          name: qbittorrent-config
-          items:
-          - key: qBittorrent.conf
-            path: qBittorrent.conf
-          defaultMode: 0744
+        persistentVolumeClaim:
+          claimName: qbittorrent-config-claim
       - name: set-goose-config-volume
         configMap:
           name: qbittorrent-config
@@ -92,8 +104,7 @@ spec:
           - name: torrent
             mountPath: /downloads
           - name: qbittorrent-config-volume
-            mountPath: /config/qBittorrent/qBittorrent.conf
-            subPath: qBittorrent.conf
+            mountPath: /config/
           - name: set-goose-config-volume
             mountPath: /goose/set-goose.sh
             subPath: set-goose.sh

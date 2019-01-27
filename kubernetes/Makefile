@@ -70,7 +70,7 @@ helm:
 .PHONY: qbittorrent
 qbittorrent:
 	- kubectl create secret generic goose-credentials --namespace torrent --from-file=/credentials/ovpn/login.conf --from-file=/credentials/ovpn/ro-10.conf
-	- kubectl create configmap qbittorrent-config --namespace torrent --from-file=torrent/qbittorrent/config/set-goose.sh --from-file=torrent/qbittorrent/config/qBittorrent.conf
+	- kubectl create configmap qbittorrent-config --namespace torrent --from-file=torrent/qbittorrent/config/set-goose.sh
 	- kubectl apply -f qbittorrent
 
 
