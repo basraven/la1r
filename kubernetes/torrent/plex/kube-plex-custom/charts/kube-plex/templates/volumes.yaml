@@ -14,9 +14,9 @@ spec:
   - ReadWriteMany
   resources:
     requests:
-      storage: {{ .Values.persistence.transcode.size | quote }}
-{{- if .Values.persistence.transcode.storageClass }}
-  storageClassName: {{ .Values.persistence.transcode.storageClass | quote }}
+      storage: {{ .Values.persistence.torrent.size | quote }}
+{{- if .Values.persistence.torrent.storageClass }}
+  storageClassName: {{ .Values.persistence.torrent.storageClass | quote }}
 {{- end }}
 ---
 {{- end }}

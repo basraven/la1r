@@ -84,7 +84,7 @@ plex:
 	- helm install torrent/plex/kube-plex/charts/kube-plex --name plex \
     	--namespace torrent \
 		--tiller-namespace tiller \
-		--set claimToken="claim-ivDxHj1ujjV7qGbYsQdF" \
+		--set claimToken="claim-sTt6yYA3wK94sjXezbaJ" \
     	--set ingress.enabled=true
 	# To delete:
 	# helm del --purge plex --tiller-namespace tiller
