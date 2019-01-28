@@ -95,14 +95,19 @@ unplex:
 	kubectl delete -f torrent/plex/plex-pv-claim.yaml
 	kubectl delete -f torrent/plex/plex-pv.yaml
 
-.PHONY: metrics-server
-metrics-server:
-	- cp -rf helm/helm-custom/stable/metrics-server/* helm/helm/stable/metrics-server/
-	- helm install helm/helm/stable/metrics-server/ --tiller-namespace tiller --namespace kube-system --name metrics-server
 
-.PHONY: unmetrics-server
-unmetrics-server:
-	- helm del --purge metrics-server --tiller-namespace tiller
+# TODO: replace heapster with metrics-server
+.PHONY: metrics
+metrics:
+	kubectl apply -f maintenance/influx-heapster-grafana.yaml
+# .PHONY: metrics
+# metrics:
+# 	- cp -rf helm/helm-custom/stable/metrics-server/* helm/helm/stable/metrics-server/
+# 	- helm install helm/helm/stable/metrics-server/ --tiller-namespace tiller --namespace kube-system --name metrics-server
+
+# .PHONY: unmetrics
+# unmetrics:
+# 	- helm del --purge metrics-server --tiller-namespace tiller
 
 .PHONY: ssl-certs
 ssl-certs:
