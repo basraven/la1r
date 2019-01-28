@@ -11,4 +11,5 @@ This project roadmap is ordered on priority
 * Fluentd
 * "alternative dashboard, TBD"
 * glusterfs
+* Fix kube-plex
 * replace flannel for Weave/Calico/Istio
