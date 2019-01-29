@@ -119,7 +119,7 @@ spec:
         command:
         - /heapster
         - --source=kubernetes:https://kubernetes.default:443?useServiceAccount=true&kubeletHttps=true&kubeletPort=10250&insecure=true
-        - --sink=influxdb:maintenance.monitoring-influxdb:8086
+        - --sink=influxdb:http://monitoring-influxdb.maintenance:8086?insecuressl=true&db=k8s&user=root&pw=root
 ---
 apiVersion: v1
 kind: Service

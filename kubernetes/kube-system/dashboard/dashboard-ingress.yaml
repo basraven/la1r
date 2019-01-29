@@ -1,0 +1,32 @@
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    k8s-app: kubernetes-dashboard
+  name: kubernetes-dashboard-http
+  namespace: kube-system
+spec:
+  ports:
+    - port: 9090
+      targetPort: 80
+  selector:
+    k8s-app: kubernetes-dashboard
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: kubernetes-dashboardingress
+  namespace: kube-system
+  # annotations:
+    # ingress.kubernetes.io/ssl-redirect: "true"
+    # ingress.kubernetes.io/use-port-in-redirects: "true"
+    # kubernetes.io/ingress.class: traefik0
+spec:
+  rules:
+  - host: kubernetes.bas
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: kubernetes-dashboard-http
+          servicePort: 80
