@@ -1,0 +1,58 @@
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: chronograf
+  namespace: maintenance
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        task: monitoring
+        k8s-app: chronograf
+    spec:
+      containers:
+      - name: chronograf
+        image: chronograf
+        ports:
+        - containerPort: 8888
+        volumeMounts:
+        - mountPath: /var/lib/chronograf
+          name: chronograf
+        # env:
+        # - name: INFLUXDB_HOST
+        #   value: monitoring-influxdb
+    
+      volumes:
+      - name: chronograf
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chronograf
+  namespace: maintenance
+spec:
+  ports:
+  - port: 80
+    targetPort: 8888
+  selector:
+    k8s-app: chronograf
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: monitoring-grafana-ingress
+  namespace: maintenance
+  # annotations:
+  #   kubernetes.io/ingress.class: traefik
+spec:
+  rules:
+  - host: chronograf.bas
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: chronograf
+          servicePort: 80

@@ -18,6 +18,13 @@ spec:
         volumeMounts:
         - mountPath: /data
           name: influxdb-storage
+        env:
+          - name: INFLUXDB_DB
+            value: k8s
+          - name: INFLUXDB_ADMIN_USER
+            value: root
+          - name: INFLUXDB_ADMIN_PASSWORD
+            value: root
       volumes:
       - name: influxdb-storage
         emptyDir: {}
