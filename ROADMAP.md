@@ -1,11 +1,11 @@
 # Project ROADMAP
 This project roadmap is ordered on priority
 
-* basic auth https://github.com/kubernetes/dashboard/wiki/Access-control#basic
+* Prometheus 
 * Samba
 * FaaS
-* Prometheus 
 * Grafana
+* Fix SSL Certificates
 * Elasticsearch
 * pihole
 * Fluentd
