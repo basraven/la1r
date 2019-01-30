@@ -1,51 +1,51 @@
-apiVersion: extensions/v1beta1
-# SHOULD BE REMOVED AND REPLACED BY metrics-server
-kind: Deployment
-metadata:
-  name: monitoring-influxdb
-  namespace: maintenance
-spec:
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        task: monitoring
-        k8s-app: influxdb
-    spec:
-      containers:
-      - name: influxdb
-        image: influxdb
-        volumeMounts:
-        - mountPath: /data
-          name: influxdb-storage
-        env:
-          - name: INFLUXDB_DB
-            value: k8s
-          - name: INFLUXDB_ADMIN_USER
-            value: root
-          - name: INFLUXDB_ADMIN_PASSWORD
-            value: root
-      volumes:
-      - name: influxdb-storage
-        emptyDir: {}
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    task: monitoring
-    # For use as a Cluster add-on (https://github.com/kubernetes/kubernetes/tree/master/cluster/addons)
-    # If you are NOT using this as an addon, you should comment out this line.
-    kubernetes.io/cluster-service: 'true'
-    kubernetes.io/name: monitoring-influxdb
-  name: monitoring-influxdb
-  namespace: maintenance
-spec:
-  ports:
-  - port: 8086
-    targetPort: 8086
-  selector:
-    k8s-app: influxdb
+# apiVersion: extensions/v1beta1
+# # SHOULD BE REMOVED AND REPLACED BY metrics-server
+# kind: Deployment
+# metadata:
+#   name: monitoring-influxdb
+#   namespace: maintenance
+# spec:
+#   replicas: 1
+#   template:
+#     metadata:
+#       labels:
+#         task: monitoring
+#         k8s-app: influxdb
+#     spec:
+#       containers:
+#       - name: influxdb
+#         image: influxdb
+#         volumeMounts:
+#         - mountPath: /data
+#           name: influxdb-storage
+#         env:
+#           - name: INFLUXDB_DB
+#             value: k8s
+#           - name: INFLUXDB_ADMIN_USER
+#             value: root
+#           - name: INFLUXDB_ADMIN_PASSWORD
+#             value: root
+#       volumes:
+#       - name: influxdb-storage
+#         emptyDir: {}
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   labels:
+#     task: monitoring
+#     # For use as a Cluster add-on (https://github.com/kubernetes/kubernetes/tree/master/cluster/addons)
+#     # If you are NOT using this as an addon, you should comment out this line.
+#     kubernetes.io/cluster-service: 'true'
+#     kubernetes.io/name: monitoring-influxdb
+#   name: monitoring-influxdb
+#   namespace: maintenance
+# spec:
+#   ports:
+#   - port: 8086
+#     targetPort: 8086
+#   selector:
+#     k8s-app: influxdb
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -138,95 +138,3 @@ spec:
     targetPort: 8082
   selector:
     k8s-app: heapster
----
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  name: monitoring-grafana
-  namespace: maintenance
-spec:
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        task: monitoring
-        k8s-app: grafana
-    spec:
-      containers:
-      - name: grafana
-        # image: k8s.gcr.io/heapster-grafana-amd64:v4.4.3
-        image: grafana/grafana
-        ports:
-        - containerPort: 3000
-          protocol: TCP
-        volumeMounts:
-        - mountPath: /etc/ssl/certs
-          name: ca-certificates
-          readOnly: true
-        - mountPath: /var/lib/grafana
-          name: grafana-storage
-        env:
-        - name: INFLUXDB_HOST
-          value: monitoring-influxdb
-        - name: GF_SERVER_HTTP_PORT
-          value: "3000"
-          # The following env variables are required to make Grafana accessible via
-          # the kubernetes api-server proxy. On production clusters, we recommend
-          # removing these env variables, setup auth for grafana, and expose the grafana
-          # service using a LoadBalancer or a public IP.
-        - name: GF_AUTH_BASIC_ENABLED
-          value: "false"
-        - name: GF_AUTH_ANONYMOUS_ENABLED
-          value: "true"
-        - name: GF_AUTH_ANONYMOUS_ORG_ROLE
-          value: Admin
-        - name: GF_SERVER_ROOT_URL
-          # If you're only using the API Server proxy, set this value instead:
-          # value: /api/v1/namespaces/maintenance/services/monitoring-grafana/proxy
-          value: /
-      volumes:
-      - name: ca-certificates
-        # hostPath:
-        #   path: /etc/ssl/certs
-        emptyDir: {}
-      - name: grafana-storage
-        emptyDir: {}
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    # For use as a Cluster add-on (https://github.com/kubernetes/kubernetes/tree/master/cluster/addons)
-    # If you are NOT using this as an addon, you should comment out this line.
-    kubernetes.io/cluster-service: 'true'
-    kubernetes.io/name: monitoring-grafana
-  name: monitoring-grafana
-  namespace: maintenance
-spec:
-  # In a production setup, we recommend accessing Grafana through an external Loadbalancer
-  # or through a public IP.
-  # type: LoadBalancer
-  # You could also use NodePort to expose the service at a randomly-generated port
-  # type: NodePort
-  ports:
-  - port: 80
-    targetPort: 3000
-  selector:
-    k8s-app: grafana
----
-apiVersion: extensions/v1beta1
-kind: Ingress
-metadata:
-  name: monitoring-grafana-ingress
-  namespace: maintenance
-  # annotations:
-  #   kubernetes.io/ingress.class: traefik
-spec:
-  rules:
-  - host: grafana.bas
-    http:
-      paths:
-      - path: /
-        backend:
-          serviceName: monitoring-grafana
-          servicePort: 80
