@@ -61,7 +61,7 @@ alertmanager:
 
   ## Deploy alertmanager
   ##
-  enabled: true
+  enabled: false
 
   ## Service account for Alertmanager to use.
   ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
@@ -323,7 +323,9 @@ grafana:
     ##
     # hosts:
     #   - prometheus.domain.com
-    hosts: []
+    # hosts: []
+    hosts:
+      - grafana-prometheus.bas
 
     ## TLS configuration for prometheus Ingress
     ## Secret must be manually created in the namespace
@@ -707,7 +709,9 @@ prometheus:
     ##
     # hosts:
     #   - prometheus.domain.com
-    hosts: []
+    # hosts: []
+    hosts:
+      - prometheus.bas
 
     ## TLS configuration for Prometheus Ingress
     ## Secret must be manually created in the namespace

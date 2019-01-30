@@ -1,0 +1,87 @@
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: jackett-config-claim
+  namespace: torrent
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "jackett-config"
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jackett
+  namespace: torrent
+  labels:
+    app: jackett
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jackett
+  template:
+    metadata:
+      labels:
+        app: jackett
+    spec:
+      volumes:
+        - name: jackett-config-volume
+          persistentVolumeClaim:
+            claimName: jackett-config-claim
+      containers:
+      - name: jackett
+        image: linuxserver/jackett
+        ports:
+        - name: http
+          containerPort: 9117
+        env:
+        - name: TZ
+          value: Europe/Amsterdam
+        - name: PGID
+          value: "1000"
+        - name: PUID
+          value: "1000"
+        volumeMounts:
+          - name: jackett-config-volume
+            mountPath: /config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: jackett
+  name: jackett
+  namespace: torrent
+spec:
+  ports:
+  - name: http
+    targetPort: 9117
+    port: 80
+  selector:
+    app: jackett
+  type: ClusterIP
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: jackettingress
+  namespace: torrent
+  # annotations:
+  #   kubernetes.io/ingress.class: traefik
+spec:
+  rules:
+  - host: jackett.bas
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: jackett
+          servicePort: 80
