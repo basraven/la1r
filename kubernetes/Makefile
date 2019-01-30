@@ -9,13 +9,12 @@ local: dashboard nextcloud
 .PHONY: network-overlay
 network-overlay:
 	# - curl -sSL https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml | sed "s/amd64/arm/g" | kubectl create -f -  && exit 0
-	kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+	- kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
 	
 .PHONY: dashboard
 dashboard:
 	# - curl -sSL https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml | sed "s/amd64/arm/g" | kubectl create -f -
-	# kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml
-	kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v1.10.1/src/deploy/recommended/kubernetes-dashboard.yaml
+	- kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v1.10.1/src/deploy/recommended/kubernetes-dashboard.yaml
 
 	- kubectl create serviceaccount cluster-admin-dashboard-sa
 	- kubectl create clusterrolebinding cluster-admin-dashboard-sa --clusterrole=cluster-admin --serviceaccount=default:cluster-admin-dashboard-sa
@@ -77,7 +76,7 @@ qbittorrent:
 # Refresh claimToken from https://www.plex.tv/claim/
 .PHONY: plex
 plex:
-	- cp -rf torrent/plex/kube-plex-custom/* torrent/plex/kube-plex
+	cp -rf torrent/plex/kube-plex-custom/* torrent/plex/kube-plex
 	- kubectl apply -f torrent/plex/plex-pv.yaml
 	- kubectl apply -f torrent/plex/plex-pv-claim.yaml
 	- kubectl apply -f torrent/plex/plex-local-service.yaml
@@ -97,24 +96,25 @@ unplex:
 
 
 # TODO: replace heapster with metrics-server
-.PHONY: metrics
-metrics:
-	kubectl apply -f maintenance/influx-heapster-grafana.yaml
-# .PHONY: metrics
-# metrics:
-# 	- cp -rf helm/helm-custom/stable/metrics-server/* helm/helm/stable/metrics-server/
-# 	- helm install helm/helm/stable/metrics-server/ --tiller-namespace tiller --namespace kube-system --name metrics-server
+.PHONY: dashboard-metrics
+dashboard-metrics:
+	- kubectl apply -f maintenance/heapster/heapster.yaml
 
-# .PHONY: unmetrics
-# unmetrics:
-# 	- helm del --purge metrics-server --tiller-namespace tiller
+.PHONY: prometheus
+prometheus:
+	cp -rf helm/helm-custom/stable/prometheus-operator/* helm/helm/stable/prometheus-operator/
+	helm install stable/prometheus-operator --tiller-namespace tiller --name prometheus-operator --namespace maintenance
+
+.PHONY: unprometheus
+unprometheus:
+	helm del --purge prometheus-operator --tiller-namespace tiller
 
 .PHONY: ssl-certs
 ssl-certs:
 	# FIXME: doesn't accept the CA: Create CA
-	- openssl genrsa -des3 -out ravenCA.key 2048
-	- openssl req -x509 -new -nodes -key ravenCA.key -sha256 -days 1825 -out ravenCA.pem
+	openssl genrsa -des3 -out ravenCA.key 2048
+	openssl req -x509 -new -nodes -key ravenCA.key -sha256 -days 1825 -out ravenCA.pem
 	
 	# Create crt (works)
-	- /bin/bash /credentials/nextcloud/make-cert.sh cloud.bas && mv ./cloud.bas.cert.pem /credentials/nextcloud/cloud.bas.crt && mv ./cloud.bas.key.pem /credentials/nextcloud/cloud.bas.key
-	- kubectl create secret generic traefik-cert --namespace kube-system --from-file=/credentials/nextcloud/cloud.bas.crt --from-file=/credentials/nextcloud/cloud.bas.key
+	/bin/bash /credentials/nextcloud/make-cert.sh cloud.bas && mv ./cloud.bas.cert.pem /credentials/nextcloud/cloud.bas.crt && mv ./cloud.bas.key.pem /credentials/nextcloud/cloud.bas.key
+	kubectl create secret generic traefik-cert --namespace kube-system --from-file=/credentials/nextcloud/cloud.bas.crt --from-file=/credentials/nextcloud/cloud.bas.key
