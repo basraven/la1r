@@ -24,9 +24,14 @@ spec:
       - name: ssl
         secret:
           secretName: traefik-cert
+          defaultMode: 0744
       - name: config
         configMap:
           name: traefik-conf
+          defaultMode: 0744
+          # items:
+          #   - key: traefik.toml
+          #     path: traefik.toml
       serviceAccountName: traefik-ingress-controller
       terminationGracePeriodSeconds: 60
       containers:
@@ -55,10 +60,11 @@ spec:
             - NET_BIND_SERVICE
         args:
         # FIXME: fix it with plex
-        # - --configfile=/config/traefik.toml
+        - --configfile=/config/traefik.toml
         - --api
         - --kubernetes
         - --logLevel=INFO
+        - --insecureskipverify
 ---
 kind: Service
 apiVersion: v1
