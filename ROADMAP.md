@@ -5,6 +5,7 @@ This project roadmap is ordered on priority
 * Samba
 * FaaS
 * Grafana
+* mailserver
 * Fix SSL Certificates
 * Elasticsearch
 * pihole
