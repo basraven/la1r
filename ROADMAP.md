@@ -2,12 +2,12 @@
 This project roadmap is ordered on priority
 
 * basic auth https://github.com/kubernetes/dashboard/wiki/Access-control#basic
-* Pihole
 * Samba
 * FaaS
 * Prometheus 
 * Grafana
 * Elasticsearch
+* pihole
 * Fluentd
 * "alternative dashboard, TBD"
 * glusterfs
