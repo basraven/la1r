@@ -604,7 +604,9 @@ prometheusOperator:
   ## Assign the prometheus operator to run on specific nodes
   ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
   ##
-  affinity: {}
+  affinity: {
+    "beta.kubernetes.io/arch" : "amd64"
+  }
   # requiredDuringSchedulingIgnoredDuringExecution:
   #   nodeSelectorTerms:
   #   - matchExpressions:

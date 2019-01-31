@@ -104,10 +104,16 @@ dashboard-metrics:
 prometheus:
 	cp -rf helm/helm-custom/stable/prometheus-operator/* helm/helm/stable/prometheus-operator/
 	helm install stable/prometheus-operator --tiller-namespace tiller --name prometheus-operator --namespace maintenance
+	- kubectl apply -f maintenance/prometheus/prometheus-ingress.yaml
 
 .PHONY: unprometheus
 unprometheus:
-	helm del --purge prometheus-operator --tiller-namespace tiller
+	- helm del --purge prometheus-operator --tiller-namespace tiller
+	- kubectl delete -f maintenance/prometheus/prometheus-ingress.yaml
+	- kubectl delete crd prometheuses.monitoring.coreos.com
+	- kubectl delete crd prometheusrules.monitoring.coreos.com
+	- kubectl delete crd servicemonitors.monitoring.coreos.com
+	- kubectl delete crd alertmanagers.monitoring.coreos.com
 
 .PHONY: ssl-certs
 ssl-certs:

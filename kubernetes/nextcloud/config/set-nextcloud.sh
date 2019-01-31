@@ -3,7 +3,7 @@ set -eu
 echo "[Raven] Tuning the container..."
 echo "alias www-data='su -l www-data -s /bin/bash'" >> ~/.bashrc
 apt-get update
-apt-get install cron
+apt-get install cron -y
 echo "" >> /etc/crontab
 echo "*/15  *  *  *  * www-data php -f /var/www/html/cron.php" >> /etc/crontab
 echo "*/10  *  *  *  * www-data /var/www/html/occ preview:pre-generate" >> /etc/crontab
