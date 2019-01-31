@@ -1,5 +1,6 @@
 #!/bin/sh
 set -eu
+# TODO: Put this is a new container instead of this...
 echo "[Raven] Tuning the container..."
 echo "alias www-data='su -l www-data -s /bin/bash'" >> ~/.bashrc
 apt-get update

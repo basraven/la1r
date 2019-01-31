@@ -1,4 +1,49 @@
 ---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: email-claim
+  namespace: network
+spec:
+  accessModes:
+  - ReadWriteMany
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "email"
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: email-sender
+  namespace: network
+  labels:
+    app: email-sender
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: email-sender
+  template:
+    metadata:
+      labels:
+        app: email-sender
+    spec:    
+      containers:
+      - name: email-sender
+        image: namshi/smtp
+        ports:
+        - name: smtp
+          containerPort: 25
+        env:
+        - name: MAILNAME
+          value: "admin.bas"
+        - name: PORT 
+          value: "25"
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -16,17 +61,56 @@ spec:
       labels:
         app: email
     spec:    
+      volumes:
+      - name: email-volume
+        persistentVolumeClaim:
+          claimName: email-claim
+      - name: email-config-volume
+        configMap:
+          name: email-config
+          items:
+          - key: config.json
+            path: config.json
+          defaultMode: 0744
       containers:
       - name: email
-        image: namshi/smtp
+        image: mailhog/mailhog
         ports:
         - name: smtp
-          containerPort: 25
+          containerPort: 1025
+        - name: http
+          containerPort: 8025
         env:
         - name: MAILNAME
           value: "admin.bas"
         - name: PORT 
-          value: "25"
+          value: "8025"
+        - name: MH_MAILDIR_PATH 
+          value: "/email"
+        - name: MH_OUTGOING_SMTP 
+          value: "/var/email/config.json"
+        volumeMounts:
+          - name: email-config-volume
+            mountPath: "/var/email/config.json"
+            subPath: "config.json"
+          - name: email-volume
+            mountPath: "/email"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: email-sender
+  name: email-sender
+  namespace: network
+spec:
+  ports:
+  - name: smtp
+    targetPort: 25
+    port: 25
+  selector:
+    app: email-sender
+  type: ClusterIP
 ---
 apiVersion: v1
 kind: Service
@@ -38,8 +122,33 @@ metadata:
 spec:
   ports:
   - name: smtp
-    targetPort: 25
+    targetPort: 1025
     port: 25
+  - name: http
+    targetPort: 8025
+    port: 80
   selector:
     app: email
   type: ClusterIP
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: emailingress
+  namespace: network
+spec:
+  rules:
+  - host: email.bas
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: email
+          servicePort: 80
+  - host: mail.bas
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: email
+          servicePort: 80

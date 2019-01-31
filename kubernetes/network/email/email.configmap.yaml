@@ -1,0 +1,16 @@
+apiVersion: v1
+metadata:
+  name: email-config
+  namespace: network
+kind: ConfigMap
+data:
+  config.json: |-
+    {
+        ".bas": {
+            "name": "admin.bas",
+            "host": "email-sender",
+            "email": "admin@bas",
+            "port": "25",
+            "mechanism": "PLAIN"
+        }
+    }
