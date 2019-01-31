@@ -74,21 +74,31 @@ spec:
           defaultMode: 0744
       containers:
       - name: email
-        image: mailhog/mailhog
+        image: djfarrelly/maildev
         ports:
         - name: smtp
-          containerPort: 1025
+          containerPort: 25
         - name: http
-          containerPort: 8025
-        env:
-        - name: MAILNAME
-          value: "admin.bas"
-        - name: PORT 
-          value: "8025"
-        - name: MH_MAILDIR_PATH 
-          value: "/email"
-        - name: MH_OUTGOING_SMTP 
-          value: "/var/email/config.json"
+          containerPort: 80
+        command:
+          - "bin/maildev"
+          - "--web=80"
+          - "--smtp=25"
+          - "--outgoing-host=email-sender"
+          - "--outgoing-user=admin@bas"
+          - "--auto-relay"
+          - "--auto-relay-rules=/var/email/config.json"
+        # args:
+
+        # env:
+        # - name: MAILNAME
+        #   value: "admin.bas"
+        # - name: PORT 
+        #   value: "8025"
+        # - name: MH_MAILDIR_PATH 
+        #   value: "/email"
+        # - name: MH_OUTGOING_SMTP 
+        #   value: "/var/email/config.json"
         volumeMounts:
           - name: email-config-volume
             mountPath: "/var/email/config.json"
@@ -122,10 +132,10 @@ metadata:
 spec:
   ports:
   - name: smtp
-    targetPort: 1025
+    targetPort: 25
     port: 25
   - name: http
-    targetPort: 8025
+    targetPort: 80
     port: 80
   selector:
     app: email
