@@ -1,16 +1,18 @@
 # Project ROADMAP
 This project roadmap is ordered on priority
 
-* Prometheus 
+* Calico
+* Fix SSL Certificates
 * Samba
 * FaaS
 * Grafana
-* mailserver
-* Fix SSL Certificates
-* Elasticsearch
 * pihole
+
+## Nice to haves
+* Prometheus 
+* Elasticsearch
 * Fluentd
 * "alternative dashboard, TBD"
 * glusterfs
 * Fix kube-plex
-* replace flannel for Weave/Calico/Istio
+* Istio...?
