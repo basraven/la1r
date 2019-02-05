@@ -1,31 +1,8 @@
-#--- Source: http://clarkgrubb.com/makefile-style-guide
-# MAKEFLAGS += --warn-undefined-variables
-SHELL := bash
-.SHELLFLAGS := -e -o pipefail -c
-.DEFAULT_GOAL := all
-.DELETE_ON_ERROR:
-.SUFFIXES:
-
-#--- Surpress default functions
-# .PHONY: create
-# create: ;@:
-# .PHONY: delete
-# delete: ;@:
-# .PHONY: bas
-# bas: ;@:
-#--- Target PHONY
-
-#--- Collections
 .PHONY: all
 all: network-overlay dashboard config faas traefik
 
 .PHONY: local
 local: dashboard nextcloud
-
-#---
-.PHONY: torrent
-torrent:
-	@$(MAKE) -C $(MAKECMDGOALS) --no-print-directory
 
 # Prefix all commands with - to ignore errors (already exists errors)
 
@@ -89,6 +66,11 @@ helm:
 	- helm init --tiller-namespace tiller
 	
 
+.PHONY: qbittorrent
+qbittorrent:
+	- kubectl create secret generic goose-credentials --namespace torrent --from-file=/credentials/ovpn/login.conf --from-file=/credentials/ovpn/ro-10.conf
+	- kubectl create configmap qbittorrent-config --namespace torrent --from-file=torrent/qbittorrent/config/set-goose.sh
+	- kubectl apply -f qbittorrent
 
 
 # Refresh claimToken from https://www.plex.tv/claim/
