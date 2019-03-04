@@ -1,0 +1,97 @@
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: backup-claim
+  namespace: network
+spec:
+  accessModes:
+  - ReadWriteMany
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "backup"
+  resources:
+    requests:
+      storage: 2000Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: backup-nextcloud-data-claim
+  namespace: network
+spec:
+  accessModes:
+  - ReadWriteMany
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "backup-nextcloud-data"
+  resources:
+    requests:
+      storage: 800Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: backup-nextcloud-web-claim
+  namespace: network
+spec:
+  accessModes:
+  - ReadWriteMany
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "backup-nextcloud-web"
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: email
+  namespace: network
+  labels:
+    app: email
+spec:
+  schedule: "*/1 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: email
+        spec:    
+          volumes:
+          - name: backup-script-volume
+            configMap:
+              name: backup-script
+              items:
+              - key: backup.sh
+                path: backup.sh
+              defaultMode: 0744
+          - name: backup-volume
+            persistentVolumeClaim:
+              claimName: backup-claim
+          - name: backup-nextcloud-data-volume
+            persistentVolumeClaim:
+              claimName: backup-nextcloud-data-claim
+          - name: backup-nextcloud-web-volume
+            persistentVolumeClaim:
+              claimName: backup-nextcloud-web-claim
+          containers:
+          - name: backup
+            image: busybox
+            command: 
+              - /backup-script/backup.sh
+            volumeMounts:
+              - name: backup-script-volume
+                mountPath: /backup-script
+              - name: backup-volume
+                mountPath: "/backup"
+              - name: backup-nextcloud-data-volume
+                mountPath: "/nextcloud-data"
+              - name: backup-nextcloud-web-volume
+                mountPath: "/nextcloud-web"
+            restartPolicy: OnFailure
