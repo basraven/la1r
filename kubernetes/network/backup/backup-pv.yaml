@@ -2,31 +2,6 @@
 kind: PersistentVolume
 apiVersion: v1
 metadata:
-  name: backup-pv
-  labels:
-    contenttype: "backup"
-spec:
-  capacity:
-    storage: 2000Gi
-  storageClassName: local-storage
-  persistentVolumeReclaimPolicy: Retain
-  accessModes:
-  - ReadWriteMany
-  local:
-    path: /mnt/largehdd/backup/
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-      - matchExpressions:
-        - key: kubernetes.io/hostname
-          operator: In
-          values:
-          - raspi2
-# raspi2 should be changed to a more intelligent label
----
-kind: PersistentVolume
-apiVersion: v1
-metadata:
   name: backup-nextcloud-data-pv
   labels:
     contenttype: "backup-nextcloud-data"

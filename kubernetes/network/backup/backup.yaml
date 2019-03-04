@@ -2,22 +2,6 @@
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: backup-claim
-  namespace: network
-spec:
-  accessModes:
-  - ReadWriteMany
-  storageClassName: local-storage
-  selector:
-    matchLabels:
-      contenttype: "backup"
-  resources:
-    requests:
-      storage: 2000Gi
----
-kind: PersistentVolumeClaim
-apiVersion: v1
-metadata:
   name: backup-nextcloud-data-claim
   namespace: network
 spec:
@@ -50,20 +34,28 @@ spec:
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
-  name: email
+  name: backup
   namespace: network
   labels:
-    app: email
+    app: backup
 spec:
-  schedule: "*/1 * * * *"
+  schedule: "*/10 * * * *"
   jobTemplate:
     spec:
       template:
         metadata:
           labels:
-            app: email
-        spec:    
+            app: backup
+        spec:
+          restartPolicy: Never    
           volumes:
+          - name: id-rsa-volume
+            secret:
+              secretName: backup-credentials
+              items:
+              - key: id_rsa
+                path: id_rsa
+              defaultMode: 0600
           - name: backup-script-volume
             configMap:
               name: backup-script
@@ -71,9 +63,6 @@ spec:
               - key: backup.sh
                 path: backup.sh
               defaultMode: 0744
-          - name: backup-volume
-            persistentVolumeClaim:
-              claimName: backup-claim
           - name: backup-nextcloud-data-volume
             persistentVolumeClaim:
               claimName: backup-nextcloud-data-claim
@@ -82,16 +71,15 @@ spec:
               claimName: backup-nextcloud-web-claim
           containers:
           - name: backup
-            image: busybox
+            image: instrumentisto/rsync-ssh
             command: 
               - /backup-script/backup.sh
             volumeMounts:
+              - name: id-rsa-volume
+                mountPath: /backup-ssh-key
               - name: backup-script-volume
                 mountPath: /backup-script
-              - name: backup-volume
-                mountPath: "/backup"
               - name: backup-nextcloud-data-volume
                 mountPath: "/nextcloud-data"
               - name: backup-nextcloud-web-volume
                 mountPath: "/nextcloud-web"
-            restartPolicy: OnFailure

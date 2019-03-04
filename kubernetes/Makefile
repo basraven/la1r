@@ -56,6 +56,20 @@ nextcloud:
 	- kubectl apply -f nextcloud/nextcloud-pv.yaml
 	- kubectl apply -f nextcloud/nextcloud.yaml
 
+.PHONY: backup
+backup:
+	- kubectl create secret generic backup-credentials --namespace network --from-file=/credentials/ssh/backup/id_rsa
+	- kubectl create configmap backup-script --namespace network --from-file=network/backup/backup.sh
+	- kubectl apply -f network/backup/backup-pv.yaml
+	- kubectl apply -f network/backup/backup.yaml
+
+.PHONY: unbackup
+unbackup:
+	- kubectl delete secret backup-credentials --namespace network
+	- kubectl delete configmap backup-script --namespace network
+	- kubectl delete -f network/backup/backup.yaml
+	- kubectl delete -f network/backup/backup-pv.yaml
+
 .PHONY: helm
 helm:
 	- kubectl apply -f namespaces/tiller.yaml
