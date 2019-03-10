@@ -2,8 +2,24 @@
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
+  name: backup-storage-claim
+  namespace: backup
+spec:
+  accessModes:
+  - ReadWriteMany
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "backup-storage"
+  resources:
+    requests:
+      storage: 2000Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
   name: backup-nextcloud-data-claim
-  namespace: network
+  namespace: backup
 spec:
   accessModes:
   - ReadWriteMany
@@ -19,7 +35,7 @@ kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
   name: backup-nextcloud-web-claim
-  namespace: network
+  namespace: backup
 spec:
   accessModes:
   - ReadWriteMany
@@ -35,11 +51,14 @@ apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
   name: backup
-  namespace: network
+  namespace: backup
   labels:
     app: backup
 spec:
-  schedule: "*/10 * * * *"
+  schedule: "0 4 * * 0,3"
+  concurrencyPolicy: Replace
+  successfulJobsHistoryLimit: 6
+  failedJobsHistoryLimit: 10
   jobTemplate:
     spec:
       template:
@@ -47,15 +66,17 @@ spec:
           labels:
             app: backup
         spec:
+          affinity:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                    - big-raver
           restartPolicy: Never    
           volumes:
-          - name: id-rsa-volume
-            secret:
-              secretName: backup-credentials
-              items:
-              - key: id_rsa
-                path: id_rsa
-              defaultMode: 0600
           - name: backup-script-volume
             configMap:
               name: backup-script
@@ -63,6 +84,9 @@ spec:
               - key: backup.sh
                 path: backup.sh
               defaultMode: 0744
+          - name: backup-storage-volume
+            persistentVolumeClaim:
+              claimName: backup-storage-claim
           - name: backup-nextcloud-data-volume
             persistentVolumeClaim:
               claimName: backup-nextcloud-data-claim
@@ -75,10 +99,10 @@ spec:
             command: 
               - /backup-script/backup.sh
             volumeMounts:
-              - name: id-rsa-volume
-                mountPath: /backup-ssh-key
               - name: backup-script-volume
                 mountPath: /backup-script
+              - name: backup-storage-volume
+                mountPath: /backup
               - name: backup-nextcloud-data-volume
                 mountPath: "/nextcloud-data"
               - name: backup-nextcloud-web-volume

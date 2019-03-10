@@ -58,17 +58,15 @@ nextcloud:
 
 .PHONY: backup
 backup:
-	- kubectl create secret generic backup-credentials --namespace network --from-file=/credentials/ssh/backup/id_rsa
-	- kubectl create configmap backup-script --namespace network --from-file=network/backup/backup.sh
-	- kubectl apply -f network/backup/backup-pv.yaml
-	- kubectl apply -f network/backup/backup.yaml
+	- kubectl create configmap backup-script --namespace backup --from-file=backup/backup.sh
+	- kubectl apply -f backup/backup-pv.yaml
+	- kubectl apply -f backup/backup.yaml
 
 .PHONY: unbackup
 unbackup:
-	- kubectl delete secret backup-credentials --namespace network
-	- kubectl delete configmap backup-script --namespace network
-	- kubectl delete -f network/backup/backup.yaml
-	- kubectl delete -f network/backup/backup-pv.yaml
+	- kubectl delete configmap backup-script --namespace backup
+	- kubectl delete -f backup/backup.yaml
+	- kubectl delete -f backup/backup-pv.yaml
 
 .PHONY: helm
 helm:

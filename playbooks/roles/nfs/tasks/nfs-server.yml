@@ -1,0 +1,29 @@
+---
+- hosts: all
+  remote_user: "{{ target_user }}"
+  tasks:
+    - name: Check if packages are installed
+      apt: name={{item}} state=present
+      with_items:
+          - nfs-kernel-server 
+          - nfs-common
+          - rpcbind
+    - name: Set export
+      lineinfile:
+        dest=/etc/exports
+        regexp='^/mnt/largehdd/backup'
+        line="/mnt/largehdd/backup *(rw,async,no_subtree_check,anonuid=1040,anongid=1040)"
+        state=present
+        backup=yes
+    - name: "unmask nfs-common"
+      shell:  'rm /lib/systemd/system/nfs-common.service'
+      args:
+        executable: /bin/bash
+      ignore_errors: yes   
+    - name: "enable and start system services"
+      systemd: name={{item}} daemon_reload=yes enabled=yes masked=no state=restarted
+      with_items:
+          - nfs-kernel-server 
+          - nfs-common
+          - rpcbind
+    

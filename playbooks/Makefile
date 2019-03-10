@@ -6,10 +6,10 @@ PHONY: build-ubuntu
 build-master: prep security-ubuntu docker k8s-install-ubuntu k8s-init 
 
 .PHONY: build-master
-build-master: prep security-pi docker k8s-install k8s-init k8s-fetch k8s-load no-ip ovpn-install
+build-master: prep security-pi docker k8s-install k8s-init k8s-fetch k8s-load no-ip ovpn-install nfs-client
 
 .PHONY: build-slave
-build-slave: prep security-pi docker k8s-install ovpn-join k8s-join
+build-slave: prep security-pi docker k8s-install ovpn-join k8s-join nfs-server
 
 .PHONY: ip-backup
 ip-backup: 
@@ -37,6 +37,16 @@ prep:
 .PHONY: user
 user:
 	ansible-playbook -i /playbooks/hosts /playbooks/roles/common/tasks/create-user.yml --ask-pass
+
+.PHONY: nfs-server
+nfs-server:
+	ansible-playbook -i /playbooks/hosts /playbooks/roles/nfs/tasks/create-backup-user.yml
+	ansible-playbook -i /playbooks/hosts /playbooks/roles/nfs/tasks/nfs-server.yml
+
+.PHONY: nfs-client
+nfs-client:
+	ansible-playbook -i /playbooks/hosts /playbooks/roles/nfs/tasks/create-backup-user.yml
+	ansible-playbook -i /playbooks/hosts /playbooks/roles/nfs/tasks/nfs-client.yml
 
 .PHONY: user-ubuntu
 user-ubuntu:
