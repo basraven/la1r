@@ -2,22 +2,6 @@
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: backup-storage-claim
-  namespace: backup
-spec:
-  accessModes:
-  - ReadWriteMany
-  storageClassName: local-storage
-  selector:
-    matchLabels:
-      contenttype: "backup-storage"
-  resources:
-    requests:
-      storage: 2000Gi
----
-kind: PersistentVolumeClaim
-apiVersion: v1
-metadata:
   name: backup-nextcloud-data-claim
   namespace: backup
 spec:
@@ -50,12 +34,12 @@ spec:
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
-  name: backup
+  name: backup-nextcloud-weekly
   namespace: backup
   labels:
-    app: backup
+    app: backup-nextcloud-weekly
 spec:
-  schedule: "0 4 * * 0,3"
+  schedule: "5 4 * * 0"
   concurrencyPolicy: Replace
   successfulJobsHistoryLimit: 6
   failedJobsHistoryLimit: 10
@@ -81,8 +65,8 @@ spec:
             configMap:
               name: backup-script
               items:
-              - key: backup.sh
-                path: backup.sh
+              - key: backup-weekly.sh
+                path: backup-weekly.sh
               defaultMode: 0744
           - name: backup-storage-volume
             persistentVolumeClaim:
@@ -97,7 +81,69 @@ spec:
           - name: backup
             image: instrumentisto/rsync-ssh
             command: 
-              - /backup-script/backup.sh
+              - /backup-script/backup-weekly.sh
+            volumeMounts:
+              - name: backup-script-volume
+                mountPath: /backup-script
+              - name: backup-storage-volume
+                mountPath: /backup
+              - name: backup-nextcloud-data-volume
+                mountPath: "/nextcloud-data"
+              - name: backup-nextcloud-web-volume
+                mountPath: "/nextcloud-web"
+
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: backup-nextcloud-monthly
+  namespace: backup
+  labels:
+    app: backup-nextcloud-monthly
+spec:
+  schedule: "5 3 1 * *"
+  concurrencyPolicy: Replace
+  successfulJobsHistoryLimit: 6
+  failedJobsHistoryLimit: 10
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: backup
+        spec:
+          affinity:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                    - big-raver
+          restartPolicy: Never    
+          volumes:
+          - name: backup-script-volume
+            configMap:
+              name: backup-script
+              items:
+              - key: backup-monthly.sh
+                path: backup-monthly.sh
+              defaultMode: 0744
+          - name: backup-storage-volume
+            persistentVolumeClaim:
+              claimName: backup-storage-claim
+          - name: backup-nextcloud-data-volume
+            persistentVolumeClaim:
+              claimName: backup-nextcloud-data-claim
+          - name: backup-nextcloud-web-volume
+            persistentVolumeClaim:
+              claimName: backup-nextcloud-web-claim
+          containers:
+          - name: backup
+            image: instrumentisto/rsync-ssh
+            command: 
+              - /backup-script/backup-monthly.sh
             volumeMounts:
               - name: backup-script-volume
                 mountPath: /backup-script

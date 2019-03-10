@@ -58,14 +58,16 @@ nextcloud:
 
 .PHONY: backup
 backup:
-	- kubectl create configmap backup-script --namespace backup --from-file=backup/backup.sh
+	- kubectl create configmap backup-script --namespace backup --from-file=backup/nextcloud/backup-weekly.sh --from-file=backup/nextcloud/backup-monthly.sh
 	- kubectl apply -f backup/backup-pv.yaml
-	- kubectl apply -f backup/backup.yaml
+	- kubectl apply -f backup/backup-pvc.yaml
+	- kubectl apply -f backup/backup-nextcloud.yaml
 
 .PHONY: unbackup
 unbackup:
 	- kubectl delete configmap backup-script --namespace backup
-	- kubectl delete -f backup/backup.yaml
+	- kubectl delete -f backup/backup-nextcloud.yaml
+	- kubectl delete -f backup/backup-pvc.yaml
 	- kubectl delete -f backup/backup-pv.yaml
 
 .PHONY: helm
