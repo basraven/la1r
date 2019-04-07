@@ -24,7 +24,7 @@ openvpn_KEY_OU: "basraven.nl"
 openvpn_KEY_NAME: "server"
 openvpn_cipher: "AES-128-CBC"
 openvpn_auth: "SHA256"
-openvpn_port: 65111
+openvpn_port: 80
 openvpn_proto: udp
 
 openvpn_server_url: "wessel1.ddns.net"
