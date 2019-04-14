@@ -135,18 +135,14 @@ apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   name: qbittorrentingress
-  namespace: kube-system
-  annotations:
-    kubernetes.io/ingress.class: traefik
+  namespace: torrent
+  # annotations:
+  #   kubernetes.io/ingress.class: traefik
 spec:
   rules:
   - host: torrent.bas
     http:
       paths:
       - backend:
-          serviceName: torrent
+          serviceName: qbittorrent
           servicePort: 80
-  tls:  
-  - hosts:
-    - torrent.bas
-    secretName: torrent-cert

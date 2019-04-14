@@ -40,9 +40,11 @@ faas:
 
 .PHONY: traefik
 traefik:
-	- kubectl apply -f https://raw.githubusercontent.com/containous/traefik/master/examples/k8s/traefik-rbac.yaml
-	- kubectl apply -f https://raw.githubusercontent.com/containous/traefik/master/examples/k8s/traefik-ds.yaml
-	- kubectl apply -f https://raw.githubusercontent.com/containous/traefik/master/examples/k8s/ui.yaml
+	- kubectl apply -f kube-system/traefik/traefik.yaml
+	- kubectl apply -f kube-system/traefik/traefik-rbac.yaml
+	# - kubectl create secret generic traefik-cert --namespace kube-system --from-file=main.crt=../credentials/ssl/cloud.bas.crt --from-file=main.key=../credentials/ssl/cloud.bas.key
+	# - kubectl create configmap traefik-conf --namespace kube-system --from-file=kube-system/traefik/traefik.toml
+	# - kubectl apply -f kube-system/traefik/traefik.yaml
 
 .PHONY: nextcloud
 nextcloud:
