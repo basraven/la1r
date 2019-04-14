@@ -20,15 +20,15 @@ spec:
         k8s-app: traefik-ingress-lb
         name: traefik-ingress-lb
     spec:
-      volumes:
-      - name: ssl
-        secret:
-          secretName: traefik-cert
-          defaultMode: 0744
-      - name: config
-        configMap:
-          name: traefik-conf
-          defaultMode: 0744
+      # volumes:
+      # - name: ssl
+      #   secret:
+      #     secretName: traefik-cert
+      #     defaultMode: 0744
+      # - name: config
+      #   configMap:
+          # name: traefik-conf
+          # defaultMode: 0744
           # items:
           #   - key: traefik.toml
           #     path: traefik.toml
@@ -37,11 +37,11 @@ spec:
       containers:
       - image: traefik
         name: traefik-ingress-lb
-        volumeMounts:
-        - mountPath: "/ssl"
-          name: "ssl"
-        - mountPath: "/config"
-          name: "config"
+        # volumeMounts:
+        # - mountPath: "/ssl"
+        #   name: "ssl"
+        # - mountPath: "/config"
+        #   name: "config"
         ports:
         - name: http
           containerPort: 80
@@ -60,7 +60,7 @@ spec:
             - NET_BIND_SERVICE
         args:
         # FIXME: fix it with plex
-        - --configfile=/config/traefik.toml
+        # - --configfile=/config/traefik.toml
         - --api
         - --kubernetes
         - --logLevel=INFO
@@ -83,3 +83,18 @@ spec:
     - protocol: TCP
       port: 8080
       name: admin
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: traefik-web-ui
+  namespace: kube-system
+spec:
+  rules:
+  - host: traefik.bas
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: traefik-ingress-service
+          servicePort: admin

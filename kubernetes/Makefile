@@ -40,9 +40,11 @@ faas:
 
 .PHONY: traefik
 traefik:
-	- kubectl apply -f https://raw.githubusercontent.com/containous/traefik/master/examples/k8s/traefik-rbac.yaml
-	- kubectl apply -f https://raw.githubusercontent.com/containous/traefik/master/examples/k8s/traefik-ds.yaml
-	- kubectl apply -f https://raw.githubusercontent.com/containous/traefik/master/examples/k8s/ui.yaml
+	- kubectl apply -f kube-system/traefik/traefik.yaml
+	- kubectl apply -f kube-system/traefik/traefik-rbac.yaml
+	# - kubectl create secret generic traefik-cert --namespace kube-system --from-file=main.crt=../credentials/ssl/cloud.bas.crt --from-file=main.key=../credentials/ssl/cloud.bas.key
+	# - kubectl create configmap traefik-conf --namespace kube-system --from-file=kube-system/traefik/traefik.toml
+	# - kubectl apply -f kube-system/traefik/traefik.yaml
 
 .PHONY: nextcloud
 nextcloud:
@@ -131,10 +133,13 @@ unprometheus:
 
 .PHONY: ssl-certs
 ssl-certs:
-	# FIXME: doesn't accept the CA: Create CA
-	openssl genrsa -des3 -out ravenCA.key 2048
-	openssl req -x509 -new -nodes -key ravenCA.key -sha256 -days 1825 -out ravenCA.pem
+	# Source: https://gist.github.com/fntlnz/cf14feb5a46b2eda428e000157447309
 	
+
+	# Upload crt + key
+	# kubectl create secret generic plex-cert --namespace kube-system --from-file=/credentials/ssl/plex.bas.crt --from-file=/credentials/ssl/plex.bas.key
+
+
 	# Create crt (works)
-	/bin/bash /credentials/nextcloud/make-cert.sh cloud.bas && mv ./cloud.bas.cert.pem /credentials/nextcloud/cloud.bas.crt && mv ./cloud.bas.key.pem /credentials/nextcloud/cloud.bas.key
-	kubectl create secret generic traefik-cert --namespace kube-system --from-file=/credentials/nextcloud/cloud.bas.crt --from-file=/credentials/nextcloud/cloud.bas.key
+	# /bin/bash /credentials/nextcloud/make-cert.sh cloud.bas && mv ./cloud.bas.cert.pem /credentials/nextcloud/cloud.bas.crt && mv ./cloud.bas.key.pem /credentials/nextcloud/cloud.bas.key
+	# kubectl create secret generic traefik-cert --namespace kube-system --from-file=/credentials/nextcloud/cloud.bas.crt --from-file=/credentials/nextcloud/cloud.bas.key
