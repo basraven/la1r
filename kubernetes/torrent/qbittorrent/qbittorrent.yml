@@ -143,7 +143,6 @@ spec:
   - host: torrent.bas
     http:
       paths:
-      - path: /
-        backend:
+      - backend:
           serviceName: qbittorrent
           servicePort: 80
