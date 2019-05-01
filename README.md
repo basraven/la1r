@@ -3,7 +3,7 @@ A personal collection of server configs with Kubernetes and Ansible, enjoy!
 
 
 ## Prerequisites
-* Docker for Windows (not Docker Toolbox)
+* Docker
 * id_rsa and id_rsa.pub in ```/credentials/ssh/``` (generate them yourself)
 
 ## How to run
@@ -12,9 +12,16 @@ Run the control (Ansible) client with:
 ./control/control.ps1
 ```
 
-## Core configuration
-The core configuration can be found at ```/playbooks/Makefile``` which you should run in the Ansible control container by:
+## Ansible configuration
+The Ansible configuration can be found at ```/playbooks/Makefile``` which you should run in the Ansible control container by:
 ```bash
+cd /playbook
+make all
+```
+## Kubernetes configuration
+The Kubernetes configuration can be found at ```/kubernetes/Makefile``` which you should run in the Ansible control container by:
+```bash
+cd /kubernetes
 make all
 ```
 
@@ -26,7 +33,7 @@ make all
 ## Roadmap
 Find the project roadmap on [ROADMAP.md](ROADMAP.md)
 
-### Running on Windows with Powershell
+### [Optional] Running on Windows with Powershell
 Sometimes Powershell gives the error "run.ps1 is not digitally signed. You cannot run this script on the current system."
 Please use the following command in a Powershell window as Administrator to (permanently solve this)
 ```powershell
