@@ -1,18 +1,9 @@
 # Project ROADMAP
 This project roadmap is ordered on priority
 
-* Calico
-* Fix SSL Certificates
+* More (specific) Grafana dashboards
 * Samba
-* FaaS
-* Grafana
+* OpenLDAP (integrating with Nextcloud and other services)
+* Add Prometheus with Listners
+* Fix SSL Certificates (with Cert-manager?)
 * pihole
-
-## Nice to haves
-* Prometheus 
-* Elasticsearch
-* Fluentd
-* "alternative dashboard, TBD"
-* glusterfs
-* Fix kube-plex
-* Istio...?

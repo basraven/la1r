@@ -1,16 +1,15 @@
 # server-configs
-A personal collection of server configs with Ansible, enjoy!
+A personal collection of server configs with Kubernetes and Ansible, enjoy!
 
 
 ## Prerequisites
 * Docker for Windows (not Docker Toolbox)
-* Hyper-V enabled (for testing only)
 * id_rsa and id_rsa.pub in ```/credentials/ssh/``` (generate them yourself)
 
 ## How to run
 Run the control (Ansible) client with:
 ```powershell
-.\run.ps1
+./control/control.ps1
 ```
 
 ## Core configuration
