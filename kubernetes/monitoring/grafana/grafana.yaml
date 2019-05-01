@@ -3,7 +3,7 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: monitoring-grafana
-  namespace: maintenance
+  namespace: monitoring
 spec:
   replicas: 1
   template:
@@ -42,7 +42,7 @@ spec:
           value: Admin
         - name: GF_SERVER_ROOT_URL
           # If you're only using the API Server proxy, set this value instead:
-          # value: /api/v1/namespaces/maintenance/services/monitoring-grafana/proxy
+          # value: /api/v1/namespaces/monitoring/services/monitoring-grafana/proxy
           value: /
       volumes:
       - name: ca-certificates
@@ -61,7 +61,7 @@ metadata:
     kubernetes.io/cluster-service: 'true'
     kubernetes.io/name: monitoring-grafana
   name: monitoring-grafana
-  namespace: maintenance
+  namespace: monitoring
 spec:
   # In a production setup, we recommend accessing Grafana through an external Loadbalancer
   # or through a public IP.
@@ -78,7 +78,7 @@ apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   name: monitoring-grafana-ingress
-  namespace: maintenance
+  namespace: monitoring
   # annotations:
   #   kubernetes.io/ingress.class: traefik
 spec:

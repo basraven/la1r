@@ -1,10 +1,19 @@
+---
+apiVersion: v1
+data:
+  create-default-retention.iql: CREATE RETENTION POLICY "default" ON "k8s" DURATION 1d REPLICATION 1 DEFAULT;
+kind: ConfigMap
+metadata:
+  name: influxdb-create-default-retention
+  namespace: monitoring
+---
 apiVersion: extensions/v1beta1
 # FIXME: WRITE A SCRIPT WHICH AUTOMATICALLY ENABLES THIS INFLUX QUERY:
 # CREATE RETENTION POLICY "default" ON "k8s" DURATION 1d REPLICATION 1 DEFAULT
 kind: Deployment
 metadata:
   name: monitoring-influxdb
-  namespace: maintenance
+  namespace: monitoring
 spec:
   replicas: 1
   template:
@@ -21,6 +30,8 @@ spec:
         volumeMounts:
         - mountPath: /data
           name: influxdb-storage
+        - name: create-default-retention
+          mountPath: /docker-entrypoint-initdb.d
         env:
           - name: INFLUXDB_DB
             value: k8s
@@ -29,6 +40,13 @@ spec:
           - name: INFLUXDB_USER_PASSWORD
             value: Example1
       volumes:
+      - name: create-default-retention
+        configMap:
+          name: influxdb-create-default-retention
+          items:
+          - key: create-default-retention.iql
+            path: create-default-retention.iql
+          defaultMode: 0755
       - name: influxdb-storage
         emptyDir: {}
 ---
@@ -42,7 +60,7 @@ metadata:
     kubernetes.io/cluster-service: 'true'
     kubernetes.io/name: monitoring-influxdb
   name: monitoring-influxdb
-  namespace: maintenance
+  namespace: monitoring
 spec:
   ports:
   - port: 80
