@@ -1,0 +1,51 @@
+apiVersion: extensions/v1beta1
+# FIXME: WRITE A SCRIPT WHICH AUTOMATICALLY ENABLES THIS INFLUX QUERY:
+# CREATE RETENTION POLICY "default" ON "k8s" DURATION 1d REPLICATION 1 DEFAULT
+kind: Deployment
+metadata:
+  name: monitoring-influxdb
+  namespace: maintenance
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        task: monitoring
+        k8s-app: influxdb
+    spec:
+      containers:
+      - name: influxdb
+        ports:
+        - containerPort: 8086
+        image: influxdb
+        volumeMounts:
+        - mountPath: /data
+          name: influxdb-storage
+        env:
+          - name: INFLUXDB_DB
+            value: k8s
+          - name: INFLUXDB_USER
+            value: bas
+          - name: INFLUXDB_USER_PASSWORD
+            value: Example1
+      volumes:
+      - name: influxdb-storage
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    task: monitoring
+    # For use as a Cluster add-on (https://github.com/kubernetes/kubernetes/tree/master/cluster/addons)
+    # If you are NOT using this as an addon, you should comment out this line.
+    kubernetes.io/cluster-service: 'true'
+    kubernetes.io/name: monitoring-influxdb
+  name: monitoring-influxdb
+  namespace: maintenance
+spec:
+  ports:
+  - port: 80
+    targetPort: 8086
+  selector:
+    k8s-app: influxdb

@@ -1,57 +1,9 @@
-# apiVersion: extensions/v1beta1
-# # SHOULD BE REMOVED AND REPLACED BY metrics-server
-# kind: Deployment
-# metadata:
-#   name: monitoring-influxdb
-#   namespace: maintenance
-# spec:
-#   replicas: 1
-#   template:
-#     metadata:
-#       labels:
-#         task: monitoring
-#         k8s-app: influxdb
-#     spec:
-#       containers:
-#       - name: influxdb
-#         image: influxdb
-#         volumeMounts:
-#         - mountPath: /data
-#           name: influxdb-storage
-#         env:
-#           - name: INFLUXDB_DB
-#             value: k8s
-#           - name: INFLUXDB_ADMIN_USER
-#             value: root
-#           - name: INFLUXDB_ADMIN_PASSWORD
-#             value: root
-#       volumes:
-#       - name: influxdb-storage
-#         emptyDir: {}
-# ---
-# apiVersion: v1
-# kind: Service
-# metadata:
-#   labels:
-#     task: monitoring
-#     # For use as a Cluster add-on (https://github.com/kubernetes/kubernetes/tree/master/cluster/addons)
-#     # If you are NOT using this as an addon, you should comment out this line.
-#     kubernetes.io/cluster-service: 'true'
-#     kubernetes.io/name: monitoring-influxdb
-#   name: monitoring-influxdb
-#   namespace: maintenance
-# spec:
-#   ports:
-#   - port: 8086
-#     targetPort: 8086
-#   selector:
-#     k8s-app: influxdb
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: heapster
-  namespace: kube-system
+  namespace: maintenance
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -96,13 +48,13 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: heapster
-  namespace: kube-system
+  namespace: maintenance
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: heapster
-  namespace: kube-system
+  name: monitoring-heapster
+  namespace: maintenance
 spec:
   replicas: 1
   template:
@@ -119,7 +71,8 @@ spec:
         command:
         - /heapster
         - --source=kubernetes:https://kubernetes.default:443?useServiceAccount=true&kubeletHttps=true&kubeletPort=10250&insecure=true
-        - --sink=influxdb:http://monitoring-influxdb.maintenance:8086?insecuressl=true&db=k8s&user=root&pw=root
+        - --sink=influxdb:http://monitoring-influxdb
+        # - --sink=influxdb:http://monitoring-influxdb.maintenance?insecuressl=true&db=k8s&user=bas&pw=Example1
 ---
 apiVersion: v1
 kind: Service
@@ -129,9 +82,9 @@ metadata:
     # For use as a Cluster add-on (https://github.com/kubernetes/kubernetes/tree/master/cluster/addons)
     # If you are NOT using this as an addon, you should comment out this line.
     kubernetes.io/cluster-service: 'true'
-    kubernetes.io/name: Heapster
-  name: heapster
-  namespace: kube-system
+    kubernetes.io/name: monitoring-heapster
+  name: monitoring-heapster
+  namespace: maintenance
 spec:
   ports:
   - port: 80
