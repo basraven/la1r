@@ -1,0 +1,146 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: exporter-qbittorent-config
+  namespace: monitoring
+data:
+  init.sh: |-
+    #!/bin/sh
+    apk update
+    apk add wget
+    wget $RELEASE_URL -O /exporter.jar
+    java -jar /exporter.jar
+  qbt-exporter-settings.json: |-
+    {
+        "exporterServerSettings": {
+          "port": 9561,
+          "host": "0.0.0.0"
+        },
+        "qbtSettings": {
+          "webUiAddress": "http://qbittorrent.torrent:8080"
+        },
+        "collectorSettings": {
+          "maindataCollectors": {
+            "serverState": {
+              "allTimeUploadBytes": true,
+              "networkUploadSpeedBytesPerSecond": true,
+              "allTimeShareRatio": true,
+              "diskWriteCacheOverloadPercent": false,
+              "currentSessionUploadedBytes": false,
+              "diskCacheSizeBytes": false,
+              "networkUploadSpeedCapBytesPerSecond": true,
+              "networkDownloadSpeedCapBytesSerSecond": true,
+              "diskQueueJobCount": false,
+              "diskFreeSpaceBytes": false,
+              "currentSessionWastedBytes": false,
+              "diskReadCacheOverloadPercent": false,
+              "diskAverageCacheQueueTimeMs": false,
+              "networkDhtNodeCount": true,
+              "diskQueueSizeBytes": false,
+              "diskReadCacheHitPercent": false,
+              "networkPeerConnectionCount": true,
+              "allTimeDownloadBytes": true,
+              "currentSessionDownloadedBytes": true,
+              "networkDownloadSpeedBytesPerSecond": true
+            },
+            "torrents": {
+              "downloadTotalBytes": false,
+              "uploadPayloadRateBytesPerSecond": false,
+              "activeTimeSeconds": false,
+              "downloadSessionBytes": false,
+              "seedersConnected": false,
+              "leechersConnected": false,
+              "downloadPayloadRateBytesPerSecond": false,
+              "seedersAvailable": false,
+              "leechersAvailable": false,
+              "uploadTotalBytes": false,
+              "uploadSessionBytes": false,
+              "downloadRemainingBytes": false,
+              "completedBytes": false,
+              "ratio": false
+            },
+            "aggregateTorrent": {
+              "downloadTotalBytes": true,
+              "uploadPayloadRateBytesPerSecond": true,
+              "activeTimeSeconds": true,
+              "downloadSessionBytes": true,
+              "seedersConnected": false,
+              "leechersConnected": false,
+              "downloadPayloadRateBytesPerSecond": true,
+              "seedersAvailable": true,
+              "leechersAvailable": true,
+              "uploadTotalBytes": true,
+              "uploadSessionBytes": true,
+              "sizeWantedBytes": true,
+              "sizeTotalBytes": true,
+              "downloadRemainingBytes": true,
+              "completedBytes": true
+            }
+          }
+        }
+      }
+
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: exporter-qbittorent
+  namespace: monitoring
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        task: monitoring
+        k8s-app: exporter-qbittorent
+    spec:
+      containers:
+      - name: exporter-qbittorent
+        ports:
+        - containerPort: 9561
+        image: openjdk:alpine
+        command: ["sh", "-c", "chmod +x /init.sh ; /init.sh"]
+        volumeMounts:
+        - name: exporter-qbittorent-initscript
+          mountPath: /init.sh
+          subPath: init.sh
+        - name: exporter-qbittorent-settings
+          mountPath: /qbt-exporter-settings.json
+          subPath: qbt-exporter-settings.json
+        env:
+          - name: RELEASE_URL
+            value: https://github.com/fru1tstand/qbittorrent-exporter/releases/download/1.0.0-release/qbt-exporter-fat-1.0.0-release.jar
+      volumes:
+      - name: exporter-qbittorent-initscript
+        configMap:
+          name: exporter-qbittorent-config
+          items:
+          - key: init.sh
+            path: init.sh
+          defaultMode: 0744
+      - name: exporter-qbittorent-settings
+        configMap:
+          name: exporter-qbittorent-config
+          items:
+          - key: qbt-exporter-settings.json
+            path: qbt-exporter-settings.json
+          defaultMode: 0744
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    task: monitoring
+    # For use as a Cluster add-on (https://github.com/kubernetes/kubernetes/tree/master/cluster/addons)
+    # If you are NOT using this as an addon, you should comment out this line.
+    kubernetes.io/cluster-service: 'true'
+    kubernetes.io/name: exporter-qbittorent
+  name: exporter-qbittorent
+  namespace: monitoring
+spec:
+  ports:
+  - port: 80
+    targetPort: 9561
+  selector:
+    k8s-app: exporter-qbittorent

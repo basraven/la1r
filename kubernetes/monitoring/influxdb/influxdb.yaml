@@ -8,8 +8,6 @@ metadata:
   namespace: monitoring
 ---
 apiVersion: extensions/v1beta1
-# FIXME: WRITE A SCRIPT WHICH AUTOMATICALLY ENABLES THIS INFLUX QUERY:
-# CREATE RETENTION POLICY "default" ON "k8s" DURATION 1d REPLICATION 1 DEFAULT
 kind: Deployment
 metadata:
   name: monitoring-influxdb
