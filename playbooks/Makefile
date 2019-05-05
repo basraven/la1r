@@ -57,6 +57,10 @@ ssh-clean:
 	ansible-playbook -i /playbooks/hosts /playbooks/roles/common/tasks/remove-pi-user.yml 
 
 
+##### Samba #####
+.PHONY: samba-server
+samba-server:
+	ansible-playbook -i /playbooks/hosts /playbooks/roles/samba/tasks/samba-server.yml
 
 ##### Docker #####
 .PHONY: docker
