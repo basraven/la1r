@@ -9,8 +9,8 @@ data:
     #!/bin/sh
     [global]
     sonarr_server_ids = 1
-    radarr_server_ids = false
     tautulli_server_ids = false
+    radarr_server_ids = false
     ombi_server_ids = false
     sickchill_server_ids = false
     unifi_server_ids = false
@@ -24,9 +24,9 @@ data:
     password = Example1
 
     [tautulli-1]
-    url = tautulli.domain.tld:8181
-    fallback_ip = 1.1.1.1
-    apikey = xxxxxxxxxxxxxxxx
+    url = exporter-tautulli
+    fallback_ip = 10.244.0.217
+    apikey = a505364e63204fbb8c0f2018c15dd7bc
     ssl = false
     verify_ssl = false
     get_activity = true
