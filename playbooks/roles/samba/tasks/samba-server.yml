@@ -14,10 +14,6 @@
     #     append: yes
     - name: smb config
       template: src=smb.conf.j2 dest=/etc/samba/smb.conf mode=0755
-    - name: Restart service dnsmasq, in all cases
-      service:
-        name: smbd
-        state: restarted
     - name: Include samba credentials
       include_vars:
         file: "{{credentials_dir}}/samba/samba-credentials.yaml"
@@ -26,3 +22,7 @@
       with_items:
       - "{{ samba_users }}"
       tags: smbpasswd
+    - name: Restart service smbd
+      service:
+        name: smbd
+        state: restarted
