@@ -1,4 +1,86 @@
 ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: qbittorrent-config
+  namespace: torrent
+data:
+  set-goose.sh: |-
+    #!/bin/sh
+    set -eu
+    echo "[OPENVPN] Creating GooseVPN connection"
+    apt-get update
+    apt-get install openvpn -y
+    # echo AUTOSTART="ro-10" >> /etc/default/openvpn
+    # service openvpn start
+    openvpn /etc/openvpn/ro-10.conf | sed "s/^/[OPENVPN] /" &
+    /init
+  qBittorrent.conf: |-
+    [AutoRun]
+    enabled=false
+    program=
+
+    [BitTorrent]
+    Session\Categories=@Variant(\0\0\0\b\0\0\0\x2\0\0\0\f\0s\0\x65\0r\0i\0\x65\0s\0\0\0\n\0\0\0\"\0/\0\x64\0o\0w\0n\0l\0o\0\x61\0\x64\0s\0/\0s\0\x65\0r\0i\0\x65\0s\0\0\0\f\0m\0o\0v\0i\0\x65\0s\0\0\0\n\0\0\0\"\0/\0\x64\0o\0w\0n\0l\0o\0\x61\0\x64\0s\0/\0m\0o\0v\0i\0\x65\0s)
+    Session\CreateTorrentSubfolder=true
+    Session\DisableAutoTMMByDefault=false
+    Session\DisableAutoTMMTriggers\CategoryChanged=false
+    Session\DisableAutoTMMTriggers\CategorySavePathChanged=false
+    Session\DisableAutoTMMTriggers\DefaultSavePathChanged=false
+
+    [Core]
+    AutoDeleteAddedTorrentFile=Never
+
+    [LegalNotice]
+    Accepted=true
+
+    [Preferences]
+    Bittorrent\AddTrackers=false
+    Bittorrent\MaxRatioAction=0
+    Bittorrent\PeX=true
+    Connection\GlobalDLLimitAlt=10
+    Connection\GlobalUPLimitAlt=10
+    Connection\Interface=tun0
+    Connection\PortRangeMin=6881
+    Connection\UPnP=false
+    Downloads\PreAllocation=true
+    Downloads\SavePath=/downloads/
+    Downloads\ScanDirsV2=@Variant(\0\0\0\x1c\0\0\0\0)
+    Downloads\StartInPause=false
+    Downloads\TempPath=/downloads/incomplete/
+    Downloads\UseIncompleteExtension=true
+    DynDNS\DomainName=changeme.dyndns.org
+    DynDNS\Enabled=false
+    DynDNS\Password=
+    DynDNS\Service=0
+    DynDNS\Username=
+    General\Locale=
+    General\UseRandomPort=false
+    MailNotification\email=
+    MailNotification\enabled=false
+    MailNotification\password=adminadmin
+    MailNotification\req_auth=true
+    MailNotification\req_ssl=false
+    MailNotification\sender=qBittorrent_notification@example.com
+    MailNotification\smtp_server=smtp.changeme.com
+    MailNotification\username=admin
+    Queueing\QueueingEnabled=false
+    WebUI\Address=*
+    WebUI\AlternativeUIEnabled=false
+    WebUI\AuthSubnetWhitelist=0.0.0.0/32, 0.0.0.0/0
+    WebUI\AuthSubnetWhitelistEnabled=true
+    WebUI\CSRFProtection=true
+    WebUI\ClickjackingProtection=true
+    WebUI\HTTPS\Enabled=false
+    WebUI\HostHeaderValidation=true
+    WebUI\LocalHostAuth=false
+    WebUI\Port=8080
+    WebUI\RootFolder=
+    WebUI\ServerDomains=*
+    WebUI\UseUPnP=true
+    WebUI\Username=admin
+  
+---
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
@@ -14,22 +96,6 @@ spec:
   resources:
     requests:
       storage: 2000Gi
----
-kind: PersistentVolumeClaim
-apiVersion: v1
-metadata:
-  name: qbittorrent-config-claim
-  namespace: torrent
-spec:
-  accessModes:
-  - ReadWriteMany 
-  storageClassName: local-storage
-  selector:
-    matchLabels:
-      contenttype: "qbittorrent-config"
-  resources:
-    requests:
-      storage: 2Gi
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -63,16 +129,22 @@ spec:
           - key: ro-10.conf
             path: ro-10.conf
           defaultMode: 0744
-      - name: qbittorrent-config-volume
-        persistentVolumeClaim:
-          claimName: qbittorrent-config-claim
-      - name: set-goose-config-volume
+      
+      - name: qbittorrent-config-client
+        configMap:
+          name: qbittorrent-config
+          items:
+          - key: qBittorrent.conf
+            path: qBittorrent.conf
+          defaultMode: 0744
+      - name: qbittorrent-config-goose
         configMap:
           name: qbittorrent-config
           items:
           - key: set-goose.sh
             path: set-goose.sh
           defaultMode: 0744
+      
       - name: torrent
         persistentVolumeClaim:
           claimName: qbittorrent-torrent-claim
@@ -103,9 +175,10 @@ spec:
         volumeMounts:
           - name: torrent
             mountPath: /downloads
-          - name: qbittorrent-config-volume
-            mountPath: /config/
-          - name: set-goose-config-volume
+          - name: qbittorrent-config-client
+            mountPath: /config/qBittorrent/qBittorrent.conf
+            subPath: qBittorrent.conf
+          - name: qbittorrent-config-goose
             mountPath: /goose/set-goose.sh
             subPath: set-goose.sh
           - name: set-goose-ovpn-volume

@@ -1,11 +1,12 @@
 ---
 apiVersion: v1
-data:
-  create-default-retention.iql: CREATE RETENTION POLICY "default" ON "k8s" DURATION 1d REPLICATION 1 DEFAULT;
 kind: ConfigMap
 metadata:
-  name: influxdb-create-default-retention
+  name: influxdb-init
   namespace: monitoring
+data:
+  heapster-init.iql: CREATE RETENTION POLICY "default" ON "k8s" DURATION 1d REPLICATION 1 DEFAULT;
+  varken-init.iql: CREATE DATABASE varken;
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -28,7 +29,7 @@ spec:
         volumeMounts:
         - mountPath: /data
           name: influxdb-storage
-        - name: create-default-retention
+        - name: influxdb-init
           mountPath: /docker-entrypoint-initdb.d
         env:
           - name: INFLUXDB_DB
@@ -38,12 +39,9 @@ spec:
           - name: INFLUXDB_USER_PASSWORD
             value: Example1
       volumes:
-      - name: create-default-retention
+      - name: influxdb-init
         configMap:
-          name: influxdb-create-default-retention
-          items:
-          - key: create-default-retention.iql
-            path: create-default-retention.iql
+          name: influxdb-init
           defaultMode: 0755
       - name: influxdb-storage
         emptyDir: {}
