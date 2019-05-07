@@ -12,8 +12,8 @@ data:
       "servers": [
         {"id": 0, "name": "Big Raver", "host": "10.8.0.1","man_port": 5555}
       ],
-      "username": "admin",
-      "password": "admin",
+      "username": "",
+      "password": "",
       "web": {
         "dateFormat": "HH:mm - DD.MM.YY"
       }
