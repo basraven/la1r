@@ -1,4 +1,20 @@
 ---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: grafana-claim
+  namespace: monitoring
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "grafana"
+  resources:
+    requests:
+      storage: 2Gi
+---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
@@ -24,10 +40,10 @@ spec:
           name: ca-certificates
           readOnly: true
         - mountPath: /var/lib/grafana
-          name: grafana-storage
+          name: grafana
         env:
-        - name: INFLUXDB_HOST
-          value: monitoring-influxdb
+        # - name: INFLUXDB_HOST
+        #   value: monitoring-influxdb
         - name: GF_SERVER_HTTP_PORT
           value: "3000"
           # The following env variables are required to make Grafana accessible via
@@ -49,25 +65,19 @@ spec:
         # hostPath:
         #   path: /etc/ssl/certs
         emptyDir: {}
-      - name: grafana-storage
-        emptyDir: {}
+      - name: grafana
+        persistentVolumeClaim:
+          claimName: grafana-claim
 ---
 apiVersion: v1
 kind: Service
 metadata:
   labels:
-    # For use as a Cluster add-on (https://github.com/kubernetes/kubernetes/tree/master/cluster/addons)
-    # If you are NOT using this as an addon, you should comment out this line.
     kubernetes.io/cluster-service: 'true'
     kubernetes.io/name: monitoring-grafana
   name: monitoring-grafana
   namespace: monitoring
 spec:
-  # In a production setup, we recommend accessing Grafana through an external Loadbalancer
-  # or through a public IP.
-  # type: LoadBalancer
-  # You could also use NodePort to expose the service at a randomly-generated port
-  # type: NodePort
   ports:
   - port: 80
     targetPort: 3000
@@ -79,8 +89,6 @@ kind: Ingress
 metadata:
   name: monitoring-grafana-ingress
   namespace: monitoring
-  # annotations:
-  #   kubernetes.io/ingress.class: traefik
 spec:
   rules:
   - host: grafana.bas

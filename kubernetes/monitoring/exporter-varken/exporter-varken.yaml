@@ -124,9 +124,10 @@ spec:
       containers:
       - name: exporter-varken
         image: boerderij/varken
+        command: ["/bin/sh", "-c", "cp /app/data/varken.example.ini /config/varken.example.ini && cp /config-custom/varken.ini /config/varken.ini && chmod 777 /config/varken.ini && python3 /app/Varken.py --data-folder /config"]
         volumeMounts:
         - name: exporter-varken-config
-          mountPath: /config/varken.ini
+          mountPath: /config-custom/varken.ini
           subPath: varken.ini
       volumes:
       - name: exporter-varken-config
@@ -135,4 +136,4 @@ spec:
           items:
           - key: varken.ini
             path: varken.ini
-          defaultMode: 0744
+          defaultMode: 0777
