@@ -2,7 +2,7 @@
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: exporter-tautulli-claim
+  name: chronograf-claim
   namespace: monitoring
 spec:
   accessModes:
@@ -10,7 +10,7 @@ spec:
   storageClassName: local-storage
   selector:
     matchLabels:
-      contenttype: "exporter-tautulli"
+      contenttype: "chronograf"
   resources:
     requests:
       storage: 2Gi
@@ -18,7 +18,7 @@ spec:
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: exporter-tautulli
+  name: chronograf
   namespace: monitoring
 spec:
   replicas: 1
@@ -26,27 +26,20 @@ spec:
     metadata:
       labels:
         task: monitoring
-        k8s-app: exporter-tautulli
+        k8s-app: chronograf
     spec:
       containers:
-      - name: exporter-tautulli
+      - name: chronograf
         ports:
-        - containerPort: 8181
-        env:
-        - name: TZ
-          value: Europe/Amsterdam
-        - name: PGID
-          value: "1000"
-        - name: PUID
-          value: "1000"
-        image: linuxserver/tautulli
+        - containerPort: 8888
+        image: chronograf
         volumeMounts:
-          - name: tautulli
-            mountPath: /config
+          - name: chronograf
+            mountPath: /var/lib/chronograf
       volumes:
-        - name: tautulli
+        - name: chronograf
           persistentVolumeClaim:
-            claimName: exporter-tautulli-claim
+            claimName: chronograf-claim
 ---
 apiVersion: v1
 kind: Service
@@ -54,27 +47,27 @@ metadata:
   labels:
     task: monitoring
     kubernetes.io/cluster-service: 'true'
-    kubernetes.io/name: exporter-tautulli
-  name: exporter-tautulli
+    kubernetes.io/name: chronograf
+  name: chronograf
   namespace: monitoring
 spec:
   ports:
   - port: 80
-    targetPort: 8181
+    targetPort: 8888
   selector:
-    k8s-app: exporter-tautulli
+    k8s-app: chronograf
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: exporter-tautulli
+  name: chronograf
   namespace: monitoring
 spec:
   rules:
-  - host: tautulli.bas
+  - host: chronograf.bas
     http:
       paths:
       - path: /
         backend:
-          serviceName: exporter-tautulli
+          serviceName: chronograf
           servicePort: 80

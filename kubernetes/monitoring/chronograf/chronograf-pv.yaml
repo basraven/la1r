@@ -2,18 +2,19 @@
 kind: PersistentVolume
 apiVersion: v1
 metadata:
-  name: exporter-tautulli-pv
+  name: chronograf-pv
   labels:
-    contenttype: "exporter-tautulli"
+    contenttype: "chronograf"
 spec:
   capacity:
     storage: 2Gi
+  # volumeMode field requires BlockVolume Alpha feature gate to be enabled.
   storageClassName: local-storage
   persistentVolumeReclaimPolicy: Retain
   accessModes:
   - ReadWriteMany
   local:
-    path: /mnt/largehdd/tautulli
+    path: /mnt/largehdd/chronograf
   nodeAffinity:
     required:
       nodeSelectorTerms:

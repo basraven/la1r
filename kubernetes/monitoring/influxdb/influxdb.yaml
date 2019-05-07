@@ -63,3 +63,18 @@ spec:
     targetPort: 8086
   selector:
     k8s-app: monitoring-influxdb
+# ---
+# apiVersion: extensions/v1beta1
+# kind: Ingress
+# metadata:
+#   name: monitoring-influxdb
+#   namespace: monitoring
+# spec:
+#   rules:
+#   - host: monitoring-influxdb.bas
+#     http:
+#       paths:
+#       - path: /
+#         backend:
+#           serviceName: monitoring-influxdb
+#           servicePort: 80
