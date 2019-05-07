@@ -52,7 +52,7 @@ spec:
         ports:
         - containerPort: 53
         - containerPort: 80
-        - containerPort: 443
+        # - containerPort: 443
         env:
         - name: WEBPASSWORD
           value: "admin"
@@ -65,7 +65,7 @@ spec:
         - name: DNS3
           value: "8.8.4.4"
         - name: VIRTUAL_HOST
-          value: "pihole.bas"
+          value: "pihole-ui.bas"
         # - name: MYSQL_DATABASE
         #   value: nextcloud
         # - name: MYSQL_USER
@@ -94,9 +94,9 @@ metadata:
   namespace: network
 spec:
   ports:
-  - name: http
-    targetPort: 80
+  - name: webui
     port: 80
+    targetPort: 80
   selector:
     app: pihole
   type: ClusterIP
@@ -111,8 +111,8 @@ metadata:
 spec:
   ports:
   - name: dns
+    port: 53
     targetPort: 53
-    port: 443
   selector:
     app: pihole
   type: ClusterIP
@@ -120,36 +120,43 @@ spec:
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: piholeingress
+  name: pihole-ingress
   namespace: network
   # annotations:
   #   kubernetes.io/ingress.class: traefik
 spec:
   rules:
-  - host: pihole.bas
+  - host: pihole-ui.bas
     http:
       paths:
       - path: /
         backend:
           serviceName: pihole
           servicePort: 80
----
-apiVersion: extensions/v1beta1
-kind: Ingress
-metadata:
-  name: piholeingress-dns
-  namespace: network
-  # annotations:
-  #   kubernetes.io/ingress.class: traefik
-spec:
-  rules:
-  - host: pihole-dns.bas
+  - host: pihole.bas
     http:
       paths:
       - path: /
         backend:
           serviceName: pihole-dns
-          servicePort: 443
+          servicePort: 53
+# ---
+# apiVersion: extensions/v1beta1
+# kind: Ingress
+# metadata:
+#   name: piholeingress-dns
+#   namespace: network
+#   # annotations:
+#   #   kubernetes.io/ingress.class: traefik
+# spec:
+#   rules:
+#   - host: pihole-dns.bas
+#     http:
+#       paths:
+#       - path: /
+#         backend:
+#           serviceName: pihole-dns
+#           servicePort: 443
 ---
 apiVersion: v1
 kind: Service
@@ -161,7 +168,8 @@ metadata:
 spec:
   ports:
   - name: dns
-    port: 32453
+    port: 53
+    targetPort: 53
     nodePort: 32453
   selector:
     app: pihole

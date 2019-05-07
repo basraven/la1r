@@ -1,0 +1,179 @@
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: heimdall-claim
+  namespace: monitoring
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "heimdall"
+  resources:
+    requests:
+      storage: 2Gi
+# ---
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   name: exporter-qbittorent-config
+#   namespace: monitoring
+# data:
+#   init.sh: |-
+#     #!/bin/sh
+#     apk update
+#     apk add wget
+#     wget $RELEASE_URL -O /exporter.jar
+#     java -jar /exporter.jar
+#   qbt-exporter-settings.json: |-
+#     {
+#         "exporterServerSettings": {
+#           "port": 9561,
+#           "host": "0.0.0.0"
+#         },
+#         "qbtSettings": {
+#           "webUiAddress": "http://qbittorrent.torrent:8080"
+#         },
+#         "collectorSettings": {
+#           "maindataCollectors": {
+#             "serverState": {
+#               "allTimeUploadBytes": true,
+#               "networkUploadSpeedBytesPerSecond": true,
+#               "allTimeShareRatio": true,
+#               "diskWriteCacheOverloadPercent": false,
+#               "currentSessionUploadedBytes": false,
+#               "diskCacheSizeBytes": false,
+#               "networkUploadSpeedCapBytesPerSecond": true,
+#               "networkDownloadSpeedCapBytesSerSecond": true,
+#               "diskQueueJobCount": false,
+#               "diskFreeSpaceBytes": false,
+#               "currentSessionWastedBytes": false,
+#               "diskReadCacheOverloadPercent": false,
+#               "diskAverageCacheQueueTimeMs": false,
+#               "networkDhtNodeCount": true,
+#               "diskQueueSizeBytes": false,
+#               "diskReadCacheHitPercent": false,
+#               "networkPeerConnectionCount": true,
+#               "allTimeDownloadBytes": true,
+#               "currentSessionDownloadedBytes": true,
+#               "networkDownloadSpeedBytesPerSecond": true
+#             },
+#             "torrents": {
+#               "downloadTotalBytes": false,
+#               "uploadPayloadRateBytesPerSecond": false,
+#               "activeTimeSeconds": false,
+#               "downloadSessionBytes": false,
+#               "seedersConnected": false,
+#               "leechersConnected": false,
+#               "downloadPayloadRateBytesPerSecond": false,
+#               "seedersAvailable": false,
+#               "leechersAvailable": false,
+#               "uploadTotalBytes": false,
+#               "uploadSessionBytes": false,
+#               "downloadRemainingBytes": false,
+#               "completedBytes": false,
+#               "ratio": false
+#             },
+#             "aggregateTorrent": {
+#               "downloadTotalBytes": true,
+#               "uploadPayloadRateBytesPerSecond": true,
+#               "activeTimeSeconds": true,
+#               "downloadSessionBytes": true,
+#               "seedersConnected": false,
+#               "leechersConnected": false,
+#               "downloadPayloadRateBytesPerSecond": true,
+#               "seedersAvailable": true,
+#               "leechersAvailable": true,
+#               "uploadTotalBytes": true,
+#               "uploadSessionBytes": true,
+#               "sizeWantedBytes": true,
+#               "sizeTotalBytes": true,
+#               "downloadRemainingBytes": true,
+#               "completedBytes": true
+#             }
+#           }
+#         }
+#       }
+
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: heimdall
+  namespace: monitoring
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        task: monitoring
+        k8s-app: heimdall
+    spec:
+      containers:
+      - name: heimdall
+        ports:
+        - containerPort: 80
+        env:
+        - name: TZ
+          value: Europe/Amsterdam
+        - name: PGID
+          value: "1000"
+        - name: PUID
+          value: "1000"
+        image: linuxserver/heimdall
+        volumeMounts:
+          - name: heimdall
+            mountPath: /config
+      volumes:
+        - name: heimdall
+          persistentVolumeClaim:
+            claimName: heimdall-claim
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    task: monitoring
+    # For use as a Cluster add-on (https://github.com/kubernetes/kubernetes/tree/master/cluster/addons)
+    # If you are NOT using this as an addon, you should comment out this line.
+    kubernetes.io/cluster-service: 'true'
+    kubernetes.io/name: heimdall
+  name: heimdall
+  namespace: monitoring
+spec:
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    k8s-app: heimdall
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: heimdall
+  namespace: monitoring
+spec:
+  rules:
+  - host: heimdall.bas
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: heimdall
+          servicePort: 80
+  - host: home.bas
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: heimdall
+          servicePort: 80
+  - host: portal.bas
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: heimdall
+          servicePort: 80
