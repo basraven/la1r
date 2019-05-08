@@ -1,0 +1,50 @@
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: code-server-pv
+  labels:
+    contenttype: "code-server"
+spec:
+  capacity:
+    storage: 200Gi
+  # volumeMode field requires BlockVolume Alpha feature gate to be enabled.
+  storageClassName: local-storage
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteMany
+  local:
+    path: /mnt/largehdd/code-server
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - big-raver
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: code-server-config-pv
+  labels:
+    contenttype: "code-server-config"
+spec:
+  capacity:
+    storage: 20Gi
+  # volumeMode field requires BlockVolume Alpha feature gate to be enabled.
+  storageClassName: local-storage
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteMany
+  local:
+    path: /mnt/largehdd/code-server-config
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - big-raver

@@ -1,0 +1,118 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: code-server-init
+  namespace: development
+data:
+  init.sh: |-
+    #!/bin/bash
+    sudo apt-get update
+    sudo apt-get upgrade -y
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: code-server-claim
+  namespace: development
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "code-server"
+  resources:
+    requests:
+      storage: 200Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: code-server-config-claim
+  namespace: development
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "code-server-config"
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: code-server
+  namespace: development
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        task: development
+        k8s-app: code-server
+    spec:
+      containers:
+      - name: code-server
+        ports:
+        - containerPort: 8443
+        image: codercom/code-server
+        command: ["dumb-init", "code-server", "--no-auth"]
+        volumeMounts:
+          - name: code-server
+            mountPath: /home/coder/project
+          - name: code-server-config
+            mountPath: /home/coder/.local
+          - name: code-server-init
+            mountPath: /seb/init.sh
+            subPath: init.sh
+      volumes:
+        - name: code-server
+          persistentVolumeClaim:
+            claimName: code-server-claim
+        - name: code-server-config
+          persistentVolumeClaim:
+            claimName: code-server-config-claim
+        - name: code-server-init
+          configMap:
+            name: code-server-init
+            items:
+            - key: init.sh
+              path: init.sh
+            defaultMode: 0777
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    task: development
+    # For use as a Cluster add-on (https://github.com/kubernetes/kubernetes/tree/master/cluster/addons)
+    # If you are NOT using this as an addon, you should comment out this line.
+    kubernetes.io/cluster-service: 'true'
+    kubernetes.io/name: code-server
+  name: code-server
+  namespace: development
+spec:
+  ports:
+  - port: 80
+    targetPort: 8443
+  selector:
+    k8s-app: code-server
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: code-server
+  namespace: development
+spec:
+  rules:
+  - host: code.bas
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: code-server
+          servicePort: 80
