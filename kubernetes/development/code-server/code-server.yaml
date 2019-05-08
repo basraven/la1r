@@ -8,7 +8,10 @@ data:
   init.sh: |-
     #!/bin/bash
     sudo apt-get update
-    sudo apt-get upgrade -y
+    sudo -i
+    curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
+    chmod +x ./kubectl
+    sudo mv ./kubectl /usr/local/bin/kubectl
 ---
 kind: PersistentVolumeClaim
 apiVersion: v1
@@ -29,7 +32,7 @@ spec:
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: code-server-config-claim
+  name: code-server-config-claim-local
   namespace: development
 spec:
   accessModes:
@@ -37,7 +40,23 @@ spec:
   storageClassName: local-storage
   selector:
     matchLabels:
-      contenttype: "code-server-config"
+      contenttype: "code-server-config-local"
+  resources:
+    requests:
+      storage: 20Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: code-server-config-claim-vscode
+  namespace: development
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "code-server-config-vscode"
   resources:
     requests:
       storage: 20Gi
@@ -64,8 +83,10 @@ spec:
         volumeMounts:
           - name: code-server
             mountPath: /home/coder/project
-          - name: code-server-config
+          - name: code-server-config-local
             mountPath: /home/coder/.local
+          - name: code-server-config-vscode
+            mountPath: /home/coder/.vscode
           - name: code-server-init
             mountPath: /seb/init.sh
             subPath: init.sh
@@ -73,9 +94,12 @@ spec:
         - name: code-server
           persistentVolumeClaim:
             claimName: code-server-claim
-        - name: code-server-config
+        - name: code-server-config-local
           persistentVolumeClaim:
-            claimName: code-server-config-claim
+            claimName: code-server-config-claim-local
+        - name: code-server-config-vscode
+          persistentVolumeClaim:
+            claimName: code-server-config-claim-vscode
         - name: code-server-init
           configMap:
             name: code-server-init

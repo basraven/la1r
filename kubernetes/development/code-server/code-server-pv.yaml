@@ -14,7 +14,7 @@ spec:
   accessModes:
   - ReadWriteMany
   local:
-    path: /mnt/largehdd/code-server
+    path: /mnt/largehdd/code-server/data
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -27,9 +27,9 @@ spec:
 kind: PersistentVolume
 apiVersion: v1
 metadata:
-  name: code-server-config-pv
+  name: code-server-config-vscode-pv
   labels:
-    contenttype: "code-server-config"
+    contenttype: "code-server-config-vscode"
 spec:
   capacity:
     storage: 20Gi
@@ -39,7 +39,32 @@ spec:
   accessModes:
   - ReadWriteMany
   local:
-    path: /mnt/largehdd/code-server-config
+    path: /mnt/largehdd/code-server/config-vscode
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - big-raver
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: code-server-config-local-pv
+  labels:
+    contenttype: "code-server-config-local"
+spec:
+  capacity:
+    storage: 20Gi
+  # volumeMode field requires BlockVolume Alpha feature gate to be enabled.
+  storageClassName: local-storage
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteMany
+  local:
+    path: /mnt/largehdd/code-server/config-local
   nodeAffinity:
     required:
       nodeSelectorTerms:
