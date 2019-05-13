@@ -59,7 +59,8 @@ metadata:
   namespace: monitoring
 spec:
   ports:
-  - port: 80
+  - name: http
+    port: 80
     targetPort: 8181
   selector:
     k8s-app: exporter-tautulli

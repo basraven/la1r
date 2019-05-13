@@ -9,7 +9,7 @@ data:
     #!/bin/sh
     [global]
     sonarr_server_ids = 1
-    tautulli_server_ids = false
+    tautulli_server_ids = 1
     radarr_server_ids = false
     ombi_server_ids = false
     sickchill_server_ids = false
@@ -25,7 +25,7 @@ data:
 
     [tautulli-1]
     url = exporter-tautulli
-    fallback_ip = 10.244.0.217
+    port = 80
     apikey = a505364e63204fbb8c0f2018c15dd7bc
     ssl = false
     verify_ssl = false
