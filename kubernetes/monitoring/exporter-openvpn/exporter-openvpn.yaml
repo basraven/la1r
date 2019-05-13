@@ -1,0 +1,59 @@
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: exporter-openvpn-claim
+  namespace: monitoring
+spec:
+  accessModes:
+  - ReadOnlyMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "exporter-openvpn"
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: exporter-openvpn
+  namespace: monitoring
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        task: monitoring
+        k8s-app: exporter-openvpn
+    spec:
+      containers:
+      - name: exporter-openvpn
+        ports:
+        - containerPort: 9176
+        image: kumina/openvpn-exporter
+        command: ["/bin/openvpn_exporter", "-openvpn.status_paths", "/var/log/openvpn/openvpn-status.log"]
+        volumeMounts:
+          - name: exporter-openvpn
+            mountPath: /var/log/openvpn/
+      volumes:
+        - name: exporter-openvpn
+          persistentVolumeClaim:
+            claimName: exporter-openvpn-claim
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    task: monitoring
+    kubernetes.io/cluster-service: 'true'
+    kubernetes.io/name: exporter-openvpn
+  name: exporter-openvpn
+  namespace: monitoring
+spec:
+  ports:
+  - port: 80
+    targetPort: 9176
+  selector:
+    k8s-app: exporter-openvpn

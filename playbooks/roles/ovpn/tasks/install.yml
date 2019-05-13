@@ -79,6 +79,7 @@
         - { regexp: '^;?group',             line: 'group nogroup' }
         - { regexp: '^;?port',              line: 'port {{ openvpn_port_expose }} ' }
         - { regexp: '^;?proto',             line: 'proto {{ openvpn_proto }} ' }
+        - { regexp: '^;?status-version',    line: 'status-version 2' }
         - { regexp: '^;?duplicate-cn',      line: 'duplicate-cn' }
         - { regexp: '^;?script-security',   line: 'script-security 2' }
         - { regexp: '^;?dhcp-option',       line: 'dhcp-option DNS 10.8.0.1' }

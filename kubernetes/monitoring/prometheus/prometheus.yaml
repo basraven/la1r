@@ -30,6 +30,11 @@ data:
       static_configs:
       - targets:
         - exporter-qbittorent:80
+    - job_name: openvpn
+      scrape_interval: 5s
+      static_configs:
+      - targets:
+        - exporter-openvpn:80
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
