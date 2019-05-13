@@ -1,0 +1,77 @@
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: exporter-openvpn-claim
+  namespace: monitoring
+spec:
+  accessModes:
+  - ReadOnlyMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "exporter-openvpn"
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: exporter-openvpn
+  namespace: monitoring
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        task: monitoring
+        k8s-app: exporter-openvpn
+    spec:
+      containers:
+      - name: exporter-openvpn
+        ports:
+        - containerPort: 9176
+        image: kumina/openvpn-exporter
+        command: ["-openvpn.status_paths", "/etc/openvpn_exporter/server.status"]
+        volumeMounts:
+          - name: exporter-openvpn
+            mountPath: /etc/openvpn_exporter/server.status
+            subPath: server.status
+      volumes:
+        - name: exporter-openvpn
+          persistentVolumeClaim:
+            claimName: exporter-openvpn-claim
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    task: monitoring
+    # For use as a Cluster add-on (https://github.com/kubernetes/kubernetes/tree/master/cluster/addons)
+    # If you are NOT using this as an addon, you should comment out this line.
+    kubernetes.io/cluster-service: 'true'
+    kubernetes.io/name: exporter-openvpn
+  name: exporter-openvpn
+  namespace: monitoring
+spec:
+  ports:
+  - port: 80
+    targetPort: 9176
+  selector:
+    k8s-app: exporter-openvpn
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: exporter-openvpn-ingress
+  namespace: monitoring
+spec:
+  rules:
+  - host: exporter-openvpn.bas
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: exporter-openvpn
+          servicePort: 80
