@@ -14,7 +14,7 @@ spec:
   accessModes:
   - ReadOnlyMany
   local:
-    path: /var/log/openvpn/openvpn-status.log
+    path: /var/log/openvpn/
   nodeAffinity:
     required:
       nodeSelectorTerms:

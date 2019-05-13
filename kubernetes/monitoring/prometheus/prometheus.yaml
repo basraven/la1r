@@ -34,7 +34,7 @@ data:
       scrape_interval: 5s
       static_configs:
       - targets:
-        - exporter-openvpn.bas:80
+        - exporter-openvpn:80
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment

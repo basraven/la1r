@@ -33,11 +33,10 @@ spec:
         ports:
         - containerPort: 9176
         image: kumina/openvpn-exporter
-        command: ["-openvpn.status_paths", "/etc/openvpn_exporter/server.status"]
+        command: ["/bin/openvpn_exporter", "-openvpn.status_paths", "/var/log/openvpn/openvpn-status.log"]
         volumeMounts:
           - name: exporter-openvpn
-            mountPath: /etc/openvpn_exporter/server.status
-            subPath: server.status
+            mountPath: /var/log/openvpn/
       volumes:
         - name: exporter-openvpn
           persistentVolumeClaim:
@@ -48,8 +47,6 @@ kind: Service
 metadata:
   labels:
     task: monitoring
-    # For use as a Cluster add-on (https://github.com/kubernetes/kubernetes/tree/master/cluster/addons)
-    # If you are NOT using this as an addon, you should comment out this line.
     kubernetes.io/cluster-service: 'true'
     kubernetes.io/name: exporter-openvpn
   name: exporter-openvpn
@@ -60,18 +57,3 @@ spec:
     targetPort: 9176
   selector:
     k8s-app: exporter-openvpn
----
-apiVersion: extensions/v1beta1
-kind: Ingress
-metadata:
-  name: exporter-openvpn-ingress
-  namespace: monitoring
-spec:
-  rules:
-  - host: exporter-openvpn.bas
-    http:
-      paths:
-      - path: /
-        backend:
-          serviceName: exporter-openvpn
-          servicePort: 80
