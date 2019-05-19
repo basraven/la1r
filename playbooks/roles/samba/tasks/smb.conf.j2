@@ -259,11 +259,10 @@
 ;   write list = root, @lpadmin
 
 
-
 # CUSTOM BY SEB:
 
 [basraven]
-   comment = Samba on Ubuntu
+   comment = Nextcloud Bas
    path = /mnt/largehdd/nextcloud-data/basraven/files
    read only = no
    browsable = yes
@@ -272,10 +271,20 @@
    force group = www-data
 
 [stephanie]
-   comment = Samba on Ubuntu
+   comment = Nextcloud Stephanie
    path = /mnt/largehdd/nextcloud-data/stephanie/files
    read only = no
    browsable = yes
    writable = yes
    force user = www-data
    force group = www-data
+
+[torrent]
+   comment = Torrent
+   path = /mnt/largehdd/torrent
+   read only = no
+   browsable = yes
+   writable = yes
+   force user = www-data
+   force group = www-data
+
