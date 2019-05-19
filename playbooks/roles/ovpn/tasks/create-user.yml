@@ -42,6 +42,8 @@
         - { regexp: '^remote ',             line: 'remote {{ openvpn_server_url }} {{ openvpn_port }}' }
         - { regexp: '^;remote ',            line: 'remote {{ openvpn_server_url }} {{ openvpn_port }}' }
         - { regexp: '^;?key-direction',     line: 'key-direction 1' }
+        - { regexp: '^;?ping',              line: 'ping 10' }
+        - { regexp: '^;?ping-restart',      line: 'ping-restart 240' }
         - { regexp: '^;?cipher',            line: 'cipher {{ openvpn_cipher }}' }
         - { regexp: '^;?auth',              line: 'auth {{ openvpn_auth }}' }
         - { regexp: '^;?user',              line: 'user nobody' }
