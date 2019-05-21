@@ -219,3 +219,9 @@ spec:
       - backend:
           serviceName: qbittorrent
           servicePort: 80
+  - host: torrent.thuis
+    http:
+      paths:
+      - backend:
+          serviceName: qbittorrent
+          servicePort: 80
