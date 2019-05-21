@@ -1,0 +1,114 @@
+# ---
+# Source: https://www.digitalocean.com/community/tutorials/how-to-set-up-an-elasticsearch-fluentd-and-kibana-efk-logging-stack-on-kubernetes
+# kind: PersistentVolumeClaim
+# apiVersion: v1
+# metadata:
+#   name: elasticsearch-claim
+#   namespace: efk
+# spec:
+#   accessModes:
+#   - ReadWriteMany 
+#   storageClassName: local-storage
+#   selector:
+#     matchLabels:
+#       contenttype: "elasticsearch"
+#   resources:
+#     requests:
+#       storage: 200Gi
+# ---
+# kind: PersistentVolumeClaim
+# apiVersion: v1
+# metadata:
+#   name: elasticsearch-config-claim-local
+#   namespace: efk
+# spec:
+#   accessModes:
+#   - ReadWriteMany 
+#   storageClassName: local-storage
+#   selector:
+#     matchLabels:
+#       contenttype: "elasticsearch-config-local"
+#   resources:
+#     requests:
+#       storage: 20Gi
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: elasticsearch
+  namespace: efk
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        task: efk
+        k8s-app: elasticsearch
+    spec:
+      containers:
+      - name: elasticsearch
+        ports:
+        - containerPort: 9200 
+        - containerPort: 9300 
+        env:
+        - name: discovery.type
+          value: single-node
+        image: elasticsearch:7.0.1
+        # volumeMounts:
+        #   - name: elasticsearch
+        #     mountPath: /home/coder/project
+        #   - name: elasticsearch-config-local
+        #     mountPath: /home/coder/.local
+        #   - name: elasticsearch-config-vscode
+        #     mountPath: /home/coder/.vscode
+        #   - name: elasticsearch-init
+        #     mountPath: /seb/init.sh
+        #     subPath: init.sh
+      # volumes:
+      #   - name: elasticsearch
+      #     persistentVolumeClaim:
+      #       claimName: elasticsearch-claim
+      #   - name: elasticsearch-config-local
+      #     persistentVolumeClaim:
+      #       claimName: elasticsearch-config-claim-local
+      #   - name: elasticsearch-config-vscode
+      #     persistentVolumeClaim:
+      #       claimName: elasticsearch-config-claim-vscode
+      #   - name: elasticsearch-init
+      #     configMap:
+      #       name: elasticsearch-init
+      #       items:
+      #       - key: init.sh
+      #         path: init.sh
+      #       defaultMode: 0777
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    task: efk
+    kubernetes.io/cluster-service: 'true'
+    kubernetes.io/name: elasticsearch
+  name: elasticsearch
+  namespace: efk
+spec:
+  ports:
+  - port: 80
+    targetPort: 9200
+  selector:
+    k8s-app: elasticsearch
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: elasticsearch
+  namespace: efk
+spec:
+  rules:
+  - host: elasticsearch.bas
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: elasticsearch
+          servicePort: 80
