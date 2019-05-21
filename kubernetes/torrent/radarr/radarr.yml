@@ -1,0 +1,120 @@
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: radarr-torrent-claim
+  namespace: torrent
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "radarr-torrent"
+  resources:
+    requests:
+      storage: 2000Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: radarr-config-claim
+  namespace: torrent
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "radarr-config"
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: radarr
+  namespace: torrent
+  labels:
+    app: radarr
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: radarr
+  template:
+    metadata:
+      labels:
+        app: radarr
+    spec:
+      volumes:
+        - name: radarr-config-volume
+          persistentVolumeClaim:
+            claimName: radarr-config-claim
+        - name: radarr-torrent-volume
+          persistentVolumeClaim:
+            claimName: radarr-torrent-claim
+      containers:
+      - name: radarr
+        image: linuxserver/radarr
+        ports:
+        - name: http
+          containerPort: 7878
+        env:
+        - name: TZ
+          value: Europe/Amsterdam
+        - name: PGID
+          value: "1000"
+        - name: PUID
+          value: "1000"
+        volumeMounts:
+          - name: radarr-torrent-volume
+            mountPath: /downloads
+          - name: radarr-config-volume
+            mountPath: /config
+        #   - name: radarr-config-volume
+        #     mountPath: /config/radarr/radarr.conf
+        #     subPath: radarr.conf
+        #   - name: set-goose-config-volume
+        #     mountPath: /goose/set-goose.sh
+        #     subPath: set-goose.sh
+        #   - name: set-goose-ovpn-volume
+        #     mountPath: /etc/openvpn/ro-10.conf
+        #     subPath: ro-10.conf
+        #   - name: goose-credentials-volume
+        #     mountPath: /goose/login.conf
+        #     subPath: login.conf
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: radarr
+  name: radarr
+  namespace: torrent
+spec:
+  ports:
+  - name: http
+    targetPort: 7878
+    port: 80
+  selector:
+    app: radarr
+  type: ClusterIP
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: radarringress
+  namespace: torrent
+  # annotations:
+  #   kubernetes.io/ingress.class: traefik
+spec:
+  rules:
+  - host: radarr.bas
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: radarr
+          servicePort: 80

@@ -21,3 +21,10 @@
       service:
         name: openvpn
         state: started
+    - name: Place Openvpn connection check script
+      template: src=openvpn-restart.sh.j2 dest=/etc/openvpn/openvpn-restart.sh mode=0755
+    - name: Add crontab to check connection every 5 mins
+      cron:
+        name: "check openvpn connection"
+        minute: "*/5"
+        job: "/etc/openvpn/openvpn-restart.sh"

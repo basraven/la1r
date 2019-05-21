@@ -1,6 +1,6 @@
 ---
 - hosts: all
-  remote_user: basraven
+  remote_user: "{{ target_user }}"
   tasks:
     - name: Check if python is installed
       apt: name={{item}} state=present

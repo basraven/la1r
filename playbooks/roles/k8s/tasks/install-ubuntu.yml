@@ -26,9 +26,15 @@
         command: swapoff -a
         ignore_errors: yes
       
-      # FIXME: automate with Ansible
-      # MANUAL ACTION: prefix all swap in /etc/fstab with # (comment out)
-      # - name: Remove swap 2/2
+      - name: Remove Swap file from mount
+        lineinfile:
+          dest: /etc/fstab
+          regexp: "{{ item.regexp }}"
+          line: "{{ item.line }}"
+        backup: yes
+        with_items:
+          - { regexp: '^/swapfile                                 none            swap    sw              0       0',          line: '# /swapfile                                 none            swap    sw              0       0' }
+
             
       - name: Reboot the host to reload the changed config
         shell: sleep 10 && /sbin/shutdown -r now 'Rebooting the host to reload the changed config'

@@ -12,3 +12,5 @@ RUN yum update -y && \
     mkdir -p ~/.ssh && \
     curl https://raw.githubusercontent.com/helm/helm/master/scripts/get | bash 
 WORKDIR /playbooks
+
+COPY entrypoint.sh /control/entrypoint.sh

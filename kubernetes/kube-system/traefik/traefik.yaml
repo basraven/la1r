@@ -20,6 +20,11 @@ spec:
         k8s-app: traefik-ingress-lb
         name: traefik-ingress-lb
     spec:
+      # Even run this on a Pi  
+      tolerations:
+        - key: "pi"
+          operator: Equal
+          value: "true"
       # volumes:
       # - name: ssl
       #   secret:

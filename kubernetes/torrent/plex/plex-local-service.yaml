@@ -14,3 +14,20 @@ spec:
   selector:
     app: kube-plex
   type: NodePort
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: plexingress-thuis
+  namespace: torrent
+  # annotations:
+  #   kubernetes.io/ingress.class: traefik
+spec:
+  rules:
+  - host: plex.thuis
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: kube-plex
+          servicePort: 32400
