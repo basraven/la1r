@@ -118,3 +118,10 @@ spec:
         backend:
           serviceName: radarr
           servicePort: 80
+  - host: radarr.thuis
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: radarr
+          servicePort: 80

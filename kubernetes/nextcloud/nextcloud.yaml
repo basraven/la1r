@@ -124,7 +124,7 @@ spec:
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: nextcloudingress-vpn
+  name: nextcloudingress
   namespace: nextcloud
   # annotations:
   #   kubernetes.io/ingress.class: traefik
@@ -137,16 +137,6 @@ spec:
         backend:
           serviceName: nextcloud
           servicePort: 80
----
-apiVersion: extensions/v1beta1
-kind: Ingress
-metadata:
-  name: nextcloudingress-thuis
-  namespace: nextcloud
-  # annotations:
-  #   kubernetes.io/ingress.class: traefik
-spec:
-  rules:
   - host: cloud.thuis
     http:
       paths:

@@ -98,3 +98,10 @@ spec:
         backend:
           serviceName: monitoring-grafana
           servicePort: 80
+  - host: grafana.thuis
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: monitoring-grafana
+          servicePort: 80

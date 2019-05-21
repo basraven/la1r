@@ -97,3 +97,10 @@ spec:
         backend:
           serviceName: couchpotato
           servicePort: 80
+  - host: couch.thuis
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: couchpotato
+          servicePort: 80

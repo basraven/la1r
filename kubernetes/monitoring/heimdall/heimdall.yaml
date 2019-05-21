@@ -87,7 +87,7 @@ spec:
         backend:
           serviceName: heimdall
           servicePort: 80
-  - host: portal.bas
+  - host: home.thuis
     http:
       paths:
       - path: /

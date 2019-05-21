@@ -33,3 +33,10 @@ spec:
         backend:
           serviceName: kubernetes-dashboard-custom
           servicePort: 443
+  - host: kubernetes.thuis
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: kubernetes-dashboard-custom
+          servicePort: 443

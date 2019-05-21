@@ -118,3 +118,10 @@ spec:
         backend:
           serviceName: sonarr
           servicePort: 80
+  - host: sonarr.thuis
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: sonarr
+          servicePort: 80
