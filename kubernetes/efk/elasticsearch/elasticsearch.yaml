@@ -1,5 +1,6 @@
 # ---
-# Source: https://www.digitalocean.com/community/tutorials/how-to-set-up-an-elasticsearch-fluentd-and-kibana-efk-logging-stack-on-kubernetes
+# Source:   https://www.digitalocean.com/community/tutorials/how-to-set-up-an-elasticsearch-fluentd-and-kibana-efk-logging-stack-on-kubernetes
+# Source 2: https://blog.ptrk.io/how-to-deploy-an-efk-stack-to-kubernetes/
 # kind: PersistentVolumeClaim
 # apiVersion: v1
 # metadata:
@@ -93,8 +94,15 @@ metadata:
   namespace: efk
 spec:
   ports:
-  - port: 80
+  - name: http
+    port: 80
     targetPort: 9200
+  - name: interface
+    port: 9200
+    targetPort: 9200
+  - name: integration
+    port: 9300
+    targetPort: 9300
   selector:
     k8s-app: elasticsearch
 ---

@@ -51,7 +51,7 @@ spec:
         - containerPort: 5601 
         env:
         - name: ELASTICSEARCH_URL
-          value: http://elasticsearch:80
+          value: http://elasticsearch:9200
         image: kibana:7.0.1
         # volumeMounts:
         #   - name: kibana
