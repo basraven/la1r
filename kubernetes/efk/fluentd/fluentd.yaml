@@ -73,7 +73,7 @@ spec:
           value: "http"
         - name: FLUENT_UID
           value: "0"
-        image: fluent/fluentd-kubernetes-daemonset:elasticsearch
+        image: fluent/fluentd-kubernetes-daemonset:v1.4-debian-elasticsearch-1
         volumeMounts:
           - name: varlog
             mountPath: /var/log
