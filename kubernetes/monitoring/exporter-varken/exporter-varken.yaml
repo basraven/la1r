@@ -125,6 +125,9 @@ spec:
       - name: exporter-varken
         image: boerderij/varken
         command: ["/bin/sh", "-c", "cp /app/data/varken.example.ini /config/varken.example.ini && cp /config-custom/varken.ini /config/varken.ini && chmod 777 /config/varken.ini && python3 /app/Varken.py --data-folder /config"]
+        env:
+        - name: DEBUG
+          value: "False"
         volumeMounts:
         - name: exporter-varken-config
           mountPath: /config-custom/varken.ini
