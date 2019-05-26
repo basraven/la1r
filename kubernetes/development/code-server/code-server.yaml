@@ -12,6 +12,10 @@ data:
     curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
     chmod +x ./kubectl
     sudo mv ./kubectl /usr/local/bin/kubectl
+    mkdir ~/.kube
+    cat ~/.local/kube-config > ~/.kube/config
+    git config --global user.name "Sebastiaan Raven"
+    git config --global user.email "basraven@gmail.com"
 ---
 kind: PersistentVolumeClaim
 apiVersion: v1
@@ -79,7 +83,8 @@ spec:
         ports:
         - containerPort: 8443
         image: codercom/code-server
-        command: ["dumb-init", "code-server", "--no-auth"]
+        command: ["/bin/bash"]
+        args: ["-c", "/seb/init.sh && dumb-init code-server --no-auth"]
         volumeMounts:
           - name: code-server
             mountPath: /home/coder/project
@@ -106,7 +111,7 @@ spec:
             items:
             - key: init.sh
               path: init.sh
-            defaultMode: 0777
+            defaultMode: 0755
 ---
 apiVersion: v1
 kind: Service
