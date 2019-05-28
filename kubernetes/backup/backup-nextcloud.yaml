@@ -1,4 +1,37 @@
 ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backup-script
+  namespace: backup
+data:
+  backup-weekly.sh: |-
+    #!/bin/sh
+    echo "Starting weekly rsync file sync..."
+    rsync -a --no-perms --no-owner --no-group --delete --force --update --progress /nextcloud-web /backup/nextcloud/weekly
+    rsync -a --no-perms --no-owner --no-group --delete --force --update --progress /nextcloud-data /backup/nextcloud/weekly
+  # backup-monthly.sh: |-
+  #   #!/bin/sh
+  #   echo "Starting monthly rsync file sync..."
+  #   rsync -a --no-perms --no-owner --no-group --delete --force --update --progress /nextcloud-web /backup/nextcloud/monthly
+  #   rsync -a --no-perms --no-owner --no-group --delete --force --update --progress /nextcloud-data /backup/nextcloud/monthly
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: backup-storage-claim
+  namespace: backup
+spec:
+  accessModes:
+  - ReadWriteMany
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "backup-storage"
+  resources:
+    requests:
+      storage: 2000Gi
+---
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
@@ -61,6 +94,10 @@ spec:
                     - big-raver
           restartPolicy: Never    
           volumes:
+          - name: nfs-backup-volume
+            nfs: 
+              server: 10.8.0.10
+              path: /mnt/largehdd/backup
           - name: backup-script-volume
             configMap:
               name: backup-script
@@ -85,71 +122,79 @@ spec:
             volumeMounts:
               - name: backup-script-volume
                 mountPath: /backup-script
-              - name: backup-storage-volume
+              - name: nfs-backup-volume
                 mountPath: /backup
+              # - name: backup-storage-volume
+              #   mountPath: /backup
               - name: backup-nextcloud-data-volume
                 mountPath: "/nextcloud-data"
               - name: backup-nextcloud-web-volume
                 mountPath: "/nextcloud-web"
 
----
-apiVersion: batch/v1beta1
-kind: CronJob
-metadata:
-  name: backup-nextcloud-monthly
-  namespace: backup
-  labels:
-    app: backup-nextcloud-monthly
-spec:
-  schedule: "5 3 1 * *"
-  concurrencyPolicy: Replace
-  successfulJobsHistoryLimit: 6
-  failedJobsHistoryLimit: 10
-  jobTemplate:
-    spec:
-      template:
-        metadata:
-          labels:
-            app: backup
-        spec:
-          affinity:
-            nodeAffinity:
-              requiredDuringSchedulingIgnoredDuringExecution:
-                nodeSelectorTerms:
-                - matchExpressions:
-                  - key: kubernetes.io/hostname
-                    operator: In
-                    values:
-                    - big-raver
-          restartPolicy: Never    
-          volumes:
-          - name: backup-script-volume
-            configMap:
-              name: backup-script
-              items:
-              - key: backup-monthly.sh
-                path: backup-monthly.sh
-              defaultMode: 0744
-          - name: backup-storage-volume
-            persistentVolumeClaim:
-              claimName: backup-storage-claim
-          - name: backup-nextcloud-data-volume
-            persistentVolumeClaim:
-              claimName: backup-nextcloud-data-claim
-          - name: backup-nextcloud-web-volume
-            persistentVolumeClaim:
-              claimName: backup-nextcloud-web-claim
-          containers:
-          - name: backup
-            image: instrumentisto/rsync-ssh
-            command: 
-              - /backup-script/backup-monthly.sh
-            volumeMounts:
-              - name: backup-script-volume
-                mountPath: /backup-script
-              - name: backup-storage-volume
-                mountPath: /backup
-              - name: backup-nextcloud-data-volume
-                mountPath: "/nextcloud-data"
-              - name: backup-nextcloud-web-volume
-                mountPath: "/nextcloud-web"
+# ---
+# apiVersion: batch/v1beta1
+# kind: CronJob
+# metadata:
+#   name: backup-nextcloud-monthly
+#   namespace: backup
+#   labels:
+#     app: backup-nextcloud-monthly
+# spec:
+#   schedule: "5 3 1 * *"
+#   concurrencyPolicy: Replace
+#   successfulJobsHistoryLimit: 6
+#   failedJobsHistoryLimit: 10
+#   jobTemplate:
+#     spec:
+#       template:
+#         metadata:
+#           labels:
+#             app: backup
+#         spec:
+#           affinity:
+#             nodeAffinity:
+#               requiredDuringSchedulingIgnoredDuringExecution:
+#                 nodeSelectorTerms:
+#                 - matchExpressions:
+#                   - key: kubernetes.io/hostname
+#                     operator: In
+#                     values:
+#                     - big-raver
+#           restartPolicy: Never    
+#           volumes:
+#           - name: nfs-backup-volume
+#             nfs: 
+#               server: 10.8.0.10
+#               path: /mnt/largehdd/backup
+#           - name: backup-script-volume
+#             configMap:
+#               name: backup-script
+#               items:
+#               - key: backup-monthly.sh
+#                 path: backup-monthly.sh
+#               defaultMode: 0744
+#           - name: backup-storage-volume
+#             persistentVolumeClaim:
+#               claimName: backup-storage-claim
+#           - name: backup-nextcloud-data-volume
+#             persistentVolumeClaim:
+#               claimName: backup-nextcloud-data-claim
+#           - name: backup-nextcloud-web-volume
+#             persistentVolumeClaim:
+#               claimName: backup-nextcloud-web-claim
+#           containers:
+#           - name: backup
+#             image: instrumentisto/rsync-ssh
+#             command: 
+#               - /backup-script/backup-monthly.sh
+#             volumeMounts:
+#               - name: backup-script-volume
+#                 mountPath: /backup-script
+#               - name: nfs-backup-volume
+#                 mountPath: /backup
+#               # - name: backup-storage-volume
+#               #   mountPath: /backup
+#               - name: backup-nextcloud-data-volume
+#                 mountPath: "/nextcloud-data"
+#               - name: backup-nextcloud-web-volume
+#                 mountPath: "/nextcloud-web"
