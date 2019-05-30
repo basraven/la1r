@@ -2,30 +2,6 @@
 kind: PersistentVolume
 apiVersion: v1
 metadata:
-  name: backup-storage-pv
-  labels:
-    contenttype: "backup-storage"
-spec:
-  capacity:
-    storage: 2000Gi
-  storageClassName: local-storage
-  persistentVolumeReclaimPolicy: Retain
-  accessModes:
-  - ReadWriteMany 
-  local:
-    path: /mnt/remote/backup
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-      - matchExpressions:
-        - key: kubernetes.io/hostname
-          operator: In
-          values:
-          - big-raver
----
-kind: PersistentVolume
-apiVersion: v1
-metadata:
   name: backup-nextcloud-data-pv
   labels:
     contenttype: "backup-nextcloud-data"
