@@ -1,0 +1,66 @@
+# ---
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   name: ceryx-env
+#   namespace: ceryx
+# data:
+#   credentials.env: |-
+#     TELEGRAM_API_KEY=
+#     CHAT_ID=
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: ceryx
+  namespace: ceryx
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        task: ceryx
+        k8s-app: ceryx
+    spec:
+      containers:
+      - name: ceryx
+        ports:
+        - containerPort: 80
+        env:
+        - name: TELEGRAM_API_KEY
+          value: "871411149:AAGWzYWs0pRdsWS9BeafVgSF9QIr6hNfo28"
+        - name: CHAT_ID
+          value: "27771095"
+        image: golang:alpine
+        command: [ "/bin/sh" ]
+        args: ["-c", "apk add git && go get -u github.com/basraven/ceryx && go build github.com/basraven/ceryx && ceryx"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    task: ceryx
+    kubernetes.io/name: ceryx
+  name: ceryx
+  namespace: ceryx
+spec:
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    k8s-app: ceryx
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ceryx
+  namespace: ceryx
+spec:
+  rules:
+  - host: ceryx.bas
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: ceryx
+          servicePort: 80 

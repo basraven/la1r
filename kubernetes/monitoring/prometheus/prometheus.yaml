@@ -35,6 +35,9 @@ data:
       static_configs:
       - targets:
         - exporter-openvpn:80
+    - job_name: 'node'
+      static_configs:
+      - targets: ['10.8.0.1:9100']
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment

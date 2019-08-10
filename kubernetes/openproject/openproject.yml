@@ -1,0 +1,87 @@
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: openproject-config-claim
+  namespace: openproject
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "openproject-config"
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openproject
+  namespace: openproject
+  labels:
+    app: openproject
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: openproject
+  template:
+    metadata:
+      labels:
+        app: openproject
+    spec:
+      volumes:
+        - name: openproject-config-volume
+          persistentVolumeClaim:
+            claimName: openproject-config-claim
+      containers:
+      - name: openproject
+        image: openproject/community
+        ports:
+        - name: http
+          containerPort: 8080
+        env:
+        - name: SECRET_KEY_BASE
+          value: secret
+        volumeMounts:
+          - name: openproject-config-volume
+            mountPath: /var/lib/postgresql/
+          - name: openproject-config-volume
+            mountPath: /var/log/supervisor
+          - name: openproject-config-volume
+            mountPath: /var/db/openproject
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: openproject
+  name: openproject
+  namespace: openproject
+spec:
+  ports:
+  - name: http
+    targetPort: 8080
+    port: 80
+  selector:
+    app: openproject
+  type: ClusterIP
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: openprojectingress
+  namespace: openproject
+  # annotations:
+  #   kubernetes.io/ingress.class: traefik
+spec:
+  rules:
+  - host: project.bas
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: openproject
+          servicePort: 80

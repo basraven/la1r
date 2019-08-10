@@ -24,7 +24,7 @@ spec:
       tolerations:
         - key: "pi"
           operator: Equal
-          value: "true"
+          value: "false"
       # volumes:
       # - name: ssl
       #   secret:

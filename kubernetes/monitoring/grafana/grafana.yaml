@@ -56,6 +56,14 @@ spec:
           value: "true"
         - name: GF_AUTH_ANONYMOUS_ORG_ROLE
           value: Admin
+        - name: GF_SMTP_ENABLED
+          value: "true"
+        - name: GF_SMTP_SKIP_VERIFY
+          value: "true"
+        - name: GF_SMTP_HOST
+          value: "email.network:25"
+        - name: GF_SMTP_FROM_ADDRESS
+          value: "admin@basraven.nl"
         - name: GF_SERVER_ROOT_URL
           # If you're only using the API Server proxy, set this value instead:
           # value: /api/v1/namespaces/monitoring/services/monitoring-grafana/proxy

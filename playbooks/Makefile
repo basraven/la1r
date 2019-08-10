@@ -122,6 +122,11 @@ ovpn-join:
 test: 
 	ansible-playbook -i /playbooks/local /playbooks/roles/test/test.yml 
 
+#Node Exporter
+.PHONY: node-exporter
+node-exporter: 
+	ansible-playbook -i /playbooks/hosts /playbooks/roles/prometheus_node_exporter/tasks/node-exporter.yml
+
 
 #Iptables
 .PHONY: ip-backup

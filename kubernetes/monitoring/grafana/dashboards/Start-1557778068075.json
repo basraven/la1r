@@ -36,7 +36,7 @@
       "type": "grafana",
       "id": "grafana",
       "name": "Grafana",
-      "version": "6.1.6"
+      "version": "6.3.2"
     },
     {
       "type": "panel",
@@ -111,6 +111,7 @@
       "id": 6,
       "links": [],
       "mode": "html",
+      "options": {},
       "timeFrom": null,
       "timeShift": null,
       "title": "",
@@ -129,6 +130,7 @@
       "id": 28,
       "links": [],
       "mode": "html",
+      "options": {},
       "targets": [
         {
           "aggregation": "Last",
@@ -192,6 +194,7 @@
       "id": 29,
       "links": [],
       "mode": "html",
+      "options": {},
       "targets": [
         {
           "aggregation": "Last",
@@ -255,6 +258,7 @@
       "id": 4,
       "limit": 20,
       "links": [],
+      "options": {},
       "query": "",
       "recent": true,
       "search": false,
@@ -293,9 +297,7 @@
       "interval": null,
       "links": [
         {
-          "dashboard": "Cluster",
           "title": "Cluster",
-          "type": "dashboard",
           "url": "/d/JE5P15iWk/cluster"
         }
       ],
@@ -313,6 +315,7 @@
       "maxDataPoints": 100,
       "nullPointMode": "connected",
       "nullText": null,
+      "options": {},
       "postfix": "",
       "postfixFontSize": "50%",
       "prefix": "",
@@ -412,9 +415,7 @@
       "interval": "",
       "links": [
         {
-          "dashboard": "Cluster",
           "title": "Cluster",
-          "type": "dashboard",
           "url": "/d/JE5P15iWk/cluster"
         }
       ],
@@ -432,6 +433,7 @@
       "maxDataPoints": 100,
       "nullPointMode": "connected",
       "nullText": null,
+      "options": {},
       "postfix": "",
       "postfixFontSize": "50%",
       "prefix": "",
@@ -510,6 +512,7 @@
       "dashes": false,
       "datasource": "${DS_PROMETHEUS}",
       "fill": 1,
+      "fillGradient": 0,
       "gridPos": {
         "h": 4,
         "w": 6,
@@ -532,11 +535,13 @@
       "links": [
         {
           "title": "http://openvpn.bas/",
-          "type": "absolute",
           "url": "http://openvpn.bas/"
         }
       ],
       "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
       "percentage": false,
       "pointradius": 2,
       "points": false,
@@ -627,10 +632,10 @@
       "links": [
         {
           "title": "http://openvpn.bas/",
-          "type": "absolute",
           "url": "http://openvpn.bas/"
         }
       ],
+      "options": {},
       "targets": [
         {
           "aggregation": "Last",
@@ -695,6 +700,7 @@
       "maxDataPoints": 100,
       "nullPointMode": "connected",
       "nullText": null,
+      "options": {},
       "postfix": "",
       "postfixFontSize": "80%",
       "prefix": "",
@@ -765,9 +771,7 @@
       "interval": "",
       "links": [
         {
-          "dashboard": "Cluster",
           "title": "Cluster",
-          "type": "dashboard",
           "url": "/d/JE5P15iWk/cluster"
         }
       ],
@@ -785,6 +789,7 @@
       "maxDataPoints": 100,
       "nullPointMode": "connected",
       "nullText": null,
+      "options": {},
       "postfix": "",
       "postfixFontSize": "50%",
       "prefix": "",
@@ -866,7 +871,7 @@
         "#d44a3a"
       ],
       "datasource": "${DS_PROMETHEUS}",
-      "decimals": 3,
+      "decimals": 0,
       "format": "percentunit",
       "gauge": {
         "maxValue": 100,
@@ -898,6 +903,7 @@
       "maxDataPoints": 100,
       "nullPointMode": "connected",
       "nullText": null,
+      "options": {},
       "postfix": "",
       "postfixFontSize": "80%",
       "prefix": "",
@@ -983,6 +989,7 @@
       "maxDataPoints": 100,
       "nullPointMode": "connected",
       "nullText": null,
+      "options": {},
       "postfix": "",
       "postfixFontSize": "80%",
       "prefix": "",
@@ -1066,6 +1073,7 @@
       "maxDataPoints": 100,
       "nullPointMode": "connected",
       "nullText": null,
+      "options": {},
       "postfix": "",
       "postfixFontSize": "50%",
       "prefix": "",
@@ -1178,6 +1186,7 @@
       "maxDataPoints": 100,
       "nullPointMode": "connected",
       "nullText": null,
+      "options": {},
       "postfix": "",
       "postfixFontSize": "50%",
       "prefix": "",
@@ -1261,6 +1270,7 @@
       "id": 35,
       "links": [],
       "mode": "html",
+      "options": {},
       "targets": [
         {
           "aggregation": "Last",
@@ -1324,6 +1334,7 @@
       "id": 36,
       "links": [],
       "mode": "html",
+      "options": {},
       "targets": [
         {
           "aggregation": "Last",
@@ -1389,10 +1400,10 @@
       "links": [
         {
           "title": "http://sonarr.bas/",
-          "type": "absolute",
           "url": "http://sonarr.bas/"
         }
       ],
+      "options": {},
       "pageSize": null,
       "scroll": true,
       "showHeader": true,
@@ -1608,7 +1619,6 @@
       "links": [
         {
           "title": "http://sonarr.bas/",
-          "type": "absolute",
           "url": "http://sonarr.bas/"
         }
       ],
@@ -1626,6 +1636,7 @@
       "maxDataPoints": 100,
       "nullPointMode": "connected",
       "nullText": null,
+      "options": {},
       "postfix": "",
       "postfixFontSize": "50%",
       "prefix": "",
@@ -1718,7 +1729,6 @@
       "links": [
         {
           "title": "http://sonarr.bas/",
-          "type": "absolute",
           "url": "http://sonarr.bas/"
         }
       ],
@@ -1736,6 +1746,7 @@
       "maxDataPoints": 100,
       "nullPointMode": "connected",
       "nullText": null,
+      "options": {},
       "postfix": "",
       "postfixFontSize": "50%",
       "prefix": "",
@@ -1827,9 +1838,8 @@
       "interval": null,
       "links": [
         {
-          "dashboard": "http://tautulli.bas",
           "title": "http://tautulli.bas",
-          "type": "dashboard"
+          "url": "/dashboard/db/httptautullibas"
         }
       ],
       "mappingType": 1,
@@ -1846,6 +1856,7 @@
       "maxDataPoints": 100,
       "nullPointMode": "connected",
       "nullText": null,
+      "options": {},
       "postfix": "",
       "postfixFontSize": "50%",
       "prefix": "",
@@ -1919,6 +1930,7 @@
       "id": 12,
       "links": [],
       "mode": "html",
+      "options": {},
       "targets": [
         {
           "aggregation": "Last",
@@ -1971,12 +1983,218 @@
       "type": "text"
     },
     {
+      "alert": {
+        "alertRuleTags": {},
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                200000000000
+              ],
+              "type": "lt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "B",
+                "10s",
+                "now"
+              ]
+            },
+            "reducer": {
+              "params": [],
+              "type": "last"
+            },
+            "type": "query"
+          },
+          {
+            "evaluator": {
+              "params": [
+                100000000000
+              ],
+              "type": "lt"
+            },
+            "operator": {
+              "type": "or"
+            },
+            "query": {
+              "params": [
+                "B",
+                "10s",
+                "now"
+              ]
+            },
+            "reducer": {
+              "params": [],
+              "type": "last"
+            },
+            "type": "query"
+          },
+          {
+            "evaluator": {
+              "params": [
+                50000000000
+              ],
+              "type": "gt"
+            },
+            "operator": {
+              "type": "or"
+            },
+            "query": {
+              "params": [
+                "B",
+                "10s",
+                "now"
+              ]
+            },
+            "reducer": {
+              "params": [],
+              "type": "last"
+            },
+            "type": "query"
+          }
+        ],
+        "executionErrorState": "keep_state",
+        "for": "5m",
+        "frequency": "1m",
+        "handler": 1,
+        "message": "Schijf ruimte op de server is kritiek",
+        "name": "Filesystem space available alert",
+        "noDataState": "no_data",
+        "notifications": []
+      },
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "${DS_PROMETHEUS}",
+      "decimals": 3,
+      "description": "",
+      "fill": 2,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 11,
+        "w": 12,
+        "x": 12,
+        "y": 15
+      },
+      "id": 38,
+      "legend": {
+        "alignAsTable": true,
+        "avg": true,
+        "current": true,
+        "max": true,
+        "min": true,
+        "rightSide": false,
+        "show": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "maxPerRow": 6,
+      "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "node_filesystem_avail_bytes{instance=~\"10.8.0.1:9100\",job=~\"node\",device!~'rootfs'}",
+          "format": "time_series",
+          "hide": false,
+          "intervalFactor": 2,
+          "legendFormat": "{{mountpoint}} - Available",
+          "metric": "",
+          "refId": "A",
+          "step": 4
+        },
+        {
+          "expr": "node_filesystem_free_bytes{instance=~\"10.8.0.1:9100\",job=~\"node\",device!~'rootfs'}",
+          "format": "time_series",
+          "hide": true,
+          "intervalFactor": 2,
+          "legendFormat": "{{mountpoint}} - Free",
+          "refId": "B",
+          "step": 2
+        },
+        {
+          "expr": "node_filesystem_size_bytes{instance=~\"10.8.0.1:9100\",job=~\"node\",device!~'rootfs'}",
+          "format": "time_series",
+          "hide": true,
+          "intervalFactor": 2,
+          "legendFormat": "{{mountpoint}} - Size",
+          "refId": "D",
+          "step": 2
+        }
+      ],
+      "thresholds": [
+        {
+          "colorMode": "critical",
+          "fill": true,
+          "line": true,
+          "op": "lt",
+          "value": 200000000000
+        }
+      ],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Filesystem space available",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "bytes",
+          "label": "Bytes",
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": false
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
       "aliasColors": {},
       "bars": false,
       "dashLength": 10,
       "dashes": false,
       "datasource": "${DS_INFLUXDB-K8S}",
       "fill": 1,
+      "fillGradient": 0,
       "gridPos": {
         "h": 10,
         "w": 6,
@@ -1997,13 +2215,14 @@
       "linewidth": 1,
       "links": [
         {
-          "dashboard": "Pods",
           "title": "Pods",
-          "type": "dashboard",
           "url": "/d/dxey1ciZk/pods"
         }
       ],
       "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
       "percentage": false,
       "pointradius": 2,
       "points": false,
@@ -2114,6 +2333,7 @@
       "dashes": false,
       "datasource": "${DS_INFLUXDB-K8S}",
       "fill": 1,
+      "fillGradient": 0,
       "gridPos": {
         "h": 10,
         "w": 6,
@@ -2134,13 +2354,14 @@
       "linewidth": 1,
       "links": [
         {
-          "dashboard": "Pods",
           "title": "Pods",
-          "type": "dashboard",
           "url": "/d/dxey1ciZk/pods"
         }
       ],
       "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
       "percentage": false,
       "pointradius": 2,
       "points": false,
@@ -2252,7 +2473,7 @@
     }
   ],
   "refresh": "5s",
-  "schemaVersion": 18,
+  "schemaVersion": 19,
   "style": "dark",
   "tags": [],
   "templating": {
@@ -2290,5 +2511,5 @@
   "timezone": "",
   "title": "Start",
   "uid": "ni_5GriZz",
-  "version": 25
+  "version": 30
 }
