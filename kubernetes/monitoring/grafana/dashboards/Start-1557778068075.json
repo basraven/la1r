@@ -1831,8 +1831,8 @@
       "gridPos": {
         "h": 2,
         "w": 2,
-        "x": 22,
-        "y": 11
+        "x": 18,
+        "y": 13
       },
       "id": 34,
       "interval": null,
@@ -1989,7 +1989,7 @@
           {
             "evaluator": {
               "params": [
-                200000000000
+                20000000000
               ],
               "type": "lt"
             },
@@ -1998,7 +1998,7 @@
             },
             "query": {
               "params": [
-                "B",
+                "A",
                 "10s",
                 "now"
               ]
@@ -2012,7 +2012,7 @@
           {
             "evaluator": {
               "params": [
-                100000000000
+                200000000000
               ],
               "type": "lt"
             },
@@ -2021,30 +2021,7 @@
             },
             "query": {
               "params": [
-                "B",
-                "10s",
-                "now"
-              ]
-            },
-            "reducer": {
-              "params": [],
-              "type": "last"
-            },
-            "type": "query"
-          },
-          {
-            "evaluator": {
-              "params": [
-                50000000000
-              ],
-              "type": "gt"
-            },
-            "operator": {
-              "type": "or"
-            },
-            "query": {
-              "params": [
-                "B",
+                "C",
                 "10s",
                 "now"
               ]
@@ -2060,10 +2037,14 @@
         "for": "5m",
         "frequency": "1m",
         "handler": 1,
-        "message": "Schijf ruimte op de server is kritiek",
+        "message": "Schijf ruimte op de big raver is kritiek",
         "name": "Filesystem space available alert",
         "noDataState": "no_data",
-        "notifications": []
+        "notifications": [
+          {
+            "uid": "W87YsROWz"
+          }
+        ]
       },
       "aliasColors": {},
       "bars": false,
@@ -2076,7 +2057,7 @@
       "fillGradient": 0,
       "gridPos": {
         "h": 11,
-        "w": 12,
+        "w": 6,
         "x": 12,
         "y": 15
       },
@@ -2110,9 +2091,10 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "node_filesystem_avail_bytes{instance=~\"10.8.0.1:9100\",job=~\"node\",device!~'rootfs'}",
+          "expr": "node_filesystem_avail_bytes{instance=~\"10.8.0.1:9100\",job=~\"bigraver-node\",device!~'rootfs', mountpoint=\"/\"}",
           "format": "time_series",
           "hide": false,
+          "instant": false,
           "intervalFactor": 2,
           "legendFormat": "{{mountpoint}} - Available",
           "metric": "",
@@ -2120,7 +2102,18 @@
           "step": 4
         },
         {
-          "expr": "node_filesystem_free_bytes{instance=~\"10.8.0.1:9100\",job=~\"node\",device!~'rootfs'}",
+          "expr": "node_filesystem_avail_bytes{instance=~\"10.8.0.1:9100\",job=~\"bigraver-node\",device!~'rootfs', mountpoint=\"/mnt/largehdd\"}",
+          "format": "time_series",
+          "hide": false,
+          "instant": false,
+          "intervalFactor": 2,
+          "legendFormat": "{{mountpoint}} - Available",
+          "metric": "",
+          "refId": "C",
+          "step": 4
+        },
+        {
+          "expr": "node_filesystem_free_bytes{instance=~\"10.8.0.1:9100\",job=~\"bigraver-node\",device!~'rootfs'}",
           "format": "time_series",
           "hide": true,
           "intervalFactor": 2,
@@ -2129,7 +2122,7 @@
           "step": 2
         },
         {
-          "expr": "node_filesystem_size_bytes{instance=~\"10.8.0.1:9100\",job=~\"node\",device!~'rootfs'}",
+          "expr": "node_filesystem_size_bytes{instance=~\"10.8.0.1:9100\",job=~\"bigraver-node\",device!~'rootfs'}",
           "format": "time_series",
           "hide": true,
           "intervalFactor": 2,
@@ -2144,13 +2137,209 @@
           "fill": true,
           "line": true,
           "op": "lt",
-          "value": 200000000000
+          "value": 20000000000
         }
       ],
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Filesystem space available",
+      "title": "Big-Raver Filesystem space available",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "bytes",
+          "label": "Bytes",
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": false
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "alert": {
+        "alertRuleTags": {},
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                20000000000
+              ],
+              "type": "lt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "A",
+                "10s",
+                "now"
+              ]
+            },
+            "reducer": {
+              "params": [],
+              "type": "last"
+            },
+            "type": "query"
+          },
+          {
+            "evaluator": {
+              "params": [
+                200000000000
+              ],
+              "type": "lt"
+            },
+            "operator": {
+              "type": "or"
+            },
+            "query": {
+              "params": [
+                "C",
+                "10s",
+                "now"
+              ]
+            },
+            "reducer": {
+              "params": [],
+              "type": "last"
+            },
+            "type": "query"
+          }
+        ],
+        "executionErrorState": "keep_state",
+        "for": "5m",
+        "frequency": "1m",
+        "handler": 1,
+        "message": "Schijf ruimte op raspi2 is kritiek",
+        "name": "Raspi 2 Filesystem space available alert",
+        "noDataState": "no_data",
+        "notifications": [
+          {
+            "uid": "W87YsROWz"
+          }
+        ]
+      },
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "${DS_PROMETHEUS}",
+      "decimals": 3,
+      "description": "",
+      "fill": 2,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 11,
+        "w": 6,
+        "x": 18,
+        "y": 15
+      },
+      "id": 39,
+      "legend": {
+        "alignAsTable": true,
+        "avg": true,
+        "current": true,
+        "max": true,
+        "min": true,
+        "rightSide": false,
+        "show": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "maxPerRow": 6,
+      "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "node_filesystem_avail_bytes{instance=~\"10.8.0.10:9100\",job=~\"raspi2-node\",device!~'rootfs', mountpoint=\"/\"}",
+          "format": "time_series",
+          "hide": false,
+          "intervalFactor": 2,
+          "legendFormat": "{{mountpoint}} - Available",
+          "metric": "",
+          "refId": "A",
+          "step": 4
+        },
+        {
+          "expr": "node_filesystem_avail_bytes{instance=~\"10.8.0.10:9100\",job=~\"raspi2-node\",device!~'rootfs', mountpoint=\"/mnt/largehdd\"}",
+          "format": "time_series",
+          "hide": false,
+          "intervalFactor": 2,
+          "legendFormat": "{{mountpoint}} - Available",
+          "metric": "",
+          "refId": "C",
+          "step": 4
+        },
+        {
+          "expr": "node_filesystem_free_bytes{instance=~\"10.8.0.10:9100\",job=~\"raspi2-node\",device!~'rootfs'}",
+          "format": "time_series",
+          "hide": true,
+          "intervalFactor": 2,
+          "legendFormat": "{{mountpoint}} - Free",
+          "refId": "B",
+          "step": 2
+        },
+        {
+          "expr": "node_filesystem_size_bytes{instance=~\"10.8.0.10:9100\",job=~\"raspi2-node\",device!~'rootfs'}",
+          "format": "time_series",
+          "hide": true,
+          "intervalFactor": 2,
+          "legendFormat": "{{mountpoint}} - Size",
+          "refId": "D",
+          "step": 2
+        }
+      ],
+      "thresholds": [
+        {
+          "colorMode": "critical",
+          "fill": true,
+          "line": true,
+          "op": "lt",
+          "value": 20000000000
+        }
+      ],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Raspi 2 Filesystem space available",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -2511,5 +2700,5 @@
   "timezone": "",
   "title": "Start",
   "uid": "ni_5GriZz",
-  "version": 30
+  "version": 38
 }

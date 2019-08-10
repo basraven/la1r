@@ -35,9 +35,12 @@ data:
       static_configs:
       - targets:
         - exporter-openvpn:80
-    - job_name: 'node'
+    - job_name: 'bigraver-node'
       static_configs:
       - targets: ['10.8.0.1:9100']
+    - job_name: 'raspi2-node'
+      static_configs:
+      - targets: ['10.8.0.10:9100']
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment

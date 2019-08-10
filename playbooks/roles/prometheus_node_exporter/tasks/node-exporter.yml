@@ -2,11 +2,19 @@
 - hosts: all
   remote_user: "{{ target_user }}"
   tasks:
-    - name: install node exporter
+    - name: install node exporter normal linux machine
       shell: "wget https://github.com/prometheus/node_exporter/releases/download/v0.18.1/node_exporter-0.18.1.linux-amd64.tar.gz && tar xvfz node_exporter-0.18.1.linux-amd64.tar.gz && cp node_exporter-0.18.1.linux-amd64/node_exporter /usr/sbin/"
       args:
           executable: /bin/bash
-    - name: dnsmasq config
+      when:
+      - ansible_architecture.find('arm') == -1
+    - name: install node exporter raspberry Pi
+      shell: "wget https://github.com/prometheus/node_exporter/releases/download/v0.18.1/node_exporter-0.18.1.linux-armv7.tar.gz && tar xvfz node_exporter-0.18.1.linux-armv7.tar.gz && cp node_exporter-0.18.1.linux-armv7/node_exporter /usr/sbin/"
+      args:
+          executable: /bin/bash
+      when:
+      - ansible_architecture.find('arm') != -1
+    - name: create service
       template: src=node_exporter.service.j2 dest=/etc/systemd/system/node_exporter.service mode=0755
     - name: install node exporter service
       shell: "mkdir -p /etc/sysconfig && touch /etc/sysconfig/node_exporter && systemctl daemon-reload && systemctl enable node_exporter && systemctl start node_exporter"
