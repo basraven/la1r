@@ -1,0 +1,145 @@
+# ---
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   name: mycnf
+#   namespace: sanne
+# data:
+#   my.cnf: |-  
+#     [server]
+#     skip-name-resolve
+#     innodb_buffer_pool_size = 128M
+#     innodb_buffer_pool_instances = 1
+#     innodb_flush_log_at_trx_commit = 2
+#     innodb_log_buffer_size = 32M
+#     innodb_max_dirty_pages_pct = 90
+#     query_cache_type = 1
+#     query_cache_limit = 2M
+#     query_cache_min_res_unit = 2k
+#     query_cache_size = 64M
+#     tmp_table_size= 64M
+#     max_heap_table_size= 64M
+#     slow-query-log = 1
+#     slow-query-log-file = /var/log/mysql/slow.log
+#     long_query_time = 1
+
+#     [client-server]
+#     !includedir /etc/mysql/conf.d/
+#     !includedir /etc/mysql/mariadb.conf.d/
+
+#     [client]
+#     default-character-set = utf8mb4
+
+#     [mysqld]
+#     character-set-server = utf8mb4
+#     collation-server = utf8mb4_general_ci
+#     transaction_isolation = READ-COMMITTED
+#     binlog_format = ROW
+#     innodb_large_prefix=on
+#     innodb_file_format=barracuda
+#     innodb_file_per_table=1
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: wordpress-claim-sanne
+  namespace: sanne
+spec:
+  accessModes:
+  - ReadWriteMany
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "db-sanne"
+  resources:
+    requests:
+      storage: 30Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wordpress
+  namespace: sanne
+  labels:
+    app: wordpress
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wordpress
+  template:
+    metadata:
+      labels:
+        app: wordpress
+    spec:
+      # volumes:
+      # - name: mycnf-volume
+      #   configMap:
+      #     name: mycnf
+      #     items:
+      #     - key: my.cnf
+      #       path: my.cnf
+      # - name: wordpress
+      #   persistentVolumeClaim:
+      #     claimName: wordpress-claim-sanne
+      containers:
+      - name: wordpress
+        image: nginx
+        ports:
+        - containerPort: 80
+        env:
+        - name: WORDPRESS_DEBUG
+          value: "true"
+        - name: WORDPRESS_DB_HOST
+          value: "mariadb"
+        - name: WORDPRESS_DB_NAME
+          value: wordpress
+        - name: WORDPRESS_DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: mariadbsecret
+              key: username
+        - name: WORDPRESS_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mariadbsecret
+              key: password
+        # volumeMounts:
+        #   - name: mycnf-volume
+        #     mountPath: /etc/mysql/conf.d
+        #     subPath: custom.cnf
+        #   - name: mariadb
+        #     mountPath: "/var/lib/mysql/"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: wordpress
+  name: wordpress
+  namespace: sanne
+spec:
+  ports:
+  - name: http
+    targetPort: 80
+    port: 80
+  selector:
+    app: wordpress
+  type: ClusterIP
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: wordpressingress
+  namespace: sanne
+  # annotations:
+  #   kubernetes.io/ingress.class: traefik
+spec:
+  rules:
+  - host: wordpress.bas
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: wordpress
+          servicePort: 80
