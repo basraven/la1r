@@ -95,7 +95,7 @@ spec:
               name: mariadbsecret
               key: password
         - name: MYSQL_DATABASE
-          value: nextcloud
+          value: wordpress
         - name: MYSQL_USER
           valueFrom:
             secretKeyRef:

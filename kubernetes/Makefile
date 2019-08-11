@@ -24,7 +24,7 @@ config:
 	- kubectl taint nodes big-raver node-role.kubernetes.io/master-
 	- kubectl taint nodes raspi1 pi=true:NoSchedule
 	- kubectl taint nodes raspi2 pi=true:NoSchedule
-	- kubectl taint nodes carrot carrot=true:NoSchedule
+	# - kubectl taint nodes carrot carrot=true:NoSchedule
 	- kubectl label nodes big-raver disktype=hdd
 	- kubectl label nodes raspi1 disktype=hdd
 	- kubectl label nodes raspi2 disktype=hdd
