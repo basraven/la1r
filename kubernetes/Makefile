@@ -30,6 +30,7 @@ config:
 	- kubectl label nodes raspi2 disktype=hdd
 	- kubectl label node raspi1 node-role.kubernetes.io/worker=worker
 	- kubectl label node raspi2 node-role.kubernetes.io/worker=worker
+	- kubectl label node carrot node-role.kubernetes.io/worker=worker
 
 
 .PHONY: faas

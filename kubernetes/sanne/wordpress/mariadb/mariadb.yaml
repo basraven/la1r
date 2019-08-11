@@ -1,0 +1,129 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mycnf
+  namespace: sanne
+data:
+  my.cnf: |-  
+    [server]
+    skip-name-resolve
+    innodb_buffer_pool_size = 128M
+    innodb_buffer_pool_instances = 1
+    innodb_flush_log_at_trx_commit = 2
+    innodb_log_buffer_size = 32M
+    innodb_max_dirty_pages_pct = 90
+    query_cache_type = 1
+    query_cache_limit = 2M
+    query_cache_min_res_unit = 2k
+    query_cache_size = 64M
+    tmp_table_size= 64M
+    max_heap_table_size= 64M
+    slow-query-log = 1
+    slow-query-log-file = /var/log/mysql/slow.log
+    long_query_time = 1
+
+    [client-server]
+    !includedir /etc/mysql/conf.d/
+    !includedir /etc/mysql/mariadb.conf.d/
+
+    [client]
+    default-character-set = utf8mb4
+
+    [mysqld]
+    character-set-server = utf8mb4
+    collation-server = utf8mb4_general_ci
+    transaction_isolation = READ-COMMITTED
+    binlog_format = ROW
+    innodb_large_prefix=on
+    innodb_file_format=barracuda
+    innodb_file_per_table=1
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: mariadb-claim-sanne
+  namespace: sanne
+spec:
+  accessModes:
+  - ReadWriteMany
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "db-sanne"
+  resources:
+    requests:
+      storage: 30Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mariadb
+  namespace: sanne
+  labels:
+    app: mariadb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mariadb
+  template:
+    metadata:
+      labels:
+        app: mariadb
+    spec:
+      volumes:
+      - name: mycnf-volume
+        configMap:
+          name: mycnf
+          items:
+          - key: my.cnf
+            path: my.cnf
+      - name: mariadb
+        persistentVolumeClaim:
+          claimName: mariadb-claim-sanne
+      containers:
+      - name: mariadb
+        image: mariadb
+        args: ["--transaction-isolation=READ-COMMITTED", "--binlog-format=ROW", "--log-bin=mysqld-bin"]
+        ports:
+        - containerPort: 3306
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mariadbsecret
+              key: password
+        - name: MYSQL_DATABASE
+          value: nextcloud
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              name: mariadbsecret
+              key: username
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mariadbsecret
+              key: password
+        volumeMounts:
+          - name: mycnf-volume
+            mountPath: /etc/mysql/conf.d
+            subPath: custom.cnf
+          - name: mariadb
+            mountPath: "/var/lib/mysql/"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: mariadb
+  name: mariadb
+  namespace: sanne
+spec:
+  ports:
+  - name: db
+    port: 3306
+  selector:
+    app: mariadb
+  type: ClusterIP
