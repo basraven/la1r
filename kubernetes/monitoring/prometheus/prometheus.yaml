@@ -41,6 +41,9 @@ data:
     - job_name: 'raspi2-node'
       static_configs:
       - targets: ['10.8.0.10:9100']
+    - job_name: 'carrot-node'
+      static_configs:
+      - targets: ['10.8.0.26:9100']
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment

@@ -1922,8 +1922,8 @@
       "content": "<div class=\"text-center\">\n  <h4>Cluster Resources</h4>\n</div>\n\n",
       "datasource": "${DS_INFLUXDB-K8S}",
       "gridPos": {
-        "h": 2,
-        "w": 12,
+        "h": 1,
+        "w": 9,
         "x": 0,
         "y": 14
       },
@@ -1981,6 +1981,290 @@
       "title": "",
       "transparent": true,
       "type": "text"
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "${DS_INFLUXDB-K8S}",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 10,
+        "w": 4,
+        "x": 0,
+        "y": 15
+      },
+      "id": 26,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [
+        {
+          "title": "Pods",
+          "url": "/d/dxey1ciZk/pods"
+        }
+      ],
+      "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "alias": "$tag_container_name",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "container_name"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "none"
+              ],
+              "type": "fill"
+            }
+          ],
+          "limit": "",
+          "measurement": "memory/usage",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT mean(\"value\") FROM \"memory/usage\" WHERE (\"container_name\"   !~ /kubepods.*/ AND \"container_name\"   !~ /system.slice.*/ AND \"container_name\"   !~ /user.slice.*/  ) AND $timeFilter GROUP BY time($__interval), \"container_name\" fill(none)",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "container_name",
+              "operator": "!=",
+              "value": "kubepods/besteffort"
+            }
+          ]
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "RAM Usage / Container",
+      "tooltip": {
+        "shared": true,
+        "sort": 2,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "decbytes",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "${DS_INFLUXDB-K8S}",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 10,
+        "w": 5,
+        "x": 4,
+        "y": 15
+      },
+      "id": 27,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [
+        {
+          "title": "Pods",
+          "url": "/d/dxey1ciZk/pods"
+        }
+      ],
+      "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "alias": "$tag_container_name",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "container_name"
+              ],
+              "type": "tag"
+            },
+            {
+              "params": [
+                "none"
+              ],
+              "type": "fill"
+            }
+          ],
+          "limit": "",
+          "measurement": "memory/usage",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT mean(\"value\") FROM \"cpu/usage_rate\" WHERE (\"container_name\"   !~ /kubepods.*/ AND \"container_name\"   !~ /system.slice.*/ AND \"container_name\"   !~ /user.slice.*/  ) AND $timeFilter GROUP BY time($__interval), \"container_name\" fill(none)",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              },
+              {
+                "params": [
+                  10
+                ],
+                "type": "moving_average"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "container_name",
+              "operator": "!=",
+              "value": "kubepods/besteffort"
+            }
+          ]
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "CPU Usage Rate / Container",
+      "tooltip": {
+        "shared": true,
+        "sort": 2,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "none",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
     },
     {
       "alert": {
@@ -2057,8 +2341,8 @@
       "fillGradient": 0,
       "gridPos": {
         "h": 11,
-        "w": 6,
-        "x": 12,
+        "w": 5,
+        "x": 9,
         "y": 15
       },
       "id": 38,
@@ -2091,7 +2375,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "node_filesystem_avail_bytes{instance=~\"10.8.0.1:9100\",job=~\"bigraver-node\",device!~'rootfs', mountpoint=\"/\"}",
+          "expr": "node_filesystem_avail_bytes{job=~\"bigraver-node\",device!~'rootfs', mountpoint=\"/\"}",
           "format": "time_series",
           "hide": false,
           "instant": false,
@@ -2102,7 +2386,7 @@
           "step": 4
         },
         {
-          "expr": "node_filesystem_avail_bytes{instance=~\"10.8.0.1:9100\",job=~\"bigraver-node\",device!~'rootfs', mountpoint=\"/mnt/largehdd\"}",
+          "expr": "node_filesystem_avail_bytes{job=~\"bigraver-node\",device!~'rootfs', mountpoint=\"/mnt/largehdd\"}",
           "format": "time_series",
           "hide": false,
           "instant": false,
@@ -2255,8 +2539,8 @@
       "fillGradient": 0,
       "gridPos": {
         "h": 11,
-        "w": 6,
-        "x": 18,
+        "w": 5,
+        "x": 14,
         "y": 15
       },
       "id": 39,
@@ -2289,7 +2573,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "node_filesystem_avail_bytes{instance=~\"10.8.0.10:9100\",job=~\"raspi2-node\",device!~'rootfs', mountpoint=\"/\"}",
+          "expr": "node_filesystem_avail_bytes{job=~\"raspi2-node\",device!~'rootfs', mountpoint=\"/\"}",
           "format": "time_series",
           "hide": false,
           "intervalFactor": 2,
@@ -2299,7 +2583,7 @@
           "step": 4
         },
         {
-          "expr": "node_filesystem_avail_bytes{instance=~\"10.8.0.10:9100\",job=~\"raspi2-node\",device!~'rootfs', mountpoint=\"/mnt/largehdd\"}",
+          "expr": "node_filesystem_avail_bytes{job=~\"raspi2-node\",device!~'rootfs', mountpoint=\"/mnt/largehdd\"}",
           "format": "time_series",
           "hide": false,
           "intervalFactor": 2,
@@ -2339,7 +2623,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Raspi 2 Filesystem space available",
+      "title": "Raspi2 Filesystem space available",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -2377,43 +2661,83 @@
       }
     },
     {
+      "alert": {
+        "alertRuleTags": {},
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                50000000000
+              ],
+              "type": "lt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "A",
+                "10s",
+                "now"
+              ]
+            },
+            "reducer": {
+              "params": [],
+              "type": "last"
+            },
+            "type": "query"
+          }
+        ],
+        "executionErrorState": "keep_state",
+        "for": "5m",
+        "frequency": "1m",
+        "handler": 1,
+        "message": "Schijf ruimte op carrot is kritiek",
+        "name": "Carrot Filesystem space available alert",
+        "noDataState": "no_data",
+        "notifications": [
+          {
+            "uid": "W87YsROWz"
+          }
+        ]
+      },
       "aliasColors": {},
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "${DS_INFLUXDB-K8S}",
-      "fill": 1,
+      "datasource": "${DS_PROMETHEUS}",
+      "decimals": 3,
+      "description": "",
+      "fill": 2,
       "fillGradient": 0,
       "gridPos": {
-        "h": 10,
-        "w": 6,
-        "x": 0,
-        "y": 16
+        "h": 11,
+        "w": 5,
+        "x": 19,
+        "y": 15
       },
-      "id": 26,
+      "id": 40,
       "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
+        "alignAsTable": true,
+        "avg": true,
+        "current": true,
+        "max": true,
+        "min": true,
+        "rightSide": false,
         "show": true,
         "total": false,
-        "values": false
+        "values": true
       },
       "lines": true,
       "linewidth": 1,
-      "links": [
-        {
-          "title": "Pods",
-          "url": "/d/dxey1ciZk/pods"
-        }
-      ],
+      "links": [],
+      "maxPerRow": 6,
       "nullPointMode": "null",
       "options": {
         "dataLinks": []
       },
       "percentage": false,
-      "pointradius": 2,
+      "pointradius": 5,
       "points": false,
       "renderer": "flot",
       "seriesOverrides": [],
@@ -2422,66 +2746,60 @@
       "steppedLine": false,
       "targets": [
         {
-          "alias": "$tag_container_name",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "container_name"
-              ],
-              "type": "tag"
-            },
-            {
-              "params": [
-                "none"
-              ],
-              "type": "fill"
-            }
-          ],
-          "limit": "",
-          "measurement": "memory/usage",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT mean(\"value\") FROM \"memory/usage\" WHERE (\"container_name\"   !~ /kubepods.*/ AND \"container_name\"   !~ /system.slice.*/ AND \"container_name\"   !~ /user.slice.*/  ) AND $timeFilter GROUP BY time($__interval), \"container_name\" fill(none)",
-          "rawQuery": true,
+          "expr": "node_filesystem_avail_bytes{job=~\"carrot-node\",device!~'rootfs', mountpoint=\"/\"}",
+          "format": "time_series",
+          "hide": false,
+          "intervalFactor": 2,
+          "legendFormat": "{{mountpoint}} - Available",
+          "metric": "",
           "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "container_name",
-              "operator": "!=",
-              "value": "kubepods/besteffort"
-            }
-          ]
+          "step": 4
+        },
+        {
+          "expr": "node_filesystem_avail_bytes{job=~\"raspi2-node\",device!~'rootfs', mountpoint=\"/mnt/largehdd\"}",
+          "format": "time_series",
+          "hide": true,
+          "intervalFactor": 2,
+          "legendFormat": "{{mountpoint}} - Available",
+          "metric": "",
+          "refId": "C",
+          "step": 4
+        },
+        {
+          "expr": "node_filesystem_free_bytes{instance=~\"10.8.0.10:9100\",job=~\"raspi2-node\",device!~'rootfs'}",
+          "format": "time_series",
+          "hide": true,
+          "intervalFactor": 2,
+          "legendFormat": "{{mountpoint}} - Free",
+          "refId": "B",
+          "step": 2
+        },
+        {
+          "expr": "node_filesystem_size_bytes{instance=~\"10.8.0.10:9100\",job=~\"raspi2-node\",device!~'rootfs'}",
+          "format": "time_series",
+          "hide": true,
+          "intervalFactor": 2,
+          "legendFormat": "{{mountpoint}} - Size",
+          "refId": "D",
+          "step": 2
         }
       ],
-      "thresholds": [],
+      "thresholds": [
+        {
+          "colorMode": "critical",
+          "fill": true,
+          "line": true,
+          "op": "lt",
+          "value": 50000000000
+        }
+      ],
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "RAM Usage / Container",
+      "title": "Carrot Filesystem space available",
       "tooltip": {
         "shared": true,
-        "sort": 2,
+        "sort": 0,
         "value_type": "individual"
       },
       "type": "graph",
@@ -2494,11 +2812,11 @@
       },
       "yaxes": [
         {
-          "format": "decbytes",
-          "label": null,
+          "format": "bytes",
+          "label": "Bytes",
           "logBase": 1,
           "max": null,
-          "min": null,
+          "min": "0",
           "show": true
         },
         {
@@ -2507,152 +2825,7 @@
           "logBase": 1,
           "max": null,
           "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "${DS_INFLUXDB-K8S}",
-      "fill": 1,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 10,
-        "w": 6,
-        "x": 6,
-        "y": 16
-      },
-      "id": 27,
-      "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "show": true,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 1,
-      "links": [
-        {
-          "title": "Pods",
-          "url": "/d/dxey1ciZk/pods"
-        }
-      ],
-      "nullPointMode": "null",
-      "options": {
-        "dataLinks": []
-      },
-      "percentage": false,
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "alias": "$tag_container_name",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "container_name"
-              ],
-              "type": "tag"
-            },
-            {
-              "params": [
-                "none"
-              ],
-              "type": "fill"
-            }
-          ],
-          "limit": "",
-          "measurement": "memory/usage",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT mean(\"value\") FROM \"cpu/usage_rate\" WHERE (\"container_name\"   !~ /kubepods.*/ AND \"container_name\"   !~ /system.slice.*/ AND \"container_name\"   !~ /user.slice.*/  ) AND $timeFilter GROUP BY time($__interval), \"container_name\" fill(none)",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              },
-              {
-                "params": [
-                  10
-                ],
-                "type": "moving_average"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "container_name",
-              "operator": "!=",
-              "value": "kubepods/besteffort"
-            }
-          ]
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "CPU Usage Rate / Container",
-      "tooltip": {
-        "shared": true,
-        "sort": 2,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "none",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
+          "show": false
         }
       ],
       "yaxis": {
@@ -2700,5 +2873,5 @@
   "timezone": "",
   "title": "Start",
   "uid": "ni_5GriZz",
-  "version": 38
+  "version": 39
 }
