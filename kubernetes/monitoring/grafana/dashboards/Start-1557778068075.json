@@ -2323,7 +2323,7 @@
         "handler": 1,
         "message": "Schijf ruimte op de big raver is kritiek",
         "name": "Filesystem space available alert",
-        "noDataState": "no_data",
+        "noDataState": "keep_state",
         "notifications": [
           {
             "uid": "W87YsROWz"
@@ -2521,7 +2521,7 @@
         "handler": 1,
         "message": "Schijf ruimte op raspi2 is kritiek",
         "name": "Raspi 2 Filesystem space available alert",
-        "noDataState": "no_data",
+        "noDataState": "keep_state",
         "notifications": [
           {
             "uid": "W87YsROWz"
@@ -2694,7 +2694,7 @@
         "handler": 1,
         "message": "Schijf ruimte op carrot is kritiek",
         "name": "Carrot Filesystem space available alert",
-        "noDataState": "no_data",
+        "noDataState": "keep_state",
         "notifications": [
           {
             "uid": "W87YsROWz"
@@ -2873,5 +2873,5 @@
   "timezone": "",
   "title": "Start",
   "uid": "ni_5GriZz",
-  "version": 39
+  "version": 40
 }
