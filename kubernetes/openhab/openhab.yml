@@ -1,0 +1,127 @@
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: openhab-addons-claim
+  namespace: openhab
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "openhab-addons"
+  resources:
+    requests:
+      storage: 10Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: openhab-conf-claim
+  namespace: openhab
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "openhab-conf"
+  resources:
+    requests:
+      storage: 1Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: openhab-userdata-claim
+  namespace: openhab
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "openhab-userdata"
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openhab
+  namespace: openhab
+  labels:
+    app: openhab
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: openhab
+  template:
+    metadata:
+      labels:
+        app: openhab
+    spec:
+      volumes:
+        - name: openhab-addons-volume
+          persistentVolumeClaim:
+            claimName: openhab-addons-claim
+        - name: openhab-conf-volume
+          persistentVolumeClaim:
+            claimName: openhab-conf-claim
+        - name: openhab-userdata-volume
+          persistentVolumeClaim:
+            claimName: openhab-userdata-claim
+      containers:
+      - name: openhab
+        image: openhab/openhab
+        ports:
+        - name: http
+          containerPort: 8080
+        env:
+        - name: EXTRA_JAVA_OPTS
+          value: "-Duser.timezone=Europe//Amsterdam"
+        - name: OPENHAB_HTTP_PORT
+          value: "8080"
+        volumeMounts:
+          - name: openhab-addons-volume
+            mountPath: /openhab/addons/
+          - name: openhab-conf-volume
+            mountPath: /openhab/conf/
+          - name: openhab-userdata-volume
+            mountPath: /openhab/userdata/
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: openhab
+  name: openhab
+  namespace: openhab
+spec:
+  ports:
+  - name: http
+    targetPort: 8080
+    port: 80
+  selector:
+    app: openhab
+  type: ClusterIP
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: openhabingress
+  namespace: openhab
+  # annotations:
+  #   kubernetes.io/ingress.class: traefik
+spec:
+  rules:
+  - host: openhab.bas
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: openhab
+          servicePort: 80
