@@ -85,6 +85,10 @@ spec:
           value: "-Duser.timezone=Europe//Amsterdam"
         - name: OPENHAB_HTTP_PORT
           value: "8080"
+        - name: USER_ID
+          value: "1000"
+        - name: GROUP_ID
+          value: "1000"
         volumeMounts:
           - name: openhab-addons-volume
             mountPath: /openhab/addons/
@@ -119,6 +123,13 @@ metadata:
 spec:
   rules:
   - host: openhab.bas
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: openhab
+          servicePort: 80
+  - host: openhab.thuis
     http:
       paths:
       - path: /
