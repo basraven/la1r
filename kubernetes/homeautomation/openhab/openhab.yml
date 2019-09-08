@@ -3,7 +3,7 @@ kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
   name: openhab-addons-claim
-  namespace: openhab
+  namespace: homeautomation
 spec:
   accessModes:
   - ReadWriteMany 
@@ -19,7 +19,7 @@ kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
   name: openhab-conf-claim
-  namespace: openhab
+  namespace: homeautomation
 spec:
   accessModes:
   - ReadWriteMany 
@@ -35,7 +35,7 @@ kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
   name: openhab-userdata-claim
-  namespace: openhab
+  namespace: homeautomation
 spec:
   accessModes:
   - ReadWriteMany 
@@ -51,7 +51,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: openhab
-  namespace: openhab
+  namespace: homeautomation
   labels:
     app: openhab
 spec:
@@ -103,7 +103,7 @@ metadata:
   labels:
     app: openhab
   name: openhab
-  namespace: openhab
+  namespace: homeautomation
 spec:
   ports:
   - name: http
@@ -117,7 +117,7 @@ apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   name: openhabingress
-  namespace: openhab
+  namespace: homeautomation
   # annotations:
   #   kubernetes.io/ingress.class: traefik
 spec:

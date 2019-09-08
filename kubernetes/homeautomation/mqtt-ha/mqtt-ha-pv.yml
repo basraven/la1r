@@ -1,0 +1,48 @@
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: mqtt-ha-config-pv
+  labels:
+    contenttype: "mqtt-ha-config"
+spec:
+  capacity:
+    storage: 1Gi
+  storageClassName: local-storage
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteMany
+  local:
+    path: /mnt/largessd/configs/mqtt-ha
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - big-raver
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: mqtt-ha-data-pv
+  labels:
+    contenttype: "mqtt-ha-data"
+spec:
+  capacity:
+    storage: 30Gi
+  storageClassName: local-storage
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteMany
+  local:
+    path: /mnt/largehdd/mqtt-ha
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - big-raver

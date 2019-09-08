@@ -1,0 +1,118 @@
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: mqtt-ha-config-claim
+  namespace: homeautomation
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "mqtt-ha-config"
+  resources:
+    requests:
+      storage: 1Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: mqtt-ha-data-claim
+  namespace: homeautomation
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "mqtt-ha-data"
+  resources:
+    requests:
+      storage: 30Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mqtt-ha
+  namespace: homeautomation
+  labels:
+    app: mqtt-ha
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mqtt-ha
+  template:
+    metadata:
+      labels:
+        app: mqtt-ha
+    spec:
+      volumes:
+        - name: mqtt-ha-config-volume
+          persistentVolumeClaim:
+            claimName: mqtt-ha-config-claim
+        - name: mqtt-ha-data-volume
+          persistentVolumeClaim:
+            claimName: mqtt-ha-data-claim
+      containers:
+      - name: mqtt-ha
+        image: eclipse-mosquitto
+        ports:
+        - name: mqtt
+          containerPort: 1883
+        - name: socket
+          containerPort: 9001
+        # env:
+        # - name: USER_ID
+        #   value: "1000"
+        # - name: GROUP_ID
+        #   value: "1000"
+        volumeMounts:
+          - name: mqtt-ha-config-volume
+            mountPath: /mosquitto/config/
+          - name: mqtt-ha-data-volume
+            mountPath: //mosquitto/data/
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: mqtt-ha
+  name: mqtt-ha
+  namespace: homeautomation
+spec:
+  ports:
+  - name: mqtt
+    targetPort: 1883
+    port: 1883
+  - name: socket
+    targetPort: 9001
+    port: 9001
+  selector:
+    app: mqtt-ha
+  type: ClusterIP
+# ---
+# apiVersion: extensions/v1beta1
+# kind: Ingress
+# metadata:
+#   name: mqtt-ha-ingress
+#   namespace: homeautomation
+#   # annotations:
+#   #   kubernetes.io/ingress.class: traefik
+# spec:
+#   rules:
+#   - host: mqtt-ha.bas
+#     http:
+#       paths:
+#       - path: /
+#         backend:
+#           serviceName: mqtt-ha
+#           servicePort: 80
+#   - host: mqtt-ha.thuis
+#     http:
+#       paths:
+#       - path: /
+#         backend:
+#           serviceName: mqtt-ha
+#           servicePort: 80
