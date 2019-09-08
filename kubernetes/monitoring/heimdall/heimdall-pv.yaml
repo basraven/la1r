@@ -14,7 +14,7 @@ spec:
   accessModes:
   - ReadWriteMany
   local:
-    path: /mnt/largehdd/heimdall
+    path: /mnt/largessd/configs/heimdall
   nodeAffinity:
     required:
       nodeSelectorTerms:

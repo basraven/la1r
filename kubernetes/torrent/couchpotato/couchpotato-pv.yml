@@ -14,7 +14,7 @@ spec:
   accessModes:
   - ReadWriteMany
   local:
-    path: /mnt/largehdd/couchpotato-config
+    path: /mnt/largessd/configs/couchpotato
   nodeAffinity:
     required:
       nodeSelectorTerms:

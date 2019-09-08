@@ -39,7 +39,7 @@ spec:
   accessModes:
   - ReadWriteMany
   local:
-    path: /mnt/largehdd/radarr-config
+    path: /mnt/largessd/configs/radarr
   nodeAffinity:
     required:
       nodeSelectorTerms:

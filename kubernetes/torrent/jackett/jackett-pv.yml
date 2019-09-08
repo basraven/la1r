@@ -14,7 +14,7 @@ spec:
   accessModes:
   - ReadWriteMany
   local:
-    path: /mnt/largehdd/jackett-config
+    path: /mnt/largessd/configs/jackett
   nodeAffinity:
     required:
       nodeSelectorTerms:

@@ -14,7 +14,7 @@ spec:
   accessModes:
   - ReadWriteMany
   local:
-    path: /mnt/largehdd/grafana
+    path: /mnt/largessd/configs/grafana
   nodeAffinity:
     required:
       nodeSelectorTerms:
