@@ -1,7 +1,7 @@
 [raspis]
-# big-raver ansible_host=10.8.0.1
+big-raver ansible_host=10.8.0.1
 # raspi2 ansible_host=10.8.0.10
-carrot ansible_host=10.8.0.26
+# carrot ansible_host=10.8.0.26
 
 [raspis:vars]
 ansible_ssh_private_key_file=~/.ssh/id_rsa

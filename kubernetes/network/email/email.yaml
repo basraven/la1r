@@ -1,19 +1,19 @@
----
-kind: PersistentVolumeClaim
-apiVersion: v1
-metadata:
-  name: email-claim
-  namespace: network
-spec:
-  accessModes:
-  - ReadWriteMany
-  storageClassName: local-storage
-  selector:
-    matchLabels:
-      contenttype: "email"
-  resources:
-    requests:
-      storage: 20Gi
+# ---
+# kind: PersistentVolumeClaim
+# apiVersion: v1
+# metadata:
+#   name: email-claim
+#   namespace: network
+# spec:
+#   accessModes:
+#   - ReadWriteMany
+#   storageClassName: local-storage
+#   selector:
+#     matchLabels:
+#       contenttype: "email"
+#   resources:
+#     requests:
+#       storage: 20Gi
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -103,8 +103,8 @@ spec:
           - name: email-config-volume
             mountPath: "/var/email/config.json"
             subPath: "config.json"
-          - name: email-volume
-            mountPath: "/email"
+          # - name: email-volume
+          #   mountPath: "/email"
 ---
 apiVersion: v1
 kind: Service
