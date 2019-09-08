@@ -1,0 +1,199 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backup-script
+  namespace: backup
+data:
+  backup-weekly.sh: |-
+    #!/bin/sh
+    echo "#> Starting weekly rsync file sync..."
+    echo "#> Backing up nextcloud..."
+    rsync -a --no-perms --no-owner --no-group --delete --force --update --progress /nextcloud-web /backup/nextcloud
+    rsync -a --no-perms --no-owner --no-group --delete --force --update --progress /nextcloud-data /backup/nextcloud    
+    echo "#> Backing up configs..."
+    rsync -a --no-perms --no-owner --no-group --delete --force --update --progress /configs /backup/configs    
+    echo "#> Backing up mariadb..."
+    rsync -a --no-perms --no-owner --no-group --delete --force --update --progress /mariadb /backup/mariadb
+    echo "#> Backing up plex..."
+    rsync -a --no-perms --no-owner --no-group --delete --force --update --progress /plex /backup/plex
+    echo "#> Backing up tautulli..."
+    rsync -a --no-perms --no-owner --no-group --delete --force --update --progress /tautulli /backup/tautulli
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: backup-nextcloud-data-claim
+  namespace: backup
+spec:
+  accessModes:
+  - ReadWriteMany
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "backup-nextcloud-data"
+  resources:
+    requests:
+      storage: 800Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: backup-nextcloud-web-claim
+  namespace: backup
+spec:
+  accessModes:
+  - ReadWriteMany
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "backup-nextcloud-web"
+  resources:
+    requests:
+      storage: 5Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: backup-configs-claim
+  namespace: backup
+spec:
+  accessModes:
+  - ReadWriteMany
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "backup-configs"
+  resources:
+    requests:
+      storage: 5Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: backup-mariadb-claim
+  namespace: backup
+spec:
+  accessModes:
+  - ReadWriteMany
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "backup-mariadb"
+  resources:
+    requests:
+      storage: 30Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: backup-plex-claim
+  namespace: backup
+spec:
+  accessModes:
+  - ReadWriteMany
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "backup-plex"
+  resources:
+    requests:
+      storage: 20Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: backup-tautulli-claim
+  namespace: backup
+spec:
+  accessModes:
+  - ReadWriteMany
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "backup-tautulli"
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: backup-nextcloud-weekly
+  namespace: backup
+  labels:
+    app: backup-nextcloud-weekly
+spec:
+  schedule: "5 4 * * 0"
+  concurrencyPolicy: Replace
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: backup
+        spec:
+          affinity:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                    - big-raver
+          restartPolicy: Never    
+          volumes:
+          - name: nfs-backup-volume
+            nfs: 
+              server: 10.8.0.10
+              path: /mnt/largehdd/backup
+          - name: backup-script-volume
+            configMap:
+              name: backup-script
+              items:
+              - key: backup-weekly.sh
+                path: backup-weekly.sh
+              defaultMode: 0744
+          - name: backup-nextcloud-data-volume
+            persistentVolumeClaim:
+              claimName: backup-nextcloud-data-claim
+          - name: backup-nextcloud-web-volume
+            persistentVolumeClaim:
+              claimName: backup-nextcloud-web-claim
+          - name: backup-configs-volume
+            persistentVolumeClaim:
+              claimName: backup-configs-claim
+          - name: backup-mariadb-volume
+            persistentVolumeClaim:
+              claimName: backup-mariadb-claim
+          - name: backup-plex-volume
+            persistentVolumeClaim:
+              claimName: backup-plex-claim
+          - name: backup-tautulli-volume
+            persistentVolumeClaim:
+              claimName: backup-tautulli-claim
+          containers:
+          - name: backup
+            image: instrumentisto/rsync-ssh
+            command: 
+              - /backup-script/backup-weekly.sh
+            volumeMounts:
+              - name: backup-script-volume
+                mountPath: /backup-script
+              - name: nfs-backup-volume
+                mountPath: /backup
+              - name: backup-nextcloud-data-volume
+                mountPath: "/nextcloud-data"
+              - name: backup-nextcloud-web-volume
+                mountPath: "/nextcloud-web"
+              - name: backup-configs-volume
+                mountPath: "/configs"
+              - name: backup-mariadb-volume
+                mountPath: "/mariadb"
+              - name: backup-plex-volume
+                mountPath: "/plex"
+              - name: backup-tautulli-volume
+                mountPath: "/tautulli"

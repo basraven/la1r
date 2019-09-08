@@ -7,7 +7,7 @@ metadata:
     contenttype: "exporter-tautulli"
 spec:
   capacity:
-    storage: 2Gi
+    storage: 5Gi
   storageClassName: local-storage
   persistentVolumeReclaimPolicy: Retain
   accessModes:
