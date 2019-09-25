@@ -11,6 +11,6 @@ RUN yum update -y && \
     kubectl && \
     mkdir -p ~/.ssh && \
     curl https://raw.githubusercontent.com/helm/helm/master/scripts/get | bash 
-WORKDIR /playbooks
+WORKDIR /kubernetes
 
 COPY entrypoint.sh /control/entrypoint.sh

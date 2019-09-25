@@ -1,0 +1,97 @@
+# ---
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   name: influxdb-init
+#   namespace: homeautomation
+# data:
+#   heapster-init.iql: CREATE RETENTION POLICY "default" ON "k8s" DURATION 1d REPLICATION 1 DEFAULT;
+#   varken-init.iql: CREATE DATABASE varken;
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: influx-ha-data-claim
+  namespace: homeautomation
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "influx-ha-data"
+  resources:
+    requests:
+      storage: 30Gi
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: homeautomation-influxdb
+  namespace: homeautomation
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        task: homeautomation
+        k8s-app: homeautomation-influxdb
+    spec:
+      containers:
+      - name: influxdb
+        ports:
+        - containerPort: 8086
+        image: influxdb
+        volumeMounts:
+        - name: influx-ha-data-volume
+          mountPath: /data
+        # - name: influxdb-init
+        #   mountPath: /docker-entrypoint-initdb.d
+        env:
+          - name: INFLUXDB_DB
+            value: k8s
+          - name: INFLUXDB_USER
+            value: bas
+          - name: INFLUXDB_USER_PASSWORD
+            value: Example1
+      volumes:
+      - name: influxdb-init
+        configMap:
+          name: influxdb-init
+          defaultMode: 0755
+      - name: influx-ha-data-volume
+          persistentVolumeClaim:
+            claimName: influx-ha-data-claim
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    task: homeautomation
+    # For use as a Cluster add-on (https://github.com/kubernetes/kubernetes/tree/master/cluster/addons)
+    # If you are NOT using this as an addon, you should comment out this line.
+    kubernetes.io/cluster-service: 'true'
+    kubernetes.io/name: homeautomation-influxdb
+  name: homeautomation-influxdb
+  namespace: homeautomation
+spec:
+  ports:
+  - port: 80
+    targetPort: 8086
+  selector:
+    k8s-app: homeautomation-influxdb
+# ---
+# apiVersion: extensions/v1beta1
+# kind: Ingress
+# metadata:
+#   name: homeautomation-influxdb
+#   namespace: homeautomation
+# spec:
+#   rules:
+#   - host: homeautomation-influxdb.bas
+#     http:
+#       paths:
+#       - path: /
+#         backend:
+#           serviceName: homeautomation-influxdb
+#           servicePort: 80

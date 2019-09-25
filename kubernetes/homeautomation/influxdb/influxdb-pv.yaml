@@ -1,0 +1,24 @@
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: influx-ha-data-pv
+  labels:
+    contenttype: "influx-ha-data"
+spec:
+  capacity:
+    storage: 30Gi
+  storageClassName: local-storage
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteMany
+  local:
+    path: /mnt/largehdd/influx-ha
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - big-raver

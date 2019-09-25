@@ -1,5 +1,5 @@
 .PHONY: all
-all: network-overlay dashboard config faas traefik
+all: network-overlay dashboard config  traefik
 
 .PHONY: local
 local: dashboard nextcloud
@@ -9,36 +9,41 @@ local: dashboard nextcloud
 .PHONY: network-overlay
 network-overlay:
 	# - curl -sSL https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml | sed "s/amd64/arm/g" | kubectl create -f -  && exit 0
-	- kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+	# - kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+	- kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
+
+	- kubectl apply -f https://raw.githubusercontent.com/weaveworks/scope/master/examples/k8s/ns.yaml
+	- kubectl apply -f https://raw.githubusercontent.com/weaveworks/scope/master/examples/k8s/cluster-role-binding.yaml
+	- kubectl apply -f https://raw.githubusercontent.com/weaveworks/scope/master/examples/k8s/cluster-role.yaml
+	- kubectl apply -f https://raw.githubusercontent.com/weaveworks/scope/master/examples/k8s/deploy.yaml
+	- kubectl apply -f https://raw.githubusercontent.com/weaveworks/scope/master/examples/k8s/ds.yaml
+	- kubectl apply -f https://raw.githubusercontent.com/weaveworks/scope/master/examples/k8s/probe-deploy.yaml
+	- kubectl apply -f https://raw.githubusercontent.com/weaveworks/scope/master/examples/k8s/psp.yaml
+	- kubectl apply -f https://raw.githubusercontent.com/weaveworks/scope/master/examples/k8s/sa.yaml
+	- kubectl apply -f https://raw.githubusercontent.com/weaveworks/scope/master/examples/k8s/svc.yaml
+	- kubectl apply -f kube-system/weave-scope/scope-ingress.yaml
+	
+
+
+
 	
 .PHONY: dashboard
 dashboard:
-	# - curl -sSL https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml | sed "s/amd64/arm/g" | kubectl create -f -
-	- kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v1.10.1/src/deploy/recommended/kubernetes-dashboard.yaml
-
-	- kubectl create serviceaccount cluster-admin-dashboard-sa
-	- kubectl create clusterrolebinding cluster-admin-dashboard-sa --clusterrole=cluster-admin --serviceaccount=default:cluster-admin-dashboard-sa
+	- kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.0.0-beta4/aio/deploy/recommended.yaml
 
 .PHONY: config 
 config: 
 	- kubectl taint nodes big-raver node-role.kubernetes.io/master-
-	- kubectl taint nodes raspi1 pi=true:NoSchedule
-	- kubectl taint nodes raspi2 pi=true:NoSchedule
+	# - kubectl taint nodes raspi1 pi=true:NoSchedule
+	# - kubectl taint nodes raspi2 pi=true:NoSchedule
 	# - kubectl taint nodes carrot carrot=true:NoSchedule
-	- kubectl label nodes big-raver disktype=hdd
-	- kubectl label nodes raspi1 disktype=hdd
-	- kubectl label nodes raspi2 disktype=hdd
-	- kubectl label node raspi1 node-role.kubernetes.io/worker=worker
-	- kubectl label node raspi2 node-role.kubernetes.io/worker=worker
-	- kubectl label node carrot node-role.kubernetes.io/worker=worker
+	# - kubectl label nodes big-raver disktype=hdd
+	# - kubectl label nodes raspi1 disktype=hdd
+	# - kubectl label nodes raspi2 disktype=hdd
+	# - kubectl label node raspi1 node-role.kubernetes.io/worker=worker
+	# - kubectl label node raspi2 node-role.kubernetes.io/worker=worker
+	# - kubectl label node carrot node-role.kubernetes.io/worker=worker
 
-
-.PHONY: faas
-faas:
-	- kubectl apply -f https://raw.githubusercontent.com/openfaas/faas-netes/master/namespaces.yml
-	- git clone https://github.com/openfaas/faas-netes /tmp/faas-netes
-	- kubectl apply -f /tmp/faas-netes/yaml_armhf
-	- rm -rf /tmp/faas-netes
 
 .PHONY: traefik
 traefik:
@@ -67,12 +72,6 @@ backup:
 	- kubectl apply -f backup/backup-pvc.yaml
 	- kubectl apply -f backup/backup-nextcloud.yaml
 
-.PHONY: unbackup
-unbackup:
-	- kubectl delete configmap backup-script --namespace backup
-	- kubectl delete -f backup/backup-nextcloud.yaml
-	- kubectl delete -f backup/backup-pvc.yaml
-	- kubectl delete -f backup/backup-pv.yaml
 
 .PHONY: helm
 helm:
@@ -84,12 +83,34 @@ helm:
 	- helm init --tiller-namespace tiller
 	
 
+
+
+
+
+
+
+###############################################################
+######## Deprecated, not in current cluster ###################
+###############################################################
 .PHONY: qbittorrent
 qbittorrent:
 	- kubectl create secret generic goose-credentials --namespace torrent --from-file=/credentials/ovpn/login.conf --from-file=/credentials/ovpn/ro-10.conf
 	- kubectl create configmap qbittorrent-config --namespace torrent --from-file=torrent/qbittorrent/config/set-goose.sh
 	- kubectl apply -f qbittorrent
 
+.PHONY: unbackup
+unbackup:
+	- kubectl delete configmap backup-script --namespace backup
+	- kubectl delete -f backup/backup-nextcloud.yaml
+	- kubectl delete -f backup/backup-pvc.yaml
+	- kubectl delete -f backup/backup-pv.yaml
+
+.PHONY: faas
+faas:
+	- kubectl apply -f https://raw.githubusercontent.com/openfaas/faas-netes/master/namespaces.yml
+	- git clone https://github.com/openfaas/faas-netes /tmp/faas-netes
+	- kubectl apply -f /tmp/faas-netes/yaml_armhf
+	- rm -rf /tmp/faas-netes
 
 # Refresh claimToken from https://www.plex.tv/claim/
 .PHONY: plex
@@ -132,6 +153,7 @@ unprometheus:
 	- kubectl delete crd prometheusrules.monitoring.coreos.com
 	- kubectl delete crd servicemonitors.monitoring.coreos.com
 	- kubectl delete crd alertmanagers.monitoring.coreos.com
+
 
 .PHONY: ssl-certs
 ssl-certs:

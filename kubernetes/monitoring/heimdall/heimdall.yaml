@@ -6,27 +6,29 @@ metadata:
   namespace: monitoring
 spec:
   accessModes:
-  - ReadWriteMany 
+    - ReadWriteMany 
   storageClassName: local-storage
   selector:
     matchLabels:
-      contenttype: "heimdall"
+      contenttype: heimdall
   resources:
     requests:
       storage: 2Gi
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: heimdall
   namespace: monitoring
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: heimdall
   template:
     metadata:
       labels:
-        task: monitoring
-        k8s-app: heimdall
+        app: heimdall
     spec:
       containers:
       - name: heimdall
@@ -55,42 +57,76 @@ metadata:
     task: monitoring
     # For use as a Cluster add-on (https://github.com/kubernetes/kubernetes/tree/master/cluster/addons)
     # If you are NOT using this as an addon, you should comment out this line.
-    kubernetes.io/cluster-service: 'true'
-    kubernetes.io/name: heimdall
+    # kubernetes.io/cluster-service: 'true'
+    # kubernetes.io/name: heimdall
   name: heimdall
   namespace: monitoring
 spec:
   ports:
   - port: 80
     targetPort: 80
+  # type: NodePort
   selector:
     k8s-app: heimdall
----
-apiVersion: extensions/v1beta1
+
 kind: Ingress
+apiVersion: extensions/v1beta1
 metadata:
-  name: heimdall
+  name: "heimdall"
   namespace: monitoring
+
 spec:
   rules:
-  - host: heimdall.bas
-    http:
-      paths:
-      - path: /
-        backend:
-          serviceName: heimdall
-          servicePort: 80
-  - host: home.bas
-    http:
-      paths:
-      - path: /
-        backend:
-          serviceName: heimdall
-          servicePort: 80
-  - host: home.thuis
-    http:
-      paths:
-      - path: /
-        backend:
-          serviceName: heimdall
-          servicePort: 80
+    - host: heimdall.bas
+      http:
+        paths:
+          - path: /
+            backend:
+              serviceName: heimdall
+              servicePort: 80
+
+# ---
+# kind: Ingress
+# apiVersion: extensions/v1beta1
+# metadata:
+#   name: heimdall
+#   namespace: monitoring
+# spec:
+#   rules:
+#     - host: heimdal.bas
+#       http:
+#         paths:
+#           - path: /
+#             backend:
+#               serviceName: heimdall
+#               servicePort: 80
+          
+
+# apiVersion: extensions/v1beta1
+# kind: Ingress
+# metadata:
+#   name: heimdall
+#   namespace: monitoring
+# spec:
+#   rules:
+#   - host: heimdall.bas
+#     http:
+#       paths:
+#       - path: /
+#         backend:
+#           serviceName: heimdall
+#           servicePort: 80
+#   - host: home.bas
+#     http:
+#       paths:
+#       - path: /
+#         backend:
+#           serviceName: heimdall
+#           servicePort: 80
+#   - host: home.thuis
+#     http:
+#       paths:
+#       - path: /
+#         backend:
+#           serviceName: heimdall
+#           servicePort: 80
