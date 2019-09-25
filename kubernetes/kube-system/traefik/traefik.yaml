@@ -78,6 +78,10 @@ spec:
         args:
           - --api.insecure
           - --accesslog
+          - --metrics=true
+          - --metrics.influxdb=true
+          - --metrics.influxdb.address="monitoring-influxdb.monitoring:80"
+          - --metrics.influxdb.database="traefik"
           - --entrypoints.web.Address=:80
           - --entrypoints.websecure.Address=:443
           - --providers.kubernetesingress

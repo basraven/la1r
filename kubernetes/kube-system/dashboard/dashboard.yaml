@@ -1,29 +1,71 @@
-kind: Service
+# kind: Service
+# apiVersion: v1
+# metadata:
+#   labels:
+#     k8s-app: kubernetes-dashboard
+#   name: kubernetes-dashboard-custom
+#   namespace: kubernetes-dashboard
+# spec:
+#   ports:
+#     - port: 443
+#       protocol: TCP
+#       targetPort: 8443
+#   selector:
+#     k8s-app: kubernetes-dashboard
+#   # sessionAffinity: None
+#   type: ClusterIP
+# ---
+# apiVersion: extensions/v1beta1
+# kind: Ingress
+# metadata:
+#   name: kubernetes-dashboardingress
+#   namespace: kubernetes-dashboard
+#   # annotations:
+#     # ingress.kubernetes.io/ssl-redirect: "true"
+#     # ingress.kubernetes.io/use-port-in-redirects: "true"
+#     # kubernetes.io/ingress.class: traefik0
+# spec:
+#   rules:
+#   - host: kubernetes.bas
+#     http:
+#       paths:
+#       - path: /
+#         backend:
+#           serviceName: kubernetes-dashboard
+#           servicePort: 443
+#   - host: kubernetes.thuis
+#     http:
+#       paths:
+#       - path: /
+#         backend:
+#           serviceName: kubernetes-dashboard
+#           servicePort: 443
+
+
+---
 apiVersion: v1
+kind: Service
 metadata:
   labels:
-    k8s-app: kubernetes-dashboard
+    app: kubernetes-dashboard-custom
   name: kubernetes-dashboard-custom
-  namespace: kube-system
+  namespace: kubernetes-dashboard
 spec:
   ports:
-    - port: 443
-      protocol: TCP
-      targetPort: 8443
+  - name: https
+    targetPort: 8443
+    port: 80
   selector:
     k8s-app: kubernetes-dashboard
-  sessionAffinity: None
   type: ClusterIP
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: kubernetes-dashboardingress
-  namespace: kube-system
-  # annotations:
-    # ingress.kubernetes.io/ssl-redirect: "true"
-    # ingress.kubernetes.io/use-port-in-redirects: "true"
-    # kubernetes.io/ingress.class: traefik0
+  name: kubernetes-dashboard-custom
+  namespace: kubernetes-dashboard
+  annotations:
+    kubernetes.io/ingress.class: traefik
 spec:
   rules:
   - host: kubernetes.bas
@@ -32,11 +74,4 @@ spec:
       - path: /
         backend:
           serviceName: kubernetes-dashboard-custom
-          servicePort: 443
-  - host: kubernetes.thuis
-    http:
-      paths:
-      - path: /
-        backend:
-          serviceName: kubernetes-dashboard-custom
-          servicePort: 443
+          servicePort: 80

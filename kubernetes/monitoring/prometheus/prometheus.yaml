@@ -45,13 +45,16 @@ data:
       static_configs:
       - targets: ['10.8.0.26:9100']
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: monitoring-prometheus
   namespace: monitoring
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: monitoring-prometheus
   template:
     metadata:
       labels:

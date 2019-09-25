@@ -108,13 +108,16 @@ data:
     verify_ssl = false
     get_usg_stats_run_seconds = 300
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: exporter-varken
   namespace: monitoring
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: exporter-varken
   template:
     metadata:
       labels:

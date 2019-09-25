@@ -24,13 +24,16 @@ spec:
     requests:
       storage: 30Gi
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: homeautomation-influxdb
   namespace: homeautomation
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: homeautomation-influxdb
   template:
     metadata:
       labels:

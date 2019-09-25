@@ -62,15 +62,15 @@ nextcloud:
 	- kubectl apply -f nextcloud/dbsecret.yaml
 	- kubectl apply -f nextcloud/mariadb-pv.yaml
 	- kubectl apply -f nextcloud/mariadb.yaml
+	- kubectl apply -f nextcloud/redis-pv.yaml
+	- kubectl apply -f nextcloud/redis.yaml
 	- kubectl apply -f nextcloud/nextcloud-pv.yaml
 	- kubectl apply -f nextcloud/nextcloud.yaml
 
 .PHONY: backup
 backup:
-	- kubectl create configmap backup-script --namespace backup --from-file=backup/nextcloud/backup-weekly.sh --from-file=backup/nextcloud/backup-monthly.sh
 	- kubectl apply -f backup/backup-pv.yaml
-	- kubectl apply -f backup/backup-pvc.yaml
-	- kubectl apply -f backup/backup-nextcloud.yaml
+	- kubectl apply -f backup/backup.yaml
 
 
 .PHONY: helm

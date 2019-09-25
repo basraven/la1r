@@ -50,13 +50,16 @@ subjects:
   name: heapster
   namespace: monitoring
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: monitoring-heapster
   namespace: monitoring
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: heapster
   template:
     metadata:
       labels:

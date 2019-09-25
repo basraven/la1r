@@ -82,13 +82,16 @@ data:
       }
 
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: exporter-qbittorent
   namespace: monitoring
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: exporter-qbittorent
   template:
     metadata:
       labels:

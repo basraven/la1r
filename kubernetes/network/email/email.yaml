@@ -62,9 +62,9 @@ spec:
         app: email
     spec:    
       volumes:
-      - name: email-volume
-        persistentVolumeClaim:
-          claimName: email-claim
+      # - name: email-volume
+      #   persistentVolumeClaim:
+      #     claimName: email-claim
       - name: email-config-volume
         configMap:
           name: email-config
