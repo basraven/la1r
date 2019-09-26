@@ -21,11 +21,7 @@ network-overlay:
 	- kubectl apply -f https://raw.githubusercontent.com/weaveworks/scope/master/examples/k8s/psp.yaml
 	- kubectl apply -f https://raw.githubusercontent.com/weaveworks/scope/master/examples/k8s/sa.yaml
 	- kubectl apply -f https://raw.githubusercontent.com/weaveworks/scope/master/examples/k8s/svc.yaml
-	- kubectl apply -f kube-system/weave-scope/scope-ingress.yaml
-	
-
-
-
+	- kubectl apply -f kube-system/weave-scope/scope-ingress.yam
 	
 .PHONY: dashboard
 dashboard:
@@ -72,32 +68,6 @@ backup:
 	- kubectl apply -f backup/backup-pv.yaml
 	- kubectl apply -f backup/backup.yaml
 
-
-.PHONY: helm
-helm:
-	- kubectl apply -f namespaces/tiller.yaml
-	- kubectl create serviceaccount --namespace tiller tiller
-	- kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=tiller:tiller
-	- kubectl patch deploy --namespace tiller tiller-deploy -p'{"spec":{"template":{"spec":{"serviceAccount":"tiller"}}}}'
-	- rm -rf /root/.helm
-	- helm init --tiller-namespace tiller
-	
-
-
-
-
-
-
-
-###############################################################
-######## Deprecated, not in current cluster ###################
-###############################################################
-.PHONY: qbittorrent
-qbittorrent:
-	- kubectl create secret generic goose-credentials --namespace torrent --from-file=/credentials/ovpn/login.conf --from-file=/credentials/ovpn/ro-10.conf
-	- kubectl create configmap qbittorrent-config --namespace torrent --from-file=torrent/qbittorrent/config/set-goose.sh
-	- kubectl apply -f qbittorrent
-
 .PHONY: unbackup
 unbackup:
 	- kubectl delete configmap backup-script --namespace backup
@@ -105,34 +75,35 @@ unbackup:
 	- kubectl delete -f backup/backup-pvc.yaml
 	- kubectl delete -f backup/backup-pv.yaml
 
+	
+.PHONY: qbittorrent
+qbittorrent:
+	- kubectl create secret generic goose-credentials --namespace torrent --from-file=/credentials/ovpn/login.conf --from-file=/credentials/ovpn/ro-10.conf
+	- kubectl create configmap qbittorrent-config --namespace torrent --from-file=torrent/qbittorrent/config/set-goose.sh
+	- kubectl apply -f qbittorrent
+
+# Refresh claimToken from https://www.plex.tv/claim/
+.PHONY: plex
+plex:
+	- kubectl apply -f torrent/plex/plex-pv.yaml
+	- kubectl apply -f torrent/plex/plex.yaml
+
+.PHONY: unplex
+unplex:
+	- kubectl delete -f torrent/plex/plex-pv.yaml
+	- kubectl delete -f torrent/plex/plex.yaml
+
+###############################################################
+######## Deprecated, not in current cluster ###################
+###############################################################
+
+
 .PHONY: faas
 faas:
 	- kubectl apply -f https://raw.githubusercontent.com/openfaas/faas-netes/master/namespaces.yml
 	- git clone https://github.com/openfaas/faas-netes /tmp/faas-netes
 	- kubectl apply -f /tmp/faas-netes/yaml_armhf
 	- rm -rf /tmp/faas-netes
-
-# Refresh claimToken from https://www.plex.tv/claim/
-.PHONY: plex
-plex:
-	cp -rf torrent/plex/kube-plex-custom/* torrent/plex/kube-plex
-	- kubectl apply -f torrent/plex/plex-pv.yaml
-	- kubectl apply -f torrent/plex/plex-pv-claim.yaml
-	- kubectl apply -f torrent/plex/plex-local-service.yaml
-	- helm install torrent/plex/kube-plex/charts/kube-plex --name plex \
-    	--namespace torrent \
-		--tiller-namespace tiller \
-		--set claimToken="claim-sTt6yYA3wK94sjXezbaJ" \
-    	--set ingress.enabled=true
-	# To delete:
-	# helm del --purge plex --tiller-namespace tiller
-	# kubectl delete -f /kubernetes/plex/plex-pv.yaml
-.PHONY: unplex
-unplex:
-	helm del --purge plex --tiller-namespace tiller
-	kubectl delete -f torrent/plex/plex-pv-claim.yaml
-	kubectl delete -f torrent/plex/plex-pv.yaml
-
 
 # TODO: replace heapster with metrics-server
 .PHONY: dashboard-metrics
@@ -154,6 +125,14 @@ unprometheus:
 	- kubectl delete crd servicemonitors.monitoring.coreos.com
 	- kubectl delete crd alertmanagers.monitoring.coreos.com
 
+.PHONY: helm
+helm:
+	- kubectl apply -f namespaces/tiller.yaml
+	- kubectl create serviceaccount --namespace tiller tiller
+	- kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=tiller:tiller
+	- kubectl patch deploy --namespace tiller tiller-deploy -p'{"spec":{"template":{"spec":{"serviceAccount":"tiller"}}}}'
+	- rm -rf /root/.helm
+	- helm init --tiller-namespace tiller
 
 .PHONY: ssl-certs
 ssl-certs:

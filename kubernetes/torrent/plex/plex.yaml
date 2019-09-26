@@ -1,0 +1,174 @@
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: plex-torrent-claim
+  namespace: torrent
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "plex-torrent"
+  resources:
+    requests:
+      storage: 2000Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: plex-data-claim
+  namespace: torrent
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "plex-data"
+  resources:
+    requests:
+      storage: 50Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: plex-transcode-claim
+  namespace: torrent
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "plex-transcode"
+  resources:
+    requests:
+      storage: 50Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: plex-config-claim
+  namespace: torrent
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "plex-config"
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: plex
+  namespace: torrent
+  labels:
+    app: plex
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: plex
+  template:
+    metadata:
+      labels:
+        app: plex
+    spec:
+      volumes:
+        - name: plex-torrent-volume
+          persistentVolumeClaim:
+            claimName: plex-torrent-claim
+        - name: plex-data-volume
+          persistentVolumeClaim:
+            claimName: plex-data-claim
+        - name: plex-transcode-volume
+          persistentVolumeClaim:
+            claimName: plex-transcode-claim
+        - name: plex-config-volume
+          persistentVolumeClaim:
+            claimName: plex-config-claim
+      containers:
+      - name: plex
+        image: plexinc/pms-docker
+        ports:
+        - name: http
+          containerPort: 32400
+        env:
+        - name: TZ
+          value: "Europe//Amsterdam"
+        - name: USER_ID
+          value: "1000"
+        - name: GROUP_ID
+          value: "1000"
+        - name: PLEX_CLAIM
+        # https://plex.tv/claim
+          value: "claim-JVc8QLPdVFn4MeVaxW8S"
+        volumeMounts:
+          - name: plex-torrent-volume
+            mountPath: /torrent
+          - name: plex-data-volume
+            mountPath: /data
+          - name: plex-transcode-volume
+            mountPath: /transcode
+          - name: plex-config-volume
+            mountPath: /config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: plex
+  name: plex
+  namespace: torrent
+spec:
+  ports:
+  - port: 80
+    targetPort: 32400
+  selector:
+    app: plex
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: plex-nodeport
+  name: plex-nodeport
+  namespace: torrent
+spec:
+  ports:
+  - name: http
+    port: 32400
+    nodePort: 32400
+  selector:
+    app: plex-nodeport
+  type: NodePort
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: plexingress
+  namespace: torrent
+  # annotations:
+  #   kubernetes.io/ingress.class: traefik
+spec:
+  rules:
+  - host: plex.bas
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: plex
+          servicePort: 80
+  - host: plex.thuis
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: plex
+          servicePort: 80
