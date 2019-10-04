@@ -1,0 +1,112 @@
+# ---
+# kind: PersistentVolumeClaim
+# apiVersion: v1
+# metadata:
+#   name: nginx-config-claim
+#   namespace: online
+# spec:
+#   accessModes:
+#   - ReadWriteMany 
+#   storageClassName: local-storage
+#   selector:
+#     matchLabels:
+#       contenttype: "nginx-config"
+#   resources:
+#     requests:
+#       storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  namespace: online
+  labels:
+    app: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      # volumes:
+      #   - name: nginx-config-volume
+      #     persistentVolumeClaim:
+      #       claimName: nginx-config-claim
+      containers:
+      - name: nginx
+        image: nginx
+        ports:
+        - name: http
+          containerPort: 80
+        # env:
+        # - name: TZ
+        #   value: Europe/Amsterdam
+        # - name: PGID
+        #   value: "1000"
+        # - name: PUID
+        #   value: "1000"
+        # volumeMounts:
+        #   - name: nginx-config-volume
+        #     mountPath: /config
+        #   - name: nginx-config-volume
+        #     mountPath: /config/nginx/nginx.conf
+        #     subPath: nginx.conf
+        #   - name: set-goose-config-volume
+        #     mountPath: /goose/set-goose.sh
+        #     subPath: set-goose.sh
+        #   - name: set-goose-ovpn-volume
+        #     mountPath: /etc/openvpn/ro-10.conf
+        #     subPath: ro-10.conf
+        #   - name: goose-credentials-volume
+        #     mountPath: /goose/login.conf
+        #     subPath: login.conf
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: nginx
+  name: nginx
+  namespace: online
+spec:
+  ports:
+  - name: http
+    targetPort: 80
+    port: 80
+  selector:
+    app: nginx
+  type: ClusterIP
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: nginxingress
+  namespace: online
+  # annotations:
+  #   kubernetes.io/ingress.class: traefik
+spec:
+  rules:
+  - host: nginx.bas
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: nginx
+          servicePort: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: nginx-deny-egress
+  namespace: online
+spec:
+  podSelector:
+    matchLabels:
+      app: nginx
+  policyTypes:
+  - Egress
+  egress: []
