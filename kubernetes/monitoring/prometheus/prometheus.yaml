@@ -35,6 +35,16 @@ data:
       static_configs:
       - targets:
         - exporter-openvpn:80
+    - job_name: traefik
+      scrape_interval: 3s
+      static_configs:
+      - targets:
+        - traefik-ingress-service.kube-system:8082
+    - job_name: traefik-online
+      scrape_interval: 3s
+      static_configs:
+      - targets:
+        - online-traefik-ingress-service.online:8082
     - job_name: 'bigraver-node'
       static_configs:
       - targets: ['10.8.0.1:9100']

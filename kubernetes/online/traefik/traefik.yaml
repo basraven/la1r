@@ -119,7 +119,6 @@ kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
   name: online-traefik-ingress-controller
-
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -176,17 +175,24 @@ spec:
           containerPort: 443
         - name: admin
           containerPort: 8080
+        - name: prometheus
+          containerPort: 8082
         args:
           - --api.insecure
           - --accesslog
           - --metrics=true
-          - --metrics.influxdb=true
-          - --metrics.influxdb.address="monitoring-influxdb.monitoring:80"
-          - --metrics.influxdb.database="online-traefik"
+          # - --metrics.influxdb=true
+          # - --metrics.influxdb.address="monitoring-influxdb.monitoring:80"
+          # - --metrics.influxdb.database="onlinetraefik"
+          - --metrics.prometheus=true
+          - --metrics.prometheus.entryPoint=metrics
+          - --entrypoints.metrics.Address=:8082
           - --entrypoints.web.Address=:80
           - --entrypoints.websecure.Address=:443
           - --providers.kubernetescrd
-          # - --providers.kubernetescrd.namespaces="online"
+          - --certificatesresolvers.default.acme.tlschallenge
+          - --certificatesresolvers.default.acme.email=basraven@gmail.com
+          - --certificatesresolvers.default.acme.storage=acme.json
 ---
 kind: Service
 apiVersion: v1
@@ -209,6 +215,8 @@ spec:
       port: 8080
       nodePort: 31681
       name: admin
+    - port: 8082
+      name: prometheus
 
 ---
 # Source: https://docs.traefik.io/v2.0/middlewares/ratelimit/
@@ -221,13 +229,23 @@ metadata:
   namespace: online
 spec:
   rateLimit:
-      average: 100
-      burst: 50
+      average: 3
+      burst: 5
+
+# Replace path with regex
+# apiVersion: traefik.containo.us/v1alpha1
+# kind: Middleware
+# metadata:
+#   name: test-replacepathregex
+# spec:
+#   replacePathRegex:
+#     regex: ^/foo/(.*)
+#     replacement: /bar/$1
 ---
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
-  name: ingressroute-online-nginx
+  name: ingressroutetls
   namespace: online
 spec:
   entryPoints:
@@ -238,18 +256,8 @@ spec:
     services:
     - name: nginx
       port: 80
-      tls: {}
-    
     middlewares:
     - name: online-ratelimit
-#     - name: test-redirectscheme
+  tls:
+    certResolver: default
 
-# # Source: https://docs.traefik.io/middlewares/redirectscheme/
-# # Redirect to https
-# apiVersion: traefik.containo.us/v1alpha1
-# kind: Middleware
-# metadata:
-#   name: test-redirectscheme
-# spec:
-#   redirectScheme:
-#     scheme: http

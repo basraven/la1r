@@ -80,33 +80,34 @@ spec:
   selector:
     app: nginx
   type: ClusterIP
----
-apiVersion: networking.k8s.io/v1
-kind: NetworkPolicy
-metadata:
-  name: nginx-deny-egress
-  namespace: online
-spec:
-  podSelector:
-    matchLabels:
-      app: nginx
-  policyTypes:
-  - Egress
-  egress: []
 # ---
-# apiVersion: extensions/v1beta1
-# kind: Ingress
+# apiVersion: networking.k8s.io/v1
+# kind: NetworkPolicy
 # metadata:
-#   name: nginxingress
+#   name: nginx-deny-egress
 #   namespace: online
-#   # annotations:
-#   #   kubernetes.io/ingress.class: traefik
 # spec:
-#   rules:
-#   - host: nginx.bas
-#     http:
-#       paths:
-#       - path: /
-#         backend:
-#           serviceName: nginx
-#           servicePort: 80
+#   podSelector:
+#     matchLabels:
+#       app: nginx
+#   policyTypes:
+#   - Egress
+#   egress: []
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: nginxingress
+  namespace: online
+  # annotations:
+  #   kubernetes.io/ingress.class: traefik
+spec:
+  rules:
+  - host: nginx.bas
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: nginx
+          servicePort: 80
+

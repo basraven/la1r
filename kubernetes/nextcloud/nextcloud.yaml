@@ -1,4 +1,45 @@
 ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nextcloud-config
+  namespace: nextcloud
+data:
+  set-nextcloud.sh: |-
+    #!/bin/sh
+    set -eu
+    # TODO: Put this is a new container instead of this...
+    echo "[Raven] Tuning the container..."
+    echo "alias www-data='su -l www-data -s /bin/bash'" >> ~/.bashrc
+    apt-get update
+    apt-get install cron -y
+    echo "" >> /etc/crontab
+    echo "*/15  *  *  *  * www-data php -f /var/www/html/cron.php" >> /etc/crontab
+    echo "*/10  *  *  *  * www-data /var/www/html/occ preview:pre-generate" >> /etc/crontab
+
+    # TODO: Run this:
+    # /var/www/html/occ files:scan --all
+    # /var/www/html/occ preview:generate-all
+    # /var/www/html/occ twofactorauth:enforce --on
+    service cron start
+    a2enmod http2
+    a2enmod ssl
+    echo "Protocols h2 h2c http/1.1" >> /etc/apache2/apache2.conf
+    echo "[Raven] Done tuning the container"
+    /entrypoint.sh apache2-foreground
+
+  apcu.config: |-
+    <?php
+    $CONFIG = array (
+      'memcache.local' => '\OC\Memcache\Redis',
+      'redis' => array(
+        'host' => 'redis',
+        'port' => 6379,
+        ),
+      'memcache.locking' => '\OC\Memcache\Redis',
+    );
+
+---
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
@@ -51,14 +92,14 @@ spec:
       volumes:
       - name: set-nextcloud-volume
         configMap:
-          name: set-nextcloud
+          name: nextcloud-config
           items:
           - key: set-nextcloud.sh
             path: set-nextcloud.sh
           defaultMode: 0744
       - name: apcu-config-volume
         configMap:
-          name: apcu-config
+          name: nextcloud-config
           items:
           - key: apcu.config.php
             path: apcu.config.php

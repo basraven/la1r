@@ -7,6 +7,8 @@ metadata:
 data:
   heapster-init.iql: CREATE RETENTION POLICY "default" ON "k8s" DURATION 1d REPLICATION 1 DEFAULT;
   varken-init.iql: CREATE DATABASE varken;
+  traefik-init.iql: CREATE DATABASE traefik;
+  online-traefik-init.iql: CREATE DATABASE onlinetraefik;
 ---
 apiVersion: apps/v1
 kind: Deployment
