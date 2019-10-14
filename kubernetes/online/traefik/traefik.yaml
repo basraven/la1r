@@ -113,7 +113,6 @@ rules:
       - get
       - list
       - watch
-
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1beta1
@@ -127,7 +126,6 @@ subjects:
   - kind: ServiceAccount
     name: online-traefik-ingress-controller
     namespace: online
-
 ---
 # Source: https://medium.com/@patrickeasters/using-traefik-with-tls-on-kubernetes-cb67fb43a948
 apiVersion: v1
@@ -135,6 +133,22 @@ kind: ServiceAccount
 metadata:
   name: online-traefik-ingress-controller
   namespace: online
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: online-traefik-config-claim
+  namespace: online
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "online-traefik-config"
+  resources:
+    requests:
+      storage: 1Gi
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -165,6 +179,11 @@ spec:
                 - big-raver
       serviceAccountName: online-traefik-ingress-controller
       terminationGracePeriodSeconds: 60
+      volumes:
+        - name: online-traefik-config-volume
+          persistentVolumeClaim:
+            claimName: online-traefik-config-claim
+          defaultMode: 0600
       containers:
       - name: online-traefik-ingress-lb
         image: traefik:v2.0
@@ -190,11 +209,13 @@ spec:
           - --entrypoints.web.Address=:80
           - --entrypoints.websecure.Address=:443
           - --providers.kubernetescrd
-          # - --certificatesresolvers.default.acme.httpChallenge.entryPoint=web
-          - --certificatesResolvers.sample.acme.httpChallenge=true
+          - --certificatesResolvers.default.acme.httpChallenge=true
           - --certificatesresolvers.default.acme.tlschallenge
           - --certificatesresolvers.default.acme.email=basraven@gmail.com
-          - --certificatesresolvers.default.acme.storage=acme.json
+          - --certificatesresolvers.default.acme.storage=acme/acme.json
+        volumeMounts:
+          - name: online-traefik-config-volume
+            mountPath: /acme
 ---
 kind: Service
 apiVersion: v1
