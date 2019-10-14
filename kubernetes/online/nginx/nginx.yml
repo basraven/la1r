@@ -1,19 +1,70 @@
-# ---
-# kind: PersistentVolumeClaim
-# apiVersion: v1
-# metadata:
-#   name: nginx-config-claim
-#   namespace: online
-# spec:
-#   accessModes:
-#   - ReadWriteMany 
-#   storageClassName: local-storage
-#   selector:
-#     matchLabels:
-#       contenttype: "nginx-config"
-#   resources:
-#     requests:
-#       storage: 1Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+  namespace: online
+data:
+  default.conf: |-
+    server {
+        listen       80;
+        server_name localhost;
+        # server_name  cloud.basraven.nl www.cloud.basraven.nl;
+        # access_log   logs/cloud.basraven.access.log  main;
+
+        # serve static files
+        # location ~ ^/(images|javascript|js|css|flash|media|static)/  {
+        #   root    /var/www/virtual/cloud.basraven.nl/htdocs;
+        #   expires 30d;
+        # }
+
+        # pass requests for dynamic content to rails/turbogears/zope, et al
+        location / {
+          # proxy_bind      $server_addr;
+          # proxy_pass      http://nextcloud.nextcloud:80;
+          proxy_pass http://google.com:80;
+        }
+
+        #charset koi8-r;
+        # access_log  /var/log/nginx/host.access.log  main;
+
+        # location / {
+        #     root   /usr/share/nginx/html;
+        #     index  index.html index.htm;
+        # }
+
+        #error_page  404              /404.html;
+
+        # redirect server error pages to the static page /50x.html
+        #
+        error_page   500 502 503 504  /50x.html;
+        location = /50x.html {
+            root   /usr/share/nginx/html;
+        }
+
+        # proxy the PHP scripts to Apache listening on 127.0.0.1:80
+        #
+        #location ~ \.php$ {
+        #    proxy_pass   http://127.0.0.1;
+        #}
+
+        # pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000
+        #
+        #location ~ \.php$ {
+        #    root           html;
+        #    fastcgi_pass   127.0.0.1:9000;
+        #    fastcgi_index  index.php;
+        #    fastcgi_param  SCRIPT_FILENAME  /scripts$fastcgi_script_name;
+        #    include        fastcgi_params;
+        #}
+
+        # deny access to .htaccess files, if Apache's document root
+        # concurs with nginx's one
+        #
+        #location ~ /\.ht {
+        #    deny  all;
+        #}
+    }
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -32,38 +83,24 @@ spec:
       labels:
         app: nginx
     spec:
-      # volumes:
-      #   - name: nginx-config-volume
-      #     persistentVolumeClaim:
-      #       claimName: nginx-config-claim
+      volumes:
+      - name: nginx-config-volume
+        configMap:
+          name: nginx-config
+          items:
+          - key: default.conf
+            path: default.conf
+          defaultMode: 0600
       containers:
       - name: nginx
         image: nginx
         ports:
         - name: http
           containerPort: 80
-        # env:
-        # - name: TZ
-        #   value: Europe/Amsterdam
-        # - name: PGID
-        #   value: "1000"
-        # - name: PUID
-        #   value: "1000"
-        # volumeMounts:
-        #   - name: nginx-config-volume
-        #     mountPath: /config
-        #   - name: nginx-config-volume
-        #     mountPath: /config/nginx/nginx.conf
-        #     subPath: nginx.conf
-        #   - name: set-goose-config-volume
-        #     mountPath: /goose/set-goose.sh
-        #     subPath: set-goose.sh
-        #   - name: set-goose-ovpn-volume
-        #     mountPath: /etc/openvpn/ro-10.conf
-        #     subPath: ro-10.conf
-        #   - name: goose-credentials-volume
-        #     mountPath: /goose/login.conf
-        #     subPath: login.conf
+        volumeMounts:
+        - name: nginx-config-volume
+          mountPath: /etc/nginx/conf.d/default.conf
+          subPath: default.conf
 ---
 apiVersion: v1
 kind: Service
