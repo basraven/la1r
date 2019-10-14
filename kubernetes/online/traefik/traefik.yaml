@@ -190,6 +190,7 @@ spec:
           - --entrypoints.web.Address=:80
           - --entrypoints.websecure.Address=:443
           - --providers.kubernetescrd
+          # - --certificatesresolvers.default.acme.httpChallenge.entryPoint=web
           - --certificatesResolvers.sample.acme.httpChallenge=true
           - --certificatesresolvers.default.acme.tlschallenge
           - --certificatesresolvers.default.acme.email=basraven@gmail.com
