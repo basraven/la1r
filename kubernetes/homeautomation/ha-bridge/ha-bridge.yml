@@ -1,0 +1,122 @@
+# ---
+# kind: PersistentVolumeClaim
+# apiVersion: v1
+# metadata:
+#   name: ha-bridge-config-claim
+#   namespace: homeautomation
+# spec:
+#   accessModes:
+#   - ReadWriteMany 
+#   storageClassName: local-storage
+#   selector:
+#     matchLabels:
+#       contenttype: "ha-bridge-config"
+#   resources:
+#     requests:
+#       storage: 1Gi
+# ---
+# kind: PersistentVolumeClaim
+# apiVersion: v1
+# metadata:
+#   name: ha-bridge-data-claim
+#   namespace: homeautomation
+# spec:
+#   accessModes:
+#   - ReadWriteMany 
+#   storageClassName: local-storage
+#   selector:
+#     matchLabels:
+#       contenttype: "ha-bridge-data"
+#   resources:
+#     requests:
+#       storage: 30Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ha-bridge
+  namespace: homeautomation
+  labels:
+    app: ha-bridge
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ha-bridge
+  template:
+    metadata:
+      labels:
+        app: ha-bridge
+    spec:
+      # volumes:
+      #   - name: ha-bridge-config-volume
+      #     persistentVolumeClaim:
+      #       claimName: ha-bridge-config-claim
+      #   - name: ha-bridge-data-volume
+      #     persistentVolumeClaim:
+      #       claimName: ha-bridge-data-claim
+      initContainers:
+      - name: init-myservice
+        image: busybox:1.28
+        command: ['sh', '-c', 'until nslookup myservice; do echo waiting for myservice; sleep 2; done;']
+      containers:
+      - name: ha-bridge
+        image: eclipse-mosquitto
+        ports:
+        - name: mqtt
+          containerPort: 1883
+        - name: socket
+          containerPort: 9001
+        # env:
+        # - name: USER_ID
+        #   value: "1000"
+        # - name: GROUP_ID
+        #   value: "1000"
+        volumeMounts:
+          - name: ha-bridge-config-volume
+            mountPath: /mosquitto/config/
+          - name: ha-bridge-data-volume
+            mountPath: //mosquitto/data/
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: ha-bridge
+  name: ha-bridge
+  namespace: homeautomation
+spec:
+  ports:
+  - name: mqtt
+    targetPort: 1883
+    port: 1883
+  - name: socket
+    targetPort: 9001
+    port: 9001
+  selector:
+    app: ha-bridge
+  type: ClusterIP
+# ---
+# apiVersion: extensions/v1beta1
+# kind: Ingress
+# metadata:
+#   name: ha-bridge-ingress
+#   namespace: homeautomation
+#   # annotations:
+#   #   kubernetes.io/ingress.class: traefik
+# spec:
+#   rules:
+#   - host: ha-bridge.bas
+#     http:
+#       paths:
+#       - path: /
+#         backend:
+#           serviceName: ha-bridge
+#           servicePort: 80
+#   - host: ha-bridge.thuis
+#     http:
+#       paths:
+#       - path: /
+#         backend:
+#           serviceName: ha-bridge
+#           servicePort: 80

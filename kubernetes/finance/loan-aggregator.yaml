@@ -1,0 +1,57 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loan-aggregator
+  namespace: finance
+  labels:
+    app: loan-aggregator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: loan-aggregator
+  template:
+    metadata:
+      labels:
+        app: loan-aggregator
+    spec:
+      containers:
+      - name: loan-aggregator
+        image: python:3-alpine
+        command: ["/bin/sh"]
+        # args: ["apk add git ; pip3 install -r requirements"]
+        ports:
+        - containerPort: 5000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: loan-aggregator
+  name: loan-aggregator
+  namespace: finance
+spec:
+  ports:
+  - name: db
+    port: 3306
+  selector:
+    app: loan-aggregator
+  type: ClusterIP
+# ---
+# apiVersion: extensions/v1beta1
+# kind: Ingress
+# metadata:
+#   name: loan-aggregatorfinanceingress
+#   namespace: finance
+#   # annotations:
+#   #   kubernetes.io/ingress.class: traefik
+# spec:
+#   rules:
+#   - host: finance-sql.bas
+#     http:
+#       paths:
+#       - path: /
+#         backend:
+#           serviceName: loan-aggregator
+#           servicePort: 80
