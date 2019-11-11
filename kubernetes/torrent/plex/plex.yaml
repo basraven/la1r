@@ -99,6 +99,7 @@ spec:
         ports:
         - name: http
           containerPort: 32400
+          hostPort: 32400
         env:
         - name: TZ
           value: "Europe//Amsterdam"
@@ -132,22 +133,6 @@ spec:
     targetPort: 32400
   selector:
     app: plex
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    app: plex-nodeport
-  name: plex-nodeport
-  namespace: torrent
-spec:
-  ports:
-  - name: http
-    port: 32400
-    nodePort: 32400
-  selector:
-    app: plex-nodeport
-  type: NodePort
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress
