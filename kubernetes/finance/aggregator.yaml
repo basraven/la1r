@@ -1,57 +1,74 @@
 ---
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: loan-aggregator
-  namespace: finance
-  labels:
-    app: loan-aggregator
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: loan-aggregator
-  template:
-    metadata:
-      labels:
-        app: loan-aggregator
-    spec:
-      containers:
-      - name: loan-aggregator
-        image: python:3-alpine
-        command: ["/bin/sh"]
-        # args: ["apk add git ; pip3 install -r requirements"]
-        ports:
-        - containerPort: 5000
----
 apiVersion: v1
-kind: Service
+kind: ConfigMap
 metadata:
-  labels:
-    app: loan-aggregator
-  name: loan-aggregator
+  name: aggregator-script
   namespace: finance
+data:
+  aggregator-daily.sh: |-
+    #!/bin/sh
+    apt-get update
+    apt-get install git -y
+    git clone https://github.com/basraven/finagg.git finagg
+    cd finagg 
+    pip3 install -r requirements.txt
+    python3 aggregate.py
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: aggregator-daily
+  namespace: finance
+  labels:
+    app: aggregator-daily
 spec:
-  ports:
-  - name: db
-    port: 3306
-  selector:
-    app: loan-aggregator
-  type: ClusterIP
-# ---
-# apiVersion: extensions/v1beta1
-# kind: Ingress
-# metadata:
-#   name: loan-aggregatorfinanceingress
-#   namespace: finance
-#   # annotations:
-#   #   kubernetes.io/ingress.class: traefik
-# spec:
-#   rules:
-#   - host: finance-sql.bas
-#     http:
-#       paths:
-#       - path: /
-#         backend:
-#           serviceName: loan-aggregator
-#           servicePort: 80
+  schedule: "5 4 * * *"
+  concurrencyPolicy: Replace
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: aggregator
+        spec:
+          affinity:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                    - big-raver
+          restartPolicy: Never    
+          volumes:
+          - name: aggregator-script-volume
+            configMap:
+              name: aggregator-script
+              items:
+              - key: aggregator-daily.sh
+                path: aggregator-daily.sh
+              defaultMode: 0744
+          containers:
+          - name: aggregator-peerberry
+            image: python:3-slim
+            env:
+            - name: TOKEN
+              value: peerberry
+            volumeMounts:
+              - name: aggregator-script-volume
+                mountPath: /aggregator-script
+            command: 
+              - /aggregator-script/aggregator-daily.sh
+          - name: aggregator-fastinvest
+            image: python:3-slim
+            env:
+            - name: TOKEN
+              value: fastinvest
+            volumeMounts:
+              - name: aggregator-script-volume
+                mountPath: /aggregator-script
+            command: 
+              - /aggregator-script/aggregator-daily.sh
