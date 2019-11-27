@@ -42,36 +42,116 @@
 #           servicePort: 443
 
 
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   labels:
+#     app: kubernetes-dashboard-custom
+#   name: kubernetes-dashboard-custom
+#   namespace: kubernetes-dashboard
+# spec:
+#   ports:
+#   - name: https
+#     targetPort: 8443
+#     port: 443
+#   selector:
+#     k8s-app: kubernetes-dashboard
+#   type: ClusterIP
+# ---
+# apiVersion: extensions/v1beta1
+# kind: Ingress
+# metadata:
+#   name: kubernetes-dashboard-custom
+#   namespace: kubernetes-dashboard
+#   # annotations:
+#   #   kubernetes.io/ingress.class: traefik
+#   #   traefik.ingress.kubernetes.io/ssl-redirect: "true"
+# spec:
+#   tls:
+#     - hosts:
+#       - kubernetes.bas
+#     - secretName: kubernetes-ui-tls-cert
+#   rules:
+#   - host: kubernetes.bas
+#     http:
+#       paths:
+#       - path: /
+#         backend:
+#           serviceName: kubernetes-dashboard
+#           servicePort: 443
+
+
+
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  namespace: kube-system
+  name: whoami
+  labels:
+    app: whoami
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: whoami
+  template:
+    metadata:
+      labels:
+        app: whoami
+    spec:
+      containers:
+        - name: whoami
+          image: containous/whoami
+          ports:
+            - name: web
+              containerPort: 80
+
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  labels:
-    app: kubernetes-dashboard-custom
-  name: kubernetes-dashboard-custom
-  namespace: kubernetes-dashboard
+  name: whoami
+  namespace: kube-system
 spec:
   ports:
-  - name: https
-    targetPort: 8443
-    port: 80
+    - protocol: TCP
+      name: web
+      port: 80
   selector:
-    k8s-app: kubernetes-dashboard
-  type: ClusterIP
+    app: whoami
+
 ---
-apiVersion: extensions/v1beta1
-kind: Ingress
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
 metadata:
-  name: kubernetes-dashboard-custom
-  namespace: kubernetes-dashboard
-  annotations:
-    kubernetes.io/ingress.class: traefik
+  name: simpleingressroute
+  namespace: kube-system
 spec:
-  rules:
-  - host: kubernetes.bas
-    http:
-      paths:
-      - path: /
-        backend:
-          serviceName: kubernetes-dashboard-custom
-          servicePort: 80
+  entryPoints:
+    - web
+  routes:
+  - match: Host(`testen.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: whoami
+      port: 80
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: ingressroutetls
+  namespace: kube-system
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`testen.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: whoami
+      port: 80
+  tls:
+    certResolver: default

@@ -6,7 +6,7 @@ metadata:
   name: traefik-ingress-controller
   namespace: kube-system
 ---
-kind: DaemonSet
+kind: Deployment
 apiVersion: apps/v1
 metadata:
   name: traefik-ingress-controller
@@ -50,7 +50,7 @@ spec:
           #   - key: traefik.toml
           #     path: traefik.toml
       serviceAccountName: traefik-ingress-controller
-      terminationGracePeriodSeconds: 60
+      # terminationGracePeriodSeconds: 60
       containers:
       - name: traefik-ingress-lb
         image: traefik:v2.0
@@ -92,7 +92,12 @@ spec:
           - --entrypoints.metrics.Address=:8082
           - --entrypoints.web.Address=:80
           - --entrypoints.websecure.Address=:443
+          - --providers.kubernetescrd
           - --providers.kubernetesingress
+          - --certificatesresolvers.default.acme.tlschallenge
+          - --certificatesresolvers.default.acme.email=basraven@gmail.com
+          - --certificatesresolvers.default.acme.storage=acme.json
+          - --certificatesresolvers.default.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory
 ---
 kind: Service
 apiVersion: v1
@@ -106,8 +111,9 @@ spec:
     - protocol: TCP
       port: 80
       name: web
-    - port: 443
-      name: https
+    - protocol: TCP
+      port: 443
+      name: websecure
     - protocol: TCP
       port: 8080
       name: admin
