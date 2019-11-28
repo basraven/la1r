@@ -20,15 +20,18 @@ kind: Deployment
 metadata:
   name: heimdall
   namespace: monitoring
+  labels:
+    k8s-app: heimdall
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: heimdall
+      name: heimdall
   template:
     metadata:
       labels:
-        app: heimdall
+        name: heimdall
+        k8s-app: heimdall
     spec:
       containers:
       - name: heimdall
@@ -53,25 +56,20 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  labels:
-    task: monitoring
-    # For use as a Cluster add-on (https://github.com/kubernetes/kubernetes/tree/master/cluster/addons)
-    # If you are NOT using this as an addon, you should comment out this line.
-    # kubernetes.io/cluster-service: 'true'
-    # kubernetes.io/name: heimdall
-  name: heimdall
+  name: heimdall-ingress-service
   namespace: monitoring
 spec:
-  ports:
-  - port: 80
-    targetPort: 80
   selector:
-    app: heimdall
-
+    k8s-app: heimdall
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+---
 kind: Ingress
 apiVersion: extensions/v1beta1
 metadata:
-  name: "heimdall"
+  name: heimdall
   namespace: monitoring
 
 spec:
@@ -81,15 +79,15 @@ spec:
         paths:
           - path: /
             backend:
-              serviceName: heimdall
-              servicePort: 80
+              serviceName: heimdall-ingress-service
+              servicePort: http
     - host: heimdall.thuis
       http:
         paths:
           - path: /
             backend:
-              serviceName: heimdall
-              servicePort: 80
+              serviceName: heimdall-ingress-service
+              servicePort: http
     - host: home.bas
       http:
         paths:

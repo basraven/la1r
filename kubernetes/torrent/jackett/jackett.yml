@@ -74,8 +74,8 @@ kind: Ingress
 metadata:
   name: jackettingress
   namespace: torrent
-  # annotations:
-  #   kubernetes.io/ingress.class: traefik
+  annotations:
+    kubernetes.io/ingress.class: traefik
 spec:
   rules:
   - host: jackett.bas
