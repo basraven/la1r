@@ -135,3 +135,13 @@ spec:
         backend:
           serviceName: traefik-ingress-service
           servicePort: admin
+---
+# Redirect to https
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: http-redirect-to-https
+  namespace: kube-system
+spec:
+  redirectScheme:
+    scheme: https
