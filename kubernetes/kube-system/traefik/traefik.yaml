@@ -94,6 +94,7 @@ spec:
           - --entrypoints.web.Address=:80
           - --entrypoints.websecure.Address=:443
           - --providers.kubernetescrd
+          - --providers.kubernetescrd.labelselector=expose!=online
           - --providers.kubernetesingress
           # - --certificatesresolvers.default.acme.tlschallenge
           # - --certificatesresolvers.default.acme.email=basraven@gmail.com
@@ -135,13 +136,3 @@ spec:
         backend:
           serviceName: traefik-ingress-service
           servicePort: admin
----
-# Redirect to https
-apiVersion: traefik.containo.us/v1alpha1
-kind: Middleware
-metadata:
-  name: http-redirect-to-https
-  namespace: kube-system
-spec:
-  redirectScheme:
-    scheme: https
