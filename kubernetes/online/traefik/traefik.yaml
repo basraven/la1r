@@ -192,6 +192,7 @@ spec:
           containerPort: 80
         - name: https
           containerPort: 443
+          hostPort: 31643
         - name: admin
           containerPort: 8080
         - name: prometheus
@@ -234,7 +235,6 @@ spec:
   selector:
     k8s-app: online-traefik-ingress-lb
   type: ClusterIP
-
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress
