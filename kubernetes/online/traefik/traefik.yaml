@@ -219,29 +219,41 @@ spec:
           - name: online-traefik-config-volume
             mountPath: /acme
 ---
-kind: Service
 apiVersion: v1
+kind: Service
 metadata:
-  name: online-traefik-ingress-service
+  labels:
+    app: online-traefik-ingress-lb
+  name: online-traefik-ingress-lb
   namespace: online
 spec:
+  ports:
+  - name: admin
+    targetPort: 8080
+    port: 8080
   selector:
     k8s-app: online-traefik-ingress-lb
-  type: NodePort
-  ports:
-    - protocol: TCP
-      port: 80
-      nodePort: 31680
-      name: web
-    - port: 443
-      name: websecure
-      nodePort: 31643
-    - protocol: TCP
-      port: 8080
-      nodePort: 31681
-      name: admin
-    - port: 8082
-      name: prometheus
+  type: ClusterIP
+
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: traefik-web-ui-online
+  namespace: online
+  annotations:
+    kubernetes.io/ingress.class: traefik
+  labels:
+    expose: "local"
+spec:
+  rules:
+  - host: traefik-online.bas
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: online-traefik-ingress-lb
+          servicePort: admin
 
 ---
 # Source: https://docs.traefik.io/v2.0/middlewares/ratelimit/
@@ -275,23 +287,3 @@ spec:
 #   replacePathRegex:
 #     regex: ^/foo/(.*)
 #     replacement: /bar/$1
-# ---
-# apiVersion: traefik.containo.us/v1alpha1
-# kind: IngressRoute
-# metadata:
-#   name: ingressroutetls
-#   namespace: online
-# spec:
-#   entryPoints:
-#     - websecure
-#   routes:
-#   - match: Host(`cloud.basraven.nl`)
-#     kind: Rule
-#     services:
-#     - name: nginx
-#       port: 80
-#     middlewares:
-#     - name: online-ratelimit
-#   tls:
-#     certResolver: default
-
