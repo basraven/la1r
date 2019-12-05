@@ -43,6 +43,10 @@ spec:
         - name: PUID
           value: "1000"
         image: linuxserver/tautulli
+        resources:
+          limits:
+            memory: 100Mi
+            cpu: 100m
         volumeMounts:
           - name: tautulli
             mountPath: /config

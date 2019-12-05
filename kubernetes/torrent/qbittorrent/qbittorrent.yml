@@ -150,6 +150,10 @@ spec:
           claimName: qbittorrent-torrent-claim
       containers:
       - name: qbittorrent
+        resources:
+          limits:
+            memory: 300Mi
+            cpu: 100m
         image: linuxserver/qbittorrent
         command: [ "/goose/set-goose.sh"]
         securityContext:

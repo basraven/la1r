@@ -1,0 +1,147 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rules-editor-init
+  namespace: homeautomation
+data:
+  init.sh: |-
+    #!/bin/bash
+    sudo apt-get update
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: rules-editor-claim
+  namespace: homeautomation
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "rules-editor"
+  resources:
+    requests:
+      storage: 200Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: rules-editor-config-claim-local
+  namespace: homeautomation
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "rules-editor-config-local"
+  resources:
+    requests:
+      storage: 20Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: rules-editor-config-claim-vscode
+  namespace: homeautomation
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "rules-editor-config-vscode"
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rules-editor
+  namespace: homeautomation
+  labels:
+    app: rules-editor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rules-editor
+  template:
+    metadata:
+      labels:
+        task: development
+        app: rules-editor
+    spec:
+      containers:
+      - name: rules-editor
+        ports:
+        - containerPort: 8080
+        image: codercom/code-server
+        command: ["/bin/bash"]
+        args: ["-c", "/docker/init.sh && dumb-init code-server --no-auth"]
+        env:
+          - name: PASSWORD
+            value: "editmyrules"
+          - name: PGID
+            value: "1001"
+          - name: PUID
+            value: "1001"
+        volumeMounts:
+          - name: rules-editor
+            mountPath: /home/coder/project
+          - name: rules-editor-config-local
+            mountPath: /home/coder/.local
+          - name: rules-editor-config-vscode
+            mountPath: /home/coder/.vscode
+          - name: rules-editor-init
+            mountPath: /docker/init.sh
+            subPath: init.sh
+      volumes:
+        - name: rules-editor
+          persistentVolumeClaim:
+            claimName: rules-editor-claim
+        - name: rules-editor-config-local
+          persistentVolumeClaim:
+            claimName: rules-editor-config-claim-local
+        - name: rules-editor-config-vscode
+          persistentVolumeClaim:
+            claimName: rules-editor-config-claim-vscode
+        - name: rules-editor-init
+          configMap:
+            name: rules-editor-init
+            items:
+            - key: init.sh
+              path: init.sh
+            defaultMode: 0755
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    task: rules-editor
+  name: rules-editor
+  namespace: homeautomation
+spec:
+  ports:
+  - port: 80
+    targetPort: 8080
+  selector:
+    app: rules-editor
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: rules-editor
+  namespace: homeautomation
+spec:
+  rules:
+  - host: rules.bas
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: rules-editor
+          servicePort: 80

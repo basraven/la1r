@@ -37,6 +37,10 @@ spec:
     spec:
       containers:
       - name: openvpn-status
+        resources:
+          limits:
+            memory: 50Mi
+            cpu: 100m
         ports:
         - containerPort: 80
         image: auspexeu/openvpn-status
