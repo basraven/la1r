@@ -1,5 +1,18 @@
 set -e
 
+path_prefix="/credentials/ssl"
+
+if [ "$1" == "root" ]
+  then 
+  echo "### Creating root cert instead of client cert:"
+  # Create Root key
+	openssl genrsa -des3 -out /credentials/ssl/rootCA.key 4096
+	# Self sign root key
+	openssl req -x509 -new -nodes -key /credentials/ssl/rootCA.key -sha256 -days 1024 -out /credentials/ssl/rootCA.crt
+  exit 0
+fi
+
+
 if [ -z "$1" ]; then
   hostname="$HOSTNAME"
 else
