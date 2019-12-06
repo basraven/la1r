@@ -1,0 +1,75 @@
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: analytics-claim
+  namespace: analytics
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "analytics"
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: analytics
+  namespace: analytics
+  labels:
+    app: analytics
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: analytics
+  template:
+    metadata:
+      labels:
+        task: analytics
+        k8s-app: analytics
+        app: analytics
+    spec:
+      containers:
+      - name: analytics
+        ports:
+        - containerPort: 8888
+        image: mikebirdgeneau/jupyterlab
+        volumeMounts:
+          - name: analytics
+            mountPath: /notebooks
+      volumes:
+        - name: analytics
+          persistentVolumeClaim:
+            claimName: analytics-claim
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: analytics
+  namespace: analytics
+spec:
+  ports:
+  - port: 80
+    targetPort: 8888
+  selector:
+    app: analytics
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: analytics
+  namespace: analytics
+spec:
+  rules:
+  - host: analytics.bas
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: analytics
+          servicePort: 80
