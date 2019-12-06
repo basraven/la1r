@@ -3,7 +3,7 @@ kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
   name: chronograf-claim
-  namespace: monitoring
+  namespace: homeautomation
 spec:
   accessModes:
   - ReadWriteMany 
@@ -15,18 +15,24 @@ spec:
     requests:
       storage: 2Gi
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: chronograf
-  namespace: monitoring
+  namespace: homeautomation
+  labels:
+    app: chronograf
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: chronograf
   template:
     metadata:
       labels:
-        task: monitoring
+        task: homeautomation
         k8s-app: chronograf
+        app: chronograf
     spec:
       containers:
       - name: chronograf
@@ -44,24 +50,20 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  labels:
-    task: monitoring
-    kubernetes.io/cluster-service: 'true'
-    kubernetes.io/name: chronograf
   name: chronograf
-  namespace: monitoring
+  namespace: homeautomation
 spec:
   ports:
   - port: 80
     targetPort: 8888
   selector:
-    k8s-app: chronograf
+    app: chronograf
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   name: chronograf
-  namespace: monitoring
+  namespace: homeautomation
 spec:
   rules:
   - host: chronograf.bas

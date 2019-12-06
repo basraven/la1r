@@ -97,7 +97,7 @@ data:
 
     ## Write consistency (clusters only), can be: "any", "one", "quorum", "all".
     ## Only takes effect when using HTTP.
-    # write_consistency = "any"
+    write_consistency = "any"
 
     ## Timeout for HTTP messages.
     # timeout = "5s"
