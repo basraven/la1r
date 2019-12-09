@@ -26,11 +26,6 @@ spec:
       - name: ceryx
         ports:
         - containerPort: 80
-        env:
-        - name: TELEGRAM_API_KEY
-          value: "871411149:AAGWzYWs0pRdsWS9BeafVgSF9QIr6hNfo28"
-        - name: CHAT_ID
-          value: "27771095"
         image: golang:alpine
         command: [ "/bin/sh" ]
         args: ["-c", "apk add git && go get -u github.com/basraven/ceryx && go build github.com/basraven/ceryx && ceryx"]

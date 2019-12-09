@@ -3,7 +3,7 @@
 # apiVersion: v1
 # metadata:
 #   name: email-claim
-#   namespace: network
+#   namespace: nextcloud
 # spec:
 #   accessModes:
 #   - ReadWriteMany
@@ -15,11 +15,22 @@
 #     requests:
 #       storage: 20Gi
 ---
+apiVersion: v1
+metadata:
+  name: email-config
+  namespace: nextcloud
+kind: ConfigMap
+data:
+  config.json: |-
+    [
+    { "allow": "*" }
+    ]
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: email-sender
-  namespace: network
+  namespace: nextcloud
   labels:
     app: email-sender
 spec:
@@ -48,7 +59,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: email
-  namespace: network
+  namespace: nextcloud
   labels:
     app: email
 spec:
@@ -112,7 +123,7 @@ metadata:
   labels:
     app: email-sender
   name: email-sender
-  namespace: network
+  namespace: nextcloud
 spec:
   ports:
   - name: smtp
@@ -128,7 +139,7 @@ metadata:
   labels:
     app: email
   name: email
-  namespace: network
+  namespace: nextcloud
 spec:
   ports:
   - name: smtp
@@ -145,17 +156,10 @@ apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   name: emailingress
-  namespace: network
+  namespace: nextcloud
 spec:
   rules:
-  - host: email.bas
-    http:
-      paths:
-      - path: /
-        backend:
-          serviceName: email
-          servicePort: 80
-  - host: mail.bas
+  - host: nextcloud-email.bas
     http:
       paths:
       - path: /

@@ -11,9 +11,8 @@ data:
     echo "[OPENVPN] Creating GooseVPN connection"
     apt-get update
     apt-get install openvpn -y
-    # echo AUTOSTART="ro-10" >> /etc/default/openvpn
-    # service openvpn start
-    openvpn /etc/openvpn/ro-10.conf | sed "s/^/[OPENVPN] /" &
+    # echo AUTOSTART="all" >> /etc/default/openvpn
+    sleep 30 ; openvpn /etc/openvpn/cert2.conf &
     /init
   qBittorrent.conf: |-
     [AutoRun]
@@ -126,8 +125,8 @@ spec:
         secret:
           secretName: goose-credentials
           items:
-          - key: ro-10.conf
-            path: ro-10.conf
+          - key: cert2.conf
+            path: cert2.conf
           defaultMode: 0744
       
       - name: qbittorrent-config-client
@@ -150,10 +149,10 @@ spec:
           claimName: qbittorrent-torrent-claim
       containers:
       - name: qbittorrent
-        resources:
-          limits:
-            memory: 300Mi
-            cpu: 100m
+        # resources:
+        #   limits:
+        #     memory: 300Mi
+        #     cpu: 100m
         image: linuxserver/qbittorrent
         command: [ "/goose/set-goose.sh"]
         securityContext:
@@ -186,8 +185,8 @@ spec:
             mountPath: /goose/set-goose.sh
             subPath: set-goose.sh
           - name: set-goose-ovpn-volume
-            mountPath: /etc/openvpn/ro-10.conf
-            subPath: ro-10.conf
+            mountPath: /etc/openvpn/cert2.conf
+            subPath: cert2.conf
           - name: goose-credentials-volume
             mountPath: /goose/login.conf
             subPath: login.conf

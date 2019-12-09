@@ -39,9 +39,17 @@ spec:
         ports:
         - containerPort: 8888
         image: mikebirdgeneau/jupyterlab
+        command:
+          - jupyter-lab
+          - --ip=*
+          - --port=8888
+          - --no-browser
+          - --notebook-dir=/opt/app/data
+          - --allow-root
+          - --LabApp.token=editmylab
         volumeMounts:
           - name: analytics
-            mountPath: /notebooks
+            mountPath: /opt/app/data
       volumes:
         - name: analytics
           persistentVolumeClaim:

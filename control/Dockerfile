@@ -8,3 +8,4 @@ RUN yum update -y && \
 WORKDIR /kubernetes
 
 COPY entrypoint.sh /control/entrypoint.sh
+ENTRYPOINT entrypoint.sh /control/entrypoint.sh

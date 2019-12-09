@@ -185,3 +185,5 @@ spec:
         backend:
           serviceName: nextcloud
           servicePort: 80
+  tls:
+   - secretName: nextcloud-ssl

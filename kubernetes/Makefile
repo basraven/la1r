@@ -75,7 +75,7 @@ unbackup:
 	
 .PHONY: qbittorrent
 qbittorrent:
-	- kubectl create secret generic goose-credentials --namespace torrent --from-file=/credentials/ovpn/login.conf --from-file=/credentials/ovpn/ro-10.conf
+	- kubectl create secret generic goose-credentials --namespace torrent --from-file=/credentials/ovpn/login.conf --from-file=cert1.conf=/credentials/ovpn/ro-10.conf --from-file=cert2.conf=/credentials/ovpn/hu-2.conf
 	- kubectl apply -f qbittorrent
 
 # Refresh claimToken from https://www.plex.tv/claim/
@@ -88,6 +88,18 @@ plex:
 unplex:
 	- kubectl delete -f torrent/plex/plex-pv.yaml
 	- kubectl delete -f torrent/plex/plex.yaml
+
+.PHONY: ssl-certs
+ssl-certs:
+	# Source: https://gist.github.com/fntlnz/cf14feb5a46b2eda428e000157447309
+	
+	# Create rootCA
+	/credentials/ssl/make-cert.sh root
+	
+	# Create client cert
+	/credentials/ssl/make-cert.sh cloud.bas
+
+	kubectl create secret generic nextcloud-ssl --namespace nextcloud --from-file=tls.crt=/credentials/ssl/cloud.bas.crt --from-file=tls.key=/credentials/ssl/cloud.bas.key 
 
 ###############################################################
 ######## Deprecated, not in current cluster ###################
@@ -129,16 +141,3 @@ helm:
 	- kubectl patch deploy --namespace tiller tiller-deploy -p'{"spec":{"template":{"spec":{"serviceAccount":"tiller"}}}}'
 	- rm -rf /root/.helm
 	- helm init --tiller-namespace tiller
-
-.PHONY: ssl-certs
-ssl-certs:
-	# Source: https://gist.github.com/fntlnz/cf14feb5a46b2eda428e000157447309
-	
-
-	# Upload crt + key
-	# kubectl create secret generic plex-cert --namespace kube-system --from-file=/credentials/ssl/plex.bas.crt --from-file=/credentials/ssl/plex.bas.key
-
-
-	# Create crt (works)
-	# /bin/bash /credentials/nextcloud/make-cert.sh cloud.bas && mv ./cloud.bas.cert.pem /credentials/nextcloud/cloud.bas.crt && mv ./cloud.bas.key.pem /credentials/nextcloud/cloud.bas.key
-	# kubectl create secret generic traefik-cert --namespace kube-system --from-file=/credentials/nextcloud/cloud.bas.crt --from-file=/credentials/nextcloud/cloud.bas.key
