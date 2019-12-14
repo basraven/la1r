@@ -1,0 +1,83 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: whatsapp-selenium
+  namespace: comms
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: whatsapp-selenium
+  template:
+    metadata:
+      labels:
+        name: whatsapp-selenium
+        k8s-app: whatsapp-selenium
+    spec:
+      containers:
+      - name: whatsapp-selenium
+        ports:
+        - name: driver
+          containerPort: 4444
+        - name: vnc
+          containerPort: 5900
+        image: selenium/standalone-firefox-debug:3.14.0-curium
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    name: whatsapp-selenium
+    kubernetes.io/name: whatsapp-selenium
+  name: whatsapp-selenium
+  namespace: comms
+spec:
+  ports:
+  - name: driver
+    port: 4444
+    targetPort: 4444
+  - name: vnc
+    port: 5900
+    targetPort: 5900
+  selector:
+    k8s-app: whatsapp-selenium
+# ---
+# apiVersion: extensions/v1beta1
+# kind: Deployment
+# metadata:
+#   name: whatsapp
+#   namespace: comms
+# spec:
+#   replicas: 1
+#   template:
+#     metadata:
+#       labels:
+#         task: whatsapp
+#         k8s-app: whatsapp
+#     spec:
+#       containers:
+#       - name: whatsapp
+#         ports:
+#         - containerPort: 80
+#         env:
+#         - name: CHAT_ID
+#           value: "27771095"
+#         image: golang:alpine
+#         command: [ "/bin/sh" ]
+#         args: ["-c", "apk add git && go get -u github.com/basraven/ceryx && go build github.com/basraven/ceryx && ceryx"]
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   labels:
+#     task: whatsapp
+#     kubernetes.io/name: whatsapp
+#   name: whatsapp
+#   namespace: comms
+# spec:
+#   ports:
+#   - port: 80
+#     targetPort: 80
+#   selector:
+#     k8s-app: whatsapp

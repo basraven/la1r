@@ -1,0 +1,59 @@
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: telegram
+  namespace: telegram
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        task: telegram
+        k8s-app: telegram
+    spec:
+      containers:
+      - name: telegram
+        ports:
+        - containerPort: 80
+        env:
+        - name: TELEGRAM_API_KEY
+          valueFrom:
+              secretKeyRef:
+                name: comms-telegram
+                key: TELEGRAM_API_KEY
+        - name: CHAT_ID
+          value: "27771095"
+        image: golang:alpine
+        command: [ "/bin/sh" ]
+        args: ["-c", "apk add git && go get -u github.com/basraven/ceryx && go build github.com/basraven/ceryx && ceryx"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    task: telegram
+    kubernetes.io/name: telegram
+  name: telegram
+  namespace: telegram
+spec:
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    k8s-app: telegram
+# ---
+# apiVersion: extensions/v1beta1
+# kind: Ingress
+# metadata:
+#   name: telegram
+#   namespace: telegram
+# spec:
+#   rules:
+#   - host: telegram.bas
+#     http:
+#       paths:
+#       - path: /
+#         backend:
+#           serviceName: telegram
+#           servicePort: 80 
