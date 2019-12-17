@@ -23,5 +23,5 @@ jobs:
           sudo dpkg -i /tmp/hugo.deb
 
       - name: Run Hugo
-        working-directory: docs/src
+        working-directory: documentation/src
         run: hugo
