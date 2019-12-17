@@ -1,10 +1,10 @@
-# server-configs
+# La1r
 A personal collection of server configs with Kubernetes and Ansible, enjoy!
 
 
 ## Prerequisites
 * Docker
-* id_rsa and id_rsa.pub in ```/credentials/ssh/``` (generate them yourself)
+* id_rsa and id_rsa.pub in ```/credentials/ssh/``` (generate these yourself)
 
 ## How to run
 Run the control (Ansible) client with:
