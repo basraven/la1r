@@ -24,7 +24,7 @@ bookMenuLevels: 1
     - [Lighting]({{< relref "/docs/shortcodes/mermaid" >}})
     - [Remote control]({{< relref "/docs/shortcodes/mermaid" >}})
  
- - [**AI & Automation & Analytics**]({{< relref "/docs/example" >}})
+ - [**AI, Automation, Analytics**]({{< relref "/docs/example" >}})
     - [Active AI applications]({{< relref "/docs/shortcodes/tabs" >}})  
     - [Automation]({{< relref "/posts" >}})
     - [Analytics]({{< relref "/posts" >}})
