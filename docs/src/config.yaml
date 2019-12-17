@@ -4,6 +4,7 @@ baseURL: https://la1r.com/
 title: La1r
 theme: book
 disableKinds: ["taxonomy", "taxonomyTerm"]
+publishDir: ../../public
 
 # Book configuration
 disablePathToLower: true
