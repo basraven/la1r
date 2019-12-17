@@ -15,4 +15,4 @@ jobs:
 
       - name: Run Hugo
         working-directory: docs/src
-        run: hugo --themesDir books
+        run: hugo --publishDir ../../public
