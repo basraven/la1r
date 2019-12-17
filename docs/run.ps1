@@ -1,1 +1,2 @@
-docker run --rm -it --name la1r -p 8313:1313 --workdir /go/src -v $pwd/src/:/go/src -v $pwd/:/tools/ -it golang:alpine /bin/sh -c "/tools/install.sh ; hugo server --bind '0.0.0.0' --navigateToChanged --forceSyncStatic onedly ; tail -f /dev/null"
+cd ..
+docker run --rm -it --name la1r -p 8313:8313 --workdir /go/src/docs/src -v $pwd/:/go/src -it golang:alpine /bin/sh -c "/go/src/docs/install-hugo.sh ; hugo server --bind '0.0.0.0' --port 8313 --navigateToChanged --disableFastRender --forceSyncStatic"
