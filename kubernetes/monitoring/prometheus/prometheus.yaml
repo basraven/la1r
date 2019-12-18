@@ -1,3 +1,20 @@
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: prometheus-claim
+  namespace: monitoring
+spec:
+  accessModes:
+    - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: prometheus
+  resources:
+    requests:
+      storage: 20Gi
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -77,10 +94,15 @@ spec:
         - containerPort: 9090
         image: prom/prometheus
         volumeMounts:
+        - name: prometheus
+          mountPath: /prometheus
         - name: prometheus-config
           mountPath: /etc/prometheus/prometheus.yml
           subPath: prometheus.yml
       volumes:
+      - name: prometheus
+        persistentVolumeClaim:
+          claimName: prometheus-claim
       - name: prometheus-config
         configMap:
           name: prometheus-config
