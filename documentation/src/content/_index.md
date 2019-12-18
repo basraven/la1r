@@ -10,7 +10,7 @@ The goal of La1r is the create a collection of home-automation, security, artifi
 
 {{< columns >}}
 ## Conceptual documentation
-This documentation captures what the underlying concepts, goals and roadmap is for La1r.
+This documentation captures the underlying concepts, goals and roadmap for the La1r project.
 
 [Read more](/docs/conceptual-setup)
 
