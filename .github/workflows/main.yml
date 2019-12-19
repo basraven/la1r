@@ -25,9 +25,7 @@ jobs:
     
     - name: Add CNAME
       run: | 
-        echo 'la1r.com' > documentation/src/CNAME
         echo 'la1r.com' > docs/CNAME
-        echo 'la1r.com' > CNAME
         
     - name: Deploy
       uses: peaceiris/actions-gh-pages@v2
