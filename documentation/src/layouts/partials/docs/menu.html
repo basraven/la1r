@@ -2,7 +2,16 @@
 {{ partial "docs/brand" . }}
 {{ partial "docs/search" . }}
 {{ partial "docs/inject/menu-before" . }}
-
+{{ if .Site.Params.HomeTitle }}
+<ul class="pre-inject-menu">
+  <li>
+    <strong>
+      <!-- TODO: add active class when page is active -->
+      <a href="/" >{{ .Site.Params.HomeTitle }}  </a>
+    </strong>
+  </li>
+</ul>  
+  {{ end }}
 {{ if .Site.Params.BookMenuBundle }}
     {{ partial "docs/menu-bundle" . }}
 {{ else }}

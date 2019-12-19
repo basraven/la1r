@@ -54,9 +54,12 @@ params:
   # You can also set value to '*' to render all sections to menu
   BookSection: docs
 
+  # (Optional, default false) Show / page in menu with this title
+  HomeTitle : "Introduction"
+
   # Set source repository location.
   # Used for 'Last Modified' and 'Edit this page' links.
-  # BookRepo: https://github.com/basraven/la1r
+  BookRepo: https://github.com/basraven/la1r
 
   # Enable "Edit this page" links for 'doc' page type.
   # Disabled by default. Uncomment to enable. Requires 'BookRepo' param.
