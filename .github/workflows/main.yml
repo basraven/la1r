@@ -21,6 +21,8 @@ jobs:
     - name: Add CNAME
       run: | 
         echo 'la1r.com' > documentation/src/CNAME
+        echo 'la1r.com' > docs/src/CNAME
+        echo 'la1r.com' > CNAME
     
     - name: Build
       run: |
