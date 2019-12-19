@@ -18,17 +18,17 @@ jobs:
         wget https://github.com/gohugoio/hugo/releases/download/v0.61.0/hugo_extended_0.61.0_Linux-64bit.deb -O /tmp/hugo.deb
         sudo dpkg -i /tmp/hugo.deb
 
-    - name: Add CNAME
-      run: | 
-        echo 'la1r.com' > documentation/src/CNAME
-        echo 'la1r.com' > docs/src/CNAME
-        echo 'la1r.com' > CNAME
-    
     - name: Build
       run: |
         cd documentation/src
         hugo --minify
-
+    
+    - name: Add CNAME
+      run: | 
+        echo 'la1r.com' > documentation/src/CNAME
+        echo 'la1r.com' > docs/CNAME
+        echo 'la1r.com' > CNAME
+        
     - name: Deploy
       uses: peaceiris/actions-gh-pages@v2
       env:
