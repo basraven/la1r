@@ -16,7 +16,8 @@ network-overlay:
 	- kubectl apply -f https://raw.githubusercontent.com/weaveworks/scope/master/examples/k8s/cluster-role-binding.yaml
 	- kubectl apply -f https://raw.githubusercontent.com/weaveworks/scope/master/examples/k8s/cluster-role.yaml
 	- kubectl apply -f https://raw.githubusercontent.com/weaveworks/scope/master/examples/k8s/deploy.yaml
-	- kubectl apply -f https://raw.githubusercontent.com/weaveworks/scope/master/examples/k8s/ds.yaml
+	# - kubectl apply -f https://raw.githubusercontent.com/weaveworks/scope/master/examples/k8s/ds.yaml # untaint for pi
+	- kubectl apply -f kube-system/weave-scope/ds.yaml
 	- kubectl apply -f https://raw.githubusercontent.com/weaveworks/scope/master/examples/k8s/probe-deploy.yaml
 	- kubectl apply -f https://raw.githubusercontent.com/weaveworks/scope/master/examples/k8s/psp.yaml
 	- kubectl apply -f https://raw.githubusercontent.com/weaveworks/scope/master/examples/k8s/sa.yaml

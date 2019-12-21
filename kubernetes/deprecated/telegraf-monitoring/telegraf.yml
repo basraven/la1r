@@ -1,0 +1,95 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: telegraf-lmsensors-config
+  namespace: monitoring
+data:
+  telegraf.conf: |-
+    # Monitor sensors, requires lm-sensors package
+    [[inputs.sensors]]
+      ## Remove numbers from field names.
+      ## If true, a field name like 'temp1_input' will be changed to 'temp_input'.
+      # remove_numbers = true
+
+      ## Timeout is the maximum amount of time that the sensors command can run.
+      # timeout = "5s"
+    
+    [[outputs.influxdb]]
+    urls = ["http://monitoring-influxdb.monitoring:80"]
+    database = "lmsensors"   
+
+    skip_database_creation = true
+
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: telegraf-lmsensors-arm
+  namespace: monitoring
+  labels:
+    app: telegraf-lmsensors
+spec:
+  selector:
+    matchLabels:
+      app: telegraf-lmsensors
+  template:
+    metadata:
+      labels:
+        app: telegraf-lmsensors
+    spec:
+      tolerations:
+      - key: pi
+        operator: Equal
+        value: "true"
+      volumes:
+      - name: telegraf-config-volume
+        configMap:
+          name: telegraf-lmsensors-config
+          items:
+          - key: telegraf.conf
+            path: telegraf.conf
+          defaultMode: 0744
+      nodeSelector:
+        kubernetes.io/arch: arm
+      containers:
+      - name: telegraf-lmsensors
+        image: telegraf
+        volumeMounts:
+          - name: telegraf-config-volume
+            mountPath: /etc/telegraf/telegraf.conf
+            subPath: telegraf.conf
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: telegraf-lmsensors-amd64
+  namespace: monitoring
+  labels:
+    app: telegraf-lmsensors
+spec:
+  selector:
+    matchLabels:
+      app: telegraf-lmsensors
+  template:
+    metadata:
+      labels:
+        app: telegraf-lmsensors
+    spec:
+      volumes:
+      - name: telegraf-config-volume
+        configMap:
+          name: telegraf-lmsensors-config
+          items:
+          - key: telegraf.conf
+            path: telegraf.conf
+          defaultMode: 0744
+      nodeSelector:
+        kubernetes.io/arch: amd64
+      containers:
+      - name: telegraf-lmsensors
+        image: telegraf
+        volumeMounts:
+          - name: telegraf-config-volume
+            mountPath: /etc/telegraf/telegraf.conf
+            subPath: telegraf.conf
