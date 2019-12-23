@@ -228,3 +228,6 @@ spec:
       - backend:
           serviceName: qbittorrent
           servicePort: 80
+  tls:
+  - hosts:
+    - torrent.bas

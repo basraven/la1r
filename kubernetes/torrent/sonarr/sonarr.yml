@@ -125,3 +125,6 @@ spec:
         backend:
           serviceName: sonarr
           servicePort: 80
+  tls:
+  - hosts:
+    - sonarr.bas

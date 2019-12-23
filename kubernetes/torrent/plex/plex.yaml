@@ -157,3 +157,6 @@ spec:
         backend:
           serviceName: plex
           servicePort: 80
+  tls:
+  - hosts:
+    - plex.bas

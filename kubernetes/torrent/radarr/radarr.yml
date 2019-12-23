@@ -125,3 +125,6 @@ spec:
         backend:
           serviceName: radarr
           servicePort: 80
+  tls:
+  - hosts:
+    - radarr.bas

@@ -116,3 +116,6 @@ spec:
         backend:
           serviceName: monitoring-grafana
           servicePort: 80
+  tls:
+  - hosts:
+    - grafana.bas

@@ -1,4 +1,43 @@
 ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: traefik-extra-config
+  namespace: kube-system
+data:
+  extra.toml: |-
+    # in files/extra.toml
+
+    [[tls.certificates]]
+      certFile = "/ssl/kubernetes/tls.crt" 
+      keyFile = "/ssl/kubernetes/tls.key"
+    
+    [[tls.certificates]]
+      certFile = "/ssl/cloud/tls.crt" 
+      keyFile = "/ssl/cloud/tls.key"
+    
+    [[tls.certificates]]
+      certFile = "/ssl/grafana/tls.crt" 
+      keyFile = "/ssl/grafana/tls.key"
+    
+    [[tls.certificates]]
+      certFile = "/ssl/torrent/tls.crt" 
+      keyFile = "/ssl/torrent/tls.key"
+    
+    [[tls.certificates]]
+      certFile = "/ssl/plex/tls.crt" 
+      keyFile = "/ssl/plex/tls.key"
+    
+    [[tls.certificates]]
+      certFile = "/ssl/sonarr/tls.crt" 
+      keyFile = "/ssl/sonarr/tls.key"
+    
+    [[tls.certificates]]
+      certFile = "/ssl/radarr/tls.crt" 
+      keyFile = "/ssl/radarr/tls.key"
+    
+# and so on
+---
 # source: https://medium.com/@patrickeasters/using-traefik-with-tls-on-kubernetes-cb67fb43a948
 apiVersion: v1
 kind: ServiceAccount
@@ -37,28 +76,69 @@ spec:
         - key: "pi"
           operator: Equal
           value: "false"
-      # volumes:
-      # - name: ssl
-      #   secret:
-      #     secretName: traefik-cert
-      #     defaultMode: 0744
-      # - name: config
-      #   configMap:
-          # name: traefik-conf
-          # defaultMode: 0744
-          # items:
-          #   - key: traefik.toml
-          #     path: traefik.toml
+      volumes:
+      - name: traefik-extra-config
+        configMap:
+          name: traefik-extra-config
+          items:
+          - key: extra.toml
+            path: extra.toml
+
+
+
+      - name: kubernetes-cert-volume
+        secret:
+          secretName: kubernetes-cert
+      - name: cloud-cert-volume
+        secret:
+          secretName: cloud-cert
+      - name: grafana-cert-volume
+        secret:
+          secretName: grafana-cert
+      - name: torrent-cert-volume
+        secret:
+          secretName: torrent-cert
+      - name: plex-cert-volume
+        secret:
+          secretName: plex-cert
+      - name: sonarr-cert-volume
+        secret:
+          secretName: sonarr-cert
+      - name: radarr-cert-volume
+        secret:
+          secretName: radarr-cert
+
+
+
       serviceAccountName: traefik-ingress-controller
       # terminationGracePeriodSeconds: 60
       containers:
       - name: traefik-ingress-lb
         image: traefik:v2.0
-        # volumeMounts:
-        # - mountPath: "/ssl"
-        #   name: "ssl"
-        # - mountPath: "/config"
-        #   name: "config"
+        volumeMounts:
+        - name: traefik-extra-config
+          mountPath: /extra/extra.toml
+          subPath: extra.toml
+
+
+
+        - name: kubernetes-cert-volume
+          mountPath: /ssl/kubernetes/
+        - name: cloud-cert-volume
+          mountPath: /ssl/cloud/
+        - name: grafana-cert-volume
+          mountPath: /ssl/grafana/
+        - name: torrent-cert-volume
+          mountPath: /ssl/torrent/
+        - name: plex-cert-volume
+          mountPath: /ssl/plex/
+        - name: sonarr-cert-volume
+          mountPath: /ssl/sonarr/
+        - name: radarr-cert-volume
+          mountPath: /ssl/radarr/
+
+
+
         ports:
         - name: http
           containerPort: 80
@@ -96,6 +176,8 @@ spec:
           - --providers.kubernetescrd
           - --providers.kubernetescrd.labelselector=expose!=online
           - --providers.kubernetesingress
+          - --providers.file.directory=/extra/
+          - --providers.file.watch=true
           # - --certificatesresolvers.default.acme.tlschallenge
           # - --certificatesresolvers.default.acme.email=basraven@gmail.com
           # - --certificatesresolvers.default.acme.storage=acme.json

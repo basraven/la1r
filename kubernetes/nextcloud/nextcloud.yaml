@@ -186,4 +186,5 @@ spec:
           serviceName: nextcloud
           servicePort: 80
   tls:
-   - secretName: nextcloud-ssl
+  - hosts:
+    - nextcloud.bas

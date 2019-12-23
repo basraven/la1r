@@ -1,56 +1,56 @@
 set -e
-
 path_prefix="/credentials/ssl"
 
 if [ "$1" == "root" ]
   then 
   echo "### Creating root cert instead of client cert:"
   # Create Root key
-	openssl genrsa -des3 -out /credentials/ssl/rootCA.key 4096
+	openssl genrsa -out rootCA.key 2048
 	# Self sign root key
-	openssl req -x509 -new -nodes -key /credentials/ssl/rootCA.key -sha256 -days 1024 -out /credentials/ssl/rootCA.crt
+	openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 3650 -out rootCA.pem
   exit 0
 fi
 
 
 if [ -z "$1" ]; then
-  hostname="$HOSTNAME"
+  HOSTNAME="$HOSTNAME"
 else
-  hostname="$1"
+  HOSTNAME="$1"
 fi
+
+suffix=".bas"
+SHORTNAME=${HOSTNAME%"$suffix"}
+echo "making cert for $SHORTNAME with url $HOSTNAME"
 
 local_openssl_config="
 [ req ]
 prompt = no
-distinguished_name = req_distinguished_name
-x509_extensions = san_self_signed
-[ req_distinguished_name ]
-CN=$hostname
-[ san_self_signed ]
-subjectAltName = DNS:$hostname, DNS:www.$hostname
-subjectKeyIdentifier = hash
-authorityKeyIdentifier = keyid:always,issuer
-basicConstraints = CA:true
-keyUsage = nonRepudiation, digitalSignature, keyEncipherment, dataEncipherment, keyCertSign, cRLSign
-extendedKeyUsage = serverAuth, clientAuth, timeStamping
+default_bits = 2048
+default_md = sha256
+distinguished_name = dn
+
+[dn]
+C=NL
+ST=Amsterdam
+OU=Raven
+CN=$HOSTNAME
 "
 
-openssl req \
-  -newkey rsa:2048 -nodes \
-  -keyout "$hostname.key" \
-  -sha256 -days 3650 \
-  -config <(echo "$local_openssl_config") \
-  -out "$hostname.csr"
+v3ext="
+authorityKeyIdentifier=keyid,issuer
+basicConstraints=CA:FALSE
+keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment
+subjectAltName = @alt_names
+
+[alt_names]
+DNS.1 = $HOSTNAME
+"
 
 
-# Show unsigned
-openssl req -in $hostname.csr -noout -text
+openssl req -new -sha256 -nodes -out $HOSTNAME.csr -newkey rsa:2048 -keyout $HOSTNAME.key -config <(echo "$local_openssl_config")
+openssl x509 -req -in $HOSTNAME.csr -CA rootCA.pem -CAkey rootCA.key -CAcreateserial -out $HOSTNAME.crt -days 3650 -sha256 -extfile <(echo "$v3ext")
 
-openssl x509 -req -in $hostname.csr -CA rootCA.crt -CAkey rootCA.key -CAcreateserial -out $hostname.crt -days 500 -sha256
 
-# Show signed
-openssl x509 -in $hostname.crt -text -noout
+kubectl -n kube-system delete secrets $SHORTNAME-cert || echo "No existing secret found"
 
-kubectl create secret generic torrent-cert --namespace kube-system --from-file=tls.crt=/credentials/ssl/$hostname.crt --from-file=tls.key=/credentials/ssl/$hostname.key
-
-kubectl -n kube-system create secret tls torrent-cert --key=/credentials/ssl/$hostname.key --cert=/credentials/ssl/$hostname.crt
+kubectl create secret generic $SHORTNAME-cert --namespace kube-system --from-file=tls.crt=/credentials/ssl/$HOSTNAME.crt --from-file=tls.key=/credentials/ssl/$HOSTNAME.key

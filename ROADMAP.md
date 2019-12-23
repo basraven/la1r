@@ -6,6 +6,5 @@ This project roadmap is ordered on priority
 
 
 # Parking lot (will perhaps implement somewhere in the future ):parking:
-* ssl for .bas domain (if possible)
 * pihole in kubernetes
 * metallb
