@@ -1,4 +1,20 @@
 ---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: qbittorrent-state-claim
+  namespace: torrent
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "qbittorrent-state"
+  resources:
+    requests:
+      storage: 20Gi
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -7,12 +23,40 @@ metadata:
 data:
   set-goose.sh: |-
     #!/bin/sh
+    connect_openvpn(){
+      echo "#>>>>> in connection function"
+      openvpn /etc/openvpn/cert1.conf &
+      sleep 10
+      if curl -s --head  --request GET www.google.com | grep "200 OK" > /dev/null ; then
+          echo "#>>>>> Online with cert1"
+          return 0
+      else
+          echo "#>>>>> Offline with cert1"
+          openvpn /etc/openvpn/cert2.conf &
+          sleep 10
+          if curl -s --head  --request GET www.google.com | grep "200 OK" > /dev/null ; then
+              echo "#>>>>> Online with cert2"
+              return 0
+          else
+              echo "#>>>>> Offline with cert2"
+              openvpn /etc/openvpn/cert3.conf &
+              sleep 10
+              if curl -s --head  --request GET www.google.com | grep "200 OK" > /dev/null ; then
+                  echo "#>>>>> Online with cert3"
+                  return 0
+              else
+                  echo "#>>>>> Offline with cert3"
+              fi
+          fi
+      fi
+    }
+    
     set -eu
     echo "[OPENVPN] Creating GooseVPN connection"
     apt-get update
     apt-get install openvpn -y
     # echo AUTOSTART="all" >> /etc/default/openvpn
-    sleep 30 ; openvpn /etc/openvpn/cert2.conf &
+    sleep 10 ; connect_openvpn & 
     /init
   qBittorrent.conf: |-
     [AutoRun]
@@ -125,8 +169,12 @@ spec:
         secret:
           secretName: goose-credentials
           items:
+          - key: cert1.conf
+            path: cert1.conf
           - key: cert2.conf
             path: cert2.conf
+          - key: cert3.conf
+            path: cert3.conf
           defaultMode: 0744
       
       - name: qbittorrent-config-client
@@ -147,8 +195,17 @@ spec:
       - name: torrent
         persistentVolumeClaim:
           claimName: qbittorrent-torrent-claim
+      - name: qbittorrent-state
+        persistentVolumeClaim:
+          claimName: qbittorrent-state-claim
       containers:
       - name: qbittorrent
+        # livenessProbe:
+        #   exec:
+        #     command:
+        #     - curl www.google.com -s -f -o
+        #   initialDelaySeconds: 30
+        #   periodSeconds: 10
         # resources:
         #   limits:
         #     memory: 300Mi
@@ -184,9 +241,17 @@ spec:
           - name: qbittorrent-config-goose
             mountPath: /goose/set-goose.sh
             subPath: set-goose.sh
+          - name: qbittorrent-state
+            mountPath: /config
+          - name: set-goose-ovpn-volume
+            mountPath: /etc/openvpn/cert1.conf
+            subPath: cert1.conf
           - name: set-goose-ovpn-volume
             mountPath: /etc/openvpn/cert2.conf
             subPath: cert2.conf
+          - name: set-goose-ovpn-volume
+            mountPath: /etc/openvpn/cert3.conf
+            subPath: cert3.conf
           - name: goose-credentials-volume
             mountPath: /goose/login.conf
             subPath: login.conf

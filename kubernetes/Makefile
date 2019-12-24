@@ -76,7 +76,7 @@ unbackup:
 	
 .PHONY: qbittorrent
 qbittorrent:
-	- kubectl create secret generic goose-credentials --namespace torrent --from-file=/credentials/ovpn/login.conf --from-file=cert1.conf=/credentials/ovpn/ro-10.conf --from-file=cert2.conf=/credentials/ovpn/hu-2.conf
+	- kubectl create secret generic goose-credentials --namespace torrent --from-file=/credentials/ovpn/login.conf --from-file=cert1.conf=/credentials/ovpn/ro-10.conf --from-file=cert2.conf=/credentials/ovpn/hu-2.conf --from-file=cert3.conf=/credentials/ovpn/cz-2.conf
 	- kubectl apply -f qbittorrent
 
 # Refresh claimToken from https://www.plex.tv/claim/
