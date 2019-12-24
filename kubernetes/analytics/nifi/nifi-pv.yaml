@@ -1,0 +1,50 @@
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: nifi-repos-pv
+  labels:
+    contenttype: "nifi-repos"
+spec:
+  capacity:
+    storage: 2Gi
+  # volumeMode field requires BlockVolume Alpha feature gate to be enabled.
+  storageClassName: local-storage
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteMany
+  local:
+    path: /mnt/largehdd/nifi/repositories
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - big-raver
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: nifi-data-pv
+  labels:
+    contenttype: "nifi-data"
+spec:
+  capacity:
+    storage: 2Gi
+  # volumeMode field requires BlockVolume Alpha feature gate to be enabled.
+  storageClassName: local-storage
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteMany
+  local:
+    path: /mnt/largehdd/nifi/data
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - big-raver

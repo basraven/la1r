@@ -1,0 +1,99 @@
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: nifi-repos-claim
+  namespace: analytics
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "nifi-repos"
+  resources:
+    requests:
+      storage: 2Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: nifi-data-claim
+  namespace: analytics
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "nifi-data"
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nifi
+  namespace: analytics
+  labels:
+    app: nifi
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nifi
+  template:
+    metadata:
+      labels:
+        task: nifi
+        k8s-app: nifi
+        app: nifi
+    spec:
+      containers:
+      - name: nifi
+        ports:
+        - containerPort: 8080 
+        image: apache/nifi
+        # env:
+        # - name: nifi_NOTEBOOK_DIR
+        #   value: "/notebook"
+        volumeMounts:
+          - name: nifi-data
+            mountPath: /data/nifi/
+          - name: nifi-repos
+            mountPath: /opt/nifi/
+      volumes:
+        - name: nifi-data
+          persistentVolumeClaim:
+            claimName: nifi-data-claim
+        - name: nifi-repos
+          persistentVolumeClaim:
+            claimName: nifi-repos-claim
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nifi
+  namespace: analytics
+spec:
+  ports:
+  - port: 80
+    targetPort: 8080
+  selector:
+    app: nifi
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: nifi
+  namespace: analytics
+spec:
+  rules:
+  - host: nifi.bas
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: nifi
+          servicePort: 80
