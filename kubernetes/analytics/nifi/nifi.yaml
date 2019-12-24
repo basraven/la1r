@@ -2,7 +2,7 @@
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: nifi-repos-claim
+  name: nifi-conf-claim
   namespace: analytics
 spec:
   accessModes:
@@ -10,15 +10,15 @@ spec:
   storageClassName: local-storage
   selector:
     matchLabels:
-      contenttype: "nifi-repos"
+      contenttype: "nifi-conf"
   resources:
     requests:
-      storage: 2Gi
+      storage: 20Gi
 ---
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: nifi-data-claim
+  name: nifi-state-claim
   namespace: analytics
 spec:
   accessModes:
@@ -26,10 +26,74 @@ spec:
   storageClassName: local-storage
   selector:
     matchLabels:
-      contenttype: "nifi-data"
+      contenttype: "nifi-state"
   resources:
     requests:
-      storage: 2Gi
+      storage: 20Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: nifi-database-repository-claim
+  namespace: analytics
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "nifi-database-repository"
+  resources:
+    requests:
+      storage: 20Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: nifi-flowfile-repository-claim
+  namespace: analytics
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "nifi-flowfile-repository"
+  resources:
+    requests:
+      storage: 20Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: nifi-content-repository-claim
+  namespace: analytics
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "nifi-content-repository"
+  resources:
+    requests:
+      storage: 20Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: nifi-provenance-repository-claim
+  namespace: analytics
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "nifi-provenance-repository"
+  resources:
+    requests:
+      storage: 20Gi
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -59,17 +123,37 @@ spec:
         # - name: nifi_NOTEBOOK_DIR
         #   value: "/notebook"
         volumeMounts:
-          - name: nifi-data
-            mountPath: /data/nifi/
-          - name: nifi-repos
-            mountPath: /opt/nifi/
+          - name: nifi-conf
+            mountPath: /opt/nifi/conf
+          - name: nifi-state
+            mountPath: /data/nifi/state
+          - name: nifi-database-repository
+            mountPath: /opt/nifi/database_repository
+          - name: nifi-flowfile-repository
+            mountPath: /opt/nifi/flowfile_repository
+          - name: nifi-content-repository
+            mountPath: /opt/nifi/content_repository
+          - name: nifi-provenance-repository
+            mountPath: /opt/nifi/provenance_repository
       volumes:
-        - name: nifi-data
+        - name: nifi-conf
           persistentVolumeClaim:
-            claimName: nifi-data-claim
-        - name: nifi-repos
+            claimName: nifi-conf-claim
+        - name: nifi-state
           persistentVolumeClaim:
-            claimName: nifi-repos-claim
+            claimName: nifi-state-claim
+        - name: nifi-database-repository
+          persistentVolumeClaim:
+            claimName: nifi-database-repository-claim
+        - name: nifi-flowfile-repository
+          persistentVolumeClaim:
+            claimName: nifi-flowfile-repository-claim
+        - name: nifi-content-repository
+          persistentVolumeClaim:
+            claimName: nifi-content-repository-claim
+        - name: nifi-provenance-repository
+          persistentVolumeClaim:
+            claimName: nifi-provenance-repository-claim
 ---
 apiVersion: v1
 kind: Service
