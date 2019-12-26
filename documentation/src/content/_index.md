@@ -36,7 +36,7 @@ All the details on how each of the concepts is implemented can be found here. It
 I noticed that combining all of these applications into a single integration environment can be challenging to keep all documentation and notes into a single place. To force myself to properly document my steps and also to give back to the open-source community, I decided to publish all of it on this domain. Hopefully it can also help others with similar aspirations.
 
 ### "Please **do** try this at home"
-Since this overview if focussed on sharing I would like to invite anyone to try everything at home, it will not have insance hardware requirements of require many niche hardware products.
+Since this overview is focussed on sharing, I would like to invite anyone to try everything at home, it will not have insane hardware requirements or require niche hardware setups.
 
 I would also invite anyone to do suggestions [on github](https://github.com/basraven/La1r/) and to file issues when encountered.
 
