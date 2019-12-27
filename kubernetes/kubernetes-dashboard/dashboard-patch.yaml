@@ -1,0 +1,10 @@
+# kubectl -n kubernetes-dashboard patch deployment kubernetes-dashboard -p "$(cat kubernetes-dashboard/dashboard-patch.yaml)"
+spec:
+  template:
+    spec:
+      containers:
+      - name: kubernetes-dashboard
+        args:
+        - --auto-generate-certificates
+        - --namespace=kubernetes-dashboard
+        - --enable-skip-login
