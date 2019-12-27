@@ -55,7 +55,7 @@ spec:
               key: KEYCLOAK_PASSWORD
         volumeMounts:
           - name: keycloak-config-volume
-            mountPath: /opt/jboss/keycloak/standalone
+            mountPath: /opt/jboss/keycloak/standalone/data
 ---
 apiVersion: v1
 kind: Service
