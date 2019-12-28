@@ -7,11 +7,11 @@ metadata:
 data:
   keycloak-auth-proxy.conf: |-
     # is the url for retrieve the OpenID configuration - normally the <server>/auth/realm/<realm_name>
-    discovery-url: https://auth.idocker.hacking-lab.com/auth/realms/master
+    discovery-url: http://keycloak.kube-system/auth/realms/master
     # skip tls verify
     skip-openid-provider-tls-verify: true
     # the client id for the 'client' application
-    client-id: ttyd
+    client-id: ip2location
     # the interface definition you wish the proxy to listen, all interfaces is specified as ':<port>', unix sockets as unix://<REL_PATH>|</ABS PATH>
     listen: :3000
     # the secret associated to the 'client' application
@@ -23,11 +23,11 @@ data:
     # the location of a private key for TLS
     tls-private-key:
     # the redirection url, essentially the site url, note: /oauth/callback is added at the end
-    redirection-url: https://ttyd.idocker.hacking-lab.com
+    redirection-url: https://keycloak.bas/
     # the encryption key used to encode the session state
     encryption-key: vGcLt8ZUdPX5fXhtLZaPHZkGWHZrT6aa
     # the upstream endpoint which we should proxy request
-    upstream-url: http://ttyd:7681/
+    upstream-url: http://home.bas
     # additional scopes to add to add to the default (openid+email+profile)
     scopes:
     #- vpn-user
@@ -38,19 +38,6 @@ data:
       methods:
       - GET 
 
-    # - uri: /admin/*
-    #   methods:
-    #   - GET
-    #   roles:
-    #   - openvpn:vpn-user
-    #   - openvpn:prod-vpn
-
-    # - uri: /admin/*
-    #   methods:
-    #   - GET
-    #   roles:
-    #   - openvpn:vpn-user
-    #   - openvpn:commons-prod-vpn
 
 
 ---
@@ -82,17 +69,15 @@ spec:
       containers:
       - name: keycloak-gatekeeper
         image: keycloak/keycloak-gatekeeper
-            
-        entrypoint: 
+        command: 
           - /opt/keycloak-gatekeeper
-          - --config=/etc/keycloak-gatekeeper.conf
+          - --config=/bas/keycloak-auth-proxy.conf
         ports:
         - name: http
           containerPort: 3000
         volumeMounts:
           - name: gatekeeper-config
-            mountPath: /etc/keycloak-gatekeeper.conf
-            subPath: keycloak-gatekeeper.conf
+            mountPath: /bas/
 ---
 apiVersion: v1
 kind: Service
