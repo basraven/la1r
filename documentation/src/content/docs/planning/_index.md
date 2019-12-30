@@ -12,3 +12,4 @@ Feel free to add comments on this through Github!
 1. Formal service bus definition and separation of raw data and defined event data
 1. find-lf - wifi tracking as input events on the Event Bus based on AI models
 1. An event data dashboard
+1. Ceph file system based on this guide: https://owncloud.org/news/running-owncloud-in-kubernetes-with-rook-ceph-storage-step-by-step/
