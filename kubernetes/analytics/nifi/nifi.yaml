@@ -124,17 +124,17 @@ spec:
         #   value: "/notebook"
         volumeMounts:
           - name: nifi-conf
-            mountPath: /opt/nifi/conf
+            mountPath: /opt/nifi/nifi-current/conf
           - name: nifi-state
-            mountPath: /data/nifi/state
+            mountPath: /opt/nifi/nifi-current/state 
           - name: nifi-database-repository
-            mountPath: /opt/nifi/database_repository
+            mountPath: /opt/nifi/nifi-current/database_repository
           - name: nifi-flowfile-repository
-            mountPath: /opt/nifi/flowfile_repository
+            mountPath: /opt/nifi/nifi-current/flowfile_repository
           - name: nifi-content-repository
-            mountPath: /opt/nifi/content_repository
+            mountPath: /opt/nifi/nifi-current/content_repository
           - name: nifi-provenance-repository
-            mountPath: /opt/nifi/provenance_repository
+            mountPath: /opt/nifi/nifi-current/provenance_repository
       volumes:
         - name: nifi-conf
           persistentVolumeClaim:
