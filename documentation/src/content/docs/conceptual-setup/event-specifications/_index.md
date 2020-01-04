@@ -11,7 +11,12 @@ These types of event specifications are currently defined:
 # Content specifications
 1. All content of an event should be structured in JSON format
 1. There cannot be duplicate data between content and attribute data
-
+1. All events should contain an ISO tz Amsterdam formatted "datetime" timestamp
+1. All events should contain an "origin" reference (e.g. Automated face recognition v0.8.46)
+1. The content of an event can reference external data with "source" through multiple ways:
+  1. Direct source path in cephFS (spoofed until ceph is implemented) 
+  1. Direct protocol link (e.g. tcp://videostream1.bas)
+  1. Hyperlink (e.g. https://videostream1.la1r.com)
 
 # Attribute specifications
 1. The topic modelling standard should be applied on any event published
