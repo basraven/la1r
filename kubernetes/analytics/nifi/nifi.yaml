@@ -1,0 +1,183 @@
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: nifi-conf-claim
+  namespace: analytics
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "nifi-conf"
+  resources:
+    requests:
+      storage: 20Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: nifi-state-claim
+  namespace: analytics
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "nifi-state"
+  resources:
+    requests:
+      storage: 20Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: nifi-database-repository-claim
+  namespace: analytics
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "nifi-database-repository"
+  resources:
+    requests:
+      storage: 20Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: nifi-flowfile-repository-claim
+  namespace: analytics
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "nifi-flowfile-repository"
+  resources:
+    requests:
+      storage: 20Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: nifi-content-repository-claim
+  namespace: analytics
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "nifi-content-repository"
+  resources:
+    requests:
+      storage: 20Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: nifi-provenance-repository-claim
+  namespace: analytics
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "nifi-provenance-repository"
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nifi
+  namespace: analytics
+  labels:
+    app: nifi
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nifi
+  template:
+    metadata:
+      labels:
+        task: nifi
+        k8s-app: nifi
+        app: nifi
+    spec:
+      containers:
+      - name: nifi
+        ports:
+        - containerPort: 8080 
+        image: apache/nifi
+        # env:
+        # - name: nifi_NOTEBOOK_DIR
+        #   value: "/notebook"
+        volumeMounts:
+          - name: nifi-conf
+            mountPath: /opt/nifi/nifi-current/conf
+          - name: nifi-state
+            mountPath: /opt/nifi/nifi-current/state 
+          - name: nifi-database-repository
+            mountPath: /opt/nifi/nifi-current/database_repository
+          - name: nifi-flowfile-repository
+            mountPath: /opt/nifi/nifi-current/flowfile_repository
+          - name: nifi-content-repository
+            mountPath: /opt/nifi/nifi-current/content_repository
+          - name: nifi-provenance-repository
+            mountPath: /opt/nifi/nifi-current/provenance_repository
+      volumes:
+        - name: nifi-conf
+          persistentVolumeClaim:
+            claimName: nifi-conf-claim
+        - name: nifi-state
+          persistentVolumeClaim:
+            claimName: nifi-state-claim
+        - name: nifi-database-repository
+          persistentVolumeClaim:
+            claimName: nifi-database-repository-claim
+        - name: nifi-flowfile-repository
+          persistentVolumeClaim:
+            claimName: nifi-flowfile-repository-claim
+        - name: nifi-content-repository
+          persistentVolumeClaim:
+            claimName: nifi-content-repository-claim
+        - name: nifi-provenance-repository
+          persistentVolumeClaim:
+            claimName: nifi-provenance-repository-claim
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nifi
+  namespace: analytics
+spec:
+  ports:
+  - port: 80
+    targetPort: 8080
+  selector:
+    app: nifi
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: nifi
+  namespace: analytics
+spec:
+  rules:
+  - host: nifi.bas
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: nifi
+          servicePort: 80
