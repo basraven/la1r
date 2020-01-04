@@ -11,12 +11,36 @@ These types of event specifications are currently defined:
 # Content specifications
 1. All content of an event should be structured in JSON format
 1. There cannot be duplicate data between content and attribute data
-1. All events should contain an ISO tz Amsterdam formatted "datetime" timestamp
-1. All events should contain an "origin" reference (e.g. Automated face recognition v0.8.46)
-1. The content of an event can reference external data with "source" through multiple ways:
-  1. Direct source path in cephFS (spoofed until ceph is implemented) 
-  1. Direct protocol link (e.g. tcp://videostream1.bas)
-  1. Hyperlink (e.g. https://videostream1.la1r.com)
+1. All events should contain a Unix epoch timestamp with Amsterdam as timezone, "unixts" should be foramted as ```%i```
+1. All events should contain an "origin" reference (e.g. "automated/facerecognition/02")
+1. The payload of an event can reference external data with "payload" or can contain string or blob information:
+    * Direct string, blob or other payload formats such as a JSON object
+    * Direct source path in cephFS (spoofed until ceph is implemented) 
+    * Direct protocol link (e.g. tcp://videostream1.bas)
+    * Hyperlink (e.g. https://videostream1.la1r.com)
+
+### Content Examples
+* **Example 1**, a payload with a link
+    ```json
+    {
+        "unixts" : 1578157000,
+        "origin" : "manual/lightswitch/06",
+        "payload" : "tcp://videostream1.la1r.com"
+
+    }
+    ```
+* **Example 2**, a payload with a JSON blob
+    ```json
+    {
+        "unixts" : 1577157000,
+        "origin" : "automated/pictureonlogin/pc1",
+        "payload" : {
+            "online-time-seconds" : 3212,
+            "capture-location" : "/captures/temp/weekly-cleaned/pictureonlogin/pc1/001.jpeg"
+        }
+
+    }
+    ```
 
 # Attribute specifications
 1. The topic modelling standard should be applied on any event published
