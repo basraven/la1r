@@ -3,22 +3,22 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: influxdb-init
-  namespace: homeautomation
+  namespace: event
 data:
   telegraf-init.iql: CREATE DATABASE telegraf; 
 ---
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: influx-ha-data-claim
-  namespace: homeautomation
+  name: influx-event-data-claim
+  namespace: event
 spec:
   accessModes:
   - ReadWriteMany 
   storageClassName: local-storage
   selector:
     matchLabels:
-      contenttype: "influx-ha-data"
+      contenttype: "influx-event-data"
   resources:
     requests:
       storage: 30Gi
@@ -26,18 +26,18 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: homeautomation-influxdb
-  namespace: homeautomation
+  name: event-influxdb
+  namespace: event
 spec:
   replicas: 1
   selector:
     matchLabels:
-      k8s-app: homeautomation-influxdb
+      k8s-app: event-influxdb
   template:
     metadata:
       labels:
-        task: homeautomation
-        k8s-app: homeautomation-influxdb
+        task: event
+        k8s-app: event-influxdb
     spec:
       containers:
       - name: influxdb
@@ -45,8 +45,8 @@ spec:
         - containerPort: 8086
         image: influxdb
         volumeMounts:
-        - name: influx-ha-data-volume
-          mountPath: /data
+        - name: influx-event-data-volume
+          mountPath: /var/lib/influxdb
         - name: influxdb-init
           mountPath: /docker-entrypoint-initdb.d
         env:
@@ -61,35 +61,35 @@ spec:
         configMap:
           name: influxdb-init
           defaultMode: 0755
-      - name: influx-ha-data-volume
+      - name: influx-event-data-volume
         persistentVolumeClaim:
-          claimName: influx-ha-data-claim
+          claimName: influx-event-data-claim
 ---
 apiVersion: v1
 kind: Service
 metadata:
   labels:
-    task: homeautomation-influxdb
-  name: homeautomation-influxdb
-  namespace: homeautomation
+    task: event-influxdb
+  name: event-influxdb
+  namespace: event
 spec:
   ports:
   - port: 8086
     targetPort: 8086
   selector:
-    k8s-app: homeautomation-influxdb
+    k8s-app: event-influxdb
 # ---
 # apiVersion: extensions/v1beta1
 # kind: Ingress
 # metadata:
-#   name: homeautomation-influxdb
-#   namespace: homeautomation
+#   name: event-influxdb
+#   namespace: event
 # spec:
 #   rules:
-#   - host: homeautomation-influxdb.bas
+#   - host: event-influxdb.bas
 #     http:
 #       paths:
 #       - path: /
 #         backend:
-#           serviceName: homeautomation-influxdb
+#           serviceName: event-influxdb
 #           servicePort: 80

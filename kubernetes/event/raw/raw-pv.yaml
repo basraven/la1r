@@ -14,7 +14,7 @@ spec:
   accessModes:
   - ReadWriteMany
   local:
-    path: /mnt/largehdd/state/raw
+    path: /mnt/largehdd/event/raw
   nodeAffinity:
     required:
       nodeSelectorTerms:
