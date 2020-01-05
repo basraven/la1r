@@ -77,10 +77,6 @@ spec:
       containers:
       - name: openhab
         image: openhab/openhab
-        resources:
-          limits:
-            memory: 500Mi
-            cpu: 200m
         ports:
         - name: http
           containerPort: 8080

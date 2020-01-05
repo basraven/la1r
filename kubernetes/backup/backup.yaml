@@ -116,6 +116,38 @@ spec:
     requests:
       storage: 5Gi
 ---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: backup-finance-claim
+  namespace: backup
+spec:
+  accessModes:
+  - ReadWriteMany
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "backup-finance"
+  resources:
+    requests:
+      storage: 50Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: backup-event-claim
+  namespace: backup
+spec:
+  accessModes:
+  - ReadWriteMany
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "backup-event"
+  resources:
+    requests:
+      storage: 50Gi
+---
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
@@ -175,6 +207,12 @@ spec:
           - name: backup-tautulli-volume
             persistentVolumeClaim:
               claimName: backup-tautulli-claim
+          - name: backup-finance-volume
+            persistentVolumeClaim:
+              claimName: backup-finance-claim
+          - name: backup-event-volume
+            persistentVolumeClaim:
+              claimName: backup-event-claim
           containers:
           - name: backup
             image: instrumentisto/rsync-ssh
@@ -197,3 +235,7 @@ spec:
                 mountPath: "/plex"
               - name: backup-tautulli-volume
                 mountPath: "/tautulli"
+              - name: backup-finance-volume
+                mountPath: "/finance"
+              - name: backup-event-volume
+                mountPath: "/event"
