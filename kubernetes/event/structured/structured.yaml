@@ -1,0 +1,93 @@
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: structured-data-claim
+  namespace: event
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "structured-data"
+  resources:
+    requests:
+      storage: 30Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: structured-config
+  namespace: event
+data:
+  mosquitto.conf: |-
+    persistence true
+    persistence_location /mosquitto/data/
+    log_dest file /mosquitto/log/mosquitto.log
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: structured
+  namespace: event
+  labels:
+    app: structured
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: structured
+  template:
+    metadata:
+      labels:
+        app: structured
+    spec:
+      volumes:
+        - name: structured-config-volume
+          configMap:
+            name: structured-config
+            items:
+            - key: mosquitto.conf
+              path: mosquitto.conf
+            # defaultMode: 0600
+        - name: structured-data-volume
+          persistentVolumeClaim:
+            claimName: structured-data-claim
+      containers:
+      - name: structured
+        image: eclipse-mosquitto
+        ports:
+        - name: mqtt
+          containerPort: 1883
+        - name: socket
+          containerPort: 9001
+        # env:
+        # - name: USER_ID
+        #   value: "1000"
+        # - name: GROUP_ID
+        #   value: "1000"
+        volumeMounts:
+          - name: structured-config-volume
+            mountPath: /mosquitto/config/
+          - name: structured-data-volume
+            mountPath: /mosquitto/data/
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: structured
+  name: structured
+  namespace: event
+spec:
+  ports:
+  - name: mqtt
+    targetPort: 1883
+    port: 1883
+  - name: socket
+    targetPort: 9001
+    port: 9001
+  selector:
+    app: structured
+  type: ClusterIP

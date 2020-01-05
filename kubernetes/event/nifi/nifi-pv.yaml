@@ -14,7 +14,7 @@ spec:
   accessModes:
   - ReadWriteMany
   local:
-    path: /mnt/largehdd/nifi/conf
+    path: /mnt/largehdd/state/nifi/conf
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -39,7 +39,7 @@ spec:
   accessModes:
   - ReadWriteMany
   local:
-    path: /mnt/largehdd/nifi/state
+    path: /mnt/largehdd/state/nifi/state
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -64,7 +64,7 @@ spec:
   accessModes:
   - ReadWriteMany
   local:
-    path: /mnt/largehdd/nifi/database-repository
+    path: /mnt/largehdd/state/nifi/database-repository
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -89,7 +89,7 @@ spec:
   accessModes:
   - ReadWriteMany
   local:
-    path: /mnt/largehdd/nifi/flowfile-repository
+    path: /mnt/largehdd/state/nifi/flowfile-repository
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -114,7 +114,7 @@ spec:
   accessModes:
   - ReadWriteMany
   local:
-    path: /mnt/largehdd/nifi/content-repository
+    path: /mnt/largehdd/state/nifi/content-repository
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -139,7 +139,7 @@ spec:
   accessModes:
   - ReadWriteMany
   local:
-    path: /mnt/largehdd/nifi/provenance-repository
+    path: /mnt/largehdd/state/nifi/provenance-repository
   nodeAffinity:
     required:
       nodeSelectorTerms:

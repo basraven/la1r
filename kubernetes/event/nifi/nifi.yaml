@@ -3,7 +3,7 @@ kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
   name: nifi-conf-claim
-  namespace: analytics
+  namespace: event
 spec:
   accessModes:
   - ReadWriteMany 
@@ -19,7 +19,7 @@ kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
   name: nifi-state-claim
-  namespace: analytics
+  namespace: event
 spec:
   accessModes:
   - ReadWriteMany 
@@ -35,7 +35,7 @@ kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
   name: nifi-database-repository-claim
-  namespace: analytics
+  namespace: event
 spec:
   accessModes:
   - ReadWriteMany 
@@ -51,7 +51,7 @@ kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
   name: nifi-flowfile-repository-claim
-  namespace: analytics
+  namespace: event
 spec:
   accessModes:
   - ReadWriteMany 
@@ -67,7 +67,7 @@ kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
   name: nifi-content-repository-claim
-  namespace: analytics
+  namespace: event
 spec:
   accessModes:
   - ReadWriteMany 
@@ -83,7 +83,7 @@ kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
   name: nifi-provenance-repository-claim
-  namespace: analytics
+  namespace: event
 spec:
   accessModes:
   - ReadWriteMany 
@@ -96,14 +96,13 @@ spec:
       storage: 20Gi
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: DaemonSet
 metadata:
   name: nifi
-  namespace: analytics
+  namespace: event
   labels:
     app: nifi
 spec:
-  replicas: 1
   selector:
     matchLabels:
       app: nifi
@@ -118,10 +117,22 @@ spec:
       - name: nifi
         ports:
         - containerPort: 8080 
+        - containerPort: 8082 
         image: apache/nifi
         # env:
         # - name: nifi_NOTEBOOK_DIR
         #   value: "/notebook"
+        env:
+          - name: NIFI_WEB_HTTP_PORT
+            value: "8080"
+          - name: NIFI_CLUSTER_IS_NODE
+            value: "true"
+          - name: NIFI_CLUSTER_NODE_PROTOCOL_PORT
+            value: "8082"
+          - name: NIFI_ZK_CONNECT_STRING
+            value: "zookeeper:2181"
+          - name: NIFI_ELECTION_MAX_WAIT
+            value: "1 min"
         volumeMounts:
           - name: nifi-conf
             mountPath: /opt/nifi/nifi-current/conf
@@ -159,11 +170,15 @@ apiVersion: v1
 kind: Service
 metadata:
   name: nifi
-  namespace: analytics
+  namespace: event
 spec:
   ports:
-  - port: 80
+  - name: http
+    port: 80
     targetPort: 8080
+  - name: protocol
+    port: 8082
+    targetPort: 8082
   selector:
     app: nifi
 ---
@@ -171,7 +186,7 @@ apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   name: nifi
-  namespace: analytics
+  namespace: event
 spec:
   rules:
   - host: nifi.bas

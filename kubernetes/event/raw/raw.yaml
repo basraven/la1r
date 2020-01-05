@@ -1,0 +1,93 @@
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: raw-data-claim
+  namespace: event
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "raw-data"
+  resources:
+    requests:
+      storage: 30Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: raw-config
+  namespace: event
+data:
+  mosquitto.conf: |-
+    persistence true
+    persistence_location /mosquitto/data/
+    log_dest file /mosquitto/log/mosquitto.log
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: raw
+  namespace: event
+  labels:
+    app: raw
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: raw
+  template:
+    metadata:
+      labels:
+        app: raw
+    spec:
+      volumes:
+        - name: raw-config-volume
+          configMap:
+            name: raw-config
+            items:
+            - key: mosquitto.conf
+              path: mosquitto.conf
+            # defaultMode: 0600
+        - name: raw-data-volume
+          persistentVolumeClaim:
+            claimName: raw-data-claim
+      containers:
+      - name: raw
+        image: eclipse-mosquitto
+        ports:
+        - name: mqtt
+          containerPort: 1883
+        - name: socket
+          containerPort: 9001
+        # env:
+        # - name: USER_ID
+        #   value: "1000"
+        # - name: GROUP_ID
+        #   value: "1000"
+        volumeMounts:
+          - name: raw-config-volume
+            mountPath: /mosquitto/config/
+          - name: raw-data-volume
+            mountPath: /mosquitto/data/
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: raw
+  name: raw
+  namespace: event
+spec:
+  ports:
+  - name: mqtt
+    targetPort: 1883
+    port: 1883
+  - name: socket
+    targetPort: 9001
+    port: 9001
+  selector:
+    app: raw
+  type: ClusterIP
