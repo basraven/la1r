@@ -12,7 +12,7 @@ These types of event specifications are currently defined:
 1. All content of an event should be structured in JSON format
 1. There cannot be duplicate data between content and attribute data
 1. All events should contain a Unix epoch timestamp with Amsterdam as timezone, "unixts" should be foramted as ```%i```
-1. All events should contain an "origin" reference (e.g. "automated/facerecognition/02")
+1. All events should contain an "origin" reference (e.g. "automated/face-recognition/1")
 1. The payload of an event can reference external data with "payload" or can contain string or blob information:
     * Direct string, blob or other payload formats such as a JSON object
     * Direct source path in cephFS (spoofed until ceph is implemented) 
@@ -24,7 +24,7 @@ These types of event specifications are currently defined:
     ```json
     {
         "unixts" : 1578157000,
-        "origin" : "manual/lightswitch/06",
+        "origin" : "manual/light-switch/6",
         "payload" : "tcp://videostream1.la1r.com"
 
     }
@@ -33,10 +33,10 @@ These types of event specifications are currently defined:
     ```json
     {
         "unixts" : 1577157000,
-        "origin" : "automated/pictureonlogin/pc1",
+        "origin" : "automated/picture-on-login/pc-1",
         "payload" : {
             "online-time-seconds" : 3212,
-            "capture-location" : "/captures/temp/weekly-cleaned/pictureonlogin/pc1/001.jpeg"
+            "capture-location" : "/captures/temp/weekly-cleaned/picture-on-login/pc-1/1.jpeg"
         }
 
     }
@@ -55,11 +55,30 @@ Large refactor movements in the conceptual structure of an Event bus can have a 
 The following things arose while brainstorming about what should be captured in a La1r structured event bus:
 > This list will probably be extended in the (near) future
 
-* Actuators - such as lights that can dim of switch, these can be binary, stepped or by value.
-* Sensors - such as temperature, presence, location or humidity sensors
-* Intent - this can be behavior, derived from manual input from a person, or based on automated (AI) analytics
+* Any of the flow types
+    * Actuator - such as lights that can dim of switch, these can be binary, stepped or by value.
+    * Sensor - such as temperature, presence, location or humidity sensors
+    * Intent - this can be behavior, derived from manual input from a person, or based on automated (AI) analytics
+* Location specificity - is something specific for a location (in the la1r / outside the la1r)? Numbering with "-%i" as template. "-" if not location specific.
+* Person or device specificity - is something specific for a person or device? Numbering with "-%i" as template. "-" if not person or device specific.
 
+### Topic hierarchy
+Taking this into consideration, all events in the structured event bus need to following this topic hierarchy (all lower case, without spaces or special characters), either indirect by translation from the raw event bus or direct when considering these standards:
 
-* Person specificity - is something specific for a person?
-* Location specificity - is something specific for a location (in the la1r / outside the la1r)?
-* Time specificity - is something specific for a time?
+```shell
+<flow type>/<Location specification>/<Person or device specification>
+```
+
+#### Examples of hierarchy usage
+* Example 1 - turing off light 1 in the living room
+    ```shell
+    actuator/living-room/lightswitch-1
+    ```
+* Example 2 - security camera 1 sensing an unidentified person
+    ```shell
+    sensor/front-door/doorbel-camera-1
+    ```
+* Example 3 - analysis algo 1 predicts an intent to shutdown all lights in the backyard
+    ```shell
+    intent/backyard/lightswitch-all
+    ```
