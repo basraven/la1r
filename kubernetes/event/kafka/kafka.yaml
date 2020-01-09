@@ -56,7 +56,7 @@ spec:
       #       # defaultMode: 0600
       containers:
       - name: kafka
-        image: bitname/kafka
+        image: bitnami/kafka
         ports:
         - name: kafka
           containerPort: 9092
