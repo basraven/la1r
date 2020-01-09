@@ -1,0 +1,102 @@
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: kafka-data-claim
+  namespace: event
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "kafka-data"
+  resources:
+    requests:
+      storage: 30Gi
+# ---
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   name: kafka-config
+#   namespace: event
+# data:
+#   mosquitto.conf: |-
+#     persistence true
+#     persistence_location /mosquitto/data/
+#     log_dest file /mosquitto/log/mosquitto.log
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka
+  namespace: event
+  labels:
+    app: kafka
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka
+  template:
+    metadata:
+      labels:
+        app: kafka
+    spec:
+      volumes:
+        - name: kafka-data-volume
+          persistentVolumeClaim:
+            claimName: kafka-data-claim
+      #   - name: kafka-config-volume
+      #     configMap:
+      #       name: kafka-config
+      #       items:
+      #       - key: mosquitto.conf
+      #         path: mosquitto.conf
+      #       # defaultMode: 0600
+      containers:
+      - name: kafka
+        image: bitname/kafka
+        ports:
+        - name: kafka
+          containerPort: 9092
+        env:
+        - name: ALLOW_PLAINTEXT_LISTENER
+          value: "yes"
+        - name: KAFKA_CFG_ZOOKEEPER_CONNECT
+          value: "zookeeper.event:2181"
+        - name: KAFKA_INTER_BROKER_USER
+          value: "admin"
+        - name: KAFKA_INTER_BROKER_PASSWORD
+          value: "bitnami"
+        - name: KAFKA_BROKER_USER
+          value: "user"
+        - name: KAFKA_BROKER_PASSWORD
+          value: "bitnami"
+        # - name: KAFKA_ZOOKEEPER_USER
+        #   value: "nodefault"
+        # - name: KAFKA_ZOOKEEPER_PASSWORD
+        #   value: "nodefault"
+        # - name: KAFKA_HEAP_OPTS
+        #   value: "-Xmx1024m -Xms1024m"
+        volumeMounts:
+          - name: kafka-data-volume
+            mountPath: /bitnami/kafka
+          # - name: kafka-config-volume
+          #   mountPath: /mosquitto/config/
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: kafka
+  name: kafka
+  namespace: event
+spec:
+  ports:
+  - name: kafka
+    targetPort: 9092
+    port: 9092
+  selector:
+    app: kafka
+  type: ClusterIP
