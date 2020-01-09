@@ -19,4 +19,13 @@ chmod 600 ~/.kube/config
 chmod 600 /root/.kube/config
 
 kubectl completion bash >/etc/bash_completion.d/kubectl
+touch ~/.bashrc 
+echo 'source /control/kubectl_aliases.sh' >> ~/.bashrc
+echo ""
+echo "###"
+echo "###> Active aliases:"
+echo "###"
+echo ""
+echo ""
+cat /control/kubectl_aliases.sh && echo ""
 exec "$@"
