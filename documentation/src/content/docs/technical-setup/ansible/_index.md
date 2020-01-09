@@ -1,0 +1,2 @@
+# Ansible to prepare the playground 
+Since there's always a need for installing packages on the nodes directly and I don't want to just use a bunch of shell scripts all configuration and applications outside of k8s is deployed with Ansible which are directed by makefiles. Makefiles because I don't want to remember all commands that I need to spin up ansible by heart,Ansible because I want to semi-formalize the steps I take. 
