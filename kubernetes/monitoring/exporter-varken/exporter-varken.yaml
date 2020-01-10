@@ -8,6 +8,7 @@ data:
   varken.ini: |-
     #!/bin/sh
     [global]
+    maxmind_license_key = c21iT4lX3VBWRAn7
     sonarr_server_ids = 1
     tautulli_server_ids = 1
 
