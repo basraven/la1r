@@ -28,19 +28,17 @@ spec:
   replicas: 1
   selector:
     matchLabels:
+      app: openvpn-status
       k8s-app: openvpn-status
   template:
     metadata:
       labels:
         task: monitoring
+        app: openvpn-status
         k8s-app: openvpn-status
     spec:
       containers:
       - name: openvpn-status
-        resources:
-          limits:
-            memory: 50Mi
-            cpu: 100m
         ports:
         - containerPort: 80
         image: auspexeu/openvpn-status
@@ -60,20 +58,15 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  labels:
-    task: monitoring
-    # For use as a Cluster add-on (https://github.com/kubernetes/kubernetes/tree/master/cluster/addons)
-    # If you are NOT using this as an addon, you should comment out this line.
-    kubernetes.io/cluster-service: 'true'
-    kubernetes.io/name: openvpn-status
   name: openvpn-status
   namespace: monitoring
 spec:
   ports:
-  - port: 80
+  - name: http
+    port: 80
     targetPort: 80
   selector:
-    k8s-app: openvpn-status
+    app: openvpn-status
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress
@@ -87,5 +80,5 @@ spec:
       paths:
       - path: /
         backend:
-          serviceName: openvpn-status
+          serviceName: http
           servicePort: 80
