@@ -1,0 +1,105 @@
+# ---
+# kind: PersistentVolumeClaim
+# apiVersion: v1
+# metadata:
+#   name: kafka-manager-data-claim
+#   namespace: event
+# spec:
+#   accessModes:
+#   - ReadWriteMany 
+#   storageClassName: local-storage
+#   selector:
+#     matchLabels:
+#       contenttype: "kafka-manager-data"
+#   resources:
+#     requests:
+#       storage: 30Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-manager
+  namespace: event
+  labels:
+    app: kafka-manager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-manager
+  template:
+    metadata:
+      labels:
+        app: kafka-manager
+    spec:
+      # volumes:
+      #   - name: kafka-manager-data-volume
+      #     persistentVolumeClaim:
+      #       claimName: kafka-manager-data-claim
+      #   - name: kafka-manager-config-volume
+      #     configMap:
+      #       name: kafka-manager-config
+      #       items:
+      #       - key: mosquitto.conf
+      #         path: mosquitto.conf
+      #       # defaultMode: 0600
+      containers:
+      - name: kafka-manager
+        image: kafkamanager/kafka-manager
+        resources:
+          limits:
+            memory: "256Mi"
+            cpu: "100m"
+        ports:
+        - name: kafka-manager
+          containerPort: 9000
+        env:
+        - name: ZK_HOSTS
+          value: "zookeeper.event:2181"
+        - name: APPLICATION_SECRET
+          value: bitnami
+        # - name: kafka-manager_ZOOKEEPER_USER
+        #   value: "nodefault"
+        # - name: kafka-manager_ZOOKEEPER_PASSWORD
+        #   value: "nodefault"
+        # - name: kafka-manager_HEAP_OPTS
+        #   value: "-Xmx1024m -Xms1024m"
+        # volumeMounts:
+        #   - name: kafka-manager-data-volume
+        #     mountPath: /bitnami/kafka-manager
+          # - name: kafka-manager-config-volume
+          #   mountPath: /mosquitto/config/
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: kafka-manager
+  name: kafka-manager
+  namespace: event
+spec:
+  ports:
+  - name: kafka-manager
+    targetPort: 9000
+    port: 80
+  selector:
+    app: kafka-manager
+  type: ClusterIP
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: kafka-manager-ingress
+  namespace: event
+spec:
+  rules:
+  - host: kafka.bas
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: kafka-manager
+          servicePort: 80
+  # tls:
+  # - hosts:
+  #   - kafka.bas

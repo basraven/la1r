@@ -207,11 +207,11 @@ spec:
         #     - www.google.com
         #   initialDelaySeconds: 300
         #   periodSeconds: 60
-        # resources:
-        #   limits:
-        #     memory: 300Mi
-        #     cpu: 100m
         image: linuxserver/qbittorrent
+        resources:
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
         command: [ "/goose/set-goose.sh"]
         securityContext:
           allowPrivilegeEscalation: true
