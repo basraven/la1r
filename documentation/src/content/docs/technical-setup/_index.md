@@ -8,6 +8,40 @@ weight: 3
 The technical setup of La1r is my personal take on how to properly implement the conceptual setup as described on this site. This does not mean that all implementations are matching the infrastructure context, on the contrary. Implementations in La1r are aimed on enterprise scale setups, which often make them an overkill for the hardware it is running. 
 The reason for this is that the technical setup tries to comply to several application architecture principles which are focussed on maximizing my personal learning experiences and are often near enterprise scale. 
 
+## Main area's of the technical setup
+The technical setup can be divided into area's:
+
+{{< columns >}}
+## AI, Automation, Analytics
+All the components which have a primary nature in AI, Automation and Analytics
+
+[Read more](/docs/technical-setup/ai-automation-analytics)
+
+<--->
+
+## Ansible
+All bare-metal setup related Ansible scripts.
+This is mainly used to setup new hardware and to manage hardware such as IOT devices or new servers (improving portability).
+
+[Read more](/docs/technical-setup/ansible)
+
+<--->
+
+## Kubernetes
+All Kubernetes related scripts, the core of La1r!
+All components will be documented.
+
+[Read more](/docs/technical-setup/kubernetes)
+
+
+<--->
+
+## Secrets
+Small document describing how secrets are managed in the different Ansible and k8s clusters.
+
+[Read more](/docs/technical-setup/secrets)
+
+{{< /columns >}}
 
 ## Application architecture principles
 1. Only the paranoid survive, apply and practice backup scenarios. - Backup scenarios should not only be implemented as tick in the box for our list of non functional requirements (nfrs), but should also be practiced where possible. 

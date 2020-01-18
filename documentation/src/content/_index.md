@@ -32,6 +32,11 @@ All the details on how each of the concepts is implemented can be found here. It
 
 {{< /columns >}}
 
+## Planning
+Working on la1r is a continuous project & learning experience.
+I created a planning to ensure la1r isn't a fully unguided experiment, but it is focussed on bringing new and complete features.
+[Read more](/docs/planning)
+
 ## Why this site?
 I noticed that combining all of these applications into a single integration environment can be challenging to keep all documentation and notes into a single place. To force myself to properly document my steps and also to give back to the open-source community, I decided to publish all of it on this domain. Hopefully it can also help others with similar aspirations.
 
