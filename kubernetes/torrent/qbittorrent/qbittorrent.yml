@@ -200,13 +200,14 @@ spec:
           claimName: qbittorrent-state-claim
       containers:
       - name: qbittorrent
-        # livenessProbe:
-        #   exec:
-        #     command:
-        #     - curl
-        #     - www.google.com
-        #   initialDelaySeconds: 300
-        #   periodSeconds: 60
+        livenessProbe:
+          initialDelaySeconds: 150
+          periodSeconds: 120
+          exec:
+            command:
+              - /bin/sh
+              - -c
+              - 'curl --connect-timeout 10 --max-time 10 --retry 5 --retry-max-time 60 -IsLX GET google.com:80 | grep 200'
         # resources:
         #   limits:
         #     memory: 300Mi
