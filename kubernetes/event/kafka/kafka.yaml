@@ -79,9 +79,9 @@ spec:
         #   value: "nodefault"
         # - name: KAFKA_HEAP_OPTS
         #   value: "-Xmx1024m -Xms1024m"
-        volumeMounts:
-          - name: kafka-data-volume
-            mountPath: /bitnami/kafka
+        # volumeMounts:
+        #   - name: kafka-data-volume
+        #     mountPath: /bitnami/kafka
           # - name: kafka-config-volume
           #   mountPath: /mosquitto/config/
 ---

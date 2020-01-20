@@ -9,12 +9,21 @@ Since I'm (currently) only developing la1r by myself, there are only so many thi
 For this reason I created this planning page in which I track and prioritize what I will add to la1r next.
 Feel free to add comments on this through Github!
 
-1. Deploy a Kafka bus as structured event bus instead of mqtt
+# In progress
 1. find-lf - wifi tracking as input events on the Event Bus based on AI models
 1. An event data dashboard for kafka
+
+# Planned
+1. Formal managed bare-metal security setup
 1. Refactor mosqitto to [vernemq](https://vernemq.com/)
+1. OpenLDAP implementation
+1. Keycloak proxy & management plane
 1. Ceph file system based rook.io or on this guide: https://owncloud.org/news/running-owncloud-in-kubernetes-with-rook-ceph-storage-step-by-step/
 
 
+# Parked
+1. Deploy a Kafka bus as structured event bus instead of mqtt
+    * Parked due to server resources shortage
+
 # Completed
-1. Formal service bus definition and separation of raw data and defined event data
+1. Formal service bus definition and separation of raw data and defined event data in MQTT

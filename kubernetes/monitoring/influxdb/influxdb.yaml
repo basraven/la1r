@@ -48,8 +48,8 @@ spec:
         - containerPort: 8086
         image: influxdb
         volumeMounts:
-        - mountPath: /data
-          name: influxdb-storage
+        - name: influxdb-storage
+          mountPath: /var/lib/influxdb
         - name: influxdb-init
           mountPath: /docker-entrypoint-initdb.d
         env:
