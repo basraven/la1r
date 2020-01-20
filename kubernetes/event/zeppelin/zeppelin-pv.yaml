@@ -2,18 +2,19 @@
 kind: PersistentVolume
 apiVersion: v1
 metadata:
-  name: influx-event-data-pv
+  name: zeppelin-pv
   labels:
-    contenttype: "influx-event-data"
+    contenttype: "zeppelin"
 spec:
   capacity:
-    storage: 30Gi
+    storage: 20Gi
+  # volumeMode field requires BlockVolume Alpha feature gate to be enabled.
   storageClassName: local-storage
   persistentVolumeReclaimPolicy: Retain
   accessModes:
   - ReadWriteMany
   local:
-    path: /mnt/largehdd/event/influx
+    path: /mnt/largehdd/event/zeppelin
   nodeAffinity:
     required:
       nodeSelectorTerms:

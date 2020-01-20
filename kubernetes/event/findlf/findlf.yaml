@@ -2,94 +2,94 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: influxdb-init
+  name: findlf-install
   namespace: event
 data:
-  telegraf-init.iql: CREATE DATABASE telegraf; 
----
-kind: PersistentVolumeClaim
-apiVersion: v1
-metadata:
-  name: influx-event-data-claim
-  namespace: event
-spec:
-  accessModes:
-  - ReadWriteMany 
-  storageClassName: local-storage
-  selector:
-    matchLabels:
-      contenttype: "influx-event-data"
-  resources:
-    requests:
-      storage: 30Gi
+  findlf-install.sh : |-
+    #!/bin/sh
+    git clone https://github.com/schollz/find-lf.git
+    cd find-lf/server
+    go get github.com/gin-gonic/gin
+    go build
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: event-influxdb
+  name: findlf
   namespace: event
 spec:
   replicas: 1
   selector:
     matchLabels:
-      k8s-app: event-influxdb
+      k8s-app: findlf
   template:
     metadata:
       labels:
         task: event
-        k8s-app: event-influxdb
+        k8s-app: findlf
     spec:
-      containers:
-      - name: influxdb
-        ports:
-        - containerPort: 8086
-        image: influxdb
+      initContainers:
+      - name: findlf-build
+        image: golang
+        command: 
+          - /bin/sh
+          - -c
+          - "/start/findlf-install.sh"
         volumeMounts:
-        - name: influx-event-data-volume
-          mountPath: /var/lib/influxdb
-        - name: influxdb-init
-          mountPath: /docker-entrypoint-initdb.d
+        - name: findlf-install
+          mountPath: /start
+        - name: build-dir
+          mountPath: /go
+      containers:
+      - name: findlf
         env:
-          - name: INFLUXDB_DB
-            value: k8s
-          - name: INFLUXDB_USER
-            value: bas
-          - name: INFLUXDB_USER_PASSWORD
-            value: Example1
+          - name: GOPATH
+            value: "/go"
+        ports:
+        - containerPort: 8072
+        image: golang
+        command:
+          - /bin/sh
+          - -c
+          - "cd /go/find-lf/server ; ./server -server find "
+        volumeMounts:
+        - name: build-dir
+          mountPath: /go
+        - name: findlf-install
+          mountPath: /start
       volumes:
-      - name: influxdb-init
+      - name: findlf-install
         configMap:
-          name: influxdb-init
+          name: findlf-install
           defaultMode: 0755
-      - name: influx-event-data-volume
-        persistentVolumeClaim:
-          claimName: influx-event-data-claim
+      - name: build-dir
+        emptyDir: {} 
 ---
 apiVersion: v1
 kind: Service
 metadata:
   labels:
-    task: event-influxdb
-  name: event-influxdb
+    task: findlf
+  name: findlf
   namespace: event
 spec:
   ports:
-  - port: 8086
-    targetPort: 8086
+  - port: 80
+    targetPort: 8072
   selector:
-    k8s-app: event-influxdb
-# ---
-# apiVersion: extensions/v1beta1
-# kind: Ingress
-# metadata:
-#   name: event-influxdb
-#   namespace: event
-# spec:
-#   rules:
-#   - host: event-influxdb.bas
-#     http:
-#       paths:
-#       - path: /
-#         backend:
-#           serviceName: event-influxdb
-#           servicePort: 80
+    k8s-app: findlf
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: findlf
+  namespace: event
+spec:
+  rules:
+  - host: findlf.bas
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: findlf
+          servicePort: 80
