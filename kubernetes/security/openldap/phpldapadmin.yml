@@ -1,0 +1,94 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: phpldapadmin-config
+  namespace: security
+data:
+  config.php: |-
+     # test
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: phpldapadmin
+  namespace: security
+  labels:
+    app: phpldapadmin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: phpldapadmin
+  template:
+    metadata:
+      labels:
+        app: phpldapadmin
+    spec:
+      volumes:      
+      - name: phpldapadmin-config-volume
+        configMap:
+          name: phpldapadmin-config
+          items:
+          - key: config.php
+            path: config.php
+          defaultMode: 0744      
+      # - name: phpldapadmin-db-volume
+      #   persistentVolumeClaim:
+      #     claimName: phpldapadmin-db-claim
+      # - name: phpldapadmin-config-volume
+      #   persistentVolumeClaim:
+      #     claimName: phpldapadmin-config-claim
+      containers:
+      - name: phpldapadmin
+        image: osixia/phpldapadmin
+        ports:
+        - name: https
+          containerPort: 443
+        env:
+        - name: TZ
+          value: Europe/Amsterdam
+        - name: PHPLDAPADMIN_LDAP_HOSTS
+          valueFrom:
+            secretKeyRef:
+              name: openldap-credentials
+              key: LDAP_DOMAIN
+        # volumeMounts:
+        #   - name: phpldapadmin-config-volume
+        #     mountPath: /container/service/phpldapadmin/assets/config/config.php
+        #     subPath: config.php
+          # - name: phpldapadmin-config-volume
+          #   mountPath: /etc/ldap/slapd.d
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: phpldapadmin
+  name: phpldapadmin
+  namespace: security
+spec:
+  ports:
+  - name: https
+    targetPort: 443
+    port: 443
+  selector:
+    app: phpldapadmin
+  type: ClusterIP
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: phpldapadminingress
+  namespace: security
+spec:
+  rules:
+  - host: openldap.bas
+    http:
+      paths:
+      - backend:
+          serviceName: phpldapadmin
+          servicePort: 443
+  tls:
+  - hosts:
+    - openldap.bas

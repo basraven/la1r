@@ -10,20 +10,20 @@ For this reason I created this planning page in which I track and prioritize wha
 Feel free to add comments on this through Github!
 
 # In progress
-1. find-lf - wifi tracking as input events on the Event Bus based on AI models
-1. An event data dashboard for kafka
 
 # Planned
-1. Formal managed bare-metal security setup
-1. Refactor mosqitto to [vernemq](https://vernemq.com/)
 1. OpenLDAP implementation
+1. Formal managed bare-metal security setup
 1. Keycloak proxy & management plane
 1. Ceph file system based rook.io or on this guide: https://owncloud.org/news/running-owncloud-in-kubernetes-with-rook-ceph-storage-step-by-step/
+1. Refactor mosquitto to [vernemq](https://vernemq.com/)
 
 
 # Parked
 1. Deploy a Kafka bus as structured event bus instead of mqtt
     * Parked due to server resources shortage
+1. An event data dashboard for kafka
 
 # Completed
 1. Formal service bus definition and separation of raw data and defined event data in MQTT
+1. find-lf - wifi tracking as input events on the Event Bus based on AI models

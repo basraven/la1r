@@ -1,0 +1,48 @@
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: openldap-db-pv
+  labels:
+    contenttype: "openldap-db"
+spec:
+  capacity:
+    storage: 20Gi
+  storageClassName: local-storage
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteMany
+  local:
+    path: /mnt/largehdd/security/openldap/db
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - big-raver
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: openldap-config-pv
+  labels:
+    contenttype: "openldap-config"
+spec:
+  capacity:
+    storage: 20Gi
+  storageClassName: local-storage
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteMany
+  local:
+    path: /mnt/largehdd/security/openldap/config
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - big-raver

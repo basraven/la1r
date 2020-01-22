@@ -36,43 +36,54 @@ spec:
     spec:
       containers:
       - name: zeppelin
-        # env:
-        #   - name: ZEPPELIN_NOTEBOOK_DIR
-        #     value: "/notebook"
+        env:
+          - name: ZEPPELIN_ADDR
+            value: "0.0.0.0"
+          - name: ZEPPELIN_PORT
+            value: "8080"
+          - name: ZEPPELIN_NOTEBOOK_DIR
+            value: "/notebook"
         ports:
-        - containerPort: 80
+        - name: http
+          containerPort: 8080
         image: apache/zeppelin:0.8.2
         # volumeMounts:
         #   - name: zeppelin
         #     mountPath: /notebook 
-      # volumes:
-      #   - name: zeppelin
-      #     persistentVolumeClaim:
-      #       claimName: zeppelin-claim
+      volumes:
+        - name: zeppelin
+          persistentVolumeClaim:
+            claimName: zeppelin-claim
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: zeppelin
+  labels:
+    app: zeppelin
   namespace: event
 spec:
   ports:
   - port: 80
-    targetPort: 80
+    protocol: TCP
+    targetPort: 8080
   selector:
     app: zeppelin
+  type: ClusterIP
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: zeppelin
+  name: zeppeliningress
   namespace: event
 spec:
   rules:
   - host: zeppelin.bas
     http:
       paths:
-      - path: /
-        backend:
+      - backend:
           serviceName: zeppelin
           servicePort: 80
+  tls:
+  - hosts:
+    - zeppelin.bas

@@ -1,0 +1,130 @@
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: openldap-db-claim
+  namespace: security
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "openldap-db"
+  resources:
+    requests:
+      storage: 20Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: openldap-config-claim
+  namespace: security
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "openldap-config"
+  resources:
+    requests:
+      storage: 20Gi
+# ---
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   name: openldap-config
+#   namespace: security
+# data:
+#   openldap.conf: |-
+#     some config
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openldap
+  namespace: security
+  labels:
+    app: openldap
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: openldap
+  template:
+    metadata:
+      labels:
+        app: openldap
+    spec:
+      volumes:      
+      - name: openldap-db-volume
+        persistentVolumeClaim:
+          claimName: openldap-db-claim
+      - name: openldap-config-volume
+        persistentVolumeClaim:
+          claimName: openldap-config-claim
+      # - name: openldap-config-volume
+      #   configMap:
+      #     name: openldap-config
+      #     items:
+      #     - key: openldap.conf
+      #       path: openldap.conf
+      #     defaultMode: 0777     
+      containers:
+      - name: openldap
+        image: osixia/openldap
+        ports:
+        - name: ldap
+          containerPort: 389
+        - name: ldaps
+          containerPort: 636
+        env:
+        - name: TZ
+          value: Europe/Amsterdam
+        - name: LDAP_ORGANISATION
+          valueFrom:
+            secretKeyRef:
+              name: openldap-credentials
+              key: LDAP_ORGANISATION
+        volumeMounts:
+          - name: openldap-db-volume
+            mountPath: /var/lib/ldap
+          - name: openldap-config-volume
+            mountPath: /etc/ldap/slapd.d
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: openldap
+  name: openldap
+  namespace: security
+spec:
+  ports:
+  - name: ldap
+    targetPort: 389
+    port: 389
+  - name: ldaps
+    targetPort: 636
+    port: 636
+  selector:
+    app: openldap
+  type: ClusterIP
+# ---
+# apiVersion: extensions/v1beta1
+# kind: Ingress
+# metadata:
+#   name: openldapingress
+#   namespace: security
+# spec:
+#   rules:
+#   - host: security.bas
+#     http:
+#       paths:
+#       - backend:
+#           serviceName: openldap
+#           servicePort: 80
+#   tls:
+#   - hosts:
+#     - security.bas
