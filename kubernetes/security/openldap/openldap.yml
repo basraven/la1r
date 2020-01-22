@@ -92,11 +92,16 @@ spec:
             secretKeyRef:
               name: openldap-credentials
               key: LDAP_DOMAIN
+        - name: LDAP_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: openldap-credentials
+              key: LDAP_ADMIN_PASSWORD
         - name: LDAP_BASE_DN
           valueFrom:
             secretKeyRef:
               name: openldap-credentials
-              key: LDAP_BASE_DN
+              key: LDAP_DOMAIN
         volumeMounts:
           - name: openldap-db-volume
             mountPath: /var/lib/ldap
