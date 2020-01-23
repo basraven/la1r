@@ -1,0 +1,4 @@
+dn: olcDatabase={1}monitor,cn=config
+changetype: modify
+replace: olcAccess
+olcAccess: {0}to *  by dn.base="cn=admins,dc=raven,dc=bas" manage by * none

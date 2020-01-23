@@ -12,10 +12,10 @@ Feel free to add comments on this through Github!
 # In progress
 
 # Planned
-1. OpenLDAP implementation
+1. Traefik auth proxy middleware with Authelia
+1. Facial recognition from images and streaming video
+1. Object recognition (garbage bin outside of our house) combined with garbage collection ical (https://inzamelkalender.gad.nl/ical/0402200001574396)
 1. Formal managed bare-metal security setup
-1. Keycloak proxy & management plane
-1. Ceph file system based rook.io or on this guide: https://owncloud.org/news/running-owncloud-in-kubernetes-with-rook-ceph-storage-step-by-step/
 1. Refactor mosquitto to [vernemq](https://vernemq.com/)
 
 
@@ -23,7 +23,9 @@ Feel free to add comments on this through Github!
 1. Deploy a Kafka bus as structured event bus instead of mqtt
     * Parked due to server resources shortage
 1. An event data dashboard for kafka
+1. Ceph file system based rook.io or on this guide: https://owncloud.org/news/running-owncloud-in-kubernetes-with-rook-ceph-storage-step-by-step/
 
 # Completed
+1. OpenLDAP implementation
 1. Formal service bus definition and separation of raw data and defined event data in MQTT
 1. find-lf - wifi tracking as input events on the Event Bus based on AI models
