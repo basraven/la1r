@@ -1,0 +1,252 @@
+{
+  "paragraphs": [
+    {
+      "text": "%md\n# Image Recognition\n\nNotes:\n```\n# %python.conda install -c auto mosquitto\n```",
+      "user": "anonymous",
+      "dateUpdated": "2020-01-26 22:31:54.393",
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "markdown",
+          "editOnDblClick": true,
+          "completionKey": "TAB",
+          "completionSupport": false
+        },
+        "editorMode": "ace/mode/markdown",
+        "editorHide": true,
+        "tableHide": false
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "HTML",
+            "data": "\u003cdiv class\u003d\"markdown-body\"\u003e\n\u003ch1\u003eImage Recognition\u003c/h1\u003e\n\u003cp\u003eNotes:\u003c/p\u003e\n\u003cpre\u003e\u003ccode\u003e# %python.conda install -c auto mosquitto\n\u003c/code\u003e\u003c/pre\u003e\n\u003c/div\u003e"
+          }
+        ]
+      },
+      "apps": [],
+      "jobName": "paragraph_1580077132211_-1739194588",
+      "id": "20200126-221852_731411566",
+      "dateCreated": "2020-01-26 22:18:52.211",
+      "dateStarted": "2020-01-26 22:31:54.394",
+      "dateFinished": "2020-01-26 22:31:54.399",
+      "status": "FINISHED",
+      "progressUpdateIntervalMs": 500
+    },
+    {
+      "text": "%sh\npip install --upgrade pip\npip install -c paho-mqtt\n",
+      "user": "anonymous",
+      "dateUpdated": "2020-01-26 22:33:14.680",
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "sh",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": false
+        },
+        "editorMode": "ace/mode/sh"
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "ERROR",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "Could not open requirements file: [Errno 2] No such file or directory: \u0027paho-mqtt\u0027\nYou are using pip version 9.0.1, however version 20.0.2 is available.\nYou should consider upgrading via the \u0027pip install --upgrade pip\u0027 command.\n"
+          },
+          {
+            "type": "TEXT",
+            "data": "ExitValue: 1"
+          }
+        ]
+      },
+      "apps": [],
+      "jobName": "paragraph_1580077427908_-929302645",
+      "id": "20200126-222347_66506355",
+      "dateCreated": "2020-01-26 22:23:47.908",
+      "dateStarted": "2020-01-26 22:32:51.679",
+      "dateFinished": "2020-01-26 22:32:51.920",
+      "status": "ERROR",
+      "progressUpdateIntervalMs": 500
+    },
+    {
+      "text": "\n%spark.dep\nz.load(\"org.apache.bahir:spark-streaming-mqtt_2.11:2.4.0-SNAPSHOT\")\n\n\n",
+      "user": "anonymous",
+      "dateUpdated": "2020-01-26 22:23:27.031",
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/scala"
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "ERROR",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "java.lang.NullPointerException\n\tat org.sonatype.aether.impl.internal.DefaultRepositorySystem.resolveDependencies(DefaultRepositorySystem.java:352)\n\tat org.apache.zeppelin.spark.dep.SparkDependencyContext.fetchArtifactWithDep(SparkDependencyContext.java:171)\n\tat org.apache.zeppelin.spark.dep.SparkDependencyContext.fetch(SparkDependencyContext.java:121)\n\tat org.apache.zeppelin.spark.DepInterpreter.interpret(DepInterpreter.java:247)\n\tat org.apache.zeppelin.interpreter.LazyOpenInterpreter.interpret(LazyOpenInterpreter.java:103)\n\tat org.apache.zeppelin.interpreter.remote.RemoteInterpreterServer$InterpretJob.jobRun(RemoteInterpreterServer.java:633)\n\tat org.apache.zeppelin.scheduler.Job.run(Job.java:188)\n\tat org.apache.zeppelin.scheduler.FIFOScheduler$1.run(FIFOScheduler.java:140)\n\tat java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)\n\tat java.util.concurrent.FutureTask.run(FutureTask.java:266)\n\tat java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.access$201(ScheduledThreadPoolExecutor.java:180)\n\tat java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:293)\n\tat java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)\n\tat java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)\n\tat java.lang.Thread.run(Thread.java:748)\n"
+          }
+        ]
+      },
+      "apps": [],
+      "jobName": "paragraph_1580032739769_-1765227329",
+      "id": "20200126-095859_541790161",
+      "dateCreated": "2020-01-26 09:58:59.769",
+      "dateStarted": "2020-01-26 22:23:27.044",
+      "dateFinished": "2020-01-26 22:23:27.161",
+      "status": "ERROR",
+      "progressUpdateIntervalMs": 500
+    },
+    {
+      "text": "%python\nprint(\"testen\")\n\nimport time\ntime.sleep(100)\nprint(\"klaar met slapen\")",
+      "user": "anonymous",
+      "dateUpdated": "2020-01-26 09:58:40.131",
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/python",
+        "editorHide": false
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "testen\nklaar met slapen\n"
+          }
+        ]
+      },
+      "apps": [],
+      "jobName": "paragraph_1580032240734_1429289982",
+      "id": "20200126-095040_66152918",
+      "dateCreated": "2020-01-26 09:50:40.734",
+      "dateStarted": "2020-01-26 09:51:49.203",
+      "dateFinished": "2020-01-26 09:53:31.905",
+      "status": "FINISHED",
+      "progressUpdateIntervalMs": 500
+    },
+    {
+      "text": "%pyspark\n\ndef is_number(s):\n    try:\n        float(s)\n        return True\n    except ValueError:\n        return False\n\nimport sys\nimport operator\n\nfrom pyspark import SparkContext\nfrom pyspark.streaming import StreamingContext\nfrom pyspark.streaming.mqtt import MQTTUtils\n\nsc \u003d SparkContext(appName\u003d\"TemperatureHistory\")\nssc \u003d StreamingContext(sc, 1)\nssc.checkpoint(\"checkpoint\")\n\n# broker URI\nbrokerUrl \u003d \"tcp://192.168.2.26:1883\" # \"tcp://iot.eclipse.org:1883\"\n# topic or topic pattern where temperature data is being sent\ntopic \u003d \"+/+/sensors/temperature\"\n\nmqttStream \u003d MQTTUtils.createStream(ssc, brokerUrl, topic)\n\ncounts \u003d mqttStream \\\n    .filter(lambda message: is_number(message)) \\\n    .map(lambda message: ( round(float(message) * 2, 0) / 2, 1 )) \\\n    .reduceByKeyAndWindow(operator.add, operator.sub, 15, 1) \\\n    .transform(lambda rdd: rdd.sortByKey())\n\n\ndef printHistogram(time, rdd):\n    c \u003d rdd.collect()\n    print(\"-------------------------------------------\")\n    print(\"Time: %s\" % time)\n    print(\"-------------------------------------------\")\n    for record in c:\n    \t# \"draw\" our lil\u0027 ASCII-based histogram\n        print(str(record[0]) + \u0027: \u0027 + \u0027#\u0027*record[1])\n    print(\"\")\n\ncounts.foreachRDD(printHistogram)\n\nssc.start()\nssc.awaitTermination()",
+      "user": "anonymous",
+      "dateUpdated": "2020-01-26 22:22:18.607",
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/python",
+        "editorHide": false
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "ERROR",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "Fail to execute line 13: from pyspark.streaming.mqtt import MQTTUtils\nTraceback (most recent call last):\n  File \"/tmp/zeppelin_pyspark-8735151028477501418.py\", line 375, in \u003cmodule\u003e\n    exec(code, _zcUserQueryNameSpace)\n  File \"\u003cstdin\u003e\", line 13, in \u003cmodule\u003e\nImportError: No module named mqtt\n"
+          }
+        ]
+      },
+      "apps": [],
+      "jobName": "paragraph_1580032309177_-1154840936",
+      "id": "20200126-095149_1733598146",
+      "dateCreated": "2020-01-26 09:51:49.177",
+      "dateStarted": "2020-01-26 22:22:18.619",
+      "dateFinished": "2020-01-26 22:22:18.625",
+      "status": "ERROR",
+      "progressUpdateIntervalMs": 500
+    },
+    {
+      "text": "%python\n",
+      "user": "anonymous",
+      "dateUpdated": "2020-01-26 09:58:40.162",
+      "config": {
+        "colWidth": 12.0,
+        "fontSize": 9.0,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/python",
+        "editorHide": false
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "apps": [],
+      "jobName": "paragraph_1580032428783_1257313338",
+      "id": "20200126-095348_51070452",
+      "dateCreated": "2020-01-26 09:53:48.783",
+      "status": "READY",
+      "progressUpdateIntervalMs": 500
+    }
+  ],
+  "name": "image-recognition",
+  "id": "2F2437G1P",
+  "noteParams": {},
+  "noteForms": {},
+  "angularObjects": {
+    "md:shared_process": [],
+    "python:shared_process": [],
+    "sh:shared_process": [],
+    "spark:shared_process": []
+  },
+  "config": {
+    "isZeppelinNotebookCronEnable": false,
+    "looknfeel": "default",
+    "personalizedMode": "false"
+  },
+  "info": {}
+}

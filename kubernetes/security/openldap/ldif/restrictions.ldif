@@ -1,0 +1,11 @@
+dn: olcDatabase={1}mdb,cn=config
+changetype: modify
+replace: olcAccess
+# add: olcAccess
+olcAccess: {0}to *  by dn.base="cn=admins,dc=raven,dc=bas" manage 
+-
+changetype: modify
+replace: olcAccess
+# add: olcAccess
+olcAccess: {1}to *  by anonymous none
+-
