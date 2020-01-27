@@ -52,7 +52,7 @@ spec:
           valueFrom:
             secretKeyRef:
               name: openldap-credentials
-              key: LDAP_DOMAIN
+              key: LDAP_HOST_INTERNAL
         # volumeMounts:
         #   - name: phpldapadmin-config-volume
         #     mountPath: /container/service/phpldapadmin/assets/config/config.php
