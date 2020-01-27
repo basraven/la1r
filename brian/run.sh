@@ -1,0 +1,1 @@
+docker run -it -p 7077:7077 -p 8080:8080 --rm --privileged=true -v $PWD/logs:/logs -v $PWD/zeppelin:/notebook -e ZEPPELIN_NOTEBOOK_DIR='/notebook'  apache/zeppelin:0.8.0
