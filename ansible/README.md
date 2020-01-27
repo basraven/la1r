@@ -2,7 +2,7 @@
 A playbooks collection to manage servers
 
 ## File structure
-The file structure of these playbooks is based on [Ansible's best practices](https://docs.ansible.com/ansible/latest/user_guide/playbooks_best_practices.html)
+The file structure of these playbooks is based on [Ansible's best practices](https://docs.ansible.com/ansible/latest/user_guide/ansible_best_practices.html)
 
 
 ## How to use
