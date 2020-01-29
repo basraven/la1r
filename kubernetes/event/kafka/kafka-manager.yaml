@@ -46,16 +46,18 @@ spec:
       containers:
       - name: kafka-manager
         image: kafkamanager/kafka-manager
-        resources:
-          limits:
-            memory: "256Mi"
-            cpu: "100m"
+        # resources:
+        #   limits:
+        #     memory: "256Mi"
+        #     cpu: "100m"
         ports:
         - name: kafka-manager
           containerPort: 9000
         env:
         - name: ZK_HOSTS
           value: "zookeeper.event:2181"
+        - name: KAFKA_MANAGER_AUTH_ENABLED
+          value: "false"
         - name: APPLICATION_SECRET
           value: bitnami
         # - name: kafka-manager_ZOOKEEPER_USER
