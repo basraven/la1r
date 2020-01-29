@@ -7,6 +7,11 @@ K8s can be implemented in a million different ways. The implementation on La1r f
 * Templating engines, package managers and operators such as helm are not used - this again takes away a lot of control from the sys admin which takes away the learning experience, thus the fun. 
 * K8s over bare metal - since the use of k8s incentives portability of applications, the default hosting approach should be on k8s not on the bare metal server itself (for example through Ansible). Only things that really make sense or are directly needed by the cluster itself, such as openvpn, can be implemented directly on the server with Ansible. 
 
+## Makefile as the operator
+The way the Kubernetes setup is done should also be properly documented to ensure portability of the setup.
+For this reason we document all the steps taken in the [Kuberentes Makefile](/).
+This makefile should contain all the steps taken to setup and apply [the yaml definitions that can be found in the Git repository](https://github.com/basraven/la1r/kubernetes)
+
 ## Init with kubeadm
 Since we're using vanilla k8s on bare metal but we do not have all the time in the world, the decision was made to use kubeadm to initialize the cluster and manage node cluster and upgrades. Several upgrades were already performed with this which went flawless, even with multi cpu (x86 and arm7) architecture environments. 
 
