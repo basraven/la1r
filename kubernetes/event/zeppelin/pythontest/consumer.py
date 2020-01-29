@@ -10,4 +10,4 @@ consumer = KafkaConsumer(
     )
 
 for message in consumer:
-    print(message)
+    print(message.value)

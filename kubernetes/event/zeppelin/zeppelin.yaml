@@ -50,10 +50,10 @@ spec:
         # volumeMounts:
         #   - name: zeppelin
         #     mountPath: /notebook 
-      volumes:
-        - name: zeppelin
-          persistentVolumeClaim:
-            claimName: zeppelin-claim
+      # volumes:
+      #   - name: zeppelin
+      #     persistentVolumeClaim:
+      #       claimName: zeppelin-claim
 ---
 apiVersion: v1
 kind: Service
