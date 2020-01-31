@@ -13,7 +13,7 @@ name: spark
 # Kubernetes in any way, it is up to you to also use this namespace when
 # doing kubectl apply [...]. Can be overridden using "--namespace".  If omitted,
 # "--namespace" is required.
-namespace: apps
+namespace: spark
 
 # charts is an array of charts you want to compile into Kubernetes resource
 # files.
