@@ -1,6 +1,7 @@
 alias k='kubectl'
 alias kns='kubectl config set-context --current --namespace'
 alias kgp='kubectl get pods'
+alias wa='watch kubectl get all'
 alias wp='watch kubectl get pods'
 alias wpw='watch kubectl get pods -o wide'
 alias ka='kubectl apply -f'

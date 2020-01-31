@@ -1,0 +1,49 @@
+---
+# Source: sparkoperator/templates/crd-cleanup-job.yaml
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: release-name-sparkoperator-crd-cleanup
+  namespace: spark-operator
+  annotations:
+    "helm.sh/hook": pre-delete
+    "helm.sh/hook-delete-policy": hook-succeeded
+  labels:
+    app.kubernetes.io/name: sparkoperator
+    helm.sh/chart: sparkoperator-0.6.2
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/managed-by: Tiller
+spec:
+  template:
+    spec:
+      serviceAccountName: sparkopps
+      restartPolicy: OnFailure
+      imagePullSecrets:
+        []
+      containers:
+        - name: delete-sparkapp-crd
+          image: gcr.io/spark-operator/spark-operator:v1beta2-1.0.1-2.4.4
+          imagePullPolicy: IfNotPresent
+          command:
+            - "/bin/sh"
+            - "-c"
+            - "curl -ik \
+          -X DELETE \
+          -H \"Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)\" \
+          -H \"Accept: application/json\" \
+          -H \"Content-Type: application/json\" \
+          https://kubernetes.default.svc/apis/apiextensions.k8s.io/v1beta1/customresourcedefinitions/sparkapplications.sparkoperator.k8s.io"
+        - name: delete-scheduledsparkapp-crd
+          image: gcr.io/spark-operator/spark-operator:v1beta2-1.0.1-2.4.4
+          imagePullPolicy: IfNotPresent
+          command:
+            - "/bin/sh"
+            - "-c"
+            - "curl -ik \
+          -X DELETE \
+          -H \"Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)\" \
+          -H \"Accept: application/json\" \
+          -H \"Content-Type: application/json\" \
+          https://kubernetes.default.svc/apis/apiextensions.k8s.io/v1beta1/customresourcedefinitions/scheduledsparkapplications.sparkoperator.k8s.io"
+

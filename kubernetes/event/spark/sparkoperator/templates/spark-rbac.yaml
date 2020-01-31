@@ -1,0 +1,46 @@
+---
+# Source: sparkoperator/templates/spark-rbac.yaml
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: spark-jobs
+  name: spark-role
+  labels:
+    app.kubernetes.io/name: sparkoperator
+    helm.sh/chart: sparkoperator-0.6.2
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/managed-by: Tiller
+rules:
+- apiGroups:
+  - "" # "" indicates the core API group
+  resources:
+  - "pods"
+  verbs:
+  - "*"
+- apiGroups:
+  - "" # "" indicates the core API group
+  resources:
+  - "services"
+  verbs:
+  - "*"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: spark-role-binding
+  namespace: spark-jobs
+  labels:
+    app.kubernetes.io/name: sparkoperator
+    helm.sh/chart: sparkoperator-0.6.2
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/managed-by: Tiller
+subjects:
+- kind: ServiceAccount
+  name: 
+    sparkacount
+  namespace: spark-jobs
+roleRef:
+  kind: Role
+  name: spark-role
+  apiGroup: rbac.authorization.k8s.io
