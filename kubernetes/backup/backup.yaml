@@ -8,21 +8,21 @@ data:
   backup-weekly.sh: |-
     #!/bin/sh
     apt-get update
-    apt-get install -y rsync xz-utils pxz
+    apt-get install -y rsync lbzip2
 
     echo "#> Starting weekly rsync file sync..."
     
-    echo "#> Compressing the weekly folders to a tar.xz..."
+    echo "#> Compressing the weekly folders to a tar.bz2..."
     mkdir -p ~/tar-get/
     rm -rf ~/tar-get/* 
     
-    tar -I pxz -cvf ~/tar-get/weekly.tar.xz nextcloud-data configs mariadb plex tautulli 
+    tar -I lbzip2 -cvf ~/tar-get/weekly.tar.bz2 nextcloud-data configs mariadb plex tautulli 
     echo "Before"
     du -h -s nextcloud-data configs mariadb plex tautulli 
     echo "After"
-    du -h -s ~/tar-get/weekly.tar.xz
+    du -h -s ~/tar-get/weekly.tar.bz2
 
-    echo "#> Backing up tar.xz..."
+    echo "#> Backing up tar.bz2..."
     rsync -a --no-perms --no-owner --no-group --delete --force --update --progress ~/tar-get/ /backup/weekly/    
 
   backup-nightly.sh: |-
