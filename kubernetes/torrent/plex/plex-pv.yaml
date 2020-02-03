@@ -14,7 +14,7 @@ spec:
   accessModes:
   - ReadWriteMany
   local:
-    path: /mnt/largehdd/torrent
+    path: /mnt/largehdd/torrent/data
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -39,7 +39,7 @@ spec:
   accessModes:
   - ReadWriteMany
   local:
-    path: /mnt/largehdd/plex/data
+    path: /mnt/largehdd/torrent/plex/data
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -49,7 +49,6 @@ spec:
           values:
           - big-raver
 ---
-# FIXME: check if ssd gives a speedup (might not be because we're copying from hdd)
 kind: PersistentVolume
 apiVersion: v1
 metadata:
@@ -65,7 +64,7 @@ spec:
   accessModes:
   - ReadWriteMany
   local:
-    path: /mnt/largehdd/plex/transcode
+    path: /mnt/largessd/plex-transcode
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -90,7 +89,7 @@ spec:
   accessModes:
   - ReadWriteMany
   local:
-    path: /mnt/largehdd/plex/config
+    path: /mnt/largehdd/torrent/plex/config
   nodeAffinity:
     required:
       nodeSelectorTerms:

@@ -13,7 +13,7 @@ spec:
   accessModes:
   - ReadWriteMany
   local:
-    path: /mnt/largehdd/mariadb
+    path: /mnt/largehdd/nextcloud/mariadb
   nodeAffinity:
     required:
       nodeSelectorTerms:

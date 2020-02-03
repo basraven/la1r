@@ -14,7 +14,7 @@ spec:
   accessModes:
   - ReadWriteMany
   local:
-    path: /mnt/largehdd/torrent
+    path: /mnt/largehdd/torrent/data
   nodeAffinity:
     required:
       nodeSelectorTerms:

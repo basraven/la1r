@@ -13,31 +13,7 @@ spec:
   accessModes:
   - ReadWriteMany 
   local:
-    path: /mnt/largehdd/nextcloud-data
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-      - matchExpressions:
-        - key: kubernetes.io/hostname
-          operator: In
-          values:
-          - big-raver
----
-kind: PersistentVolume
-apiVersion: v1
-metadata:
-  name: backup-nextcloud-web-pv
-  labels:
-    contenttype: "backup-nextcloud-web"
-spec:
-  capacity:
-    storage: 5Gi
-  storageClassName: local-storage
-  persistentVolumeReclaimPolicy: Retain
-  accessModes:
-  - ReadWriteMany 
-  local:
-    path: /mnt/largessd/nextcloud
+    path: /mnt/largehdd/nextcloud/data
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -85,7 +61,7 @@ spec:
   accessModes:
   - ReadWriteMany 
   local:
-    path: /mnt/largehdd/mariadb
+    path: /mnt/largehdd/nextcloud/mariadb
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -109,7 +85,7 @@ spec:
   accessModes:
   - ReadWriteMany 
   local:
-    path: /mnt/largehdd/plex
+    path: /mnt/largehdd/torrent/plex
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -133,31 +109,7 @@ spec:
   accessModes:
   - ReadWriteMany 
   local:
-    path: /mnt/largehdd/tautulli
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-      - matchExpressions:
-        - key: kubernetes.io/hostname
-          operator: In
-          values:
-          - big-raver
----
-kind: PersistentVolume
-apiVersion: v1
-metadata:
-  name: backup-finance-pv
-  labels:
-    contenttype: "backup-finance"
-spec:
-  capacity:
-    storage: 50Gi
-  storageClassName: local-storage
-  persistentVolumeReclaimPolicy: Retain
-  accessModes:
-  - ReadWriteMany 
-  local:
-    path: /mnt/largehdd/finance
+    path: /mnt/largehdd/monitoring/tautulli
   nodeAffinity:
     required:
       nodeSelectorTerms:

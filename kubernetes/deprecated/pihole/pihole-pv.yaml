@@ -13,7 +13,7 @@
 #   accessModes:
 #   - ReadWriteMany
 #   local:
-#     path: /mnt/largehdd/mariadb
+#     path: /mnt/largehdd/pihole
 #   nodeAffinity:
 #     required:
 #       nodeSelectorTerms:

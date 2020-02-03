@@ -2,18 +2,18 @@
 kind: PersistentVolume
 apiVersion: v1
 metadata:
-  name: mariadb-pv
+  name: redis-pv
   labels:
-    contenttype: "db"
+    contenttype: "cache"
 spec:
   capacity:
-    storage: 30Gi
+    storage: 5Gi
   storageClassName: local-storage
   persistentVolumeReclaimPolicy: Retain
   accessModes:
-  - ReadWriteMany
+  - ReadWriteMany 
   local:
-    path: /mnt/largehdd/mariadb
+    path: /mnt/largessd/nextcloud/redis
   nodeAffinity:
     required:
       nodeSelectorTerms:

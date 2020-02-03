@@ -7,18 +7,41 @@ metadata:
 data:
   backup-weekly.sh: |-
     #!/bin/sh
+    apt-get update
+    apt-get install -y rsync xz-utils pxz
+
     echo "#> Starting weekly rsync file sync..."
+    
+    echo "#> Compressing the weekly folders to a tar.xz..."
+    mkdir -p ~/tar-get/
+    rm -rf ~/tar-get/* 
+    
+    tar -I pxz -cvf ~/tar-get/weekly.tar.xz nextcloud-data configs mariadb plex tautulli 
+    echo "Before"
+    du -h -s nextcloud-data configs mariadb plex tautulli 
+    echo "After"
+    du -h -s ~/tar-get/weekly.tar.xz
+
+    echo "#> Backing up tar.xz..."
+    rsync -a --no-perms --no-owner --no-group --delete --force --update --progress ~/tar-get/ /backup/weekly/    
+
+  backup-nightly.sh: |-
+    #!/bin/sh
+    apt-get update
+    apt-get install -y rsync
+    
+    echo "#> Starting nightly rsync file sync..."
     echo "#> Backing up nextcloud..."
-    rsync -a --no-perms --no-owner --no-group --delete --force --update --progress /nextcloud-web /backup/nextcloud
-    rsync -a --no-perms --no-owner --no-group --delete --force --update --progress /nextcloud-data /backup/nextcloud    
+    rsync -a -z --no-perms --no-owner --no-group --delete --force --update --progress /nextcloud-data /backup/nightly/nextcloud    
     echo "#> Backing up configs..."
-    rsync -a --no-perms --no-owner --no-group --delete --force --update --progress /configs /backup/configs    
+    rsync -a -z --no-perms --no-owner --no-group --delete --force --update --progress /configs /backup/nightly/configs    
     echo "#> Backing up mariadb..."
-    rsync -a --no-perms --no-owner --no-group --delete --force --update --progress /mariadb /backup/mariadb
+    rsync -a -z --no-perms --no-owner --no-group --delete --force --update --progress /mariadb /backup/nightly/mariadb
     echo "#> Backing up plex..."
-    rsync -a --no-perms --no-owner --no-group --delete --force --update --progress /plex /backup/plex
+    rsync -a -z --no-perms --no-owner --no-group --delete --force --update --progress /plex /backup/nightly/plex
     echo "#> Backing up tautulli..."
-    rsync -a --no-perms --no-owner --no-group --delete --force --update --progress /tautulli /backup/tautulli
+    rsync -a -z --no-perms --no-owner --no-group --delete --force --update --progress /tautulli /backup/nightly/tautulli
+ 
 ---
 kind: PersistentVolumeClaim
 apiVersion: v1
@@ -35,22 +58,6 @@ spec:
   resources:
     requests:
       storage: 800Gi
----
-kind: PersistentVolumeClaim
-apiVersion: v1
-metadata:
-  name: backup-nextcloud-web-claim
-  namespace: backup
-spec:
-  accessModes:
-  - ReadWriteMany
-  storageClassName: local-storage
-  selector:
-    matchLabels:
-      contenttype: "backup-nextcloud-web"
-  resources:
-    requests:
-      storage: 5Gi
 ---
 kind: PersistentVolumeClaim
 apiVersion: v1
@@ -119,22 +126,6 @@ spec:
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: backup-finance-claim
-  namespace: backup
-spec:
-  accessModes:
-  - ReadWriteMany
-  storageClassName: local-storage
-  selector:
-    matchLabels:
-      contenttype: "backup-finance"
-  resources:
-    requests:
-      storage: 50Gi
----
-kind: PersistentVolumeClaim
-apiVersion: v1
-metadata:
   name: backup-event-claim
   namespace: backup
 spec:
@@ -156,10 +147,10 @@ metadata:
   labels:
     app: backup-nextcloud-weekly
 spec:
-  schedule: "5 4 * * 0"
+  schedule: "5 2 * * 0"
   concurrencyPolicy: Replace
-  successfulJobsHistoryLimit: 2
-  failedJobsHistoryLimit: 3
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
   jobTemplate:
     spec:
       template:
@@ -180,7 +171,7 @@ spec:
           volumes:
           - name: nfs-backup-volume
             nfs: 
-              server: 10.8.0.10
+              server: 10.8.0.10 # TODO: use DNS
               path: /mnt/largehdd/backup
           - name: backup-script-volume
             configMap:
@@ -192,9 +183,6 @@ spec:
           - name: backup-nextcloud-data-volume
             persistentVolumeClaim:
               claimName: backup-nextcloud-data-claim
-          - name: backup-nextcloud-web-volume
-            persistentVolumeClaim:
-              claimName: backup-nextcloud-web-claim
           - name: backup-configs-volume
             persistentVolumeClaim:
               claimName: backup-configs-claim
@@ -207,15 +195,12 @@ spec:
           - name: backup-tautulli-volume
             persistentVolumeClaim:
               claimName: backup-tautulli-claim
-          - name: backup-finance-volume
-            persistentVolumeClaim:
-              claimName: backup-finance-claim
           - name: backup-event-volume
             persistentVolumeClaim:
               claimName: backup-event-claim
           containers:
           - name: backup
-            image: instrumentisto/rsync-ssh
+            image: ubuntu:latest
             command: 
               - /backup-script/backup-weekly.sh
             volumeMounts:
@@ -225,8 +210,6 @@ spec:
                 mountPath: /backup
               - name: backup-nextcloud-data-volume
                 mountPath: "/nextcloud-data"
-              - name: backup-nextcloud-web-volume
-                mountPath: "/nextcloud-web"
               - name: backup-configs-volume
                 mountPath: "/configs"
               - name: backup-mariadb-volume
@@ -235,7 +218,87 @@ spec:
                 mountPath: "/plex"
               - name: backup-tautulli-volume
                 mountPath: "/tautulli"
-              - name: backup-finance-volume
-                mountPath: "/finance"
+              - name: backup-event-volume
+                mountPath: "/event"
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: backup-nextcloud-nightly
+  namespace: backup
+  labels:
+    app: backup-nextcloud-nightly
+spec:
+  schedule: "5 4 */2 * *"
+  concurrencyPolicy: Replace
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: backup
+        spec:
+          affinity:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                    - big-raver
+          restartPolicy: Never    
+          volumes:
+          - name: nfs-backup-volume
+            nfs: 
+              server: 10.8.0.10 # TODO: Use DNS
+              path: /mnt/largehdd/backup
+          - name: backup-script-volume
+            configMap:
+              name: backup-script
+              items:
+              - key: backup-nightly.sh
+                path: backup-nightly.sh
+              defaultMode: 0744
+          - name: backup-nextcloud-data-volume
+            persistentVolumeClaim:
+              claimName: backup-nextcloud-data-claim
+          - name: backup-configs-volume
+            persistentVolumeClaim:
+              claimName: backup-configs-claim
+          - name: backup-mariadb-volume
+            persistentVolumeClaim:
+              claimName: backup-mariadb-claim
+          - name: backup-plex-volume
+            persistentVolumeClaim:
+              claimName: backup-plex-claim
+          - name: backup-tautulli-volume
+            persistentVolumeClaim:
+              claimName: backup-tautulli-claim
+          - name: backup-event-volume
+            persistentVolumeClaim:
+              claimName: backup-event-claim
+          containers:
+          - name: backup
+            image: ubuntu:latest
+            command: 
+              - /backup-script/backup-nightly.sh
+            volumeMounts:
+              - name: backup-script-volume
+                mountPath: /backup-script
+              - name: nfs-backup-volume
+                mountPath: /backup
+              - name: backup-nextcloud-data-volume
+                mountPath: "/nextcloud-data"
+              - name: backup-configs-volume
+                mountPath: "/configs"
+              - name: backup-mariadb-volume
+                mountPath: "/mariadb"
+              - name: backup-plex-volume
+                mountPath: "/plex"
+              - name: backup-tautulli-volume
+                mountPath: "/tautulli"
               - name: backup-event-volume
                 mountPath: "/event"

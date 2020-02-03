@@ -14,7 +14,7 @@ spec:
   accessModes:
   - ReadWriteMany
   local:
-    path: /mnt/largehdd/chronograf
+    path: /mnt/largehdd/homeautomation/chronograf
   nodeAffinity:
     required:
       nodeSelectorTerms:

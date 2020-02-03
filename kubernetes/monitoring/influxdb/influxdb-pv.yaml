@@ -14,7 +14,7 @@ spec:
   accessModes:
   - ReadWriteMany
   local:
-    path: /mnt/largehdd/influx-logs
+    path: /mnt/largehdd/monitoring/influx
   nodeAffinity:
     required:
       nodeSelectorTerms:
