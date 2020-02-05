@@ -34,7 +34,7 @@ Since this will not capture implementation specific / techncial principles, a se
 1. Decentralized application paradigms where possible - To support the horizontal scaling capabilities, an effort should be made to apply decentralized paradigms, which often improve scalability and availability when implemented correctly. 
 
 {{< columns >}}
-## Even Specifications
+## Event Specifications
 Since there needs to be a way of formally converging to an aligned data setup, a formal event specification setup is made.
 This event specification will dictate how all events in the structured stream should be shaped.
 Events not conforming to this standard can be disregarded.

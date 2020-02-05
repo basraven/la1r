@@ -1,0 +1,354 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: authelia-config
+  namespace: security
+data:
+  configuration.yml: |-
+    ###############################################################
+    #                   Authelia configuration                    #
+    ###############################################################
+
+    port: 80
+    logs_level: debug
+
+    default_redirection_url: http://nu.nl
+
+    authentication_backend:
+      ldap:
+        url: ldap://openldap.security
+        skip_verify: true
+        base_dn: dc=raven,dc=bas
+        additional_users_dn: ou=users
+        users_filter: (cn={0})
+        additional_groups_dn: ou=users
+        groups_filter: (objectclass=*)
+        group_name_attribute: cn
+        user: cn=admin,dc=raven,dc=bas
+        password: "dit345345345moeteenh345345345345345eelerg345345345langwach345345345345345345345twoordzijnomdatniet23482340234023239020342394dais"
+
+    access_control:
+      default_policy: one_factor
+      # default_policy: allow
+
+
+      # rules:
+      #   # Rules applied to everyone
+      #   - domain: public.example.com
+      #     policy: bypass
+      #   - domain: secure.example.com
+      #     policy: two_factor
+      #   - domain: singlefactor.example.com
+      #     policy: one_factor
+
+      #   # Rules applied to 'admins' group
+      #   - domain: "mx2.mail.example.com"
+      #     subject: "group:admins"
+      #     policy: deny
+      #   - domain: "*.example.com"
+      #     subject: "group:admins"
+      #     policy: two_factor
+
+      #   # Rules applied to 'dev' group
+      #   - domain: dev.example.com
+      #     resources:
+      #       - "^/groups/dev/.*$"
+      #     subject: "group:dev"
+      #     policy: two_factor
+
+      #   # Rules applied to user 'john'
+      #   - domain: dev.example.com
+      #     resources:
+      #       - "^/users/john/.*$"
+      #     subject: "user:john"
+      #     policy: two_factor
+
+      #   # Rules applied to user 'harry'
+      #   - domain: dev.example.com
+      #     resources:
+      #       - "^/users/harry/.*$"
+      #     subject: "user:harry"
+      #     policy: two_factor
+
+      #   # Rules applied to user 'bob'
+      #   - domain: "*.mail.example.com"
+      #     subject: "user:bob"
+      #     policy: two_factor
+      #   - domain: "dev.example.com"
+      #     resources:
+      #       - "^/users/bob/.*$"
+      #     subject: "user:bob"
+      #     policy: two_factor
+
+    session:
+      expiration: 3600 # 1 hour
+      inactivity: 300 # 5 minutes
+      domain: example.com
+      redis:
+        host: redis
+        port: 6379
+
+    regulation:
+      max_retries: 30000000
+      find_time: 120
+      ban_time: 300
+
+    authentication_methods:
+      default_method: single_factor
+    
+    storage:
+      mysql:
+        host: mariadb
+        port: 3306
+        database: authelia
+        username: authelia
+
+    notifier:
+      smtp:
+        host: "mailcatcher-service"
+        port: 1025
+        sender: admin@example.com
+        disable_require_tls: true
+
+
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mariadb
+  namespace: security
+  labels:
+    app: mariadb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mariadb
+  template:
+    metadata:
+      labels:
+        app: mariadb
+    spec:
+      containers:
+      - name: mariadb
+        image: mariadb
+        # args: ["--transaction-isolation=READ-COMMITTED", "--binlog-format=ROW", "--log-bin=mysqld-bin"]
+        ports:
+        - containerPort: 3306
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: rootpassword
+        - name: MYSQL_DATABASE
+          value: authelia
+        - name: MYSQL_USER
+          value: authelia
+        - name: MYSQL_PASSWORD
+          value: password
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: mariadb
+  name: mariadb
+  namespace: security
+spec:
+  ports:
+  - name: db
+    port: 3306
+  selector:
+    app: mariadb
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: security
+  labels:
+    app: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:alpine
+        ports:
+        - containerPort: 6379        
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: redis
+  name: redis
+  namespace: security
+spec:
+  ports:
+  - name: cache
+    port: 6379
+  selector:
+    app: redis
+  type: ClusterIP
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: authelia
+  namespace: security
+  labels:
+    app: authelia
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: authelia
+  template:
+    metadata:
+      labels:
+        app: authelia
+    spec:
+      containers:
+        - name: authelia
+          image: authelia/authelia
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/authelia
+          env:
+            # We set secrets directly here for ease of deployment but all secrets
+            # should be stored in the Kube Vault in production.
+            - name: AUTHELIA_JWT_SECRET
+              value: an_unsecure_secret
+            - name: AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD
+              value: password
+            - name: AUTHELIA_SESSION_SECRET
+              value: unsecure_password
+            - name: AUTHELIA_STORAGE_MYSQL_PASSWORD
+              value: password
+      volumes:
+        - name: config-volume
+          configMap:
+            name: authelia-config
+            items:
+              - key: configuration.yml
+                path: configuration.yml
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: authelia
+  namespace: security
+spec:
+  selector:
+    app: authelia
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: autheliaingress
+  namespace: security
+spec:
+  rules:
+  - host: authelia.bas
+    http:
+      paths:
+      - backend:
+          serviceName: authelia
+          servicePort: 80
+  # tls:
+  # - hosts:
+  #   - openldap.bas
+
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test
+  namespace: security
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: test
+  template:
+    metadata:
+      labels:
+        task: security
+        k8s-app: test
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - big-raver
+      containers:
+      - name: nginx
+        ports:
+        - containerPort: 80
+        image: nginx
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    task: test
+  name: test
+  namespace: security
+spec:
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    k8s-app: test
+
+
+---
+
+# Forward authentication to authserver.com
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: authelia
+  namespace: security
+spec:
+  forwardAuth:
+    address: http://authelia.security:80/api/verify?rd=http://authelia.bas/
+
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: test
+  namespace: security
+spec:
+  entryPoints:
+    - web
+  routes:
+  - match: Host(`test.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: test
+      port: 80
+    middlewares:
+    - name: authelia

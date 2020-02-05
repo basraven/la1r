@@ -201,6 +201,10 @@ spec:
           containers:
           - name: backup
             image: ubuntu:latest
+            resources:
+              limits:
+                memory: "2048Mi"
+                cpu: "700m"
             command: 
               - /backup-script/backup-weekly.sh
             volumeMounts:
@@ -283,6 +287,10 @@ spec:
           containers:
           - name: backup
             image: ubuntu:latest
+            resources:
+              limits:
+                memory: "2048Mi"
+                cpu: "700m"
             command: 
               - /backup-script/backup-nightly.sh
             volumeMounts:
