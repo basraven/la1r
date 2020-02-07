@@ -44,7 +44,7 @@
       "type": "grafana",
       "id": "grafana",
       "name": "Grafana",
-      "version": "6.5.2"
+      "version": "6.6.1"
     },
     {
       "type": "panel",
@@ -106,7 +106,7 @@
   "gnetId": null,
   "graphTooltip": 0,
   "id": null,
-  "iteration": 1576886791653,
+  "iteration": 1581066063777,
   "links": [],
   "panels": [
     {
@@ -1683,6 +1683,7 @@
       "styles": [
         {
           "alias": "",
+          "align": "auto",
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
           "link": false,
           "pattern": "Time",
@@ -1690,6 +1691,7 @@
         },
         {
           "alias": "Name",
+          "align": "auto",
           "colorMode": null,
           "colors": [
             "rgba(245, 54, 54, 0.9)",
@@ -1708,6 +1710,7 @@
         },
         {
           "alias": "",
+          "align": "auto",
           "colorMode": null,
           "colors": [
             "rgba(245, 54, 54, 0.9)",
@@ -1724,6 +1727,7 @@
         },
         {
           "alias": "Downloaded",
+          "align": "auto",
           "colorMode": null,
           "colors": [
             "rgba(245, 54, 54, 0.9)",
@@ -1751,6 +1755,7 @@
         },
         {
           "alias": "Type",
+          "align": "auto",
           "colorMode": null,
           "colors": [
             "rgba(245, 54, 54, 0.9)",
@@ -1768,6 +1773,7 @@
         },
         {
           "alias": "Episode",
+          "align": "auto",
           "colorMode": null,
           "colors": [
             "rgba(245, 54, 54, 0.9)",
@@ -1785,6 +1791,7 @@
         },
         {
           "alias": "",
+          "align": "auto",
           "colorMode": null,
           "colors": [
             "rgba(245, 54, 54, 0.9)",
@@ -2533,7 +2540,8 @@
           "fill": true,
           "line": true,
           "op": "lt",
-          "value": 20000000000
+          "value": 20000000000,
+          "yaxis": "left"
         }
       ],
       "timeFrom": null,
@@ -2557,9 +2565,9 @@
         {
           "format": "bytes",
           "label": "Bytes",
-          "logBase": 1,
+          "logBase": 32,
           "max": null,
-          "min": "0",
+          "min": "1000000000",
           "show": true
         },
         {
@@ -2730,7 +2738,8 @@
           "fill": true,
           "line": true,
           "op": "lt",
-          "value": 20000000000
+          "value": 20000000000,
+          "yaxis": "left"
         }
       ],
       "timeFrom": null,
@@ -2754,9 +2763,9 @@
         {
           "format": "bytes",
           "label": "Bytes",
-          "logBase": 1,
+          "logBase": 32,
           "max": null,
-          "min": "0",
+          "min": "1000000000",
           "show": true
         },
         {
@@ -2949,7 +2958,7 @@
     }
   ],
   "refresh": "5s",
-  "schemaVersion": 21,
+  "schemaVersion": 22,
   "style": "dark",
   "tags": [],
   "templating": {
@@ -3076,5 +3085,5 @@
   "timezone": "",
   "title": "Start",
   "uid": "ni_5GriZz",
-  "version": 25
+  "version": 28
 }
