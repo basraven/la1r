@@ -2,6 +2,30 @@
 kind: PersistentVolume
 apiVersion: v1
 metadata:
+  name: backup-staging-pv
+  labels:
+    contenttype: "backup-staging"
+spec:
+  capacity:
+    storage: 1200Gi
+  storageClassName: local-storage
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteMany 
+  local:
+    path: /mnt/largehdd/staging/backup
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - big-raver
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
   name: backup-nextcloud-data-pv
   labels:
     contenttype: "backup-nextcloud-data"

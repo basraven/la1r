@@ -13,17 +13,21 @@ data:
     echo "#> Starting weekly rsync file sync..."
     
     echo "#> Compressing the weekly folders to a tar.bz2..."
-    mkdir -p ~/tar-get/
-    rm -rf ~/tar-get/* 
+    mkdir -p /staging/backup/weekly
+    rm -rf /staging/backup/weekly/* 
     
-    tar -I lbzip2 -cvf ~/tar-get/weekly.tar.bz2 nextcloud-data configs mariadb plex tautulli 
+    tar -I lbzip2 -cvf /staging/backup/weekly/weekly.tar.bz2 nextcloud-data configs mariadb plex tautulli 
     echo "Before"
     du -h -s nextcloud-data configs mariadb plex tautulli 
     echo "After"
-    du -h -s ~/tar-get/weekly.tar.bz2
+    du -h -s /staging/backup/weekly/weekly.tar.bz2
 
     echo "#> Backing up tar.bz2..."
-    rsync -a --no-perms --no-owner --no-group --delete --force --update --progress ~/tar-get/ /backup/weekly/    
+    rsync -a --no-perms --no-owner --no-group --delete --force --update --progress /staging/backup/weekly/ /backup/weekly/    
+
+    echo "#> Clean up staging..."
+    rm -rf /staging/backup/weekly/* 
+
 
   backup-nightly.sh: |-
     #!/bin/sh
@@ -42,6 +46,22 @@ data:
     echo "#> Backing up tautulli..."
     rsync -a -z --no-perms --no-owner --no-group --delete --force --update --progress /tautulli /backup/nightly/tautulli
  
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: backup-staging-claim
+  namespace: backup
+spec:
+  accessModes:
+  - ReadWriteMany
+  storageClassName: local-storage
+  selector:
+    matchLabels:
+      contenttype: "backup-staging"
+  resources:
+    requests:
+      storage: 1200Gi
 ---
 kind: PersistentVolumeClaim
 apiVersion: v1
@@ -180,6 +200,9 @@ spec:
               - key: backup-weekly.sh
                 path: backup-weekly.sh
               defaultMode: 0744
+          - name: backup-staging-volume
+            persistentVolumeClaim:
+              claimName: backup-staging-claim
           - name: backup-nextcloud-data-volume
             persistentVolumeClaim:
               claimName: backup-nextcloud-data-claim
@@ -204,10 +227,11 @@ spec:
             resources:
               limits:
                 memory: "2048Mi"
-                cpu: "700m"
             command: 
               - /backup-script/backup-weekly.sh
             volumeMounts:
+              - name: backup-staging-volume
+                mountPath: /staging
               - name: backup-script-volume
                 mountPath: /backup-script
               - name: nfs-backup-volume
@@ -266,6 +290,9 @@ spec:
               - key: backup-nightly.sh
                 path: backup-nightly.sh
               defaultMode: 0744
+          - name: backup-staging-volume
+            persistentVolumeClaim:
+              claimName: backup-staging-claim
           - name: backup-nextcloud-data-volume
             persistentVolumeClaim:
               claimName: backup-nextcloud-data-claim
@@ -294,6 +321,8 @@ spec:
             command: 
               - /backup-script/backup-nightly.sh
             volumeMounts:
+              - name: backup-staging-volume
+                mountPath: /staging
               - name: backup-script-volume
                 mountPath: /backup-script
               - name: nfs-backup-volume

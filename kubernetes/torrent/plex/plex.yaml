@@ -96,6 +96,9 @@ spec:
       containers:
       - name: plex
         image: plexinc/pms-docker
+        resources:
+          limits:
+            memory: "2048Mi"
         ports:
         - name: http
           containerPort: 32400
