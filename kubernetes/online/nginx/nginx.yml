@@ -45,6 +45,14 @@ data:
         #charset koi8-r;
         # access_log  /var/log/nginx/host.access.log  main;
 
+        # Some direct redirects for bash settings
+        location ~ ^/.tmux.conf {
+          rewrite ^/.tmux.conf https://gist.githubusercontent.com/basraven/4e2e3f6603ac6ee3ac3a972832a2170d/raw/.tmux.conf;
+        }
+        location ~ ^/.bash_aliases {
+          rewrite ^/.bash_aliases https://gist.githubusercontent.com/basraven/033673d41efeb0c42dc6ff4e485f5940/raw/.bash_aliases;
+        }
+
         # location / {
         #     root   /usr/share/nginx/html;
         #     index  index.html index.htm;
