@@ -1,0 +1,123 @@
+# ---
+# kind: PersistentVolumeClaim
+# apiVersion: v1
+# metadata:
+#   name: spark-master-data-claim
+#   namespace: event
+# spec:
+#   accessModes:
+#   - ReadWriteMany 
+#   storageClassName: local-storage
+#   selector:
+#     matchLabels:
+#       contenttype: "spark-master-data"
+#   resources:
+#     requests:
+#       storage: 30Gi
+# ---
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   name: spark-master-config
+#   namespace: event
+# data:
+#   mosquitto.conf: |-
+#     persistence true
+#     persistence_location /mosquitto/data/
+#     log_dest file /mosquitto/log/mosquitto.log
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spark-master
+  namespace: event
+  labels:
+    app: spark-master
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: spark-master
+  template:
+    metadata:
+      labels:
+        app: spark-master
+    spec:
+      # volumes:
+        # - name: spark-master-config-volume
+        #   configMap:
+        #     name: spark-master-config
+        #     items:
+        #     - key: mosquitto.conf
+        #       path: mosquitto.conf
+        #     # defaultMode: 0600
+        # - name: spark-master-data-volume
+        #   persistentVolumeClaim:
+        #     claimName: spark-master-data-claim
+      containers:
+      - name: spark-master
+        image: bde2020/spark-master
+        ports:
+        - name: webui
+          containerPort: 8080
+        - name: spark
+          containerPort: 7077
+        - name: master-rest
+          containerPort: 6066
+        env:
+        - name: ENABLE_INIT_DAEMON
+          value: "false"
+        # volumeMounts:
+        #   - name: spark-master-config-volume
+        #     mountPath: /mosquitto/config/
+        #   - name: spark-master-data-volume
+        #     mountPath: /mosquitto/data/
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spark-worker
+  namespace: event
+  labels:
+    app: spark-worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: spark-worker
+  template:
+    metadata:
+      labels:
+        app: spark-worker
+    spec:
+      containers:
+      - name: spark-worker
+        image: bde2020/spark-worker
+        ports:
+        - name: webui
+          containerPort: 8081
+        env:
+        - name: ENABLE_INIT_DAEMON
+          value: "false"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: spark-master
+  name: spark-master
+  namespace: event
+spec:
+  ports:
+  - name: webui
+    targetPort: 8080
+    port: 8080
+  - name: spark
+    targetPort: 7077
+    port: 7077
+  - name: master-rest
+    targetPort: 6066
+    port: 6066
+  selector:
+    app: spark-master
+  clusterIP: None
