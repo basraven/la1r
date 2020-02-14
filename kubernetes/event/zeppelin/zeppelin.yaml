@@ -41,6 +41,8 @@ spec:
             value: "0.0.0.0"
           - name: ZEPPELIN_PORT
             value: "8080"
+          - name: SPARK_HOME
+            value: /opt/spark
           - name: ZEPPELIN_NOTEBOOK_DIR
             value: "/notebook"
         ports:

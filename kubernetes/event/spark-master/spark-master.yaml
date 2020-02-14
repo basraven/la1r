@@ -56,7 +56,7 @@ spec:
         #     claimName: spark-master-data-claim
       containers:
       - name: spark-master
-        image: bde2020/spark-master
+        image: basraven/spark-master
         ports:
         - name: webui
           containerPort: 8080
@@ -111,7 +111,7 @@ spec:
   ports:
   - name: webui
     targetPort: 8080
-    port: 8080
+    port: 80
   - name: spark
     targetPort: 7077
     port: 7077
@@ -121,3 +121,20 @@ spec:
   selector:
     app: spark-master
   clusterIP: None
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: spark-master
+  namespace: event
+spec:
+  rules:
+  - host: spark.bas
+    http:
+      paths:
+      - backend:
+          serviceName: spark-master
+          servicePort: 80
+  # tls:
+  # - hosts:
+  #   - spark-master.bas
