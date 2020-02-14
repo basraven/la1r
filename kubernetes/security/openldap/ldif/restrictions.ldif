@@ -1,11 +1,10 @@
 dn: olcDatabase={1}mdb,cn=config
 changetype: modify
-replace: olcAccess
+replace: olcPasswordHash
 # add: olcAccess
-olcAccess: {0}to *  by dn.base="cn=admins,dc=raven,dc=bas" manage 
+olcPasswordHash: {CRYPT}
 -
 changetype: modify
-replace: olcAccess
+replace: olcPasswordCryptSaltFormat
 # add: olcAccess
-olcAccess: {1}to *  by anonymous none
--
+olcPasswordCryptSaltFormat: $6$rounds=50000$%.16s

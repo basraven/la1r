@@ -1,4 +1,82 @@
 ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: openldap-ldif
+  namespace: security
+data:
+  access.rules: |-
+    olcAccess: {0}to attrs=userPassword,shadowLastChange by self write by anonymous auth by * none 
+    olcAccess: {1}to dn.base="" by * read 
+    olcAccess: {2}to * by * read 
+
+    olcPasswordHash: {CRYPT}
+    olcPasswordCryptSaltFormat: $6$rounds=50000$%.16s
+  base.ldif: |-
+    dn: ou=groups,dc=raven,dc=bas
+    objectclass: organizationalUnit
+    objectclass: top
+    ou: groups
+
+    dn: ou=users,dc=raven,dc=bas
+    objectclass: organizationalUnit
+    objectclass: top
+    ou: users
+
+    dn: cn=dev,ou=groups,dc=raven,dc=bas
+    cn: dev
+    member: cn=john,ou=users,dc=raven,dc=bas
+    member: cn=bob,ou=users,dc=raven,dc=bas
+    objectclass: groupOfNames
+    objectclass: top
+
+    dn: cn=admins,ou=groups,dc=raven,dc=bas
+    cn: admins
+    member: cn=john,ou=users,dc=raven,dc=bas
+    objectclass: groupOfNames
+    objectclass: top
+
+    dn: cn=john,ou=users,dc=raven,dc=bas
+    cn: john
+    objectclass: inetOrgPerson
+    objectclass: top
+    mail: john.doe@authelia.bas
+    sn: John Doe
+    userpassword: {CRYPT}$6$rounds=500000$jgiCMRyGXzoqpxS3$w2pJeZnnH8bwW3zzvoMWtTRfQYsHbWbD/hquuQ5vUeIyl9gdwBIt6RWk2S6afBA0DPakbeWgD/4SZPiS0hYtU/
+
+    dn: cn=harry,ou=users,dc=raven,dc=bas
+    cn: harry
+    objectclass: inetOrgPerson
+    objectclass: top
+    mail: harry.potter@authelia.bas
+    sn: Harry Potter
+    userpassword: {CRYPT}$6$rounds=500000$jgiCMRyGXzoqpxS3$w2pJeZnnH8bwW3zzvoMWtTRfQYsHbWbD/hquuQ5vUeIyl9gdwBIt6RWk2S6afBA0DPakbeWgD/4SZPiS0hYtU/
+
+    dn: cn=bob,ou=users,dc=raven,dc=bas
+    cn: bob
+    objectclass: inetOrgPerson
+    objectclass: top
+    mail: bob.dylan@authelia.bas
+    sn: Bob Dylan
+    userpassword: {CRYPT}$6$rounds=500000$jgiCMRyGXzoqpxS3$w2pJeZnnH8bwW3zzvoMWtTRfQYsHbWbD/hquuQ5vUeIyl9gdwBIt6RWk2S6afBA0DPakbeWgD/4SZPiS0hYtU/
+
+    dn: cn=james,ou=users,dc=raven,dc=bas
+    cn: james
+    objectclass: inetOrgPerson
+    objectclass: top
+    mail: james.dean@authelia.bas
+    sn: James Dean
+    userpassword: {CRYPT}$6$rounds=500000$jgiCMRyGXzoqpxS3$w2pJeZnnH8bwW3zzvoMWtTRfQYsHbWbD/hquuQ5vUeIyl9gdwBIt6RWk2S6afBA0DPakbeWgD/4SZPiS0hYtU/
+
+    dn: cn=blackhat,ou=users,dc=raven,dc=bas
+    cn: blackhat
+    objectclass: inetOrgPerson
+    objectclass: top
+    mail: billy.blackhat@authelia.bas
+    sn: Billy BlackHat
+    userpassword: {CRYPT}$6$rounds=500000$jgiCMRyGXzoqpxS3$w2pJeZnnH8bwW3zzvoMWtTRfQYsHbWbD/hquuQ5vUeIyl9gdwBIt6RWk2S6afBA0DPakbeWgD/4SZPiS0hYtU/
+  
+---
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
@@ -61,19 +139,21 @@ spec:
       - name: openldap-db-volume
         persistentVolumeClaim:
           claimName: openldap-db-claim
-      - name: openldap-config-volume
-        persistentVolumeClaim:
-          claimName: openldap-config-claim
       # - name: openldap-config-volume
-      #   configMap:
-      #     name: openldap-config
-      #     items:
-      #     - key: openldap.conf
-      #       path: openldap.conf
-      #     defaultMode: 0777     
+      #   persistentVolumeClaim:
+      #     claimName: openldap-config-claim
+      - name: openldap-config-volume
+        configMap:
+          name: openldap-ldif
+          items:
+          - key: access.rules
+            path: access.rules
+          - key: base.ldif
+            path: base.ldif
       containers:
       - name: openldap
         image: osixia/openldap
+        args: ['--copy-service']
         ports:
         - name: ldap
           containerPort: 389
@@ -92,21 +172,24 @@ spec:
             secretKeyRef:
               name: openldap-credentials
               key: LDAP_DOMAIN
-        - name: LDAP_BASE_DN
-          valueFrom:
-            secretKeyRef:
-              name: openldap-credentials
-              key: LDAP_BASE_DN
         - name: LDAP_ADMIN_PASSWORD
           valueFrom:
             secretKeyRef:
               name: openldap-credentials
               key: LDAP_ADMIN_PASSWORD
+        - name: LDAP_ADDITIONAL_MODULES
+          value: memberof
+        - name: LDAP_ADDITIONAL_SCHEMAS
+          value: openldap
+        - name: LDAP_FORCE_RECONFIGURE
+          value: "true"
         volumeMounts:
-          - name: openldap-db-volume
-            mountPath: /var/lib/ldap
           - name: openldap-config-volume
-            mountPath: /etc/ldap/slapd.d
+            mountPath: /container/service/slapd/assets/config/bootstrap/ldif/custom
+          # - name: openldap-db-volume
+          #   mountPath: /var/lib/ldap
+        #   - name: openldap-config-volume
+        #     mountPath: /etc/ldap/slapd.d
 ---
 apiVersion: v1
 kind: Service
@@ -126,20 +209,34 @@ spec:
   selector:
     app: openldap
   type: ClusterIP
-# ---
-# apiVersion: extensions/v1beta1
-# kind: Ingress
-# metadata:
-#   name: openldapingress
-#   namespace: security
-# spec:
-#   rules:
-#   - host: security.bas
-#     http:
-#       paths:
-#       - backend:
-#           serviceName: openldap
-#           servicePort: 80
-#   tls:
-#   - hosts:
-#     - security.bas
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: openldapingress
+  namespace: security
+spec:
+  rules:
+  - host: ldap.bas
+    http:
+      paths:
+      - backend:
+          serviceName: openldap
+          servicePort: 389
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: openldapsingress
+  namespace: security
+spec:
+  rules:
+  - host: ldaps.bas
+    http:
+      paths:
+      - backend:
+          serviceName: openldap
+          servicePort: 636
+  tls:
+  - hosts:
+    - ldaps.bas
