@@ -49,13 +49,13 @@ spec:
         - name: http
           containerPort: 8080
         image: apache/zeppelin:0.8.2
-        # volumeMounts:
-        #   - name: zeppelin
-        #     mountPath: /notebook 
-      # volumes:
-      #   - name: zeppelin
-      #     persistentVolumeClaim:
-      #       claimName: zeppelin-claim
+        volumeMounts:
+          - name: zeppelin
+            mountPath: /notebook 
+      volumes:
+        - name: zeppelin
+          persistentVolumeClaim:
+            claimName: zeppelin-claim
 ---
 apiVersion: v1
 kind: Service

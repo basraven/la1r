@@ -3,7 +3,7 @@ kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
   name: chronograf-claim
-  namespace: homeautomation
+  namespace: monitoring
 spec:
   accessModes:
   - ReadWriteMany 
@@ -19,7 +19,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: chronograf
-  namespace: homeautomation
+  namespace: monitoring
   labels:
     app: chronograf
 spec:
@@ -30,7 +30,7 @@ spec:
   template:
     metadata:
       labels:
-        task: homeautomation
+        task: monitoring
         k8s-app: chronograf
         app: chronograf
     spec:
@@ -51,7 +51,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: chronograf
-  namespace: homeautomation
+  namespace: monitoring
 spec:
   ports:
   - port: 80
@@ -63,7 +63,7 @@ apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   name: chronograf
-  namespace: homeautomation
+  namespace: monitoring
 spec:
   rules:
   - host: chronograf.bas
