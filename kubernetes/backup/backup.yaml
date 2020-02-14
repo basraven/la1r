@@ -5,24 +5,36 @@ metadata:
   name: backup-script
   namespace: backup
 data:
-  backup-weekly.sh: |-
+  
+  backup-xz.sh: |-
     #!/bin/sh
-    apt-get update
-    apt-get install -y rsync lbzip2
-
-    echo "#> Starting weekly rsync file sync..."
+    size=$(du -s --total -B1 minecraft | awk '{print $1}' | tail -n 1) ; tar -cf - minecraft | pv -s $size | pxz -9 --threads=3 > minecraft.tar.xz
+  
+  backup-weekly.sh: |-
+    #!/bin/bash
+    sources="nextcloud-data configs mariadb plex tautulli"
+    target_location="/staging/backup/weekly/weekly.tar.xz"
     
-    echo "#> Compressing the weekly folders to a tar.bz2..."
+    apt-get update
+    apt-get install -y rsync xz-utils pxz pv
+    
+    echo "#> Cleaning staging folder"
     mkdir -p /staging/backup/weekly
     rm -rf /staging/backup/weekly/* 
     
-    tar -I lbzip2 -cvf /staging/backup/weekly/weekly.tar.bz2 nextcloud-data configs mariadb plex tautulli 
-    echo "Before"
-    du -h -s nextcloud-data configs mariadb plex tautulli 
-    echo "After"
-    du -h -s /staging/backup/weekly/weekly.tar.bz2
+    echo "#> Determining sources size..."
+    original_size=$(du -s --total -B1 $sources | awk '{print $1}' | tail -n 1) 
+    echo "#> Sources size " $((  $((original_size))  / 1024 / 1024 ))"MB"
+    echo "#> Compressing the weekly folders to tar..."
+    # tar -cvf - $sources | pv -ptebar -E -f -s $original_size | pxz --threads=3 > $target_location
+    tar -cvf - $sources | pxz --threads=3 > $target_location
 
-    echo "#> Backing up tar.bz2..."
+    new_size=$(du -s --total -B1 $target_location | awk '{print $1}' | tail -n 1) 
+    echo "#> New size " $((  $((new_size))  / 1024 / 1024 ))"MB"
+    
+    echo $((  $(( $((original_size)) - $((new_size)) )) / 1024 / 1024 ))"MB saved"
+
+    echo "#> Transferring tar..."
     rsync -a --no-perms --no-owner --no-group --delete --force --update --progress /staging/backup/weekly/ /backup/weekly/    
 
     echo "#> Clean up staging..."
@@ -30,7 +42,7 @@ data:
 
 
   backup-nightly.sh: |-
-    #!/bin/sh
+    #!/bin/bash
     apt-get update
     apt-get install -y rsync
     
@@ -227,6 +239,7 @@ spec:
             resources:
               limits:
                 memory: "2048Mi"
+                cpu: "500m"
             command: 
               - /backup-script/backup-weekly.sh
             volumeMounts:
@@ -317,7 +330,7 @@ spec:
             resources:
               limits:
                 memory: "2048Mi"
-                cpu: "700m"
+                cpu: "500m"
             command: 
               - /backup-script/backup-nightly.sh
             volumeMounts:
