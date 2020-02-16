@@ -41,7 +41,7 @@ metadata:
   labels:
     task: test
   name: test
-  namespace: event
+  namespace: default
 spec:
   ports:
   - port: 80
