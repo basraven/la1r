@@ -49,6 +49,10 @@ spec:
         - name: http
           containerPort: 8080
         image: apache/zeppelin:0.8.2
+        resources:
+          limits:
+            memory: "8192Mi"
+            cpu: "800m"
         volumeMounts:
           - name: zeppelin
             mountPath: /notebook 

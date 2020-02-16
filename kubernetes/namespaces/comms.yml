@@ -2,25 +2,3 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: comms
----
-apiVersion: v1
-kind: LimitRange
-metadata:
-  name: mem-limit-range
-  namespace: comms
-spec:
-  limits:
-  - default:
-      memory: 2048Mi
-    type: Container
----
-apiVersion: v1
-kind: LimitRange
-metadata:
-  name: cpu-limit-range
-  namespace: comms
-spec:
-  limits:
-  - default:
-      cpu: "800m"
-    type: Container
