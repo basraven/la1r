@@ -9,95 +9,135 @@ var width = 800;
 var height = 600;
 var color = d3.scaleOrdinal(d3.schemeCategory10);
 
-var topics = [
+
+var partitions = [
     {
-    "id" : "topic A",
-    "size" : 1000
+        "id" : "A",
+        "cluster" : "clusterA"
     },
     {
-    "id" : "topic B",
-    "size" : 1000
+        "id" : "B",
+        "cluster" : "clusterB"
     }
 ]
 
 
-var graph = {
-    "nodes": [
-      {
-        "id": "Myriel",
-        "group": 1
-      },
-      {
-        "id": "Napoleon",
-        "group": 1
-      },
-      {
-        "id": "MlleBaptistine",
-        "group": 3
-      },
-      {
-        "id": "MlleBapsdfsfdtistine",
-        "group": 1
-      }
-    ],
-    // "links": [
-    // //   {
-    // //     "source": "Napoleon",
-    // //     "target": "Myriel",
-    // //     "value": 1
-    // //   },
-    // //   {
-    // //     "source": "Mlle.Baptistine",
-    // //     "target": "Myriel",
-    // //     "value": 8
-    // //   },
-    // //   {
-    // //     "source": "Mme.Magloire",
-    // //     "target": "Myriel",
-    // //     "value": 10
-    // //   },
-    // //   {
-    // //     "source": "Mme.Magloire",
-    // //     "target": "Mlle.Baptistine",
-    // //     "value": 6
-    // //   }
-    //   ]
-  };
+var topics = [
+    {
+    "id" : "topic A",
+    "size" : 1000,
+    "partition" : 1
+    },
+    {
+    "id" : "topic B",
+    "size" : 1000,
+    "partition" : 2
+    },
+    {
+    "id" : "topic C",
+    "size" : 500,
+    "partition" : 2
+    }
+]
 
-var label = {
-    'nodes': [],
-    // 'links': []
+
+var producers = [
+    {
+    "id" : "producer A",
+    "size" : 1000
+    },
+    {
+    "id" : "producer B",
+    "size" : 1000
+    },
+    {
+    "id" : "producer C",
+    "size" : 500
+    }
+]
+
+
+
+var messages = [
+    {
+    "id": "Myriel",
+    "group": 1,
+    "size" : 10
+    },
+    {
+    "id": "Napoleon",
+    "group": 1,
+    "size" : 10
+    },
+    {
+    "id": "MlleBaptistine",
+    "group": 3,
+    "size" : 15
+    },
+    {
+    "id": "MlleBapsdfsfdtistine",
+    "group": 1,
+    "size" : 25
+    }
+];
+
+var topicLinks = [];
+
+
+var labels = {
+    'messages': [],
+    'topics' : [],
+    'partitions' : [],
+    'producers': []
 };
 
-graph.nodes.forEach(function(d, i) {
-    label.nodes.push({node: d});
-    // label.nodes.push({node: d});
-    // label.links.push({
-    //     source: i * 2,
-    //     target: i * 2 + 1
-    // });
+// TODO: remove...
+messages.forEach(function(d, i) {
+    labels.messages.push({message: d});
+});
+topics.forEach(function(d, i) {
+    labels.topics.push({topic: d});
+});
+producers.forEach(function(d, i) {
+    labels.producers.push({producer: d});
 });
 
 
-
-var labelLayout = d3.forceSimulation(label.nodes)
+var messagelabelLayout = d3.forceSimulation(labels.messages)
     .force("charge", d3.forceManyBody().strength(-50))
-    // .force("link", d3.forceLink(label.links).distance(0).strength(2));
 
-var graphLayout = d3.forceSimulation(graph.nodes)
+var topiclabelLayout = d3.forceSimulation(labels.topics)
+    .force("charge", d3.forceManyBody().strength(-5000))
+
+var producerlabelLayout = d3.forceSimulation(labels.producers)
+    .force("charge", d3.forceManyBody().strength(-50))
+
+    
+var messageLayout = d3.forceSimulation(messages)
     .force("charge", d3.forceManyBody().strength(-3000))
-    .force("center", d3.forceCenter(width / 2, height / 2))
+    // .force("center", d3.forceCenter(width / 2, height / 2))
     .force("x", d3.forceX(width / 2).strength(1))
     .force("y", d3.forceY(height / 2).strength(1))
     // .force("link", d3.forceLink(graph.links).id(function(d) {return d.id; }).distance(50).strength(1))
     .on("tick", ticked);
 
-// var adjlist = [];
+var topicLayout = d3.forceSimulation(topics)
+    .force("charge", d3.forceManyBody().strength(-3000))
+    .force("center", d3.forceCenter(width / 2, height / 2))
+    .force("x", d3.forceX(width / 2).strength(0.05))
+    .force("y", d3.forceY(height / 2).strength(0.05))
+    // .force("link", d3.forceLink(graph.links).id(function(d) {return d.id; }).distance(50).strength(1))
+    .on("tick", ticked);
 
-// graph.links.forEach(function(d) {
-//     adjlist[d.source.index + "-" + d.target.index] = true;
-//     adjlist[d.target.index + "-" + d.source.index] = true;
-// });
+var producerLayout = d3.forceSimulation(producers)
+    .force("charge", d3.forceManyBody().strength(-3000))
+    .force("center", d3.forceCenter(width / 2, height / 2))
+    .force("x", d3.forceX(width / 2).strength(0.1))
+    .force("y", d3.forceY(height / 2).strength(0.1))
+    // .force("link", d3.forceLink(graph.links).id(function(d) {return d.id; }).distance(50).strength(1))
+    .on("tick", ticked);
+
+// var adjlist = [];
 
 // function neigh(a, b) {
 //     return a == b || adjlist[a + "-" + b];
@@ -113,45 +153,94 @@ svg.call(
         .on("zoom", function() { container.attr("transform", d3.event.transform); })
 );
 
-// var link = container.append("g").attr("class", "links")
-//     .selectAll("line")
-//     .data(graph.links)
-//     .enter()
-//     .append("line")
-//     .attr("stroke", "#aaa")
-//     .attr("stroke-width", "1px");
 
-var node = container.append("g").attr("class", "nodes")
+var message = container.append("g").attr("class", "messages")
     .selectAll("g")
-    .data(graph.nodes)
+    .data(messages)
     .enter()
     .append("circle")
     .attr("r", 5)
     .attr("fill", function(d) { return color(d.group); })
+// message.on("mouseover", focus).on("mouseout", unfocus);
 
-node.on("mouseover", focus).on("mouseout", unfocus);
+var topic = container.append("g").attr("class", "topics")
+        .selectAll("g")
+        .data(topics)
+        .enter()
+        .append("circle")
+        .attr("r", 17)
+        .attr("fill", function(d) { return color(d.partition); })
 
-node.call(
+var producer = container.append("g").attr("class", "producers")
+        .selectAll("g")
+        .data(producers)
+        .enter()
+        .append("circle")
+        .attr("r", 12)
+        .attr("fill", function(d) { return color(4); })
+
+// TODO: Remove the .bind somehow
+message.call(
     d3.drag()
-        .on("start", dragstarted)
-        .on("drag", dragged)
-        .on("end", dragended)
+        .on("start", dragstarted.bind(messageLayout))
+        .on("drag", dragged.bind(messageLayout))
+        .on("end", dragended.bind(messageLayout))
+);
+topic.call(
+    d3.drag()
+        .on("start", dragstarted.bind(topicLayout))
+        .on("drag", dragged.bind(topicLayout))
+        .on("end", dragended.bind(topicLayout))
 );
 
-var labelNode = container.append("g").attr("class", "labelNodes")
+producer.call(
+    d3.drag()
+        .on("start", dragstarted.bind(producerLayout))
+        .on("drag", dragged.bind(producerLayout))
+        .on("end", dragended.bind(producerLayout))
+);
+
+
+var labelMessage = container.append("g").attr("class", "labelMessage")
     .selectAll("text")
-    .data(label.nodes)
+    .data(labels.messages)
     .enter()
     .append("text")
     .text(function(d, i) { 
         // return i % 2 == 0 ? "" : d.node.id; })
-        return  d.node.id; })
+        return  d.message.id; })
     .style("fill", "#555")
     .style("font-family", "Arial")
     .style("font-size", 12)
     .style("pointer-events", "none"); // to prevent mouseover/drag capture
+    
+var labelTopic = container.append("g").attr("class", "labelTopic")
+    .selectAll("text")
+    .data(labels.topics)
+    .enter()
+    .append("text")
+    .text(function(d, i) { 
+        // return i % 2 == 0 ? "" : d.node.id; })
+        return  d.topic.id; })
+    .style("fill", "#555")
+    .style("font-family", "Arial")
+    .style("font-size", 20)
+    .style("pointer-events", "none"); // to prevent mouseover/drag capture
 
-node.on("mouseover", focus).on("mouseout", unfocus);
+var labelProducer = container.append("g").attr("class", "labelProducer")
+    .selectAll("text")
+    .data(labels.producers)
+    .enter()
+    .append("text")
+    .text(function(d, i) { 
+        // return i % 2 == 0 ? "" : d.node.id; })
+        return  d.producer.id; })
+    .style("fill", "#555")
+    .style("font-family", "Arial")
+    .style("font-size", 30)
+    .style("pointer-events", "none"); // to prevent mouseover/drag capture
+
+
 // counter = 0;
 function ticked() {
     // counter++;
@@ -159,29 +248,33 @@ function ticked() {
     //     console.log("TOCK")
     // }
     
-    node.call(updateNode);
+    message.call(updateNode);
+    topic.call(updateNode);
+    producer.call(updateNode);
     // link.call(updateLink);
 
-    labelLayout.alphaTarget(0).restart();
-    labelNode.each(function(d, i) {
-        // if(i % 2 == 0) {
-            d.x = d.node.x;
-            d.y = d.node.y;
-        // } else {
-        //     var b = this.getBBox();
+    messagelabelLayout.alphaTarget(0).restart();
+    topiclabelLayout.alphaTarget(0.5).restart();
+    producerlabelLayout.alphaTarget(0.1).restart();
 
-        //     var diffX = d.x - d.node.x;
-        //     var diffY = d.y - d.node.y;
 
-        //     var dist = Math.sqrt(diffX * diffX + diffY * diffY);
-
-        //     var shiftX = b.width * (diffX - dist) / (dist * 2);
-        //     shiftX = Math.max(-b.width, Math.min(0, shiftX));
-        //     var shiftY = 16;
-        //     this.setAttribute("transform", "translate(" + shiftX + "," + shiftY + ")");
-        // }
+    labelMessage.each(function(d, i) {
+            d.x = d.message.x;
+            d.y = d.message.y;
     });
-    labelNode.call(updateNode);
+    labelMessage.call(updateNode);
+    
+    labelTopic.each(function(d, i) {
+            d.x = d.topic.x;
+            d.y = d.topic.y;
+    });
+    labelTopic.call(updateNode);
+    
+    labelProducer.each(function(d, i) {
+            d.x = d.producer.x;
+            d.y = d.producer.y;
+    });
+    labelProducer.call(updateNode);
 
 }
 
@@ -190,24 +283,24 @@ function fixna(x) {
     return 0;
 }
 
-function focus(d) {
-    var index = d3.select(d3.event.target).datum().index;
-    node.style("opacity", function(o) {
-        return neigh(index, o.index) ? 1 : 0.1;
-    });
-    labelNode.attr("display", function(o) {
-      return neigh(index, o.node.index) ? "block": "none";
-    });
-    // link.style("opacity", function(o) {
-    //     return o.source.index == index || o.target.index == index ? 1 : 0.1;
-    // });
-}
+// function focus(d) {
+//     var index = d3.select(d3.event.target).datum().index;
+//     node.style("opacity", function(o) {
+//         return neigh(index, o.index) ? 1 : 0.1;
+//     });
+//     labelNode.attr("display", function(o) {
+//       return neigh(index, o.node.index) ? "block": "none";
+//     });
+//     // link.style("opacity", function(o) {
+//     //     return o.source.index == index || o.target.index == index ? 1 : 0.1;
+//     // });
+// }
 
-function unfocus() {
-   labelNode.attr("display", "block");
-   node.style("opacity", 1);
-//    link.style("opacity", 1);
-}
+// function unfocus() {
+//    labelNode.attr("display", "block");
+//    node.style("opacity", 1);
+// //    link.style("opacity", 1);
+// }
 
 // function updateLink(link) {
 //     link.attr("x1", function(d) { return fixna(d.source.x); })
@@ -224,7 +317,8 @@ function updateNode(node) {
 
 function dragstarted(d) {
     d3.event.sourceEvent.stopPropagation();
-    if (!d3.event.active) graphLayout.alphaTarget(0.3).restart();
+    // TODO: Fix variable alfa target here
+    if (!d3.event.active) this.alphaTarget(0.3).restart();
     d.fx = d.x;
     d.fy = d.y;
 }
@@ -235,7 +329,7 @@ function dragged(d) {
 }
 
 function dragended(d) {
-    if (!d3.event.active) graphLayout.alphaTarget(0);
+    if (!d3.event.active) this.alphaTarget(0);
     d.fx = null;
     d.fy = null;
 }
@@ -243,63 +337,64 @@ function dragended(d) {
 
 
 
-function restart() {
+// function restart() {
 
-    // Apply the general update pattern to the nodes.
-    node = node.data(graph.nodes, function(d) { return d.id;});
-    node.exit().remove();
-    labelNode = labelNode.data(label.nodes, function(d) { return d.id;});
-    labelNode.exit().remove();
+//     // Apply the general update pattern to the nodes.
+//     node = node.data(graph.nodes, function(d) { return d.id;});
+//     node.exit().remove();
+//     labelNode = labelNode.data(label.nodes, function(d) { return d.id;});
+//     labelNode.exit().remove();
 
-    node = node.enter()
-            .append("circle")
-            .attr("r", 10)
-            .attr("fill", function(d) { return color(d.group); })
-            .merge(node);
+//     node = node.enter()
+//             .append("circle")
+//             .attr("r", 10)
+//             .attr("fill", function(d) { return color(d.group); })
+//             .merge(node);
 
-    labelNode = labelNode
-            .enter()
-            .append("text")
-            .text(function(d, i) { 
-                // return i % 2 == 0 ? "" : d.node.id; })
-                return  d.node.id; })
-            .style("fill", "#555")
-            .style("font-family", "Arial")
-            .style("font-size", 12)
-            .style("pointer-events", "none") // to prevent mouseover/drag capture
-            .merge(labelNode);
-
-
-    // Update and restart the simulation.
-    graphLayout.nodes(graph.nodes);
-    labelLayout.nodes(graph.nodes);
-    // graphLayout.force("link").links(links);
-    labelLayout.alphaTarget(0).restart();
-    graphLayout.alphaTarget(0.3).restart();
-}
+//     labelNode = labelNode
+//             .enter()
+//             .append("text")
+//             .text(function(d, i) { 
+//                 // return i % 2 == 0 ? "" : d.node.id; })
+//                 return  d.node.id; })
+//             .style("fill", "#555")
+//             .style("font-family", "Arial")
+//             .style("font-size", 12)
+//             .style("pointer-events", "none") // to prevent mouseover/drag capture
+//             .merge(labelNode);
 
 
-setInterval(() => {
-  console.log("TACK")
+//     // Update and restart the simulation.
+//     graphLayout.nodes(graph.nodes);
+//     labelLayout.nodes(graph.nodes);
+//     // graphLayout.force("link").links(links);
+//     labelLayout.alphaTarget(0).restart();
+//     graphLayout.alphaTarget(0.3).restart();
+// }
+
+
+// setInterval(() => {
+//   console.log("TACK")
   
-                graph.nodes.push(
-                    {
-                    id: ("something" + Math.random() ),
-                    group: 1
-                    }
-                );
-                graph.nodes.shift()
+//                 adjlist = []
+//                 graph.nodes.push(
+//                     {
+//                     id: ("something" + Math.random() ),
+//                     group: 1
+//                     }
+//                 );
+//                 graph.nodes.shift()
 
-                graph.nodes.forEach(function(d, i) {
-                    label.nodes.push({node: d});
-                    label.nodes.shift()
+//                 graph.nodes.forEach(function(d, i) {
+//                     label.nodes.push({node: d});
+//                     label.nodes.shift()
 
-                });
+//                 });
                 
-                restart()
+//                 restart()
 
 
-}, 3000);
+// }, 3000);
 
 </script>
 </html>
