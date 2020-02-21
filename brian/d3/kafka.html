@@ -62,22 +62,30 @@ var messages = [
     {
     "id": "Myriel",
     "group": 1,
-    "size" : 10
+    "size" : 10,
+    "source" : "producer A",
+    "target" : "topic A"
     },
     {
     "id": "Napoleon",
     "group": 1,
-    "size" : 10
+    "size" : 10,
+    "source" : "producer A",
+    "target" : "topic A"
     },
     {
     "id": "MlleBaptistine",
     "group": 3,
-    "size" : 15
+    "size" : 15,
+    "source" : "producer A",
+    "target" : "topic A"
     },
     {
     "id": "MlleBapsdfsfdtistine",
     "group": 1,
-    "size" : 25
+    "size" : 25,
+    "source" : "producer A",
+    "target" : "topic A"
     }
 ];
 
@@ -92,6 +100,7 @@ var labels = {
 };
 
 // TODO: remove...
+// Get labels
 messages.forEach(function(d, i) {
     labels.messages.push({message: d});
 });
@@ -101,6 +110,19 @@ topics.forEach(function(d, i) {
 producers.forEach(function(d, i) {
     labels.producers.push({producer: d});
 });
+
+// Get links
+messages.forEach( (m, i) => {
+    if(! topicLinks.find((l) => {
+        return l.source == m.source && l.target == m.target
+    })){
+        topicLinks.push({
+            source: m.source,
+            target: m.target
+        })
+
+    }
+})
 
 
 var messagelabelLayout = d3.forceSimulation(labels.messages)
@@ -126,14 +148,15 @@ var topicLayout = d3.forceSimulation(topics)
     .force("center", d3.forceCenter(width / 2, height / 2))
     .force("x", d3.forceX(width / 2).strength(0.05))
     .force("y", d3.forceY(height / 2).strength(0.05))
-    // .force("link", d3.forceLink(graph.links).id(function(d) {return d.id; }).distance(50).strength(1))
     .on("tick", ticked);
-
-var producerLayout = d3.forceSimulation(producers)
+    
+    var producerLayout = d3.forceSimulation(producers)
     .force("charge", d3.forceManyBody().strength(-3000))
     .force("center", d3.forceCenter(width / 2, height / 2))
     .force("x", d3.forceX(width / 2).strength(0.1))
     .force("y", d3.forceY(height / 2).strength(0.1))
+    .force("link", d3.forceLink(topicLinks).id(function(d) {
+        return "topic A"; }).distance(50).strength(1))
     // .force("link", d3.forceLink(graph.links).id(function(d) {return d.id; }).distance(50).strength(1))
     .on("tick", ticked);
 
@@ -178,6 +201,15 @@ var producer = container.append("g").attr("class", "producers")
         .append("circle")
         .attr("r", 12)
         .attr("fill", function(d) { return color(4); })
+
+
+var topicLink = container.append("g").attr("class", "topicLinks")
+    .selectAll("line")
+    .data(topicLinks)
+    .enter()
+    .append("line")
+    .attr("stroke", "#aaa")
+    .attr("stroke-width", "1px");
 
 // TODO: Remove the .bind somehow
 message.call(
@@ -241,17 +273,12 @@ var labelProducer = container.append("g").attr("class", "labelProducer")
     .style("pointer-events", "none"); // to prevent mouseover/drag capture
 
 
-// counter = 0;
 function ticked() {
-    // counter++;
-    // if(counter % 100 == 0){
-    //     console.log("TOCK")
-    // }
     
     message.call(updateNode);
     topic.call(updateNode);
     producer.call(updateNode);
-    // link.call(updateLink);
+    topicLink.call(updateLink);
 
     messagelabelLayout.alphaTarget(0).restart();
     topiclabelLayout.alphaTarget(0.5).restart();
@@ -302,12 +329,12 @@ function fixna(x) {
 // //    link.style("opacity", 1);
 // }
 
-// function updateLink(link) {
-//     link.attr("x1", function(d) { return fixna(d.source.x); })
-//         .attr("y1", function(d) { return fixna(d.source.y); })
-//         .attr("x2", function(d) { return fixna(d.target.x); })
-//         .attr("y2", function(d) { return fixna(d.target.y); });
-// }
+function updateLink(link) {
+    link.attr("x1", function(d) { return fixna(d.source.x); })
+        .attr("y1", function(d) { return fixna(d.source.y); })
+        .attr("x2", function(d) { return fixna(d.target.x); })
+        .attr("y2", function(d) { return fixna(d.target.y); });
+}
 
 function updateNode(node) {
     node.attr("transform", function(d) {
