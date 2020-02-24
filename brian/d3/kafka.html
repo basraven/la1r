@@ -59,34 +59,34 @@ var producers = [
 
 
 var messages = [
-    {
-    "id": "Myriel",
-    "group": 1,
-    "size" : 10,
-    "source" : "producer A",
-    "target" : "topic A"
-    },
-    {
-    "id": "Napoleon",
-    "group": 1,
-    "size" : 10,
-    "source" : "producer A",
-    "target" : "topic A"
-    },
-    {
-    "id": "MlleBaptistine",
-    "group": 3,
-    "size" : 15,
-    "source" : "producer A",
-    "target" : "topic A"
-    },
-    {
-    "id": "MlleBapsdfsfdtistine",
-    "group": 1,
-    "size" : 25,
-    "source" : "producer A",
-    "target" : "topic A"
-    }
+//     {
+//     "id": "Myriel",
+//     "group": 1,
+//     "size" : 10,
+//     "source" : "topic A",
+//     "target" : "producer A"
+// },
+// {
+//     "id": "Napoleon",
+//     "group": 1,
+//     "size" : 1,
+//     "source" : "topic A",
+//     "target" : "producer A"
+// },
+// {
+//     "id": "MlleBaptistine",
+//     "group": 3,
+//     "size" : 1,
+//     "source" : "topic A",
+//     "target" : "producer A"
+// },
+// {
+//     "id": "MlleBapsdfsfdtistine",
+//     "group": 1,
+//     "size" : 2,
+//     "source" : "topic A",
+//     "target" : "producer A"
+//     }
 ];
 
 var topicLinks = [];
@@ -100,7 +100,7 @@ var labels = {
 };
 
 // TODO: remove...
-// Get labels
+// Get labels"
 messages.forEach(function(d, i) {
     labels.messages.push({message: d});
 });
@@ -126,7 +126,7 @@ messages.forEach( (m, i) => {
 
 
 var messagelabelLayout = d3.forceSimulation(labels.messages)
-    .force("charge", d3.forceManyBody().strength(-50))
+.force("charge", d3.forceManyBody().strength(-50))
 
 var topiclabelLayout = d3.forceSimulation(labels.topics)
     .force("charge", d3.forceManyBody().strength(-5000))
@@ -143,22 +143,16 @@ var messageLayout = d3.forceSimulation(messages)
     // .force("link", d3.forceLink(graph.links).id(function(d) {return d.id; }).distance(50).strength(1))
     .on("tick", ticked);
 
-var topicLayout = d3.forceSimulation(topics)
-    .force("charge", d3.forceManyBody().strength(-3000))
-    .force("center", d3.forceCenter(width / 2, height / 2))
-    .force("x", d3.forceX(width / 2).strength(0.05))
-    .force("y", d3.forceY(height / 2).strength(0.05))
-    .on("tick", ticked);
     
-    var producerLayout = d3.forceSimulation(producers)
+var nodeLayout = d3.forceSimulation([...topics, ...producers])
     .force("charge", d3.forceManyBody().strength(-3000))
     .force("center", d3.forceCenter(width / 2, height / 2))
     .force("x", d3.forceX(width / 2).strength(0.1))
     .force("y", d3.forceY(height / 2).strength(0.1))
-    .force("link", d3.forceLink(topicLinks).id(function(d) {
-        return "topic A"; }).distance(50).strength(1))
-    // .force("link", d3.forceLink(graph.links).id(function(d) {return d.id; }).distance(50).strength(1))
+    .force("link", d3.forceLink(topicLinks).id(function(d) {return d.id; }).distance(10).strength(1))
     .on("tick", ticked);
+
+// var groupLayout = 
 
 // var adjlist = [];
 
@@ -202,14 +196,15 @@ var producer = container.append("g").attr("class", "producers")
         .attr("r", 12)
         .attr("fill", function(d) { return color(4); })
 
-
+// Remove me
 var topicLink = container.append("g").attr("class", "topicLinks")
     .selectAll("line")
     .data(topicLinks)
     .enter()
     .append("line")
-    .attr("stroke", "#aaa")
-    .attr("stroke-width", "1px");
+    // .attr("stroke", "#000")
+    // .attr("stroke-opacity", 0.1)
+    // .attr("stroke-width", "1px");
 
 // TODO: Remove the .bind somehow
 message.call(
@@ -220,16 +215,16 @@ message.call(
 );
 topic.call(
     d3.drag()
-        .on("start", dragstarted.bind(topicLayout))
-        .on("drag", dragged.bind(topicLayout))
-        .on("end", dragended.bind(topicLayout))
+        .on("start", dragstarted.bind(nodeLayout))
+        .on("drag", dragged.bind(nodeLayout))
+        .on("end", dragended.bind(nodeLayout))
 );
 
 producer.call(
     d3.drag()
-        .on("start", dragstarted.bind(producerLayout))
-        .on("drag", dragged.bind(producerLayout))
-        .on("end", dragended.bind(producerLayout))
+        .on("start", dragstarted.bind(nodeLayout))
+        .on("drag", dragged.bind(nodeLayout))
+        .on("end", dragended.bind(nodeLayout))
 );
 
 
@@ -364,40 +359,40 @@ function dragended(d) {
 
 
 
-// function restart() {
+function restart() {
 
-//     // Apply the general update pattern to the nodes.
-//     node = node.data(graph.nodes, function(d) { return d.id;});
-//     node.exit().remove();
-//     labelNode = labelNode.data(label.nodes, function(d) { return d.id;});
-//     labelNode.exit().remove();
+    // Apply the general update pattern to the nodes.
+    node = node.data(graph.nodes, function(d) { return d.id;});
+    node.exit().remove();
+    labelNode = labelNode.data(label.nodes, function(d) { return d.id;});
+    labelNode.exit().remove();
 
-//     node = node.enter()
-//             .append("circle")
-//             .attr("r", 10)
-//             .attr("fill", function(d) { return color(d.group); })
-//             .merge(node);
+    node = node.enter()
+            .append("circle")
+            .attr("r", 10)
+            .attr("fill", function(d) { return color(d.group); })
+            .merge(node);
 
-//     labelNode = labelNode
-//             .enter()
-//             .append("text")
-//             .text(function(d, i) { 
-//                 // return i % 2 == 0 ? "" : d.node.id; })
-//                 return  d.node.id; })
-//             .style("fill", "#555")
-//             .style("font-family", "Arial")
-//             .style("font-size", 12)
-//             .style("pointer-events", "none") // to prevent mouseover/drag capture
-//             .merge(labelNode);
+    labelNode = labelNode
+            .enter()
+            .append("text")
+            .text(function(d, i) { 
+                // return i % 2 == 0 ? "" : d.node.id; })
+                return  d.node.id; })
+            .style("fill", "#555")
+            .style("font-family", "Arial")
+            .style("font-size", 12)
+            .style("pointer-events", "none") // to prevent mouseover/drag capture
+            .merge(labelNode);
 
 
-//     // Update and restart the simulation.
-//     graphLayout.nodes(graph.nodes);
-//     labelLayout.nodes(graph.nodes);
-//     // graphLayout.force("link").links(links);
-//     labelLayout.alphaTarget(0).restart();
-//     graphLayout.alphaTarget(0.3).restart();
-// }
+    // Update and restart the simulation.
+    graphLayout.nodes(graph.nodes);
+    labelLayout.nodes(graph.nodes);
+    // graphLayout.force("link").links(links);
+    labelLayout.alphaTarget(0).restart();
+    graphLayout.alphaTarget(0.3).restart();
+}
 
 
 // setInterval(() => {
