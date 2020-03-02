@@ -1,14 +1,33 @@
 <html>
-<body>
-<svg id='viz'></svg>
-</body>
+    <body>
+        <svg id='viz'></svg>
+    </body>
+    
+    <script src='./d3.v5.min.js'></script>
+    <script>
 
-<script src='./d3.v5.min.js'></script>
-<script>
-var width = 800;
-var height = 600;
-var color = d3.scaleOrdinal(d3.schemeCategory10);
-
+var width = 800,
+    height = 600,
+    color = d3.scaleOrdinal(d3.schemeCategory10),
+    messagelabelLayout,
+    topiclabelLayout,
+    producerlabelLayout,
+    messageLayout,
+    nodeLayout,
+    labels = [],
+    message,
+    messages = [],
+    topic,
+    topics = [],
+    producer,
+    producers = [],
+    topicLink,
+    topicLinks = [],
+    labelMessage,
+    labelTopic,
+    labelProducer,
+    svg,
+    container;
 
 var partitions = [
     {
@@ -22,7 +41,7 @@ var partitions = [
 ]
 
 
-var topics = [
+topics = [
     {
     "id" : "topic A",
     "size" : 1000,
@@ -41,7 +60,7 @@ var topics = [
 ]
 
 
-var producers = [
+producers = [
     {
     "id" : "producer A",
     "size" : 1000
@@ -58,52 +77,48 @@ var producers = [
 
 
 
-var messages = [
-//     {
-//     "id": "Myriel",
-//     "group": 1,
-//     "size" : 10,
-//     "source" : "topic A",
-//     "target" : "producer A"
-// },
-// {
-//     "id": "Napoleon",
-//     "group": 1,
-//     "size" : 1,
-//     "source" : "topic A",
-//     "target" : "producer A"
-// },
-// {
-//     "id": "MlleBaptistine",
-//     "group": 3,
-//     "size" : 1,
-//     "source" : "topic A",
-//     "target" : "producer A"
-// },
-// {
-//     "id": "MlleBapsdfsfdtistine",
-//     "group": 1,
-//     "size" : 2,
-//     "source" : "topic A",
-//     "target" : "producer A"
-//     }
+messages = [
+    {
+    "id": "Myriel",
+    "group": 1,
+    "size" : 10,
+    "source" : "topic A",
+    "target" : "producer A"
+},
+{
+    "id": "Napoleon",
+    "group": 1,
+    "size" : 1,
+    "source" : "topic A",
+    "target" : "producer A"
+},
+{
+    "id": "MlleBaptistine",
+    "group": 3,
+    "size" : 1,
+    "source" : "topic A",
+    "target" : "producer A"
+},
+{
+    "id": "MlleBapsdfsfdtistine",
+    "group": 1,
+    "size" : 2,
+    "source" : "topic A",
+    "target" : "producer A"
+    }
 ];
 
-var topicLinks = [];
 
 
-var labels = {
+
+labels = {
     'messages': [],
     'topics' : [],
     'partitions' : [],
     'producers': []
 };
 
-// TODO: remove...
-// Get labels"
-messages.forEach(function(d, i) {
-    labels.messages.push({message: d});
-});
+
 topics.forEach(function(d, i) {
     labels.topics.push({topic: d});
 });
@@ -111,31 +126,80 @@ producers.forEach(function(d, i) {
     labels.producers.push({producer: d});
 });
 
-// Get links
-messages.forEach( (m, i) => {
-    if(! topicLinks.find((l) => {
-        return l.source == m.source && l.target == m.target
-    })){
-        topicLinks.push({
-            source: m.source,
-            target: m.target
-        })
-
-    }
-})
 
 
-var messagelabelLayout = d3.forceSimulation(labels.messages)
+
+const refresh = () => {
+
+    messages.forEach(function(d, i) {
+        if(! labels.messages.find((o) => {
+            return o.id == d.id
+        }) ) {
+            labels.messages.push({message: d});
+        }
+    });
+
+
+    // Get links
+    let messagePresent = false;
+    messages.forEach( (m, i) => {
+        
+        if(topicLinks.find((l) => {
+            return l.source.id == m.source && l.target.id == m.target
+        })){
+            
+
+        }
+    })
+
+    // message.data(messages)
+
+    // // Apply the general update pattern to the nodes.
+    // node = node.data(graph.nodes, function(d) { return d.id;});
+    // node.exit().remove();
+    // labelNode = labelNode.data(label.nodes, function(d) { return d.id;});
+    // labelNode.exit().remove();
+
+    // node = node.enter()
+    //         .append("circle")
+    //         .attr("r", 10)
+    //         .attr("fill", function(d) { return color(d.group); })
+    //         .merge(node);
+
+    // labelNode = labelNode
+    //         .enter()
+    //         .append("text")
+    //         .text(function(d, i) { 
+    //             // return i % 2 == 0 ? "" : d.node.id; })
+    //             return  d.node.id; })
+    //         .style("fill", "#555")
+    //         .style("font-family", "Arial")
+    //         .style("font-size", 12)
+    //         .style("pointer-events", "none") // to prevent mouseover/drag capture
+    //         .merge(labelNode);
+
+
+    // // Update and restart the simulation.
+    // graphLayout.nodes(graph.nodes);
+    // labelLayout.nodes(graph.nodes);
+    // // graphLayout.force("link").links(links);
+    // labelLayout.alphaTarget(0).restart();
+    // graphLayout.alphaTarget(0.3).restart();
+}
+
+
+
+messagelabelLayout = d3.forceSimulation(labels.messages)
 .force("charge", d3.forceManyBody().strength(-50))
 
-var topiclabelLayout = d3.forceSimulation(labels.topics)
+topiclabelLayout = d3.forceSimulation(labels.topics)
     .force("charge", d3.forceManyBody().strength(-5000))
 
-var producerlabelLayout = d3.forceSimulation(labels.producers)
+producerlabelLayout = d3.forceSimulation(labels.producers)
     .force("charge", d3.forceManyBody().strength(-50))
 
     
-var messageLayout = d3.forceSimulation(messages)
+messageLayout = d3.forceSimulation(messages)
     .force("charge", d3.forceManyBody().strength(-3000))
     // .force("center", d3.forceCenter(width / 2, height / 2))
     .force("x", d3.forceX(width / 2).strength(1))
@@ -144,7 +208,7 @@ var messageLayout = d3.forceSimulation(messages)
     .on("tick", ticked);
 
     
-var nodeLayout = d3.forceSimulation([...topics, ...producers])
+nodeLayout = d3.forceSimulation([...topics, ...producers])
     .force("charge", d3.forceManyBody().strength(-3000))
     .force("center", d3.forceCenter(width / 2, height / 2))
     .force("x", d3.forceX(width / 2).strength(0.1))
@@ -161,8 +225,8 @@ var nodeLayout = d3.forceSimulation([...topics, ...producers])
 // }
 
 
-var svg = d3.select("#viz").attr("width", width).attr("height", height);
-var container = svg.append("g");
+svg = d3.select("#viz").attr("width", width).attr("height", height);
+container = svg.append("g");
 
 svg.call(
     d3.zoom()
@@ -171,7 +235,7 @@ svg.call(
 );
 
 
-var message = container.append("g").attr("class", "messages")
+message = container.append("g").attr("class", "messages")
     .selectAll("g")
     .data(messages)
     .enter()
@@ -180,7 +244,7 @@ var message = container.append("g").attr("class", "messages")
     .attr("fill", function(d) { return color(d.group); })
 // message.on("mouseover", focus).on("mouseout", unfocus);
 
-var topic = container.append("g").attr("class", "topics")
+topic = container.append("g").attr("class", "topics")
         .selectAll("g")
         .data(topics)
         .enter()
@@ -188,7 +252,7 @@ var topic = container.append("g").attr("class", "topics")
         .attr("r", 17)
         .attr("fill", function(d) { return color(d.partition); })
 
-var producer = container.append("g").attr("class", "producers")
+producer = container.append("g").attr("class", "producers")
         .selectAll("g")
         .data(producers)
         .enter()
@@ -197,7 +261,7 @@ var producer = container.append("g").attr("class", "producers")
         .attr("fill", function(d) { return color(4); })
 
 // Remove me
-var topicLink = container.append("g").attr("class", "topicLinks")
+topicLink = container.append("g").attr("class", "topicLinks")
     .selectAll("line")
     .data(topicLinks)
     .enter()
@@ -228,7 +292,7 @@ producer.call(
 );
 
 
-var labelMessage = container.append("g").attr("class", "labelMessage")
+labelMessage = container.append("g").attr("class", "labelMessage")
     .selectAll("text")
     .data(labels.messages)
     .enter()
@@ -241,7 +305,7 @@ var labelMessage = container.append("g").attr("class", "labelMessage")
     .style("font-size", 12)
     .style("pointer-events", "none"); // to prevent mouseover/drag capture
     
-var labelTopic = container.append("g").attr("class", "labelTopic")
+labelTopic = container.append("g").attr("class", "labelTopic")
     .selectAll("text")
     .data(labels.topics)
     .enter()
@@ -254,7 +318,7 @@ var labelTopic = container.append("g").attr("class", "labelTopic")
     .style("font-size", 20)
     .style("pointer-events", "none"); // to prevent mouseover/drag capture
 
-var labelProducer = container.append("g").attr("class", "labelProducer")
+labelProducer = container.append("g").attr("class", "labelProducer")
     .selectAll("text")
     .data(labels.producers)
     .enter()
@@ -266,6 +330,7 @@ var labelProducer = container.append("g").attr("class", "labelProducer")
     .style("font-family", "Arial")
     .style("font-size", 30)
     .style("pointer-events", "none"); // to prevent mouseover/drag capture
+
 
 
 function ticked() {
@@ -356,67 +421,37 @@ function dragended(d) {
     d.fy = null;
 }
 
+refresh();
 
+setInterval(() => {
+  console.log("TACK")
+  messages.push({
+    "id": ("Generated " + Math.random()),
+    "group": 1,
+    "size" : 10,
+    "source" : "topic A",
+    "target" : "producer A"
+  })
+  refresh();
+                // adjlist = []
+                // graph.nodes.push(
+                //     {
+                //     id: ("something" + Math.random() ),
+                //     group: 1
+                //     }
+                // );
+                // graph.nodes.shift()
 
+                // graph.nodes.forEach(function(d, i) {
+                //     label.nodes.push({node: d});
+                //     label.nodes.shift()
 
-function restart() {
-
-    // Apply the general update pattern to the nodes.
-    node = node.data(graph.nodes, function(d) { return d.id;});
-    node.exit().remove();
-    labelNode = labelNode.data(label.nodes, function(d) { return d.id;});
-    labelNode.exit().remove();
-
-    node = node.enter()
-            .append("circle")
-            .attr("r", 10)
-            .attr("fill", function(d) { return color(d.group); })
-            .merge(node);
-
-    labelNode = labelNode
-            .enter()
-            .append("text")
-            .text(function(d, i) { 
-                // return i % 2 == 0 ? "" : d.node.id; })
-                return  d.node.id; })
-            .style("fill", "#555")
-            .style("font-family", "Arial")
-            .style("font-size", 12)
-            .style("pointer-events", "none") // to prevent mouseover/drag capture
-            .merge(labelNode);
-
-
-    // Update and restart the simulation.
-    graphLayout.nodes(graph.nodes);
-    labelLayout.nodes(graph.nodes);
-    // graphLayout.force("link").links(links);
-    labelLayout.alphaTarget(0).restart();
-    graphLayout.alphaTarget(0.3).restart();
-}
-
-
-// setInterval(() => {
-//   console.log("TACK")
-  
-//                 adjlist = []
-//                 graph.nodes.push(
-//                     {
-//                     id: ("something" + Math.random() ),
-//                     group: 1
-//                     }
-//                 );
-//                 graph.nodes.shift()
-
-//                 graph.nodes.forEach(function(d, i) {
-//                     label.nodes.push({node: d});
-//                     label.nodes.shift()
-
-//                 });
+                // });
                 
-//                 restart()
+                // restart()
 
 
-// }, 3000);
+}, 3000);
 
 </script>
 </html>
