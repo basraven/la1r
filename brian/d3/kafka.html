@@ -78,34 +78,34 @@ producers = [
 
 
 messages = [
-    {
-    "id": "Myriel",
-    "group": 1,
-    "size" : 10,
-    "source" : "topic A",
-    "target" : "producer A"
-},
-{
-    "id": "Napoleon",
-    "group": 1,
-    "size" : 1,
-    "source" : "topic A",
-    "target" : "producer A"
-},
-{
-    "id": "MlleBaptistine",
-    "group": 3,
-    "size" : 1,
-    "source" : "topic A",
-    "target" : "producer A"
-},
-{
-    "id": "MlleBapsdfsfdtistine",
-    "group": 1,
-    "size" : 2,
-    "source" : "topic A",
-    "target" : "producer A"
-    }
+//     {
+//     "id": "Myriel",
+//     "group": 1,
+//     "size" : 10,
+//     "source" : "topic A",
+//     "target" : "producer A"
+// },
+// {
+//     "id": "Napoleon",
+//     "group": 1,
+//     "size" : 1,
+//     "source" : "topic A",
+//     "target" : "producer A"
+// },
+// {
+//     "id": "MlleBaptistine",
+//     "group": 3,
+//     "size" : 1,
+//     "source" : "topic A",
+//     "target" : "producer A"
+// },
+// {
+//     "id": "MlleBapsdfsfdtistine",
+//     "group": 1,
+//     "size" : 2,
+//     "source" : "topic A",
+//     "target" : "producer A"
+//     }
 ];
 
 
@@ -117,6 +117,9 @@ labels = {
     'partitions' : [],
     'producers': []
 };
+
+
+
 
 
 topics.forEach(function(d, i) {
@@ -141,18 +144,33 @@ const refresh = () => {
 
 
     // Get links
-    let messagePresent = false;
     messages.forEach( (m, i) => {
-        
+        let messagePresent = false;
         if(topicLinks.find((l) => {
-            return l.source.id == m.source && l.target.id == m.target
+            return l.source == m.source && l.target == m.target
         })){
-            
-
+            messagePresent = true;
         }
-    })
+        if(!messagePresent){
+            topicLinks.push({
+                "source" : m.source,
+                "target" : m.target,
+                "value" : 1
+            })
+        }
 
-    // message.data(messages)
+    })
+    topicLink.data(topicLinks)
+    nodeLayout.force("link").links(topicLinks);
+
+    message = message.data(messages, function(d) { return d.id;});
+    message = message.enter()
+    .append("circle")
+    .attr("r", 5)
+    .attr("fill", function(d) { return color(d.group); })
+    .merge(message);
+    messageLayout.nodes(messages)
+    messageLayout.alphaTarget(0.3).restart();
 
     // // Apply the general update pattern to the nodes.
     // node = node.data(graph.nodes, function(d) { return d.id;});
@@ -420,6 +438,7 @@ function dragended(d) {
     d.fx = null;
     d.fy = null;
 }
+
 
 refresh();
 
