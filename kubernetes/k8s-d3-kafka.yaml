@@ -1,0 +1,76 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kafka-viz
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-exporter
+  namespace: kafka-viz
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: kafka-exporter
+  template:
+    metadata:
+      labels:
+        task: kafka-viz
+        k8s-app: kafka-exporter
+    spec:
+      containers:
+      - name: kafka-exporter
+        ports:
+        - containerPort: 9308
+        image: danielqsj/kafka-exporter 
+        args: ["--kafka.server=kafka:9092"]
+      #   volumeMounts:
+      #   - name: influx-event-data-volume
+      #     mountPath: /var/lib/kafka-viz
+      #   - name: kafka-viz-init
+      #     mountPath: /docker-entrypoint-initdb.d
+      #   env:
+      #     - name: INFLUXDB_DB
+      #       value: k8s
+      #     - name: INFLUXDB_USER
+      #       value: bas
+      #     - name: INFLUXDB_USER_PASSWORD
+      #       value: Example1
+      # volumes:
+      # - name: kafka-viz-init
+      #   configMap:
+      #     name: kafka-viz-init
+      #     defaultMode: 0755
+      # - name: influx-event-data-volume
+      #   persistentVolumeClaim:
+      #     claimName: influx-event-data-claim
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    task: kafka-exporter
+  name: kafka-exporter
+  namespace: kafka-viz
+spec:
+  ports:
+  - port: 9308
+    targetPort: 9308
+  selector:
+    k8s-app: kafka-exporter
+# ---
+# apiVersion: extensions/v1beta1
+# kind: Ingress
+# metadata:
+#   name: kafka-viz
+#   namespace: event
+# spec:
+#   rules:
+#   - host: kafka-viz.bas
+#     http:
+#       paths:
+#       - path: /
+#         backend:
+#           serviceName: kafka-viz
+#           servicePort: 80
