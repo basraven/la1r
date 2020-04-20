@@ -60,6 +60,8 @@ spec:
         ports:
         - name: kafka
           containerPort: 9092
+        - name: jmx
+          containerPort: 9099
         env:
         - name: ALLOW_PLAINTEXT_LISTENER
           value: "yes"
@@ -69,6 +71,9 @@ spec:
           value: "PLAINTEXT://kafka.event.svc.cluster.local:9092"
         - name: KAFKA_CFG_ZOOKEEPER_CONNECT
           value: "zookeeper.event:2181"
+        - name: JMX_PORT
+          value: "9099"
+          
         # - name: KAFKA_INTER_BROKER_USER
         #   value: "admin"
         # - name: KAFKA_INTER_BROKER_PASSWORD
@@ -102,6 +107,10 @@ spec:
     # targetPort: 9092
     protocol: TCP
     port: 9092
+  - name: jmx
+    # targetPort: 9092
+    protocol: TCP
+    port: 9099
   selector:
     app: kafka
   type: ClusterIP
