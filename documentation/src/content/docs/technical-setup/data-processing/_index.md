@@ -2,6 +2,7 @@
 title: Data Processing
 type: docs
 bookToc: false
+bookCollapseSection : true
 weight: 4
 ---
 # Data Processing
