@@ -44,7 +44,7 @@ Setup of several security concepts which are an integral part of the technical a
 
 ## Technical Architecture principles
 The la1r architecture follows several technical principles which components in its architecture should follow.
-Since this will not capture conceptual principles, a section on conceptual principles is describe [in the capability architecture page](./conceptual-setup)
+Since this will not capture conceptual principles, a section on conceptual principles is describe [in the capability architecture page](./capability-architecture)
 
 1. Only the paranoid survive, apply and practice backup scenarios. - Backup scenarios should not only be implemented as tick in the box for our list of non functional requirements (nfrs), but should also be practiced where possible.
 1. Aim for near horizontal scaling - all services should be able to scale with cluster size. The infrastructure architecture of my current implementation is rather rigid, but the applications on it should be aimed on flexible and horizontally scalable underlying infrastructure.

@@ -31,7 +31,7 @@ To summarize, we identify several conceptual components:
 
 ## Conceptual Architecture Principles
 The la1r architecture followes several conceptual principles which components in its architecture should follow.
-Since this will not capture implementation specific / technical principles, a section on technical principles is describe [in the technical architecture page](./technical-setup)
+Since this will not capture implementation specific / technical principles, a section on technical principles is describe [in the technical architecture page](./technical-architecture)
 
 1. Data is realtime and streaming - Always assume that data, streaming through the la1r infrastructure is in streaming "format". Do not unnecessarily store it, or batch it when realtime streaming solutions can also be applied
 1. Don't assume information share - since an enterprise environment is conceptually simulated, it should also be simulated that (conceptual) teams are not fully aware of all integrations made by other (conceptual) teams. The implications of this is that there is a need for decoupling and formal information definitions. An example of this is the site you're currently reading, but further efforts should be made such as formal separation of layers, environments and data to appropriately conform to this conceptual requirement. 
@@ -43,14 +43,14 @@ Since there needs to be a way of formally converging to an aligned data setup, a
 This event specification will dictate how all events in the structured stream should be shaped.
 Events not conforming to this standard can be disregarded.
 
-[Read more](/docs/conceptual-setup/event-specifications)
+[Read more](/docs/capability-architecture/event-specifications)
 
 <--->
 
 ## Governance Catalogs
 Since we are still "simulating" an enterprise environment, and since my own memory is sub-optimal, appropriate governance catalogs need to be setup to fully capture the IT landscape on several domains.
 
-[Read more](/docs/conceptual-setup/governance-catalogs)
+[Read more](/docs/capability-architecture/governance-catalogs)
 
 <--->
 

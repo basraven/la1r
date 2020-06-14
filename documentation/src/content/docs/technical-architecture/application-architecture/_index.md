@@ -1,7 +1,7 @@
 ---
 title: Application Architecture
 type: docs
-bookToc: true
+bookToc: false
 bookCollapseSection : false
 weight: 4
 ---
