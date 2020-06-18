@@ -1,10 +1,10 @@
 # Governance Catalogs
 Since we are still "simulating" an enterprise environment, and since my own memory is sub-optimal, appropriate governance catalogs need to be setup to fully capture the IT landscape on several domains:
 
-* Application Catalogs - These capture which applications are currently running and are in scope of the la1r environments.
-* Data Catalogs - These capture what important data is used where (in the landscape) and again, if it is not in the data catalog it is not regarded as part of the scope of La1r.
+* [Application Catalog](../../technical-architecture/application-architecture/_index.md) - Capture which applications are currently running and are in scope of the la1r environments.
+* [Data Catalog](../../technical-architecture/data-architecture/_index.md) - Capture what important data is used where (in the landscape) and again, if it is not in the data catalog it is not regarded as part of the scope of La1r.
 
-The concept of governance catalogs ia a reoccurring pattern which large organizations often lack (or at least lack maturity to appropriately apply) in their landscape.
+The concept of governance catalogs is a reoccurring pattern which large organizations often lack (or at least lack maturity to appropriately apply) in their landscape.
 A simple principle of "if it is not in the domain catalog, it doesn't exist" can be regarded in La1r, forcing well-practiced governance.
 
 ## Wider topic of governance
