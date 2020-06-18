@@ -1,4 +1,9 @@
-# Network Architecture
+---
+title: Network Architecture
+type: docs
+bookToc: false
+---
+## Network Architecture
 The network setup is of la1r.com is not a simple one, this due to several reasons:
 
 * Multi-site setup, with servers on different locations, connected either directly or through vpn
@@ -13,10 +18,10 @@ To break down these complexities we can split the network architecture into two 
 1. Technical Layer - ([OSI](https://en.wikipedia.org/wiki/OSI_model#:~:text=The%20Open%20Systems%20Interconnection%20model,underlying%20internal%20structure%20and%20technology) layers 1 - 4)
 2. Data Layer - ([OSI](https://en.wikipedia.org/wiki/OSI_model#:~:text=The%20Open%20Systems%20Interconnection%20model,underlying%20internal%20structure%20and%20technology) layers 5 - 7)
 
-## Technical Layer
+### Technical Layer
 The Technical Layer is structured as follows:
-![](/diagrams/la1r-diagrams-Network%20Arch%20-%20Technical%20Layer.png)
+![](/diagrams/la1r-diagrams-Network%20Arch%20-%20Techical%20Layer.png)
 
-## Data Layer
+### Data Layer
 The Data Layer is structured as follows:
 ![](/diagrams/la1r-diagrams-Network%20Arch%20-%20Data%20Layer.png)
