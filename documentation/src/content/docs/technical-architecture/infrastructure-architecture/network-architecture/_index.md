@@ -15,8 +15,8 @@ To break down these complexities we can split the network architecture into two 
 
 ## Technical Layer
 The Technical Layer is structured as follows:
-![](../../../../../../diagrams/la1r-diagrams-Network%20Arch%20-%20Technical%20Layer.png)
+![](/diagrams/la1r-diagrams-Network%20Arch%20-%20Technical%20Layer.png)
 
 ## Data Layer
 The Data Layer is structured as follows:
-![](../../../../../../diagrams/la1r-diagrams-Network%20Arch%20-%20Data%20Layer.png)
+![](/diagrams/la1r-diagrams-Network%20Arch%20-%20Data%20Layer.png)
