@@ -336,3 +336,12 @@ aside nav,
     padding: $padding-16 * 2 $padding-16;
   }
 }
+
+// Added by Seb
+.book-brand{
+  font-size: 1.75em !important;
+}
+
+.book-brand img{
+  float: right !important;
+}

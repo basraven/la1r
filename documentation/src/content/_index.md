@@ -1,5 +1,5 @@
 ---
-title: Introduction
+title: La1r
 type: docs
 bookToc: false
 ---
@@ -28,7 +28,7 @@ This documentation captures the underlying capabilities, concepts, goals and roa
 <--->
 
 ### Technical Architecture
-All the details on how each of the concepts is implemented can be found here. It will also contain details on the roadmap based on the conceptual roadmap.
+All the details\ on how each of the concepts is implemented can be found here. It will also contain details on the roadmap based on the conceptual roadmap.
 
 [Read more](docs/technical-architecture/_index.md)
 

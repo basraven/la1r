@@ -55,7 +55,7 @@ params:
   BookSection: docs
 
   # (Optional, default false) Show / page in menu with this title
-  HomeTitle : "Introduction"
+  HomeTitle : "La1r"
 
   # Set source repository location.
   # Used for 'Last Modified' and 'Edit this page' links.
@@ -74,3 +74,6 @@ params:
   # (Optional, default true) Enables search function with flexsearch,
   # Index is built on fly, therefore it might slowdown your website.
   BookSearch: true
+
+  # Enable edit page link
+  # BookEditPath: edit/rick/la1r/content 
