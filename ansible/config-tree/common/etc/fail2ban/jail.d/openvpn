@@ -1,0 +1,9 @@
+# Fail2Ban configuration fragment for OpenVPN
+
+[openvpn]
+enabled  = true
+port     = 65111
+protocol = udp
+filter   = openvpn
+logpath  = /var/log/openvpn.log
+maxretry = 5
