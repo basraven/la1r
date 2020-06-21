@@ -11,11 +11,17 @@ For this reason I created this planning page in which I track and prioritize wha
 Feel free to add comments on this through Github!
 
 ## In progress
-
-1. Traefik auth proxy middleware with Authelia
+1. new dns configuration
+1. New network configuration
+1. Prototype based configuration management
 
 ## Planned
-
+1. Jamulus server
+1. GoCD CI/CD for prototype based config management (2 ways)
+1. Kibana log analysis
+1. Fail2ban new filters for ALL services
+1. Traefik auth proxy middleware with Authelia
+1. "View in repo" button for all pages of the la1r documentation. While reading documentation, for example about Ansible, the visitor should be able to view which scripts are currently discussed by clicking a button to the git repository.
 1. Deploy a Kafka bus as structured event bus instead of mqtt
 1. Spark 2.x Cluster in k8s
 1. Streaming analytics pipeline with Spark 2.x and Kafka
@@ -23,11 +29,9 @@ Feel free to add comments on this through Github!
 1. Streaming Facial recognition from images and streaming video
 1. Object recognition (garbage bin outside of our house) combined with garbage collection iCal (https://inzamelkalender.gad.nl/ical/0402200001574396)
 1. Formal managed bare-metal security camera setup
-1. "View in repo" button for all pages of the la1r documentation. While reading documentation, for example about Ansible, the visitor should be able to view which scripts are currently discussed by clicking a button to the git repository.
 1. Refactor Mosquito to [vernemq](https://vernemq.com/)
 
 ## Parked
-
 1. Ceph file system based rook.io or on this guide: https://owncloud.org/news/running-owncloud-in-kubernetes-with-rook-ceph-storage-step-by-step/
 
 ## Completed

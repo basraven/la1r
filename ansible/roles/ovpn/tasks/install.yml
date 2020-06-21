@@ -74,7 +74,7 @@
         - { regexp: '^;?key-direction',     line: 'key-direction 0' }
         - { regexp: '^;?cipher',            line: 'cipher {{ openvpn_cipher }}' }
         - { regexp: '^;?auth',              line: 'auth {{ openvpn_auth }}' }
-        - { regexp: '^;?management',        line: 'management 0.0.0.0 5555' }
+        - { regexp: '^;?management',        line: 'management 0.0.0.0 33555' }
         - { regexp: '^;?user',              line: 'user nobody' }
         - { regexp: '^;?group',             line: 'group nogroup' }
         - { regexp: '^;?port',              line: 'port {{ openvpn_port_expose }} ' }

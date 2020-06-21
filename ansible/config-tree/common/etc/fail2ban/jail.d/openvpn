@@ -2,8 +2,8 @@
 
 [openvpn]
 enabled  = true
-port     = 65111
+port     = 33555
 protocol = udp
 filter   = openvpn
 logpath  = /var/log/openvpn.log
-maxretry = 5
+maxretry = 10

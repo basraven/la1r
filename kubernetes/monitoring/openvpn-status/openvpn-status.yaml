@@ -10,7 +10,7 @@ data:
       "port": 80,
       "bind": "0.0.0.0",
       "servers": [
-        {"id": 0, "name": "Big Raver", "host": "10.8.0.1","man_port": 5555}
+        {"id": 0, "name": "Big Raver", "host": "10.8.0.1","man_port": 33555}
       ],
       "username": "",
       "password": "",
