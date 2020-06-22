@@ -212,7 +212,7 @@ spec:
           - --entrypoints.web.Address=:80
           - --entrypoints.websecure.Address=:443
           - --providers.kubernetescrd
-          - --providers.kubernetescrd.namespaces="online,plusone,facefan"
+          - --providers.kubernetescrd.namespaces=online,plusone
           - --providers.kubernetescrd.labelselector=expose=online
           - --certificatesResolvers.default.acme.httpChallenge=true
           - --certificatesresolvers.default.acme.tlschallenge

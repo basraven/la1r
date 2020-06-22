@@ -38,3 +38,20 @@ spec:
   selector:
     app: status
   type: ClusterIP
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: status-default
+  namespace: default
+  labels:
+    expose: online
+spec:
+  entryPoints:
+    - web
+  routes:
+  - match: Host(`dev.la1r.com`)
+    kind: Rule
+    services:
+    - name: status
+      port: 80
