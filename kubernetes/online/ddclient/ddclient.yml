@@ -1,0 +1,139 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ddclient-config
+  namespace: online
+data:
+  fill-template.sh: |-
+    #/bin/bash
+    echo ${DDNS_PASSWORD} | xargs -n 1 -I {} sed s/\${DDNS_PASSWORD}/{}/ /template/ddclient.conf.template > /config/ddclient.conf    
+
+  ddclient.conf.template: |-
+    ######################################################################
+    ## 
+    ## Define default global variables with lines like:
+    ## 	var=value [, var=value]*
+    ## These values will be used for each following host unless overridden
+    ## with a local variable definition.
+    ##
+    ## Define local variables for one or more hosts with:
+    ## 	var=value [, var=value]* host.and.domain[,host2.and.domain...]
+    ##
+    ## Lines can be continued on the following line by ending the line
+    ## with a \
+    ##
+    ##
+    ## Warning: not all supported routers or dynamic DNS services
+    ##          are mentioned here.
+    ##
+    ######################################################################
+    daemon=150				# check every 300 seconds
+    syslog=yes				# log update msgs to syslog
+    #mail=root				# mail all msgs to root
+    #mail-failure=root			# mail failed update msgs to root
+    pid=/var/run/ddclient/ddclient.pid		# record PID in file.
+    ssl=yes 				# use ssl-support.  Works with
+    # ssl-library
+    # postscript=script			# run script after updating.  The
+    # new IP is added as argument.
+    #
+    #use=watchguard-soho,        fw=192.168.111.1:80	# via Watchguard's SOHO FW
+    #use=netopia-r910,           fw=192.168.111.1:80	# via Netopia R910 FW
+    #use=smc-barricade,          fw=192.168.123.254:80	# via SMC's Barricade FW
+    #use=netgear-rt3xx,          fw=192.168.0.1:80		# via Netgear's internet FW
+    #use=linksys,                fw=192.168.1.1:80		# via Linksys's internet FW
+    #use=maxgate-ugate3x00,      fw=192.168.0.1:80		# via MaxGate's UGATE-3x00  FW
+    #use=elsa-lancom-dsl10,      fw=10.0.0.254:80		# via ELSA LanCom DSL/10 DSL Router
+    #use=elsa-lancom-dsl10-ch01, fw=10.0.0.254:80		# via ELSA LanCom DSL/10 DSL Router
+    #use=elsa-lancom-dsl10-ch02, fw=10.0.0.254:80		# via ELSA LanCom DSL/10 DSL Router
+    #use=alcatel-stp,            fw=10.0.0.138:80           # via Alcatel Speed Touch Pro
+    #use=xsense-aero,            fw=192.168.1.1:80          # via Xsense Aero Router
+    #use=allnet-1298,            fw=192.168.1.1:80          # via AllNet 1298 DSL Router
+    #use=3com-oc-remote812,	     fw=192.168.0.254:80	# via 3com OfficeConnect Remote 812
+    #use=e-tech,                 fw=192.168.1.1:80          # via E-tech Router
+    #use=cayman-3220h,           fw=192.168.0.1:1080        # via Cayman 3220-H DSL Router
+    #
+    #fw-login=admin,             fw-password=XXXXXX		# FW login and password
+    #
+    ## To obtain an IP address from FW status page (using fw-login, fw-password)
+    #use=fw, fw=192.168.1.254/status.htm, fw-skip='IP Address' # found after IP Address
+    #
+    ## To obtain an IP address from Web status page (using the proxy if defined)
+    ## by default, checkip.dyndns.org is used if you use the dyndns protocol.
+    ## Using use=web is enough to get it working.
+    ## WARNING: set deamon at least to 600 seconds if you use checkip or you could
+    ## get banned from their service.
+    #use=web, web=checkip.dyndns.org/, web-skip='IP Address' # found after IP Address
+    #
+    #use=ip,                     ip=127.0.0.1	# via static IP's
+    #use=if,                     if=eth0		# via interfaces
+    use=web					# via web
+    #
+    #protocol=dyndns2				# default protocol
+    #proxy=fasthttp.sympatico.ca:80			# default proxy
+    #server=members.dyndns.org			# default server
+    #server=members.dyndns.org:8245			# default server (bypassing proxies)
+
+    #login=your-login				# default login
+    #password=test					# default password
+    #mx=mx.for.your.host				# default MX
+    #backupmx=yes|no				# host is primary MX?
+    #wildcard=yes|no				# add wildcard CNAME?
+
+    ##
+    ## NameCheap (namecheap.com)
+    ##
+    protocol=namecheap,				\
+    server=dynamicdns.park-your-domain.com,	\
+    login=la1r.com,			\
+    password=${DDNS_PASSWORD} \
+    vpn,status
+    
+    
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ddclient
+  namespace: online
+  labels:
+    app: ddclient
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ddclient
+  template:
+    metadata:
+      labels:
+        app: ddclient
+    spec:
+      volumes:
+        - name: fill-template-volume
+          configMap:
+            name: ddclient-config
+            items:
+            - key: fill-template.sh
+              path: fill-template.sh
+            defaultMode: 0744
+        - name: ddclient-config-volume
+          configMap:
+            name: ddclient-config
+            items:
+            - key: ddclient.conf.template
+              path: ddclient.conf.template
+      containers:
+      - name: ddclient
+        image: linuxserver/ddclient
+        volumeMounts:
+          - name: ddclient-config-volume
+            mountPath: "/template"
+          - name: fill-template-volume
+            mountPath: "/config/custom-cont-init.d"
+        env:
+          - name: DDNS_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: ddnspasword
+                key: DDNS_PASSWORD
