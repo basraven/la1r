@@ -1,0 +1,72 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: status
+  namespace: online
+  labels:
+    app: status
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: status
+  template:
+    metadata:
+      labels:
+        app: status
+    spec:
+      containers:
+      - name: status
+        image: nginxdemos/hello
+        ports:
+        - name: http
+          containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: status
+  name: status
+  namespace: online
+spec:
+  ports:
+  - name: http
+    targetPort: 80
+    port: 80
+  selector:
+    app: status
+  type: ClusterIP
+# ---
+# apiVersion: networking.k8s.io/v1
+# kind: NetworkPolicy
+# metadata:
+#   name: status-deny-egress
+#   namespace: online
+# spec:
+#   podSelector:
+#     matchLabels:
+#       app: status
+#   policyTypes:
+#   - Egress
+#   egress: []
+# ---
+
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: status-tls
+  namespace: online
+  labels:
+    expose: "online"
+spec:
+  entryPoints:
+    - web
+  routes:
+  - match: Host(`status.la1r.com`)
+    kind: Rule
+    services:
+    - name: status
+      port: 80

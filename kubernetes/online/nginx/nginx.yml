@@ -23,6 +23,12 @@ data:
         if ($http_host = "cloud.basraven.nl") {
           set $my_host "cloud.bas";
         }
+        
+        # if ($http_host = "status.la1r.com") {
+        #   proxy_bind      $server_addr;
+        #   proxy_pass      http://status.online:80;
+        #   proxy_set_header Host $my_host;
+        # }
           
         # http://cloud.bas/index.php/s/bYCzAd5tmpcjmnR
         # pass requests for dynamic content to rails/turbogears/zope, et al
@@ -161,7 +167,7 @@ spec:
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
-  name: ingressroutetls
+  name: nginx-tls
   namespace: online
   labels:
     expose: "online"

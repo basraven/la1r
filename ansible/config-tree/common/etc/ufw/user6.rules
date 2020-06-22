@@ -29,16 +29,9 @@
 ### tuple ### allow tcp 443 ::/0 any ::/0 in
 -A ufw6-user-input -p tcp --dport 443 -j ACCEPT
 
-### tuple ### allow tcp 80 ::/0 any ::/0 in
--A ufw6-user-input -p tcp --dport 80 -j ACCEPT
-
 ### tuple ### allow any 33443 ::/0 any ::/0 in
 -A ufw6-user-input -p tcp --dport 33443 -j ACCEPT
 -A ufw6-user-input -p udp --dport 33443 -j ACCEPT
-
-### tuple ### allow any 11443 ::/0 any ::/0 in
--A ufw6-user-input -p tcp --dport 11443 -j ACCEPT
--A ufw6-user-input -p udp --dport 11443 -j ACCEPT
 
 ### tuple ### allow any 33555 ::/0 any ::/0 in
 -A ufw6-user-input -p tcp --dport 33555 -j ACCEPT
@@ -80,9 +73,21 @@
 -A ufw6-user-input -p tcp --dport 6443 -j ACCEPT
 -A ufw6-user-input -p udp --dport 6443 -j ACCEPT
 
-### tuple ### allow any 22124 ::/0 any ::/0 in
--A ufw6-user-input -p tcp --dport 22124 -j ACCEPT
--A ufw6-user-input -p udp --dport 22124 -j ACCEPT
+### tuple ### allow any 22280 ::/0 any ::/0 in
+-A ufw6-user-input -p tcp --dport 22280 -j ACCEPT
+-A ufw6-user-input -p udp --dport 22280 -j ACCEPT
+
+### tuple ### allow any 22443 ::/0 any ::/0 in
+-A ufw6-user-input -p tcp --dport 22443 -j ACCEPT
+-A ufw6-user-input -p udp --dport 22443 -j ACCEPT
+
+### tuple ### allow any 51443 ::/0 any ::/0 in
+-A ufw6-user-input -p tcp --dport 51443 -j ACCEPT
+-A ufw6-user-input -p udp --dport 51443 -j ACCEPT
+
+### tuple ### allow any 52124 ::/0 any ::/0 in
+-A ufw6-user-input -p tcp --dport 52124 -j ACCEPT
+-A ufw6-user-input -p udp --dport 52124 -j ACCEPT
 
 ### END RULES ###
 

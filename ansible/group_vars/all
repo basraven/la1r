@@ -28,7 +28,7 @@ openvpn_port: 33443
 openvpn_port_expose: 33443
 openvpn_proto: udp
 
-openvpn_server_url: "vpn.lair.com"
+openvpn_server_url: "vpn.la1r.com"
 
 openvpn_user: ""
 openvpn_password: ""

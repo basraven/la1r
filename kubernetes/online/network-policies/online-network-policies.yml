@@ -1,0 +1,25 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: egress-allow-apps-to-access-traefik
+  namespace:  online
+spec:
+  podSelector: 
+    matchLabels:
+      app: status
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          app: online-traefik-ingress-lb
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny
+  namespace: online
+spec:
+  podSelector: {}
+  policyTypes:
+  - Egress

@@ -11,16 +11,18 @@ For this reason I created this planning page in which I track and prioritize wha
 Feel free to add comments on this through Github!
 
 ## In progress
-1. new dns configuration
 1. New network configuration
 1. Prototype based configuration management
+1. Dynamic DNS on new DNS with https://hub.docker.com/r/linuxserver/ddclient
 
 ## Planned
 1. Jamulus server
+1. Implement status.la1r.com
 1. GoCD CI/CD for prototype based config management (2 ways)
 1. Kibana log analysis
 1. Fail2ban new filters for ALL services
 1. Traefik auth proxy middleware with Authelia
+1. MetalLB tests
 1. "View in repo" button for all pages of the la1r documentation. While reading documentation, for example about Ansible, the visitor should be able to view which scripts are currently discussed by clicking a button to the git repository.
 1. Deploy a Kafka bus as structured event bus instead of mqtt
 1. Spark 2.x Cluster in k8s
@@ -36,6 +38,7 @@ Feel free to add comments on this through Github!
 
 ## Completed
 
+1. new dns configuration
 1. Refactor backup facilities to use compression and dual backup (weekly and bi-daily)
 1. OpenLDAP implementation
 1. Formal service bus definition and separation of raw data and defined event data in MQTT
