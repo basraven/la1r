@@ -1,0 +1,81 @@
+# ---
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: jamulus
+#   namespace: online
+#   labels:
+#     app: jamulus
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: jamulus
+#   template:
+#     metadata:
+#       labels:
+#         app: jamulus
+#     spec:
+#       containers:
+#       - name: jamulus
+#         securityContext:
+#             allowPrivilegeEscalation: true
+#             privileged: true
+#             capabilities:
+#               add:
+#                 - NET_ADMIN
+#         image: grundic/jamulus
+#         ports:
+#         - name: udp
+#           containerPort: 32124
+            # protocol: udp
+#           hostPort: 32124
+#         command: ["/bin/sh"]
+#         args: ["-c", "sleep 1000000"]
+#           # - --nogui
+#           # - --server
+#           # - -e
+#           # - --jamulusallgenres.fischvolk.de:22224
+#           # - --servername
+#           # - sebserver
+#           # - --port
+#           # - "80"
+#           # - --numchannels
+#           # - "16"
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   labels:
+#     app: jamulus
+#   name: jamulus
+#   namespace: online
+# spec:
+#   ports:
+#   - name: http
+#     targetPort: 80
+#     port: 80
+      # protocol: udp
+#     nodePort: 32124
+#   selector:
+#     app: jamulus
+#   type: NodePort
+
+
+# ---
+# apiVersion: traefik.containo.us/v1alpha1
+# kind: IngressRoute
+# metadata:
+#   name: jamulus-http
+#   namespace: online
+#   labels:
+#     expose: online
+# spec:
+#   entryPoints:
+#     - web
+#   routes:
+#   - match: Host(`jamulus.la1r.com`)
+#     kind: Rule
+#     services:
+#     - name: jamulus
+#       port: 80

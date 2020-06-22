@@ -2,3 +2,6 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: online
+  labels:
+    expose: online
+    plusone: access
