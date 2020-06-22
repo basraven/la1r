@@ -57,10 +57,10 @@ spec:
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
-  name: status-tls
+  name: status-http
   namespace: online
   labels:
-    expose: "online"
+    expose: online
 spec:
   entryPoints:
     - web
