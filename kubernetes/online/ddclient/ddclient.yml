@@ -2,12 +2,13 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: ddclient-config
+  name: ddclient-la1r-config
   namespace: online
 data:
   fill-template.sh: |-
     #/bin/bash
     echo ${DDNS_PASSWORD} | xargs -n 1 -I {} sed s/\${DDNS_PASSWORD}/{}/ /template/ddclient.conf.template > /config/ddclient.conf    
+    nohup /bin/bash -c "sleep 5 ; echo '' >> /config/ddclient.conf" &
 
   ddclient.conf.template: |-
     ######################################################################
@@ -88,46 +89,46 @@ data:
     server=dynamicdns.park-your-domain.com,	\
     login=la1r.com,			\
     password=${DDNS_PASSWORD} \
-    vpn,status
+    vpn,status,jamulus,plusone,plusone-vpn
     
     
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ddclient
+  name: ddclient-la1r
   namespace: online
   labels:
-    app: ddclient
+    app: ddclient-la1r
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: ddclient
+      app: ddclient-la1r
   template:
     metadata:
       labels:
-        app: ddclient
+        app: ddclient-la1r
     spec:
       volumes:
         - name: fill-template-volume
           configMap:
-            name: ddclient-config
+            name: ddclient-la1r-config
             items:
             - key: fill-template.sh
               path: fill-template.sh
             defaultMode: 0744
-        - name: ddclient-config-volume
+        - name: ddclient-la1r-config-volume
           configMap:
-            name: ddclient-config
+            name: ddclient-la1r-config
             items:
             - key: ddclient.conf.template
               path: ddclient.conf.template
       containers:
-      - name: ddclient
+      - name: ddclient-la1r
         image: linuxserver/ddclient
         volumeMounts:
-          - name: ddclient-config-volume
+          - name: ddclient-la1r-config-volume
             mountPath: "/template"
           - name: fill-template-volume
             mountPath: "/config/custom-cont-init.d"
