@@ -13,25 +13,23 @@ Feel free to add comments on this through Github!
 ## In progress
 1. New network configuration
 1. Prototype based configuration management
-1. Dynamic DNS on new DNS with https://hub.docker.com/r/linuxserver/ddclient
 
 ## Planned
-1. Jamulus server
-1. Implement status.la1r.com
-1. GoCD CI/CD for prototype based config management (2 ways)
-1. Kibana log analysis
-1. Fail2ban new filters for ALL services
-1. Traefik auth proxy middleware with Authelia
-1. MetalLB tests
-1. "View in repo" button for all pages of the la1r documentation. While reading documentation, for example about Ansible, the visitor should be able to view which scripts are currently discussed by clicking a button to the git repository.
-1. Deploy a Kafka bus as structured event bus instead of mqtt
-1. Spark 2.x Cluster in k8s
-1. Streaming analytics pipeline with Spark 2.x and Kafka
-1. An event data dashboard for kafka
-1. Streaming Facial recognition from images and streaming video
-1. Object recognition (garbage bin outside of our house) combined with garbage collection iCal (https://inzamelkalender.gad.nl/ical/0402200001574396)
-1. Formal managed bare-metal security camera setup
-1. Refactor Mosquito to [vernemq](https://vernemq.com/)
+1. Grafana backup script with: https://github.com/ysde/grafana-backup-tool
+2. GoCD CI/CD for prototype based config management (2 ways)
+3. Kibana log analysis
+4. Fail2ban new filters for ALL services
+5. Traefik auth proxy middleware with Authelia
+6. MetalLB tests
+7. "View in repo" button for all pages of the la1r documentation. While reading documentation, for example about Ansible, the visitor should be able to view which scripts are currently discussed by clicking a button to the git repository.
+8. Deploy a Kafka bus as structured event bus instead of mqtt
+9.  Spark 2.x Cluster in k8s
+10. Streaming analytics pipeline with Spark 2.x and Kafka
+11. An event data dashboard for kafka
+12. Streaming Facial recognition from images and streaming video
+13. Object recognition (garbage bin outside of our house) combined with garbage collection iCal (https://inzamelkalender.gad.nl/ical/0402200001574396)
+14. Formal managed bare-metal security camera setup
+15. Refactor Mosquito to [vernemq](https://vernemq.com/)
 
 ## Parked
 1. Ceph file system based rook.io or on this guide: https://owncloud.org/news/running-owncloud-in-kubernetes-with-rook-ceph-storage-step-by-step/

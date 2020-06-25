@@ -16,6 +16,8 @@
       - ansible_architecture.find('arm') != -1
     - name: create service
       template: src=node_exporter.service.j2 dest=/etc/systemd/system/node_exporter.service mode=0755
+    - name: create config
+      template: src=sysconfig.node_exporter.j2 dest=/etc/sysconfig/node_exporter mode=0755
     - name: install node exporter service
       shell: "mkdir -p /etc/sysconfig && touch /etc/sysconfig/node_exporter && systemctl daemon-reload && systemctl enable node_exporter && systemctl start node_exporter"
       args:
