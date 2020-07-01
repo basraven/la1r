@@ -10,9 +10,27 @@
 #port=5353
 
 address=/bas/10.8.0.1
+address=/thuis/192.168.2.15
+#address=/cloud.bas/192.168.2.15
+
+#server=pihole.bas
+#server=10.8.0.1#32453
 server=1.1.1.1
-no-resolv
+
+#strict-order
+# server=localhost:32453
+listen-address=10.8.0.1,192.168.2.15
+# listen-address=10.8.0.1
+
+
+#no-resolv
 except-interface=lo
+
+#no-resolv
+bind-interfaces
+# interface=lo
+# interface=tun0
+#server=127.0.0.53
 
 # The following two options make you a better netizen, since they
 # tell dnsmasq to filter out queries which the public DNS cannot
@@ -126,7 +144,7 @@ except-interface=lo
 # want dnsmasq to really bind only the interfaces it is listening on,
 # uncomment this option. About the only time you may need this is when
 # running another nameserver on the same machine.
-bind-interfaces
+# bind-interfaces
 
 # If you don't want dnsmasq to read /etc/hosts, uncomment the
 # following line.
