@@ -23,8 +23,8 @@ RUN while read i ; \
         done < /usr/share/jenkins/plugins
 
 #Update the username and password
-ENV JENKINS_USER admin
-ENV JENKINS_PASS mystrongpw
+# ENV JENKINS_USER admin
+# ENV JENKINS_PASS mystrongpw
 
 #id_rsa.pub file will be saved at /root/.ssh/
 RUN ssh-keygen -f /root/.ssh/id_rsa -t rsa -N ''

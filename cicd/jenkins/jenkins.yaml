@@ -2,9 +2,6 @@ jenkins:
   agentProtocols:
   - "JNLP4-connect"
   - "Ping"
-  authorizationStrategy:
-    loggedInUsersCanDoAnything:
-      allowAnonymousRead: false
   crumbIssuer:
     standard:
       excludeClientIPFromCrumb: false
@@ -21,19 +18,8 @@ jenkins:
   projectNamingStrategy: "standard"
   quietPeriod: 5
   remotingSecurity:
-    enabled: true
+    enabled: false
   scmCheckoutRetryCount: 0
-  securityRealm:
-    local:
-      allowsSignup: false
-      enableCaptcha: false
-      users:
-      - id: "admin"
-        name: "admin"
-        properties:
-        - "apiToken"
-        - "myView"
-        - "timezone"
   slaveAgentPort: 50000
   updateCenter:
     sites:
@@ -54,31 +40,10 @@ unclassified:
   buildDiscarders:
     configuredBuildDiscarders:
     - "jobBuildDiscarder"
-  buildStepOperation:
-    enabled: false
   defaultFolderConfiguration:
     healthMetrics:
     - worstChildHealthMetric:
         recursive: true
-  extendedEmailPublisher:
-    adminRequiredForTemplateTesting: false
-    allowUnregisteredEnabled: false
-    charset: "UTF-8"
-    debugMode: false
-    defaultBody: |-
-      $PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STATUS:
-
-      Check console output at $BUILD_URL to view the results.
-    defaultSubject: "$PROJECT_NAME - Build # $BUILD_NUMBER - $BUILD_STATUS!"
-    maxAttachmentSize: -1
-    maxAttachmentSizeMb: 0
-    precedenceBulk: false
-    useSsl: false
-    watchingEnabled: false
-  gitHubConfiguration:
-    apiRateLimitChecker: ThrottleForNormalize
-  gitHubPluginConfig:
-    hookUrl: "http://localhost:8080/github-webhook/"
   gitSCM:
     createAccountBasedOnEmail: false
     showEntireCommitSummaryInChanges: false
@@ -89,15 +54,15 @@ unclassified:
     charset: "UTF-8"
     useSsl: false
     useTls: false
-  mavenModuleSet:
-    localRepository: "default"
   pollSCM:
     pollingThreadCount: 10
-  timestamperConfig:
-    allPipelines: false
-    elapsedTimeFormat: "'<b>'HH:mm:ss.S'</b> '"
-    systemTimeFormat: "'<b>'HH:mm:ss'</b> '"
 tool:
+  ansibleInstallation:
+    installations:
+    - name: "Default"
+  dockerTool:
+    installations:
+    - name: "Default"
   git:
     installations:
     - home: "git"
