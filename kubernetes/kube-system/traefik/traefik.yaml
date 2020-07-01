@@ -70,7 +70,7 @@ spec:
               - key: kubernetes.io/hostname
                 operator: In
                 values:
-                - big-raver
+                - linux-wayne
       # Even run this on a Pi  
       tolerations:
         - key: "pi"

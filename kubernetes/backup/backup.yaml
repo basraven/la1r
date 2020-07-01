@@ -198,7 +198,7 @@ spec:
                   - key: kubernetes.io/hostname
                     operator: In
                     values:
-                    - big-raver
+                    - linux-wayne
           restartPolicy: Never    
           volumes:
           - name: nfs-backup-volume
@@ -289,7 +289,7 @@ spec:
                   - key: kubernetes.io/hostname
                     operator: In
                     values:
-                    - big-raver
+                    - linux-wayne
           restartPolicy: Never    
           volumes:
           - name: nfs-backup-volume

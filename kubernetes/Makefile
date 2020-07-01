@@ -30,11 +30,11 @@ dashboard:
 
 .PHONY: config 
 config: 
-	- kubectl taint nodes big-raver node-role.kubernetes.io/master-
+	- kubectl taint nodes linux-wayne node-role.kubernetes.io/master-
 	# - kubectl taint nodes raspi1 pi=true:NoSchedule
 	# - kubectl taint nodes raspi2 pi=true:NoSchedule
 	# - kubectl taint nodes carrot carrot=true:NoSchedule
-	# - kubectl label nodes big-raver disktype=hdd
+	# - kubectl label nodes linux-wayne disktype=hdd
 	# - kubectl label nodes raspi1 disktype=hdd
 	# - kubectl label nodes raspi2 disktype=hdd
 	# - kubectl label node raspi1 node-role.kubernetes.io/worker=worker

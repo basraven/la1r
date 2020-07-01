@@ -22,7 +22,7 @@ spec:
         - key: kubernetes.io/hostname
           operator: In
           values:
-          - big-raver
+          - linux-wayne
 ---
 kind: PersistentVolume
 apiVersion: v1
@@ -47,7 +47,7 @@ spec:
         - key: kubernetes.io/hostname
           operator: In
           values:
-          - big-raver
+          - linux-wayne
 ---
 kind: PersistentVolume
 apiVersion: v1
@@ -72,7 +72,7 @@ spec:
         - key: kubernetes.io/hostname
           operator: In
           values:
-          - big-raver
+          - linux-wayne
 ---
 kind: PersistentVolume
 apiVersion: v1
@@ -97,7 +97,7 @@ spec:
         - key: kubernetes.io/hostname
           operator: In
           values:
-          - big-raver
+          - linux-wayne
 ---
 kind: PersistentVolume
 apiVersion: v1
@@ -122,7 +122,7 @@ spec:
         - key: kubernetes.io/hostname
           operator: In
           values:
-          - big-raver
+          - linux-wayne
 ---
 kind: PersistentVolume
 apiVersion: v1
@@ -147,4 +147,4 @@ spec:
         - key: kubernetes.io/hostname
           operator: In
           values:
-          - big-raver
+          - linux-wayne

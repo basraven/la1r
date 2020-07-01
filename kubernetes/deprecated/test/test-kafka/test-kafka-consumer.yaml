@@ -55,7 +55,7 @@ spec:
               - key: kubernetes.io/hostname
                 operator: In
                 values:
-                - big-raver
+                - linux-wayne
       volumes:
         - name: init-script-volume
           configMap:
