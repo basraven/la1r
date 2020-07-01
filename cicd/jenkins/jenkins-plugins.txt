@@ -1,0 +1,9 @@
+workflow-aggregator
+git
+ssh
+ssh-agent
+docker-plugin
+docker-build-step
+dockerhub-notification
+oauth-credentials
+jenkins-credentials
