@@ -15,3 +15,5 @@ ansible
 docker-plugin
 docker-workflow
 dashboard-view
+project-stats-plugin
+greenballs

@@ -1,5 +1,6 @@
 <?xml version='1.1' encoding='UTF-8'?>
 <com.cloudbees.hudson.plugins.folder.Folder plugin="cloudbees-folder@6.14">
+  <actions/>
   <description></description>
   <displayName>ansible</displayName>
   <properties>
@@ -7,6 +8,23 @@
       <dockerLabel></dockerLabel>
       <registry plugin="docker-commons@1.17"/>
     </org.jenkinsci.plugins.docker.workflow.declarative.FolderConfig>
+    <com.cloudbees.hudson.plugins.folder.properties.FolderCredentialsProvider_-FolderCredentialsProperty>
+      <domainCredentialsMap class="hudson.util.CopyOnWriteMap$Hash">
+        <entry>
+          <com.cloudbees.plugins.credentials.domains.Domain plugin="credentials@2.3.11">
+            <specifications/>
+          </com.cloudbees.plugins.credentials.domains.Domain>
+          <java.util.concurrent.CopyOnWriteArrayList>
+            <com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl plugin="credentials@2.3.11">
+              <id>b96bf1c5-749b-41f3-9930-e10afc129498</id>
+              <description>vagrant default</description>
+              <username>vagrant</username>
+              <password>{AQAAABAAAAAQy/UJtZxfNfr4rwNuEvqyY8vplYMHlIhwC/Sor8r3vXI=}</password>
+            </com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl>
+          </java.util.concurrent.CopyOnWriteArrayList>
+        </entry>
+      </domainCredentialsMap>
+    </com.cloudbees.hudson.plugins.folder.properties.FolderCredentialsProvider_-FolderCredentialsProperty>
   </properties>
   <folderViews class="com.cloudbees.hudson.plugins.folder.views.DefaultFolderViewHolder">
     <views>

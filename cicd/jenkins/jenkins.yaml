@@ -26,6 +26,16 @@ jenkins:
     - id: "default"
       url: "https://updates.jenkins.io/update-center.json"
   views:
+  - dashboard:
+      columns:
+      - "status"
+      - "weather"
+      - "jobName"
+      - "lastSuccess"
+      - "lastFailure"
+      - "lastDuration"
+      - "buildButton"
+      name: "Sebdashboard"
   - all:
       name: "all"
   viewsTabBar: "standard"
@@ -59,11 +69,8 @@ unclassified:
 tool:
   ansibleInstallation:
     installations:
-    - name: "Default"
-  dockerTool:
-    installations:
-    - name: "Default"
+    - name: "ansible"
   git:
     installations:
     - home: "git"
-      name: "Default"
+      name: "git"
