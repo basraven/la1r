@@ -17,7 +17,11 @@ RUN apt-get update && \
    apt-get -y install docker-ce \
    sshpass
 
-# install jenkins plugins
+# Install Ansible
+RUN apt-get install ansible -y
+
+
+# Install jenkins plugins
 COPY ./jenkins-plugins.txt /usr/share/jenkins/plugins
 RUN while read i ; \
                 do /usr/local/bin/install-plugins.sh $i ; \

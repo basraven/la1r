@@ -1,5 +1,7 @@
-[raspis]
-linux-wayne ansible_host=10.8.0.1
+[matrix]
+test-ubuntu ansible_host=192.168.1.195
+test-centos ansible_host=192.168.1.196
+# linux-wayne ansible_host=10.8.0.1
 # raspi2 ansible_host=10.8.0.10
 # carrot ansible_host=10.8.0.26
 

@@ -1,45 +1,39 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
-
-
 Vagrant.configure("2") do |config|
+  config.vm.provision "shell", inline: "echo Hello"
+  config.vm.provider "hyperv" do |v|
+    v.memory = 1024
+    v.cpus = 2
+  end
+  config.vm.network "private_network", bridge: "Standardswitch"
   
-  config.vm.define "ubuntu" do |web|
-    web.vm.box = "packer/.builds/ubuntu-20.04.hyperv.box"
-    
-    # Remove attempts to use samba
-    config.vm.synced_folder '.', '/vagrant', disabled: true
-    
-    config.vm.provider "hyperv" do |v|
-      v.memory = 2056
-      v.cpus = 2
-    end
-    if Vagrant.has_plugin?("vagrant-vbguest")
-      config.vbguest.auto_update = false
-    end
-    config.vm.network "public_network", bridge: "Standardswitch"
-    config.vm.provision "shell", inline: <<-SHELL
-      apt-get update
-      apt-get install -y apache2
+  
+  
+  
+  # Ubuntu 20.04
+  config.vm.define "ubuntu" do |ubuntu|
+    ubuntu.vm.box = "generic/ubuntu2004"    
+    # ubuntu.ssh.username = 'vagrant'
+    # ubuntu.ssh.password = 'vagrant'
+    ubuntu.vm.provision "shell", inline: <<-SHELL
+    apt-get update
+    apt-get install -y net-tools
     SHELL
   end
-  # config.vm.define "centos" do |web|
-  #   web.vm.box = "packer/.builds/ubuntu-20.04.hyperv.box"
-    
-  #   # Remove attempts to use samba
-  #   config.vm.synced_folder '.', '/vagrant', disabled: true
-
-  #   config.vm.provider "hyperv" do |v|
-  #     v.memory = 2056
-  #     v.cpus = 2
-  #   end
-  #   if Vagrant.has_plugin?("vagrant-vbguest")
-  #     config.vbguest.auto_update = false
-  #   end
-  #   config.vm.network "public_network", bridge: "Standardswitch"
-  #   config.vm.provision "shell", inline: <<-SHELL
-  #     apt-get update
-  #     apt-get install -y apache2
-  #   SHELL
-  # end
+  
+  # Centos 8
+  config.vm.define "centos" do |centos|
+    centos.vm.box = "generic/centos8"
+    # centos.vm.provision "shell", inline: <<-SHELL
+    # sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+    # systemctl restart sshd.service
+    # SHELL
+  end
+  
+  # config.ssh.insert_key = true
+  config.vm.provision "shell", inline: "sed \
+  -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+  systemctl restart sshd.service"
+  
 end

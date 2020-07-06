@@ -46,13 +46,14 @@
     stage(&apos;Preparation&apos;) { // for display purposes
         // Get code from a GitHub repository
         checkout([$class: &apos;GitSCM&apos;, branches: [[name: &apos;*/rick&apos;]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: &apos;CloneOption&apos;, noTags: true, reference: &apos;&apos;, shallow: true], [$class: &apos;SubmoduleOption&apos;, disableSubmodules: false, parentCredentials: false, recursiveSubmodules: true, reference: &apos;&apos;, shallow: true, trackingSubmodules: false]], submoduleCfg: [], userRemoteConfigs: [[url: &apos;https://github.com/basraven/la1r.git&apos;]]])
-        sh label: &apos;create hosts&apos;, script: &apos;printf &quot;[la1r]\n $os $hosts&quot; &gt; ./hosts&apos;
+        sh label: &apos;create hosts&apos;, script: &apos;printf &quot;[la1r]\n$os $hosts&quot; &gt; ./hosts&apos;
+        
+        
+        sh label: &apos;test ssh&apos;, script: &apos;sshpass -p &quot;vagrant&quot; ssh -o &quot;StrictHostKeyChecking=no&quot;  $default_ssh_user@$hosts \&apos;ls -altr\&apos;&apos;
+        sh label: &apos;ls local&apos;, script: &apos;ls -altr&apos;
     }
     stage(&apos;Build&apos;) {
-        sh label: &apos;test ssh&apos;, script: &apos;sshpass -p &quot;vagrant&quot; ssh -o &quot;StrictHostKeyChecking=no&quot;  $default_ssh_user@$hosts \&apos;ls -altr\&apos;&apos;
-    }
-    stage(&apos;ansible&apos;) {
-        ansiblePlaybook colorized: true, credentialsId: &apos;7fbbb33e-7a3d-4381-bca2-62bb9018a0dd&apos;, disableHostKeyChecking: true, installation: &apos;ansible&apos;, inventory: &apos;./hosts&apos;, playbook: &apos;./la1r/cicd/ansible/la1r.yml&apos;
+        ansiblePlaybook colorized: true, credentialsId: &apos;7fbbb33e-7a3d-4381-bca2-62bb9018a0dd&apos;, disableHostKeyChecking: true, installation: &apos;ansible&apos;, inventory: &apos;./hosts&apos;, playbook: &apos;./cicd/ansible/la1r.yml&apos;
     }
     // stage(&apos;Results&apos;) {
     //     junit &apos;**/target/surefire-reports/TEST-*.xml&apos;
