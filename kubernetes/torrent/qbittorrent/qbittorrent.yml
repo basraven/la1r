@@ -23,40 +23,45 @@ metadata:
 data:
   set-goose.sh: |-
     #!/bin/sh
-    connect_openvpn(){
-      echo "#>>>>> in connection function"
-      openvpn /etc/openvpn/cert1.conf &
-      sleep 10
-      if curl -s --head  --request GET www.google.com | grep "200 OK" > /dev/null ; then
-          echo "#>>>>> Online with cert1"
-          return 0
-      else
-          echo "#>>>>> Offline with cert1"
-          openvpn /etc/openvpn/cert2.conf &
-          sleep 10
-          if curl -s --head  --request GET www.google.com | grep "200 OK" > /dev/null ; then
-              echo "#>>>>> Online with cert2"
-              return 0
-          else
-              echo "#>>>>> Offline with cert2"
-              openvpn /etc/openvpn/cert3.conf &
-              sleep 10
-              if curl -s --head  --request GET www.google.com | grep "200 OK" > /dev/null ; then
-                  echo "#>>>>> Online with cert3"
-                  return 0
-              else
-                  echo "#>>>>> Offline with cert3"
-              fi
-          fi
-      fi
-    }
+    
+    # connect_openvpn(){
+    #   echo "#>>>>> in connection function"
+    #   nohup openvpn /etc/openvpn/cert1.conf &
+    #   sleep 10
+    #   if curl -s --head  --request GET www.google.com | grep "200 OK" > /dev/null ; then
+    #       echo "#>>>>> Online with cert1"
+    #       return 0
+    #   else
+    #       echo "#>>>>> Offline with cert1"
+    #       openvpn /etc/openvpn/cert2.conf &
+    #       sleep 10
+    #       if curl -s --head  --request GET www.google.com | grep "200 OK" > /dev/null ; then
+    #           echo "#>>>>> Online with cert2"
+    #           return 0
+    #       else
+    #           echo "#>>>>> Offline with cert2"
+    #           openvpn /etc/openvpn/cert3.conf &
+    #           sleep 10
+    #           if curl -s --head  --request GET www.google.com | grep "200 OK" > /dev/null ; then
+    #               echo "#>>>>> Online with cert3"
+    #               return 0
+    #           else
+    #               echo "#>>>>> Offline with cert3"
+    #           fi
+    #       fi
+    #   fi
+    # }
     
     set -eu
-    echo "[OPENVPN] Creating GooseVPN connection"
     apt-get update
     apt-get install openvpn -y
     # echo AUTOSTART="all" >> /etc/default/openvpn
-    sleep 10 ; connect_openvpn & 
+    nohup openvpn /etc/openvpn/cert1.conf &
+    echo "sleeping 30 secs..."
+    sleep 30
+    echo "Finished sleeping 30 secs"
+    ip route del 0.0.0.0/1 | true # TODO: TEMPFIX
+    echo "[OPENVPN] Creating GooseVPN connection"
     /init
   qBittorrent.conf: |-
     [AutoRun]
