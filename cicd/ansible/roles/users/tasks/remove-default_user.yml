@@ -9,4 +9,6 @@
     name: "{{ default_user }}"
     state: absent
   when: default_user_delete
+  notify:
+  - "restart ssh"
   

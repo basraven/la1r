@@ -1,7 +1,7 @@
 ---
 - debug: var=ansible_user
-- include: define-os.yml
 - include: enable-sudo.yml
 - include: add-target_user.yml
 - include: swap-uid.yml
+- include: change-root-password.yml
 - include: remove-default_user.yml

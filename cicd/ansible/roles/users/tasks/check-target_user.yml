@@ -1,0 +1,15 @@
+---
+- name: Check target_user / Check User
+  become: yes
+  shell: | 
+    if [ `id -u {{ target_user_name }} 2>/dev/null || echo -1` -ge 0 ]; then 
+      echo true
+    fi
+  register: target_user_exists_output
+
+- name: Check target_user / Set Variable
+  set_fact:
+    target_user_exists: "{{ target_user_exists_output.stdout }}"
+
+- name: Check target_user / Print Target User Exists
+  debug: var=target_user_exists

@@ -20,7 +20,7 @@
   set_fact:
     default_user: pi
     default_user_pw: raspberry
-    default_user_delete: true
+    default_user_delete: false
 
 - name: "Define OS / Print default username and password"
   debug: var=default_user,default_user_pw
