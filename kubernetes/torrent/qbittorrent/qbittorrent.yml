@@ -57,9 +57,9 @@ data:
     apt-get install openvpn -y
     # echo AUTOSTART="all" >> /etc/default/openvpn
     nohup openvpn /etc/openvpn/cert1.conf &
-    echo "sleeping 30 secs..."
-    sleep 30
-    echo "Finished sleeping 30 secs"
+    echo "sleeping 15 secs..."
+    sleep 15
+    echo "Finished sleeping 15 secs"
     ip route del 0.0.0.0/1 | true # TODO: TEMPFIX
     echo "[OPENVPN] Creating GooseVPN connection"
     /init

@@ -1,39 +1,36 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
+
 Vagrant.configure("2") do |config|
   config.vm.provision "shell", inline: "echo Hello"
   config.vm.provider "hyperv" do |v|
     v.memory = 1024
     v.cpus = 2
   end
-  config.vm.network "private_network", bridge: "Standardswitch"
-  
-  
-  
-  
+
   # Ubuntu 20.04
+  #  vagrant destroy --force ubuntu ; vagrant up ubuntu --provider=hyperv
   config.vm.define "ubuntu" do |ubuntu|
+    ubuntu.vm.network "private_network", bridge: "Standardswitch"
     ubuntu.vm.box = "generic/ubuntu2004"    
-    # ubuntu.ssh.username = 'vagrant'
-    # ubuntu.ssh.password = 'vagrant'
     ubuntu.vm.provision "shell", inline: <<-SHELL
-    apt-get update
-    apt-get install -y net-tools
+    sudo apt-get update
+    sudo apt-get install -y net-tools 
+    
+    sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+    systemctl restart sshd.service
+
     SHELL
   end
   
   # Centos 8
+  #  vagrant destroy --force centos ; vagrant up centos --provider=hyperv
   config.vm.define "centos" do |centos|
     centos.vm.box = "generic/centos8"
-    # centos.vm.provision "shell", inline: <<-SHELL
-    # sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
-    # systemctl restart sshd.service
-    # SHELL
+    centos.vm.network "private_network", bridge: "Standardswitch"
+    centos.vm.provision "shell", inline: <<-SHELL
+    sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+    systemctl restart sshd.service
+    SHELL
   end
-  
-  # config.ssh.insert_key = true
-  config.vm.provision "shell", inline: "sed \
-  -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
-  systemctl restart sshd.service"
-  
 end
