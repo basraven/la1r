@@ -3,31 +3,32 @@
 
 Vagrant.configure("2") do |config|
   config.vm.provision "shell", inline: "echo Hello"
+  config.vm.synced_folder ".", "/vagrant", disabled: true
   config.vm.provider "hyperv" do |v|
     v.memory = 1024
     v.cpus = 2
   end
+  config.vm.network "public_network"
 
   
   # Centos 8
   #  vagrant destroy --force centos ; vagrant up centos --provider=hyperv
   config.vm.define "centos" do |centos|
     centos.vm.box = "generic/centos8"
-    centos.vm.network "private_network", bridge: "Standardswitch"
     centos.vm.provision "shell", inline: <<-SHELL
     hostnamectl set-hostname "centos8"
     sudo yum update
     sudo yum install avahi -y
+    systemctl start avahi-daemon start
     
     sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
     systemctl restart sshd.service
     SHELL
   end
-  
+
   # Ubuntu 20.04
   #  vagrant destroy --force ubuntu ; vagrant up ubuntu --provider=hyperv
   config.vm.define "ubuntu" do |ubuntu|
-    ubuntu.vm.network "private_network", bridge: "Standardswitch"
     ubuntu.vm.box = "generic/ubuntu2004"    
     ubuntu.vm.provision "shell", inline: <<-SHELL
     sudo apt-get update

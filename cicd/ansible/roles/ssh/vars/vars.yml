@@ -1,0 +1,16 @@
+ssh_start_users:
+  matrix: 
+    ubuntu: 
+      username: vagrant
+      password: vagrant
+    centos: 
+      username: vagrant
+      password: vagrant
+  metal:
+    ubuntu:
+      username: root
+      password: ubuntu
+    centos:
+      username: root
+      password: centos
+    

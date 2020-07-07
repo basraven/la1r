@@ -1,3 +1,4 @@
 ---
+- hosts: matrix
 - roles:
-  - nfs
+  - ssh
