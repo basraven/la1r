@@ -1,0 +1,12 @@
+---
+- name: Remove Default User / Kill all default user processes
+  become: yes
+  shell: "killall -u {{ default_user }}"
+  args:
+    executable: /bin/bash
+- name: Remove Default User / Delete
+  user:
+    name: "{{ default_user }}"
+    state: absent
+  when: default_user_delete
+  

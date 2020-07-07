@@ -1,0 +1,26 @@
+---
+- name: "Define OS / lsb-release backfill for CentOS"
+  package:
+    name: redhat-lsb-core
+    state: present
+  when: ansible_facts['distribution'] == "CentOS"
+
+- name: "Define OS / Print lsb-release"
+  debug: var=ansible_lsb.id
+
+- name: "Define OS / Detect vagrant machines"
+  when: '"vagrant" in group_names'
+  set_fact:
+    default_user: vagrant
+    default_user_pw: vagrant
+    default_user_delete: false
+
+- name: "Define OS / Detect qemu machines"
+  when: '"qemu" in group_names'
+  set_fact:
+    default_user: pi
+    default_user_pw: raspberry
+    default_user_delete: true
+
+- name: "Define OS / Print default username and password"
+  debug: var=default_user,default_user_pw

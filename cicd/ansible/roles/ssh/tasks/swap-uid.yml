@@ -1,0 +1,64 @@
+---
+- name: Swap UID / Switch to "{{target_user_name}}" user
+  set_fact:
+    ansible_ssh_user: "{{target_user_name}}"
+    ansible_user: "{{target_user_name}}"
+- name: Swap UID / reset ssh connection to allow user changes to affect 'current login user'
+  meta: reset_connection
+
+- name: Swap UID / Kill all default user processes
+  become: yes
+  shell: "killall -u {{ default_user }}"
+  args:
+    executable: /bin/bash
+
+- name: Swap UID / Change user id of default user user, that's my spot!
+  become: yes
+  user:
+    name: "{{ default_user }}"
+    non_unique: yes
+    uid: 1036
+
+- name: Swap UID / Switch to default user user
+  set_fact:
+    ansible_ssh_user: "{{ default_user }}"
+    ansible_ssh_pass: "{{ default_user_pw }}"
+    ansible_user: "{{ default_user }}"
+- name: Swap UID / reset ssh connection to allow user changes to affect 'current login user'
+  meta: reset_connection
+  
+- name: Swap UID / Kill all {{target_user_name}} processes
+  become: yes
+  shell: "killall -u {{target_user_name}}"
+  args:
+    executable: /bin/bash
+
+- name: Swap UID / Change user id of {{target_user_name}}
+  become: yes
+  user:
+    name: "{{target_user_name}}"
+    non_unique: yes
+    uid: 1001
+
+- name: Swap UID / Switch to "{{target_user_name}}" user
+  set_fact:
+    ansible_ssh_user: "{{target_user_name}}"
+    ansible_user: "{{target_user_name}}"
+- name: Swap UID / reset ssh connection to allow user changes to affect 'current login user'
+  meta: reset_connection
+
+# Log UID
+- name: Swap UID / Get default user UID
+  command: "id -u {{ default_user }}"
+  changed_when: false
+  become: false
+  register: default_id_on_host
+- name: Swap UID / Get {{target_user_name}} UID
+  command: id -u "{{target_user_name}}"
+  changed_when: false
+  become: false
+  register: target_id_on_host
+- name: Swap UID / show default_id_on_host
+  debug: var=default_id_on_host.stdout
+- name: Swap UID / show user_id_on_host
+  debug: var=target_id_on_host.stdout

@@ -1,0 +1,19 @@
+---
+- name: Enable Sudo / Install sudo
+  package:
+    name: sudo
+    state: present
+
+- name: Enable Sudo / Add include for sudoers.d folder
+  lineinfile:
+    path: /etc/sudoers
+    state: present
+    line: '#includedir /etc/sudoers.d'
+
+- name: Enable Sudo / Create sudoers.d folder
+  file:
+    path: /etc/sudoers.d
+    state: directory
+    owner: root
+    group: root
+    mode: 0755

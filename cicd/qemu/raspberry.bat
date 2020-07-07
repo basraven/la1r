@@ -8,5 +8,5 @@
 -append "root=/dev/sda2 rootfstype=ext4 rw" ^
 -drive format=raw,file=2020-05-27-raspios-buster-lite-armhf.img ^
 -net nic ^
--net user,hostfwd=tcp::5022-:22 ^
+-net user,hostfwd=tcp::52022-:22 ^
 -no-reboot
