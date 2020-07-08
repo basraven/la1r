@@ -14,6 +14,7 @@
       content: "{{ target_user_name }}  ALL=(ALL)  NOPASSWD: ALL"
 
 - name: Add Target User /  Set authorized key took from file for "{{ target_user_name }}"
+  become: yes
   authorized_key:
     user: "{{ target_user_name }}"
     key: "{{ lookup('file', '/credentials/ssh/id_rsa.pub') }}"

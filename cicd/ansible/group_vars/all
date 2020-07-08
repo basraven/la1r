@@ -1,15 +1,14 @@
 ---
 target_user_name: basraven
+credentials_dir: /credentials
 
 ######### Above means refactored
 
 
 
 
-credentials_dir: /credentials
 home_dir: /home/{{ansible_ssh_user}}
 home_dir_target_user: /home/{{ansible_ssh_user}}
-ansible_become: True
 dhcp_interface: "eth0"
 dhcp_router: 192.168.2.254
 

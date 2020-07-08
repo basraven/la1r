@@ -1,5 +1,6 @@
 ---
 - name: "Define OS / lsb-release backfill for CentOS"
+  become: yes
   package:
     name: redhat-lsb-core
     state: present
@@ -11,6 +12,7 @@
 - name: "Define OS / Detect vagrant machines"
   when: '"vagrant" in group_names'
   set_fact:
+    machine_type: virtual
     default_user: vagrant
     default_user_pw: vagrant
     default_user_delete: false
@@ -18,6 +20,7 @@
 - name: "Define OS / Detect qemu machines"
   when: '"qemu" in group_names'
   set_fact:
+    machine_type: virtual
     default_user: pi
     default_user_pw: raspberry
     default_user_delete: false

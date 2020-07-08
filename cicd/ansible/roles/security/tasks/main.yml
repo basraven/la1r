@@ -1,6 +1,5 @@
 ---
-- include: check-target_user.yml
-  notify:
-    - "ssh restart"
-- include: transform-user.yml
-  # when: target_user_exists != true
+- include: fail2ban.yml
+- include: ufw.yml
+- include: ssh.yml
+  when: machine_type == "metal"

@@ -1,6 +1,11 @@
 ---
-- include: check-target_user.yml
-  notify:
-    - "ssh restart"
-- include: transform-user.yml
-  # when: target_user_exists != true
+- name: Fail2Ban / Install Fail2Ban
+  become: yes
+  package:
+    name: fail2ban
+    state: present
+- name: Fail2Ban / Copy jail file
+  become: yes
+  shell: 'cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local'
+  args:
+    executable: /bin/bash

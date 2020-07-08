@@ -1,16 +1,19 @@
 ---
 - name: Enable Sudo / Install sudo
+  become: yes
   package:
     name: sudo
     state: present
 
 - name: Enable Sudo / Add include for sudoers.d folder
+  become: yes
   lineinfile:
     path: /etc/sudoers
     state: present
     line: '#includedir /etc/sudoers.d'
 
 - name: Enable Sudo / Create sudoers.d folder
+  become: yes
   file:
     path: /etc/sudoers.d
     state: directory

@@ -1,6 +1,27 @@
 ---
-- include: check-target_user.yml
-  notify:
-    - "ssh restart"
-- include: transform-user.yml
-  # when: target_user_exists != true
+- name: UFW / Install UFW
+  become: yes
+  package:
+    name: ufw
+    state: present
+- name: UFW / Allow SSH
+  become: yes
+  ufw:
+    rule: allow
+    port: ssh
+    proto: tcp
+- name: UFW / Enable OpenSSH
+  become: yes
+  ufw:
+    rule: allow
+    port: OpenSSH
+- name: UFW / Rate Limit Ssh
+  become: yes
+  ufw:
+    rule: limit
+    port: ssh
+    proto: tcp
+- name: UFW / Enable UFW
+  become: yes
+  ufw:
+    state: enabled
