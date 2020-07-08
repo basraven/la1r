@@ -9,6 +9,29 @@
 # leaving only DHCP and/or TFTP.
 #port=5353
 
+address=/bas/10.8.0.1
+address=/thuis/192.168.2.15
+#address=/cloud.bas/192.168.2.15
+
+#server=pihole.bas
+#server=10.8.0.1#32453
+server=1.1.1.1
+
+#strict-order
+# server=localhost:32453
+listen-address=10.8.0.1,192.168.2.15
+# listen-address=10.8.0.1
+
+
+#no-resolv
+except-interface=lo
+
+#no-resolv
+bind-interfaces
+# interface=lo
+# interface=tun0
+#server=127.0.0.53
+
 # The following two options make you a better netizen, since they
 # tell dnsmasq to filter out queries which the public DNS cannot
 # answer, and which load the servers (especially the root servers)
@@ -664,18 +687,3 @@
 
 # Include all files in a directory which end in .conf
 #conf-dir=/etc/dnsmasq.d/,*.conf
-
-
-## By Seb
-address=/bas/10.8.0.1
-server=1.1.1.1
-listen-address=10.8.0.1
-except-interface=lo
-bind-interfaces
-
-# strict-order
-# no-resolv
-# server=10.8.0.1#32453
-# server=127.0.0.53
-# interface=lo
-# interface=tun0

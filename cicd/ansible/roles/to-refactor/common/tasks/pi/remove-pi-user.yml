@@ -1,9 +1,0 @@
----
-- hosts: all
-  remote_user: "{{ target_user }}"
-  tasks:
-    - name: Remove the user 'pi'
-      user:
-        name: pi
-        state: absent
-        remove: yes

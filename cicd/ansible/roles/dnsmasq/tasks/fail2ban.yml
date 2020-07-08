@@ -1,0 +1,7 @@
+---
+# TODO: fill with some jails
+- name: Dnsmasq / Install Fail2Ban
+  become: yes
+  package:
+    name: fail2ban
+    state: present

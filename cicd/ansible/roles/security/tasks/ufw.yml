@@ -4,24 +4,28 @@
   package:
     name: ufw
     state: present
-- name: UFW / Allow SSH
-  become: yes
-  ufw:
-    rule: allow
-    port: ssh
-    proto: tcp
-- name: UFW / Enable OpenSSH
-  become: yes
-  ufw:
-    rule: allow
-    port: OpenSSH
-- name: UFW / Rate Limit Ssh
-  become: yes
-  ufw:
-    rule: limit
-    port: ssh
-    proto: tcp
 - name: UFW / Enable UFW
   become: yes
   ufw:
     state: enabled
+  when: '"qemu" not in group_names' # QEMU raspberry doesn't like this for some reason, not wasting time on this now, good luck future Seb (:
+- name: UFW / Allow SSH
+  become: yes
+  ufw:
+    rule: allow
+    port: "22"
+    proto: tcp
+# - name: UFW / Rate Limit Ssh
+#   become: yes
+#   ufw:
+#     rule: limit
+#     port: "22"
+#     proto: tcp
+
+# FIXME: should be working..?
+# - name: UFW / Enable service
+#   service:
+#     name: ufw
+#     enabled: yes
+#     state: started
+#   when: '"qemu" not in group_names' # QEMU raspberry doesn't like this for some reason, not wasting time on this now, good luck future Seb (:

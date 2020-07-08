@@ -9,3 +9,9 @@
   shell: 'cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local'
   args:
     executable: /bin/bash
+- name: Fail2Ban / Enable service
+  become: yes
+  service:
+    name: fail2ban
+    enabled: yes
+    state: started

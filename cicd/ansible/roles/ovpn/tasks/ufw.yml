@@ -1,0 +1,18 @@
+---
+- name: Dnsmasq / Install UFW
+  become: yes
+  package:
+    name: ufw
+    state: present
+- name: Dnsmasq / UFW passthrough for tun0 interface
+  become: yes
+  ufw:
+    rule: allow
+    direction: out
+    interface: tun0
+- name: Dnsmasq / Allow in UFW passthrough for tun0 interface
+  become: yes
+  ufw:
+    rule: allow
+    direction: in
+    interface: tun0

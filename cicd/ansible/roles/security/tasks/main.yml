@@ -2,4 +2,4 @@
 - include: fail2ban.yml
 - include: ufw.yml
 - include: ssh.yml
-  when: machine_type == "metal"
+  when: baremetal

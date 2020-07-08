@@ -1,6 +1,8 @@
 ---
 - hosts: all
   roles:
+  - toolbox
   - os
   - users
   - security
+  - dnsmasq

@@ -1,0 +1,22 @@
+---
+- name: Dnsmasq / Install dnsmasq
+  become: yes
+  package:
+    name: dnsmasq
+    state: present
+- name: Dnsmasq / Place config
+  become: yes
+  template:
+    src: "../templates/dnsmasq.conf.j2"
+    dest: "/etc/dnsmasq.conf"
+    mode: "0755"
+- name: Dnsmasq / Update /etc/hosts
+  become: yes
+  lineinfile:
+    dest=/etc/hosts
+    regexp='^10.8.0.1'
+    line="10.8.0.1 *.bas"
+    state=present
+    backup=yes
+  notify:
+    - restart dnsmasq

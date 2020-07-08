@@ -1,0 +1,30 @@
+---
+- name: Dnsmasq / Install UFW
+  become: yes
+  package:
+    name: ufw
+    state: present
+- name: Dnsmasq / Let UFW allow port 53 udp
+  become: yes
+  ufw:
+    rule: allow
+    port: "53"
+    proto: udp
+- name: Dnsmasq / Let UFW allow port 53 tcp
+  become: yes
+  ufw:
+    rule: allow
+    port: "53"
+    proto: tcp
+- name: Dnsmasq / UFW passthrough for tun0 interface
+  become: yes
+  ufw:
+    rule: allow
+    direction: out
+    interface: tun0
+- name: Dnsmasq / Allow in UFW passthrough for tun0 interface
+  become: yes
+  ufw:
+    rule: allow
+    direction: in
+    interface: tun0
