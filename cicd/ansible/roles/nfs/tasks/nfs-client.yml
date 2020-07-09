@@ -1,9 +1,9 @@
 ---
 - name: Nfs Client / Touch /etc/idmapd.conf file
+  become: yes
   file:
     path: /etc/idmapd.conf
     state: touch
-    recurse: yes
 - name: Nfs Client / Edit /etc/idmapd.conf
   become: yes
   lineinfile:
@@ -14,10 +14,10 @@
     - { regexp: '^Nobody-User',  line: 'Nobody-User = backup' }
     - { regexp: '^Nobody-Group', line: 'Nobody-Group = backup' }
 - name: Nfs Client / Touch /etc/fstab file
+  become: yes
   file:
     path: /etc/fstab
     state: touch
-    recurse: yes
 - name: Nfs Client/  Edit /etc/fstab
   become: yes
   lineinfile:

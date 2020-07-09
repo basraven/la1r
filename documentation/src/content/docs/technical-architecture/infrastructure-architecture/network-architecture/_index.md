@@ -23,6 +23,15 @@ The Technical Layer is structured as follows:
 
 ![](/images/la1r-diagrams-Network%20Arch%20-%20Technical%20Layer.png)
 
+
+### Network with WeaveWorks
+Initially the decision was made to use flannel as network provider, since this is a pretty standard choice for many k8s implementations. Unfortunately this gave several networking, performance and upgrading issues over time, especially with our multi cpu architects environment. After a tool selection process weave works came out best because:
+
+* Substantial performance and stability improvements
+* Capable of complex network segregation which flannel was not able to do
+* Easy to setup, even if several sources on the way point out the opposite
+* Bonus: Weave works supplies a fancy and comprehensive dashboard of your entire network
+
 ### Data Layer
 The Data Layer is structured as follows:
 

@@ -1,5 +1,4 @@
 ---
 - include: node_exporter.yml
   tags:
-    - metrics
     - node_exporter
