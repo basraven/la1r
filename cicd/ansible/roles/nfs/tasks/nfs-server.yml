@@ -2,11 +2,11 @@
 - name: Nfs Server / Set export
   become: yes
   lineinfile:
-    dest=/etc/exports
-    regexp="^{{ nfs_backup_folder_path }}"
-    line="{{ nfs_backup_folder_path }} *(rw,async,no_subtree_check,anonuid=1040,anongid=1040)"
-    state=present
-    backup=yes
+    dest: /etc/exports
+    regexp: "^{{ nfs_backup_folder_path }}"
+    line: "{{ nfs_backup_folder_path }} *(rw,async,no_subtree_check,anonuid=1040,anongid=1040)"
+    state: present
+    backup: yes
 
 - name: Nfs Server / Unmask nfs-common
   become: yes
@@ -16,7 +16,10 @@
 
 - name: Nfs Server / Restart system services
   become: yes
-  service: name={{item}} enabled=yes state=restarted
+  service: 
+    name: "{{item}}"
+    enabled: yes
+    state: restarted
   with_items:
       - nfs-server 
       - rpcbind

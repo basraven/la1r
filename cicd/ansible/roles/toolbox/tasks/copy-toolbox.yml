@@ -10,6 +10,7 @@
     path: /toolbox
     state: directory
     mode: '0755'
+    recurse: yes
 - name: Toolbox / Copy templates to /toolbox
   become: yes
   template:

@@ -11,9 +11,10 @@
 - name: Install Samba Server / Make sure folder exists
   become: yes
   file:
-    path: "/etc/samba/"
+    path: /etc/samba/
     state: directory
     mode: "0777"
+    recurse: yes
 
 - name: Install Samba Server / smb config
   become: yes

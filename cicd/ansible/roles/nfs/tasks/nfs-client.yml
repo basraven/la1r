@@ -1,23 +1,33 @@
 ---
-  - name: Nfs Client / Edit /etc/idmapd.conf
-    become: yes
-    lineinfile:
-      dest: "/etc/idmapd.conf"
-      regexp: "{{ item.regexp }}"
-      line: "{{ item.line }}"
-    with_items:
-      - { regexp: '^Nobody-User',  line: 'Nobody-User = backup' }
-      - { regexp: '^Nobody-Group', line: 'Nobody-Group = backup' }
-  - name: Nfs Client/  Edit /etc/fstab
-    become: yes
-    lineinfile:
-      dest: "/etc/fstab"
-      regexp: "{{ item.regexp }}"
-      line: "{{ item.line }}"
-    with_items:
-      - { regexp: "^{{ nfs_server_address }}:{{ nfs_backup_folder_path }}",  line: "{{ nfs_server_address }}:{{ nfs_backup_folder_path }} {{ nfs_backup_folder_path }} nfs rw 0 0' " }
-  - name: Nfs Client / Reload /etc/fstab
-    become: yes
-    shell: mount -a
-    args:
-      executable: /bin/bash
+- name: Nfs Client / Touch /etc/idmapd.conf file
+  file:
+    path: /etc/idmapd.conf
+    state: touch
+    recurse: yes
+- name: Nfs Client / Edit /etc/idmapd.conf
+  become: yes
+  lineinfile:
+    dest: "/etc/idmapd.conf"
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+  with_items:
+    - { regexp: '^Nobody-User',  line: 'Nobody-User = backup' }
+    - { regexp: '^Nobody-Group', line: 'Nobody-Group = backup' }
+- name: Nfs Client / Touch /etc/fstab file
+  file:
+    path: /etc/fstab
+    state: touch
+    recurse: yes
+- name: Nfs Client/  Edit /etc/fstab
+  become: yes
+  lineinfile:
+    dest: "/etc/fstab"
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+  with_items:
+    - { regexp: "^{{ nfs_server_address }}:{{ nfs_backup_folder_path }}",  line: "{{ nfs_server_address }}:{{ nfs_backup_folder_path }} {{ nfs_backup_folder_path }} nfs rw 0 0' " }
+- name: Nfs Client / Reload /etc/fstab
+  become: yes
+  shell: mount -a
+  args:
+    executable: /bin/bash

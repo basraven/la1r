@@ -1,0 +1,8 @@
+---
+- include: ufw.yml
+  tags: 
+    - openvpn-server
+- include: install-openvpn.yml
+  tags:
+    - openvpn-server  
+

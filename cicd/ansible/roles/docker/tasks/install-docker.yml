@@ -1,18 +1,31 @@
 ---
-- name: Install Docker / Install needed containerd.io for CentOS
+
+# CentOS
+- name: Install Docker / Add docker-ce to package repo for CentOS and install --no-best version (older containerd.io versioned)
   become: yes
-  package:
-    name: containerd.io
-    state: present
+  shell: |
+    dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo
+    dnf install --nobest docker-ce
+  args:
+    executable: /bin/bash
   when: ansible_facts['distribution'] == "CentOS"
 
+- name: Install Docker / Disable firewalld for CentOS, we are using ufw
+  become: yes
+  firewalld:
+    state: disabled
+  when: ansible_facts['distribution'] == "CentOS"
 
-- name: Install Docker / Install docker
+# Non CentOS
+- name: Install Docker / Install docker-ce for non CentOS
   become: yes
   shell:  'curl -sSL get.docker.com | CHANNEL=test sh' # We use test build, following channels available: nightly, test, stable
   args:
     executable: /bin/bash
+  when: ansible_facts['distribution'] != "CentOS"
 
+
+# Common
 - name: Add {{ target_user_name }} to docker group
   become: yes
   user:
@@ -27,15 +40,3 @@
     enabled: yes
     state: started
 
-
-  
-# VERY OLD:
-  # when:
-  #   - ansible_architecture.find('arm') != -1
-# - name: "Install docker on non-arm"
-#   shell:  'curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ansible_distribution_release}} stable" && apt-get update && apt-get install docker-ce && usermod {{ target_user_name }} -aG docker && newgrp docker'
-#   args:
-#     executable: /bin/bash
-#   when:
-#     - ansible_architecture.find('arm') == -1
-  

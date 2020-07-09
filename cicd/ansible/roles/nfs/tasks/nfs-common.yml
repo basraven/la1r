@@ -2,7 +2,9 @@
 # TODO: use pretty mapping here
 - name: Nfs Common / Check if packages are installed non CentOS
   become: yes
-  package: name={{item}} state=present
+  package:
+    name: "{{ item }}"
+    state: present
   with_items:
       - nfs-kernel-server 
       - nfs-common
@@ -11,7 +13,9 @@
 
 - name: Nfs Common / Check if packages are installed CentOS
   become: yes
-  package: name={{item}} state=present
+  package: 
+    name: "{{ item }}"
+    state: present
   with_items:
       - nfs-utils
       - rpcbind

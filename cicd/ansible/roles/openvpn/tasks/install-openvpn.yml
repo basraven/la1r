@@ -1,0 +1,22 @@
+---
+- name: Install Openvpn / Install Package
+  become: yes
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - openvpn
+    - easy-rsa
+- name: Install Openvpn / UFW passthrough for tun0 interface
+  become: yes
+  ufw:
+    rule: allow
+    direction: out
+    interface: tun0
+- name: Install Openvpn / Allow in UFW passthrough for tun0 interface
+  become: yes
+  ufw:
+    rule: allow
+    direction: in
+    interface: tun0
+
