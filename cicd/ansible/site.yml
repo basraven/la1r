@@ -9,3 +9,4 @@
   - nfs
   - samba
   - docker
+  - prometheus_node_exporter

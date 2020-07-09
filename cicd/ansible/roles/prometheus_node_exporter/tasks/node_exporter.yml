@@ -1,0 +1,33 @@
+---
+- name: Node_exporter / Install node_exporter for AMD64
+  become: yes
+  shell: "wget https://github.com/prometheus/node_exporter/releases/download/v0.18.1/node_exporter-0.18.1.linux-amd64.tar.gz && tar xvfz node_exporter-0.18.1.linux-amd64.tar.gz && cp node_exporter-0.18.1.linux-amd64/node_exporter /usr/sbin/"
+  args:
+      executable: /bin/bash
+  when:
+  - ansible_architecture.find('arm') == -1
+- name: Node_exporter / Install node_exporter for ARM7 (Raspberry Pi)
+  become: yes
+  shell: "wget https://github.com/prometheus/node_exporter/releases/download/v0.18.1/node_exporter-0.18.1.linux-armv7.tar.gz && tar xvfz node_exporter-0.18.1.linux-armv7.tar.gz && cp node_exporter-0.18.1.linux-armv7/node_exporter /usr/sbin/"
+  args:
+      executable: /bin/bash
+  when:
+  - ansible_architecture.find('arm') != -1
+- name: Node_exporter / Create service
+  become: yes
+  template:
+    src: node_exporter.service.j2
+    dest: /etc/systemd/system/node_exporter.service
+    mode: "0755"
+- name: Node_exporter / Create config
+  become: yes
+  template:
+    src: sysconfig.node_exporter.j2
+    dest: "/etc/sysconfig/node_exporter"
+    mode: "0755"
+- name: Node_exporter / Install node exporter service
+  become: yes
+  service:
+    name: node_exporter
+    enabled: yes
+    state: reloaded
