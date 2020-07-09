@@ -1,5 +1,18 @@
 ---
+- include: update.yml
+  tags: 
+    - initial
+    - update
 - include: fail2ban.yml
+  tags: 
+    - initial
+    - security
 - include: ufw.yml
+  tags: 
+    - initial
+    - security
 - include: ssh.yml
+  tags: 
+    - initial
+    - security
   when: baremetal

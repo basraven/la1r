@@ -1,27 +1,4 @@
 ---
-- name: Toolbox / Clean /toolbox directory
-  become: yes
-  file:
-    state: absent
-    path: "/toolbox/*"
-- name: Toolbox / Creating /toolbox directory
-  become: yes
-  file:
-    path: /toolbox
-    state: directory
-    mode: '0755'
-- name: Toolbox / Copy templates to /toolbox
-  become: yes
-  template:
-    src: "{{ item }}"
-    dest: /toolbox/{{ item | basename | regex_replace('\.j2$', '') }}
-  with_fileglob:
-    - ../templates/*
-
-- name: Toolbox / Copy files to /toolbox
-  become: yes
-  file:
-    src: "{{ item }}"
-    dest: /toolbox/{{ item | basename }}
-  with_fileglob:
-    - ../templates/*
+- include: copy-toolbox.yml
+  tags:
+    - initial

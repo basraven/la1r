@@ -1,0 +1,41 @@
+---
+- name: Install Docker / Install needed containerd.io for CentOS
+  become: yes
+  package:
+    name: containerd.io
+    state: present
+  when: ansible_facts['distribution'] == "CentOS"
+
+
+- name: Install Docker / Install docker
+  become: yes
+  shell:  'curl -sSL get.docker.com | CHANNEL=test sh' # We use test build, following channels available: nightly, test, stable
+  args:
+    executable: /bin/bash
+
+- name: Add {{ target_user_name }} to docker group
+  become: yes
+  user:
+    name: "{{ target_user_name }}"
+    groups: docker
+    append: yes
+
+- name: Start service docker, if not started
+  become: yes
+  service:
+    name: docker
+    enabled: yes
+    state: started
+
+
+  
+# VERY OLD:
+  # when:
+  #   - ansible_architecture.find('arm') != -1
+# - name: "Install docker on non-arm"
+#   shell:  'curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add - && add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ansible_distribution_release}} stable" && apt-get update && apt-get install docker-ce && usermod {{ target_user_name }} -aG docker && newgrp docker'
+#   args:
+#     executable: /bin/bash
+#   when:
+#     - ansible_architecture.find('arm') == -1
+  

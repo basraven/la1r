@@ -1,0 +1,14 @@
+---
+- name: Update / Update yum
+  become: yes
+  shell:  'yum update -y'
+  args:
+    executable: /bin/bash
+  when: ansible_facts['distribution'] == "CentOS"
+
+- name: Update / Update apt
+  become: yes
+  shell:  'apt-get update -y'
+  args:
+    executable: /bin/bash
+  when: ansible_os_family == 'Debian'

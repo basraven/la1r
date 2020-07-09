@@ -3,7 +3,7 @@ test-ubuntu ansible_port=22    ansible_user=vagrant  ansible_ssh_pass=vagrant   
 test-centos ansible_port=22    ansible_user=vagrant  ansible_ssh_pass=vagrant   ansible_host=192.168.125.140
 
 [qemu]
-test-raspi  ansible_port=5022  ansible_user=pi       ansible_ssh_pass=raspberry ansible_host=192.168.1.234
+# test-raspi  ansible_port=5022  ansible_user=pi       ansible_ssh_pass=raspberry ansible_host=192.168.1.234
 # linux-wayne ansible_host=10.8.0.1
 # raspi2 ansible_host=10.8.0.10
 # ali-bel ansible_host=10.8.0.10

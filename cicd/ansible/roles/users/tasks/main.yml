@@ -2,5 +2,9 @@
 - include: check-target_user.yml
   notify:
     - "ssh restart"
+  tags: 
+    - initial
 - include: transform-user.yml
-  # when: target_user_exists != true
+  tags: 
+    - initial
+  when: target_user_exists != true
