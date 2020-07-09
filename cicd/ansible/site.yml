@@ -6,3 +6,5 @@
   - users
   - security
   - dnsmasq
+  - nfs
+  - samba

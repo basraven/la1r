@@ -1,0 +1,3 @@
+---
+- include: install-samba-server.yml
+  tags: samba-server

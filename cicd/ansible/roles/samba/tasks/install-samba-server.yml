@@ -1,0 +1,49 @@
+---
+- name: Install Samba Server /  Check if packages are installed
+  become: yes
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - samba-common
+    - samba
+
+- name: Install Samba Server / Make sure folder exists
+  become: yes
+  file:
+    path: "/etc/samba/"
+    state: directory
+    mode: "0777"
+
+- name: Install Samba Server / smb config
+  become: yes
+  template:
+    src: smb.conf.j2
+    dest: /etc/samba/smb.conf
+    mode: "0755"
+
+- name: Install Samba Server / Include samba credentials
+  include_vars:
+    file: "{{credentials_dir}}/samba/samba-credentials.yaml"
+
+- name: Install Samba Server / set Samba passwords for each user
+  become: yes
+  shell: "printf '{{ item.passwd }}\n{{ item.passwd }}\n' | smbpasswd -a {{ item.name }}"
+  with_items:
+  - "{{ samba_users }}"
+
+- name: Install Samba Server / Restart service smbd non CentOS
+  become: yes
+  service:
+    name: smbd
+    state: restarted
+    enabled: yes
+  when: ansible_facts['distribution'] != "CentOS"
+
+- name: Install Samba Server / Restart service smb CentOS
+  become: yes
+  service:
+    name: smb
+    state: restarted
+    enabled: yes
+  when: ansible_facts['distribution'] == "CentOS"

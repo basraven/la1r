@@ -1,5 +1,4 @@
 ---
-- debug: var=ansible_user
 - include: enable-sudo.yml
 - include: add-target_user.yml
 - include: swap-uid.yml

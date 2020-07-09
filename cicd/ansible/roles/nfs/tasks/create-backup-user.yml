@@ -1,0 +1,23 @@
+---
+- name: Create Backup User / Add backup group with guid 1040
+  become: yes
+  group:
+    name: backup
+    state: present
+    gid: 1040
+    non_unique: yes
+- name: Create Backup User / Add the user backup with a specific uid and a primary group of 'backup'
+  become: yes
+  user:
+    name: backup
+    shell: /bin/bash
+    home: /home/backup
+    groups: backup
+    uid: 1040
+    append: yes
+- name: Create Backup User / Set authorized key took from file
+  become: yes
+  authorized_key:
+    user: backup
+    key: "{{ lookup('file', '/credentials/ssh/backup/id_rsa.pub') }}"
+    state: present

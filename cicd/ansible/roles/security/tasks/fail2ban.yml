@@ -4,11 +4,13 @@
   package:
     name: fail2ban
     state: present
+
 - name: Fail2Ban / Copy jail file
   become: yes
   shell: 'cp /etc/fail2ban/jail.conf /etc/fail2ban/jail.local'
   args:
     executable: /bin/bash
+
 - name: Fail2Ban / Enable service
   become: yes
   service:
