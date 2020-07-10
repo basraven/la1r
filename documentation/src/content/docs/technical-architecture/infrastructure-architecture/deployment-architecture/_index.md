@@ -32,6 +32,11 @@ The following tags are used in Ansible:
   * Requires ```---extra-vars "openvpn-user=someusername"```
 * openvpn-server        - Install openvpn server and creates new CA
 * node_exporter         - Install prometheus_node_exporter
+* kubernetes-server     - Install Kubernetes
+* init-kubernetes       - Run kubeadm init
+* join-kubernetes       - Join a kubernetes cluster
+  * Requires ```---extra-vars "kubernetes_master=1.1.1.1"```
+  * Requires ```/credentials/kubernetes/join-token.yaml"```
 
 ## CI with Jenkins
 A key component of the architecture is that in essence, everything should be able to run **without Jenkins**, just with Ansible and Kubernetes.

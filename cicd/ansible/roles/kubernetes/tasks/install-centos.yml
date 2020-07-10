@@ -1,0 +1,30 @@
+---
+- name: Install on CentOs / Delete swap from fstab
+  become: yes
+  lineinfile:
+    dest: "/etc/fstab"
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+  with_items:
+    - { regexp: '^/dev/mapper/cl_centos8-swap swap                    swap    defaults        0 0',
+    line: '# /dev/mapper/cl_centos8-swap swap                    swap    defaults        0 0' }
+
+- name: Install on CentOs / Create new yum repo entry
+  become: true
+  copy: 
+    dest: /etc/yum.repos.d/kubernetes.repo
+    content: |
+      [kubernetes]
+      name=Kubernetes
+      baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+      enabled=1
+      gpgcheck=1
+      repo_gpgcheck=1
+      gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+
+- name: Install on CentOS / Release mount and update yum
+  become: yes
+  shell: |
+    yum update -q -y --nobest
+  args:
+    executable: /bin/bash

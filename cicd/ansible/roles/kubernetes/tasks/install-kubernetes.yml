@@ -1,0 +1,7 @@
+---
+- include: install-centos.yml
+  when: ansible_lsb.id == "CentOS"
+- include: install-ubuntu.yml
+  when: ansible_lsb.id == "Ubuntu"
+- include: install-common.yml
+  

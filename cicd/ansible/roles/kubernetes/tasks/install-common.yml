@@ -1,0 +1,20 @@
+---
+- name: Install on Common / Remove swap and unmount
+  become: yes
+  shell: |
+    swapoff -a
+    mount -a
+  args:
+    executable: /bin/bash
+  ignore_errors: yes
+
+- name: Install on Common / Install kubelet, kubeadm and kubernetes-cni
+  become: yes
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items: 
+    - kubelet
+    - kubeadm
+    - kubernetes-cni
+    

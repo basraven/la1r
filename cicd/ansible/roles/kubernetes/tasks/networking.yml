@@ -1,0 +1,22 @@
+---
+- name: Networking / UFW Allow Kubernetes port 6443
+  become: yes
+  ufw:
+    rule: allow
+    port: "6443"
+
+
+
+# Source:  https://thenewstack.io/how-to-install-a-kubernetes-cluster-on-red-hat-centos-8/
+# sudo firewall-cmd --permanent --add-port=6443/tcp
+# sudo firewall-cmd --permanent --add-port=2379-2380/tcp
+# sudo firewall-cmd --permanent --add-port=10250/tcp
+# sudo firewall-cmd --permanent --add-port=10251/tcp
+# sudo firewall-cmd --permanent --add-port=10252/tcp
+# sudo firewall-cmd --permanent --add-port=10255/tcp
+# sudo firewall-cmd –reload
+# sudo modprobe br_netfilter
+# sudo echo '1' > /proc/sys/net/bridge/bridge-nf-call-iptables
+# nano /etc/sysctl.d/k8s.conf
+#     net.bridge.bridge-nf-call-ip6tables = 1
+#     net.bridge.bridge-nf-call-iptables = 1

@@ -1,0 +1,13 @@
+---
+- include: install-kubernetes.yml
+  tags:
+    - kubernetes-server
+- include: networking.yml
+  tags:
+    - kubernetes-server
+- include: init-kubernetes.yml
+  tags:
+    - init-kubernetes
+- include: join-kubernetes.yml
+  tags:
+    - join-kubernetes

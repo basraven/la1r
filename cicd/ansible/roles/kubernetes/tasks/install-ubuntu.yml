@@ -1,0 +1,25 @@
+---
+- name: Install on Ubuntu / Delete swap from fstab
+  become: yes
+  lineinfile:
+    dest: "/etc/fstab"
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+  with_items:
+    - { regexp: '^/swapfile                                 none            swap    sw              0       0',
+    line: '# /swapfile                                 none            swap    sw              0       0' }
+
+- name: Install on Ubuntu / Check if apt-transport-https (curl) is installed
+  become: yes
+  package:
+    name: apt-transport-https
+    state: present
+  
+- name: Install on Ubuntu / Release mount, add k8s gpg key, add it to apt and update apt
+  become: yes
+  shell: |
+    curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+    echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" > /etc/apt/sources.list.d/kubernetes.list
+    apt-get update -q 
+  args:
+    executable: /bin/bash
