@@ -6,8 +6,8 @@
   - users
   - security
   - dnsmasq
-  - nfs
+  # - nfs
   - samba
   - docker
-  # - openvpn
+  - openvpn
   - prometheus_node_exporter

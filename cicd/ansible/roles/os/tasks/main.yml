@@ -1,2 +1,4 @@
 ---
 - include: define-os.yml
+  tags:
+    - helper

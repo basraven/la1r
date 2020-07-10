@@ -1,0 +1,56 @@
+---
+- name: Create User / Check input variable
+  fail: 
+    msg: "Variable '{{ item }}' is not defined"
+  when: item not in hostvars[inventory_hostname]
+  with_items:
+    - openvpn_user
+
+- name: Create User / Install expect if needed
+  become: yes
+  package: 
+    name: expect
+    state: present
+
+- name: "Create User / Create {{ openvpn_client_configs_dir }}/ovpn"
+  become: yes
+  file:
+    path: "{{ openvpn_client_configs_dir }}/ovpn"
+    state: directory
+    mode: 0644
+    recurse: yes
+
+- name: "Create User / Create templates in {{ openvpn_client_configs_dir }}"
+  become: yes
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  with_items:
+      - { src: openvpn.base.conf.j2, dest:  "{{ openvpn_client_configs_dir }}/base.conf" }
+      - { src: make_client_ovpn_cert.sh.j2, dest:  "{{ openvpn_client_configs_dir }}/make_client_ovpn_cert.sh" }
+
+- name: Create User / Request and create client key and cert
+  become: yes
+  shell: |
+    export EASYRSA_BATCH=1 # non-interactive mode
+    ./easyrsa gen-req {{ openvpn_user }} nopass
+    ./easyrsa sign-req client {{ openvpn_user }}
+  args:
+    chdir: "{{ openvpn_ca_dir }}"
+    executable: /bin/bash
+
+- name: Create User / Create client connection file {{ openvpn_client_configs_dir }}/ovpn/{{ openvpn_user }}.ovpn
+  become: yes
+  shell: |
+    chmod +x ./make_client_ovpn_cert.sh
+    ./make_client_ovpn_cert.sh "{{ openvpn_user }}"
+  args:
+    chdir: "{{ openvpn_client_configs_dir }}"
+    executable: /bin/bash
+
+- name: Create User / Copying {{ openvpn_user }}.ovpn to /credentials/ovpn/{{ openvpn_user }}.ovpn
+  become: yes
+  fetch:
+    src: "{{ openvpn_client_configs_dir }}/ovpn/{{ openvpn_user }}.ovpn"
+    dest: /credentials/ovpn/{{ openvpn_user }}.ovpn
+    flat: True

@@ -1,4 +1,0 @@
-#!/bin/bash
-
-ROUTER_IP=10.8.0.1
-( ! ping -c1 $ROUTER_IP >/dev/null 2>&1 ) && service openvpn restart >/dev/null 2>&1

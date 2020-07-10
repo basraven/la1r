@@ -12,7 +12,8 @@
     name: backup
     shell: /bin/bash
     home: /home/backup
-    groups: backup
+    groups: 
+      - backup
     uid: 1040
     append: yes
 - name: Create Backup User / Set authorized key took from file

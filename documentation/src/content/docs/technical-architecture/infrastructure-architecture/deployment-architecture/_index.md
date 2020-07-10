@@ -15,18 +15,23 @@ These Ansible scripts can be found on <https://github.com/basraven/la1r/ansible>
 
 ### Ansible Tags
 The following tags are used in Ansible:
-* initial
-* update
-* security
-* toolbox 
-* users
-* dns-server
-* docker
-* nfs-client
-* nfs-server
-* openvpn-client
-* openvpn-server
-* node_exporter
+* helper                - Helper scripts for the run itself, e.g. to determine os
+* initial               - Script needed for a first ever run of the OS
+* update                - Update the package managers
+* security              - Security related packages and update
+* toolbox               - Placement of /cicd/ansible/toolbox scripts, used for infrastructure management
+* users                 - Creation of users
+* dns-server            - Install DNS Server
+* docker                - Install docker
+* nfs-client            - Install nfs-client
+* nfs-server            - Install nfs-server
+* openvpn-client        - Install openvpn client and place certificate from /credentials
+* create-ovpn-user      - Create a new certificate for openvpn,
+  * Requires ```---extra-vars "openvpn-user=someusername"```
+* delete-ovpn-user   - Create a new certificate for openvpn
+  * Requires ```---extra-vars "openvpn-user=someusername"```
+* openvpn-server        - Install openvpn server and creates new CA
+* node_exporter         - Install prometheus_node_exporter
 
 ## CI with Jenkins
 A key component of the architecture is that in essence, everything should be able to run **without Jenkins**, just with Ansible and Kubernetes.

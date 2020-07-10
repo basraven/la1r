@@ -1,0 +1,26 @@
+---
+
+openvpn_ca_dir: "/etc/openvpn/openvpn-ca/current"
+openvpn_ca_backup_dir: "/etc/openvpn/openvpn-ca/backup"
+openvpn_client_configs_dir: "/etc/openvpn/client-configs/current"
+openvpn_client_configs_backup_dir: "/etc/openvpn/client-configs/backup"
+
+openvpn_KEY_COUNTRY: "NL"
+openvpn_KEY_PROVINCE: "NH"
+openvpn_KEY_CITY: "Amsterdam"
+openvpn_KEY_ORG: "basraven"
+openvpn_KEY_EMAIL: "vpn@la1r.com"
+openvpn_KEY_OU: "la1r.com"
+openvpn_KEY_NAME: "{{ inventory_hostname }}"
+openvpn_cipher: "AES-128-CBC"
+openvpn_auth: "SHA256"
+openvpn_port: "33443"
+openvpn_port_expose: "33443"
+openvpn_proto: udp
+
+openvpn_server_url: "vpn.la1r.com"
+
+openvpn_heartbeat_ip: ""
+
+openvpn_user: ""
+openvpn_password: ""

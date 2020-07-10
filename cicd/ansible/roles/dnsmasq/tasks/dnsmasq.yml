@@ -13,10 +13,10 @@
 - name: Dnsmasq / Update /etc/hosts
   become: yes
   lineinfile:
-    dest=/etc/hosts
-    regexp='^10.8.0.1'
-    line="10.8.0.1 *.bas"
-    state=present
-    backup=yes
+    dest: /etc/hosts
+    regexp: '^10.8.0.1'
+    line: "10.8.0.1 *.bas"
+    state: present
+    backup: yes
   notify:
     - restart dnsmasq

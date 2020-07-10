@@ -7,8 +7,6 @@ credentials_dir: /credentials
 
 
 
-home_dir: /home/{{ansible_ssh_user}}
-home_dir_target_user: /home/{{ansible_ssh_user}}
 dhcp_interface: "eth0"
 dhcp_router: 192.168.2.254
 
@@ -18,22 +16,3 @@ noip_conf: /usr/local/etc/no-ip2.conf
 noip_pid: /var/run/noip2.pid
 noip_initd: /etc/init.d/noip
 
-openvpn_ca_dir: "{{ home_dir_target_user }}/openvpn-ca"
-openvpn_client_configs_dir: "{{ home_dir_target_user }}/client-configs"
-openvpn_KEY_COUNTRY: "NL"
-openvpn_KEY_PROVINCE: "NH"
-openvpn_KEY_CITY: "Amsterdam"
-openvpn_KEY_ORG: "basraven"
-openvpn_KEY_EMAIL: "vpn@basraven.nl"
-openvpn_KEY_OU: "basraven.nl"
-openvpn_KEY_NAME: "server"
-openvpn_cipher: "AES-128-CBC"
-openvpn_auth: "SHA256"
-openvpn_port: 33443
-openvpn_port_expose: 33443
-openvpn_proto: udp
-
-openvpn_server_url: "vpn.la1r.com"
-
-openvpn_user: ""
-openvpn_password: ""

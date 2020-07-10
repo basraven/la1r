@@ -1,0 +1,31 @@
+---
+- name: Delete User / Check input variable
+  fail: 
+    msg: "Variable '{{ item }}' is not defined"
+  when: item not in hostvars[inventory_hostname]
+  with_items:
+    - openvpn_user
+
+- name: Delete User / Delete ovpn file, private kye
+  become: yes
+  file:
+    path: "{{ item }}"
+    state: absent
+    force: yes
+  with_items:
+    - "{{ openvpn_client_configs_dir }}/ovpn/{{ openvpn_user }}.ovpn"
+    - "{{ openvpn_client_configs_dir }}/make_client_ovpn_cert.sh"
+    - "{{ openvpn_client_configs_dir }}/base.conf"
+
+- name: Delete User / Revoke Access based on certificate
+  become: yes
+  shell: |
+    export EASYRSA_BATCH=1 # non-interactive mode
+    ./easyrsa revoke {{ openvpn_user }}
+  args:
+    chdir: "{{ openvpn_ca_dir }}"
+    executable: /bin/bash
+
+- name: Delete User / Revoke Access based on certificate
+  become: yes
+  local_action: file path=/credentials/ovpn/{{ openvpn_user }}.ovpn state=absent

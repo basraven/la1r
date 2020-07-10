@@ -13,7 +13,7 @@
   file:
     path: /lib/systemd/system/nfs-common.service
     state: absent
-
+    
 - name: Nfs Server / Restart system services
   become: yes
   service: 

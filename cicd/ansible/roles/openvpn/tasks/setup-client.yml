@@ -1,0 +1,34 @@
+---
+- name: Setup Client / copy .ovpn file
+  copy:
+    src: "{{credentials_dir}}/ovpn/{{  inventory_hostname }}.ovpn"
+    dest: /etc/openvpn/{{  inventory_hostname }}.conf
+
+- name: Setup Client / Enable autostart
+  become: yes
+  lineinfile:
+    dest: /etc/default/openvpn
+    regexp: '^AUTOSTART'
+    line: 'AUTOSTART="{{  inventory_hostname }}"'
+    state: present
+    backup: yes
+
+- name: Setup Client / Start service openvpn, if not started
+  become: yes
+  service:
+    name: openvpn
+    state: started
+
+- name: Setup Client / Place Openvpn heartbeat cronjob script
+  become: yes
+  template: 
+    src: openvpn-cron-heartbeat.sh.j2
+    dest: /etc/openvpn/openvpn-cron-heartbeat.sh
+    mode: "0755"
+
+- name: Setup Client / Add crontab to check connection every 5 mins
+  become: yes
+  cron:
+    name: "check openvpn connection"
+    minute: "*/5"
+    job: "/etc/openvpn/openvpn-cron-heartbeat.sh"

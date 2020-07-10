@@ -1,9 +1,0 @@
-# Fail2Ban configuration fragment for OpenVPN
-
-[openvpn]
-enabled  = true
-port     = {{ openvpn_port }}
-protocol = {{ openvpn_proto }}
-filter   = openvpn
-logpath  = /var/log/openvpn.log
-maxretry = 5

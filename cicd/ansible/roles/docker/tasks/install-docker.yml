@@ -30,7 +30,8 @@
   become: yes
   user:
     name: "{{ target_user_name }}"
-    groups: docker
+    groups:
+      - docker 
     append: yes
 
 - name: Start service docker, if not started

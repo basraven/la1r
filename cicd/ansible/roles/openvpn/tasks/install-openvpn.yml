@@ -1,4 +1,13 @@
 ---
+- name: Install Openvpn / Install needed tools additionally for CentOS
+  become: yes
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items: 
+    - epel-release
+  when: ansible_facts['distribution'] == "CentOS"
+
 - name: Install Openvpn / Install Package
   become: yes
   package:
@@ -6,17 +15,3 @@
     state: present
   with_items:
     - openvpn
-    - easy-rsa
-- name: Install Openvpn / UFW passthrough for tun0 interface
-  become: yes
-  ufw:
-    rule: allow
-    direction: out
-    interface: tun0
-- name: Install Openvpn / Allow in UFW passthrough for tun0 interface
-  become: yes
-  ufw:
-    rule: allow
-    direction: in
-    interface: tun0
-

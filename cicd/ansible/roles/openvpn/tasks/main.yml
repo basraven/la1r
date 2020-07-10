@@ -1,8 +1,20 @@
 ---
-- include: ufw.yml
-  tags: 
-    - openvpn-server
 - include: install-openvpn.yml
   tags:
+    - openvpn-client  
     - openvpn-server  
-
+- include: prepare-folders.yml
+  tags:
+    - openvpn-server  
+- include: create-server.yml
+  tags:
+    - openvpn-server  
+- include: setup-client.yml
+  tags:
+    - openvpn-client
+- include: create-user.yml
+  tags: 
+    - create-ovpn-user
+- include: delete-user.yml
+  tags: 
+    - delete-ovpn-user

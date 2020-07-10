@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# First argument: Client identifier
+# Source: https://www.digitalocean.com/community/tutorials/how-to-set-up-an-openvpn-server-on-ubuntu-16-04
+
+BASE_CONFIG={{ openvpn_client_configs_dir }}/base.conf
+CA_CERT_DIR={{ openvpn_ca_dir }}/pki
+CA_KEY_DIR={{ openvpn_ca_dir }}/pki/private
+CA_KEY_NAME=ca
+USER_NAME=${1}
+USER_CERT_DIR={{ openvpn_ca_dir }}/pki/issued
+USER_KEY_DIR={{ openvpn_ca_dir }}/pki/private
+OUTPUT_DIR={{ openvpn_client_configs_dir }}/ovpn
+
+cat ${BASE_CONFIG} \
+    <(echo -e '<ca>') \
+    ${CA_CERT_DIR}/ca.crt \
+    <(echo -e '</ca>\n<cert>') \
+    ${USER_CERT_DIR}/${USER_NAME}.crt \
+    <(echo -e '</cert>\n<key>') \
+    ${USER_KEY_DIR}/${USER_NAME}.key \
+    <(echo -e '</key>\n<tls-auth>') \
+    ${CA_KEY_DIR}/${CA_KEY_NAME}.key \
+    <(echo -e '</tls-auth>') \
+    > ${OUTPUT_DIR}/${USER_NAME}.ovpn

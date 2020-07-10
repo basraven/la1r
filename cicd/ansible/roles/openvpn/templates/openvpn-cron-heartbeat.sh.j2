@@ -1,4 +1,4 @@
 #!/bin/bash
 
-ROUTER_IP=10.8.0.1
+ROUTER_IP={{ openvpn_heartbeat_ip }}
 ( ! ping -c1 $ROUTER_IP >/dev/null 2>&1 ) && service openvpn restart >/dev/null 2>&1
