@@ -2,32 +2,37 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: gocd
+  name: consul
   namespace: cicd
   labels:
-    app: gocd
+    app: consul
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: gocd
+      app: consul
   template:
     metadata:
       labels:
-        app: gocd
+        app: consul
     spec:
       containers:
-      - name: gocd
-        image: gocd/gocd-server:v20.5.0
+      - name: consul
+        image: consul
         ports:
-        - name: http
-          containerPort: 8153
-        # command: ["/bin/sh"]
-        # args: ["-c", "sleep 1000000"]
+        - name: webui
+          containerPort: 8500
+        - name: udp
+          containerPort: 8600
+          protocol: "udp"
+        env:
+          - name: "CONSUL_BIND_INTERFACE"
+            value: "eth0"
+        args: ["-ui"]
           # - --nogui
           # - --server
           # - -e
-          # - --gocdallgenres.fischvolk.de:22224
+          # - --consulallgenres.fischvolk.de:22224
           # - --servername
           # - sebserver
           # - --port
@@ -39,28 +44,32 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: gocd
-  name: gocd
+    app: consul
+  name: consul
   namespace: cicd
 spec:
   ports:
-  - name: http
-    targetPort: 8153
+  - name: webui
+    targetPort: 8500
     port: 80
+  - name: udp
+    targetPort: 8600
+    port: 8600
+    protocol: "udp"
   selector:
-    app: gocd
+    app: consul
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: gocd
+  name: consul
   namespace: cicd
 spec:
   rules:
-  - host: gocd.bas
+  - host: consul.bas
     http:
       paths:
       - path: /
         backend:
-          serviceName: gocd
+          serviceName: consul
           servicePort: 80 
