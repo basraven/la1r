@@ -20,8 +20,11 @@
           <name>hosts</name>
           <description>Hosts to apply Ansible script on</description>
           <defaultValue>[vagrant]
-test-ubuntu ansible_port=22    ansible_user=vagrant  ansible_ssh_pass=vagrant   ansible_host=192.168.24.23
-test-centos ansible_port=22    ansible_user=vagrant  ansible_ssh_pass=vagrant   ansible_host=192.168.1.195
+test-ubuntu ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.24.23
+test-centos ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.1.195
+
+[vagrant:vars]
+ansible_python_interpreter=/usr/bin/python3
 </defaultValue>
           <trim>false</trim>
         </hudson.model.TextParameterDefinition>
@@ -33,8 +36,8 @@ test-centos ansible_port=22    ansible_user=vagrant  ansible_ssh_pass=vagrant   
     stage(&apos;Preparation&apos;) { // for display purposes
         // Get code from a GitHub repository
         checkout([$class: &apos;GitSCM&apos;, branches: [[name: &apos;*/rick&apos;]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: &apos;CloneOption&apos;, noTags: true, reference: &apos;&apos;, shallow: true], [$class: &apos;SubmoduleOption&apos;, disableSubmodules: false, parentCredentials: false, recursiveSubmodules: true, reference: &apos;&apos;, shallow: true, trackingSubmodules: false]], submoduleCfg: [], userRemoteConfigs: [[url: &apos;https://github.com/basraven/la1r.git&apos;]]])
-        sh label: &apos;create hosts&apos;, script: &apos;printf &quot;[la1r]\n$os $hosts&quot; &gt; ./hosts&apos;
-        sh label: &apos;copy ansible.cfg to /etc/ansible/ansible.cfg&apos;, script: &apos;cp -f ./cicd/ansible/config/ansible.cfg /etc/ansible/ansible.cfg&apos;
+        sh label: &apos;create hosts&apos;, script: &apos;printf &quot;[la1r]\n$os $hosts&quot; &gt; ./cicd/ansible/hosts&apos;
+        sh label: &apos;copy ansible.cfg to /etc/ansible/ansible.cfg&apos;, script: &apos;mkdir -p /etc/ansible &amp;&amp; cp -f ./cicd/ansible/config/ansible.cfg /etc/ansible/ansible.cfg&apos;
         
         
         // sh label: &apos;test ssh&apos;, script: &apos;sshpass -p &quot;vagrant&quot; ssh -o &quot;StrictHostKeyChecking=no&quot;  $default_ssh_user@$hosts \&apos;ls -altr\&apos;&apos;

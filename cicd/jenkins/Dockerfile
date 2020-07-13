@@ -15,10 +15,12 @@ RUN apt-get update && \
       stable" && \
    apt-get update && \
    apt-get -y install docker-ce \
+   python python3 \
+   python-pip \
    sshpass
 
 # Install Ansible
-RUN apt-get install ansible -y
+# RUN apt-get install ansible -y
 
 
 # Install jenkins plugins
@@ -26,6 +28,8 @@ COPY ./jenkins-plugins.txt /usr/share/jenkins/plugins
 RUN while read i ; \
                 do /usr/local/bin/install-plugins.sh $i ; \
         done < /usr/share/jenkins/plugins
+# Install Python plugins
+RUN pip install junit-xml ansible ; pip3 install junit-xml ansible
 
 #Update the username and password
 # ENV JENKINS_USER admin
