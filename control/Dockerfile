@@ -9,6 +9,7 @@ RUN curl https://raw.githubusercontent.com/helm/helm/master/scripts/get | bash
 # RUN git clone https://github.com/blendle/kubecrt.git /kubecrt ; cd /kubecrt ; go get ../... ; go build ; chmod +x kubecrt ; cp kubecrt /usr/bin/kubecrt
 # Ansible is dependent on epel-release and an updated yum after install
 RUN yum update -y && yum install -y ansible
+RUN pip3 install junit_xml
 WORKDIR /kubernetes
 
 COPY entrypoint.sh /control/entrypoint.sh

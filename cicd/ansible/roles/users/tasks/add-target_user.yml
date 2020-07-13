@@ -1,5 +1,6 @@
 ---
 - name: Add Target User /  Add the user "{{ target_user_name }}"
+  become: yes
   user:
     name: "{{ target_user_name }}"
     comment: "{{ target_user_comment }}"
@@ -9,6 +10,7 @@
     createhome: yes
 
 - name: Add Target User /  Add {{ target_user_name }} user to the sudoers
+  become: yes
   copy:
       dest: "/etc/sudoers.d/{{ target_user_name }}"
       content: "{{ target_user_name }}  ALL=(ALL)  NOPASSWD: ALL"
@@ -20,4 +22,4 @@
     key: "{{ lookup('file', '/credentials/ssh/id_rsa.pub') }}"
     state: present
   notify:
-  - "restart ssh"
+  - restart ssh

@@ -1,4 +1,4 @@
-# Place samba-credentials.yaml with the following structure:
+# Place samba-credentials.yml with the following structure:
 (these users should be known in linux!)
 ```yaml
 ---

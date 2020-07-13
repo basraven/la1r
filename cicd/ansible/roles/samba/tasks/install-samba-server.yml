@@ -25,7 +25,7 @@
 
 - name: Install Samba Server / Include samba credentials
   include_vars:
-    file: "{{credentials_dir}}/samba/samba-credentials.yaml"
+    file: "{{credentials_dir}}/samba/samba-credentials.yml"
 
 - name: Install Samba Server / set Samba passwords for each user
   become: yes

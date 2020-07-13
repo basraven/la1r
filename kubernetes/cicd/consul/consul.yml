@@ -24,21 +24,17 @@ spec:
           containerPort: 8500
         - name: udp
           containerPort: 8600
-          protocol: "udp"
+          protocol: UDP
         env:
           - name: "CONSUL_BIND_INTERFACE"
             value: "eth0"
-        args: ["-ui"]
-          # - --nogui
-          # - --server
-          # - -e
-          # - --consulallgenres.fischvolk.de:22224
-          # - --servername
-          # - sebserver
-          # - --port
-          # - "80"
-          # - --numchannels
-          # - "16"
+        args:
+          - agent
+          - -server
+          - -ui
+          - -node=server-1
+          - -bootstrap-expect=1
+          - -client=0.0.0.0
 ---
 apiVersion: v1
 kind: Service
@@ -55,7 +51,7 @@ spec:
   - name: udp
     targetPort: 8600
     port: 8600
-    protocol: "udp"
+    protocol: UDP
   selector:
     app: consul
 ---
