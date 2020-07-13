@@ -17,6 +17,7 @@ cat /credentials/kubernetes/config > ~/.kube/config
 cat /credentials/kubernetes/config > /root/.kube/config
 chmod 600 ~/.kube/config
 chmod 600 /root/.kube/config
+# cp -f /ansible/roles/ansible.cfg ~/.ansible.cfg && chmod 600 ~/.ansible.cfg
 
 kubectl completion bash >/etc/bash_completion.d/kubectl
 touch ~/.bashrc 

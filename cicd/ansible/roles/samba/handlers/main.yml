@@ -1,18 +1,18 @@
 ---
-- name: restart ssh on non-centos
+- name: restart samba on non-centos
   become: yes
   service:
-    name: ssh
+    name: smb
     state: restarted
     enabled: yes
   when: ansible_facts['distribution'] != "CentOS"
-  listen: restart ssh
+  listen: restart samba
 
-- name: restart ssh on centos
+- name: restart samba on centos
   become: yes
   service:
-    name: sshd
+    name: smbd
     state: restarted
     enabled: yes
   when: ansible_facts['distribution'] == "CentOS"
-  listen: restart ssh
+  listen: restart samba

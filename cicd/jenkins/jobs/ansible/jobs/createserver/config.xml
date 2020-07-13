@@ -16,28 +16,15 @@
     <org.jenkinsci.plugins.workflow.job.properties.DisableResumeJobProperty/>
     <hudson.model.ParametersDefinitionProperty>
       <parameterDefinitions>
-        <hudson.model.ChoiceParameterDefinition>
-          <name>os</name>
-          <description>Choose server OS</description>
-          <choices class="java.util.Arrays$ArrayList">
-            <a class="string-array">
-              <string>ubuntu</string>
-              <string>centos</string>
-            </a>
-          </choices>
-        </hudson.model.ChoiceParameterDefinition>
         <hudson.model.TextParameterDefinition>
           <name>hosts</name>
           <description>Hosts to apply Ansible script on</description>
-          <defaultValue>192.168.1.184</defaultValue>
+          <defaultValue>[vagrant]
+test-ubuntu ansible_port=22    ansible_user=vagrant  ansible_ssh_pass=vagrant   ansible_host=192.168.24.23
+test-centos ansible_port=22    ansible_user=vagrant  ansible_ssh_pass=vagrant   ansible_host=192.168.1.195
+</defaultValue>
           <trim>false</trim>
         </hudson.model.TextParameterDefinition>
-        <hudson.model.StringParameterDefinition>
-          <name>default_ssh_user</name>
-          <description>Default SSH User</description>
-          <defaultValue>vagrant</defaultValue>
-          <trim>true</trim>
-        </hudson.model.StringParameterDefinition>
       </parameterDefinitions>
     </hudson.model.ParametersDefinitionProperty>
   </properties>
@@ -47,13 +34,14 @@
         // Get code from a GitHub repository
         checkout([$class: &apos;GitSCM&apos;, branches: [[name: &apos;*/rick&apos;]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: &apos;CloneOption&apos;, noTags: true, reference: &apos;&apos;, shallow: true], [$class: &apos;SubmoduleOption&apos;, disableSubmodules: false, parentCredentials: false, recursiveSubmodules: true, reference: &apos;&apos;, shallow: true, trackingSubmodules: false]], submoduleCfg: [], userRemoteConfigs: [[url: &apos;https://github.com/basraven/la1r.git&apos;]]])
         sh label: &apos;create hosts&apos;, script: &apos;printf &quot;[la1r]\n$os $hosts&quot; &gt; ./hosts&apos;
+        sh label: &apos;copy ansible.cfg to /etc/ansible/ansible.cfg&apos;, script: &apos;cp -f ./cicd/ansible/config/ansible.cfg /etc/ansible/ansible.cfg&apos;
         
         
-        sh label: &apos;test ssh&apos;, script: &apos;sshpass -p &quot;vagrant&quot; ssh -o &quot;StrictHostKeyChecking=no&quot;  $default_ssh_user@$hosts \&apos;ls -altr\&apos;&apos;
-        sh label: &apos;ls local&apos;, script: &apos;ls -altr&apos;
+        // sh label: &apos;test ssh&apos;, script: &apos;sshpass -p &quot;vagrant&quot; ssh -o &quot;StrictHostKeyChecking=no&quot;  $default_ssh_user@$hosts \&apos;ls -altr\&apos;&apos;
+        // sh label: &apos;ls local&apos;, script: &apos;ls -altr&apos;
     }
     stage(&apos;Build&apos;) {
-        ansiblePlaybook colorized: true, credentialsId: &apos;7fbbb33e-7a3d-4381-bca2-62bb9018a0dd&apos;, disableHostKeyChecking: true, installation: &apos;ansible&apos;, inventory: &apos;./hosts&apos;, playbook: &apos;./cicd/ansible/la1r.yml&apos;
+        ansiblePlaybook colorized: true, disableHostKeyChecking: true, installation: &apos;ansible&apos;, inventory: &apos;cicd/ansible/hosts&apos;, playbook: &apos;cicd/ansible/site.yml&apos;, tags: &apos;initial&apos;
     }
     // stage(&apos;Results&apos;) {
     //     junit &apos;**/target/surefire-reports/TEST-*.xml&apos;
