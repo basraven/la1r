@@ -1,6 +1,14 @@
 <?xml version='1.1' encoding='UTF-8'?>
 <flow-definition plugin="workflow-job@2.39">
-  <actions/>
+  <actions>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction plugin="pipeline-model-definition@1.7.1"/>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction plugin="pipeline-model-definition@1.7.1">
+      <jobProperties/>
+      <triggers/>
+      <parameters/>
+      <options/>
+    </org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction>
+  </actions>
   <description>Build, Test and Deploy server configurations</description>
   <displayName>Create Server</displayName>
   <keepDependencies>false</keepDependencies>
@@ -19,39 +27,61 @@
         <hudson.model.TextParameterDefinition>
           <name>hosts</name>
           <description>Hosts to apply Ansible script on</description>
-          <defaultValue>[vagrant]
-test-ubuntu ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.24.23
-test-centos ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.1.195
+          <defaultValue>[test]
+test-ubuntu ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.1.195
+# test-centos ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.1.195
 
-[vagrant:vars]
-ansible_python_interpreter=/usr/bin/python3
-</defaultValue>
+
+[test:vars]
+# ansible_python_interpreter=/usr/bin/python3</defaultValue>
           <trim>false</trim>
         </hudson.model.TextParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>Initial</name>
+          <description></description>
+          <defaultValue>true</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>End</name>
+          <description></description>
+          <defaultValue>true</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
       </parameterDefinitions>
     </hudson.model.ParametersDefinitionProperty>
   </properties>
   <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.81">
-    <script>node {
-    stage(&apos;Preparation&apos;) { // for display purposes
-        // Get code from a GitHub repository
-        checkout([$class: &apos;GitSCM&apos;, branches: [[name: &apos;*/rick&apos;]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: &apos;CloneOption&apos;, noTags: true, reference: &apos;&apos;, shallow: true], [$class: &apos;SubmoduleOption&apos;, disableSubmodules: false, parentCredentials: false, recursiveSubmodules: true, reference: &apos;&apos;, shallow: true, trackingSubmodules: false]], submoduleCfg: [], userRemoteConfigs: [[url: &apos;https://github.com/basraven/la1r.git&apos;]]])
-        sh label: &apos;create hosts&apos;, script: &apos;printf &quot;[la1r]\n$os $hosts&quot; &gt; ./cicd/ansible/hosts&apos;
-        sh label: &apos;copy ansible.cfg to /etc/ansible/ansible.cfg&apos;, script: &apos;mkdir -p /etc/ansible &amp;&amp; cp -f ./cicd/ansible/config/ansible.cfg /etc/ansible/ansible.cfg&apos;
-        
-        
-        // sh label: &apos;test ssh&apos;, script: &apos;sshpass -p &quot;vagrant&quot; ssh -o &quot;StrictHostKeyChecking=no&quot;  $default_ssh_user@$hosts \&apos;ls -altr\&apos;&apos;
-        // sh label: &apos;ls local&apos;, script: &apos;ls -altr&apos;
+    <script>pipeline{
+    agent {
+        label &apos;!windows&apos;
     }
-    stage(&apos;Build&apos;) {
-        ansiblePlaybook colorized: true, disableHostKeyChecking: true, installation: &apos;ansible&apos;, inventory: &apos;cicd/ansible/hosts&apos;, playbook: &apos;cicd/ansible/site.yml&apos;, tags: &apos;initial&apos;
+    
+    environment {
+        JUNIT_OUTPUT_DIR    = &apos;junit/&apos;
     }
-    // stage(&apos;Results&apos;) {
-    //     junit &apos;**/target/surefire-reports/TEST-*.xml&apos;
-    //     archiveArtifacts &apos;target/*.jar&apos;
-    // }
-}
-</script>
+    
+    stages {
+        stage(&apos;Preparation&apos;) { // for display purposes
+            steps{
+                // Get code from a GitHub repository
+                checkout([$class: &apos;GitSCM&apos;, branches: [[name: &apos;*/rick&apos;]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: &apos;CloneOption&apos;, noTags: true, reference: &apos;&apos;, shallow: true], [$class: &apos;SubmoduleOption&apos;, disableSubmodules: false, parentCredentials: false, recursiveSubmodules: true, reference: &apos;&apos;, shallow: true, trackingSubmodules: false]], submoduleCfg: [], userRemoteConfigs: [[url: &apos;https://github.com/basraven/la1r.git&apos;]]])
+                sh label: &apos;Create hosts&apos;, script: &apos;printf &quot;[la1r]\n$os $hosts&quot; &gt; ./cicd/ansible/hosts&apos;
+                sh label: &quot;Create ${JUNIT_OUTPUT_DIR}&quot;, script: &quot;mkdir -p ${JUNIT_OUTPUT_DIR}&quot;
+                sh label: &apos;Copy ansible.cfg to /etc/ansible/ansible.cfg&apos;, script: &apos;mkdir -p /etc/ansible &amp;&amp; cp -f ./cicd/ansible/config/ansible.cfg /etc/ansible/ansible.cfg&apos;
+            }
+        }
+        stage(&apos;Deploy&apos;) {
+            steps{
+                ansiblePlaybook colorized: true, disableHostKeyChecking: true, installation: &apos;ansible&apos;, inventory: &apos;cicd/ansible/hosts&apos;, playbook: &apos;cicd/ansible/site.yml&apos;, tags: &apos;initial&apos;
+            }
+        }
+        stage(&apos;Results&apos;) {
+            steps {
+                junit &apos;junit/site-*.xml&apos;
+                // archiveArtifacts &apos;target/*.jar&apos;
+            }
+        }    
+    }
+}</script>
     <sandbox>false</sandbox>
   </definition>
   <triggers/>

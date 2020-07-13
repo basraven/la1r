@@ -7,7 +7,6 @@ ssh-agent
 docker-plugin
 docker-build-step
 oauth-credentials
-jenkins-credentials
 junit
 pipeline-stage-step
 pipeline-build-step 
@@ -17,3 +16,6 @@ docker-workflow
 dashboard-view
 project-stats-plugin
 greenballs
+ws-cleanup
+test-results-aggregator
+parameter-separator
