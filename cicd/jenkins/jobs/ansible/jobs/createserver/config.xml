@@ -50,7 +50,7 @@ metal-ubuntu ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansib
           <trim>false</trim>
         </hudson.model.TextParameterDefinition>
         <jenkins.plugins.parameter__separator.ParameterSeparatorDefinition plugin="parameter-separator@1.0">
-          <name>separator-8890dec4-f641-47fe-ba98-6f6702a9eed7</name>
+          <name>separator-1fdfa613-0668-4045-bd4e-b92c44e49bf1</name>
           <description></description>
           <sectionHeader>Tags</sectionHeader>
           <sectionHeaderStyle></sectionHeaderStyle>
@@ -181,7 +181,7 @@ metal-ubuntu ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansib
         stage(&apos;Virtual Deployment&apos;) {
             steps{
                 script {
-                    tags = sh(returnStdout: true, script: &apos;bash ./cicd/jenkins/create-tags.sh&apos;).trim()
+                    tags = sh(returnStdout: true, script: &apos;bash ./cicd/jenkins/scripts/create-tags.sh&apos;).trim()
                 }
                 ansiblePlaybook colorized: true, disableHostKeyChecking: true, installation: &apos;ansible&apos;, inventory: &apos;cicd/ansible/hosts&apos;, extras: &apos;--limit=&quot;virtual&quot;&apos; , playbook: &apos;cicd/ansible/site.yml&apos;, tags: &quot;${tags}&quot;    
                 junit &apos;junit/site-*.xml&apos; 
@@ -189,13 +189,17 @@ metal-ubuntu ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansib
         }
         stage(&apos;Virtual Tests&apos;) {
             steps {
-                sh label: &apos;Newman scripts for virtual tests&apos;, script: &apos;echo PLACEHOLDER&apos;
+                sh label: &apos;Execute Newman&apos;, 
+                script: &apos;&apos;&apos;mkdir -p ./newman ; 
+                cd ./newman ; 
+                npm install --prefix ./ newman ;
+                node ./node_modules/newman/bin/newman.js run ../cicd/jenkins/tests/newman/newman-ansible.json -e ../cicd/jenkins/tests/newman/environments/virtual.json --reporters cli,junit --reporter-junit-export ./newman-junit.xml&apos;&apos;&apos;
             }
         }    
         stage(&apos;Metal Deployment&apos;) {
             steps{
                 script {
-                    tags = sh(returnStdout: true, script: &apos;bash ./cicd/jenkins/create-tags.sh&apos;).trim()
+                    tags = sh(returnStdout: true, script: &apos;bash ./cicd/jenkins/scripts/create-tags.sh&apos;).trim()
                 }
                 ansiblePlaybook colorized: true, disableHostKeyChecking: true, installation: &apos;ansible&apos;, inventory: &apos;cicd/ansible/hosts&apos;, extras: &apos;--limit=&quot;metal&quot;&apos; , playbook: &apos;cicd/ansible/site.yml&apos;, tags: &quot;${tags}&quot;    
                 junit &apos;junit/site-*.xml&apos; 
@@ -204,7 +208,11 @@ metal-ubuntu ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansib
         
         stage(&apos;Metal Tests&apos;) {
             steps {
-                sh label: &apos;Newman scripts for metal tests&apos;, script: &apos;echo PLACEHOLDER&apos;
+                sh label: &apos;Execute Newman&apos;, 
+                script: &apos;&apos;&apos;mkdir -p ./newman ; 
+                cd ./newman ; 
+                npm install --prefix ./ newman ;
+                node ./node_modules/newman/bin/newman.js run ../cicd/jenkins/tests/newman/newman-ansible.json -e ../cicd/jenkins/tests/newman/environments/virtual.json --reporters cli,junit --reporter-junit-export ./newman-junit.xml&apos;&apos;&apos;
             }
         }    
     }

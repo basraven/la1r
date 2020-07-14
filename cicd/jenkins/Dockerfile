@@ -23,6 +23,10 @@ RUN apt-get update && \
 RUN pip install ansible 
 
 
+# Install nodejs for newman
+RUN curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash - && \
+    apt-get install -y nodejs
+
 # Install jenkins plugins
 COPY ./jenkins-plugins.txt /usr/share/jenkins/plugins
 RUN while read i ; \
