@@ -15,8 +15,9 @@ These Ansible scripts can be found on <https://github.com/basraven/la1r/ansible>
 
 ### Ansible Tags
 The following tags are used in Ansible:
-* helper                - Helper scripts for the run itself, e.g. to determine os
+* helper                - Helper scripts for the run itself, e.g. to determine OS
 * initial               - Script needed for a first ever run of the OS
+* returnvalue           - Set return value of the playbook
 * update                - Update the package managers
 * security              - Security related packages and update
 * toolbox               - Placement of /cicd/ansible/toolbox scripts, used for infrastructure management
@@ -26,11 +27,11 @@ The following tags are used in Ansible:
 * nfs-client            - Install nfs-client
 * nfs-server            - Install nfs-server
 * openvpn-client        - Install openvpn client and place certificate from /credentials
+* openvpn-server        - Install openvpn server and creates new CA
 * create-ovpn-user      - Create a new certificate for openvpn,
   * Requires ```---extra-vars "openvpn-user=someusername"```
 * delete-ovpn-user   - Create a new certificate for openvpn
   * Requires ```---extra-vars "openvpn-user=someusername"```
-* openvpn-server        - Install openvpn server and creates new CA
 * node_exporter         - Install prometheus_node_exporter
 * kubernetes-server     - Install Kubernetes
 * init-kubernetes       - Run kubeadm init

@@ -36,15 +36,107 @@ test-ubuntu ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansibl
 # ansible_python_interpreter=/usr/bin/python3</defaultValue>
           <trim>false</trim>
         </hudson.model.TextParameterDefinition>
-        <hudson.model.BooleanParameterDefinition>
-          <name>Initial</name>
+        <jenkins.plugins.parameter__separator.ParameterSeparatorDefinition plugin="parameter-separator@1.0">
+          <name>separator-4fcd0ed7-766d-41d6-ad2f-f132affc8715</name>
           <description></description>
+          <sectionHeader>Tags</sectionHeader>
+          <sectionHeaderStyle></sectionHeaderStyle>
+          <separatorStyle></separatorStyle>
+        </jenkins.plugins.parameter__separator.ParameterSeparatorDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>tag_helper</name>
+          <description>Tag: Helper scripts for the run itself, e.g. determine OS</description>
           <defaultValue>true</defaultValue>
         </hudson.model.BooleanParameterDefinition>
         <hudson.model.BooleanParameterDefinition>
-          <name>End</name>
-          <description></description>
+          <name>tag_initial</name>
+          <description>Tag: Script needed for a first ever run of the OS</description>
           <defaultValue>true</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>tag_returnvalue</name>
+          <description>Tag: Set return value of the playbook</description>
+          <defaultValue>true</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>tag_update</name>
+          <description>Tag: Update the package managers</description>
+          <defaultValue>true</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>tag_security</name>
+          <description>Tag: Security related packages and updates</description>
+          <defaultValue>true</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>tag_toolbox</name>
+          <description>Tag: Placement of /cicd/ansible/toolbox scripts, used for infrastructure management</description>
+          <defaultValue>true</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>tag_users</name>
+          <description>Tag: Creation of users</description>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>tag_dns-server</name>
+          <description>Tag: Install DNS server</description>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>tag_docker</name>
+          <description>Tag: Install Docker</description>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>tag_nfs-client</name>
+          <description>Tag: Install NFS Client</description>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>tag_nfs-server</name>
+          <description>Tag: Install NFS Server</description>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>tag_openvpn-client</name>
+          <description>Tag: Install OpenVPN client</description>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>tag_openvpn-server</name>
+          <description>Tag: Install OpenVPN server and create new CA (backup old)</description>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>tag_create_ovpn_user</name>
+          <description>Tag: Create a new OpenVPN user certificate</description>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>tag_delete-ovpn-user</name>
+          <description>Tag: Delete an existing OpenVPN user certificate and revoke access</description>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>tag_node_exporter</name>
+          <description>Tag: Install node_exporter</description>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>tag_kubernetes-server</name>
+          <description>Tag: Install kubernetes</description>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>tag_init-kubernetes</name>
+          <description>Tag: Run kubeadm init</description>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>tag_join-kubernetes</name>
+          <description>Tag: Join a kubernetes cluster with host</description>
+          <defaultValue>false</defaultValue>
         </hudson.model.BooleanParameterDefinition>
       </parameterDefinitions>
     </hudson.model.ParametersDefinitionProperty>
@@ -57,11 +149,15 @@ test-ubuntu ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansibl
     
     environment {
         JUNIT_OUTPUT_DIR    = &apos;junit/&apos;
+        
     }
     
     stages {
         stage(&apos;Preparation&apos;) { // for display purposes
             steps{
+                // Clean workspace
+                cleanWs()
+
                 // Get code from a GitHub repository
                 checkout([$class: &apos;GitSCM&apos;, branches: [[name: &apos;*/rick&apos;]], doGenerateSubmoduleConfigurations: false, extensions: [[$class: &apos;CloneOption&apos;, noTags: true, reference: &apos;&apos;, shallow: true], [$class: &apos;SubmoduleOption&apos;, disableSubmodules: false, parentCredentials: false, recursiveSubmodules: true, reference: &apos;&apos;, shallow: true, trackingSubmodules: false]], submoduleCfg: [], userRemoteConfigs: [[url: &apos;https://github.com/basraven/la1r.git&apos;]]])
                 sh label: &apos;Create hosts&apos;, script: &apos;printf &quot;[la1r]\n$os $hosts&quot; &gt; ./cicd/ansible/hosts&apos;
@@ -71,7 +167,11 @@ test-ubuntu ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansibl
         }
         stage(&apos;Deploy&apos;) {
             steps{
-                ansiblePlaybook colorized: true, disableHostKeyChecking: true, installation: &apos;ansible&apos;, inventory: &apos;cicd/ansible/hosts&apos;, playbook: &apos;cicd/ansible/site.yml&apos;, tags: &apos;initial&apos;
+                script {
+                    tags = sh(returnStdout: true, script: &apos;bash ./cicd/jenkins/create-tags.sh&apos;).trim()
+                }
+                ansiblePlaybook colorized: true, disableHostKeyChecking: true, installation: &apos;ansible&apos;, inventory: &apos;cicd/ansible/hosts&apos;, playbook: &apos;cicd/ansible/site.yml&apos;, tags: &quot;${tags}&quot;    
+                
             }
         }
         stage(&apos;Results&apos;) {
