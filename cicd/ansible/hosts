@@ -1,10 +1,12 @@
-[vagrant]
-test-ubuntu ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.24.23
-test-centos ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.1.195
+[virtual]
+test-ubuntu ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.1.195
+# test-centos ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.1.195
 
 
-[vagrant:vars]
-ansible_python_interpreter=/usr/bin/python3
+[metal]
+metal-ubuntu ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.1.195
+# test-centos ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.1.195
+
 
 [qemu]
 # test-raspi  ansible_port=5022  ansible_user=pi       ansible_ssh_pass=raspberry ansible_host=192.168.1.234

@@ -27,17 +27,30 @@
         <hudson.model.TextParameterDefinition>
           <name>hosts</name>
           <description>Hosts to apply Ansible script on</description>
-          <defaultValue>[test]
+          <defaultValue>[virtual]
 test-ubuntu ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.1.195
 # test-centos ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.1.195
 
 
-[test:vars]
-# ansible_python_interpreter=/usr/bin/python3</defaultValue>
+[metal]
+metal-ubuntu ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.1.195
+# test-centos ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.1.195
+
+
+[qemu]
+# test-raspi  ansible_port=5022  ansible_user=pi       ansible_ssh_pass=raspberry ansible_host=192.168.1.234
+# linux-wayne ansible_host=10.8.0.1
+# raspi2 ansible_host=10.8.0.10
+# ali-bel ansible_host=10.8.0.10
+# carrot ansible_host=10.8.0.26
+
+#[raspis:vars]
+#ansible_ssh_private_key_file=~/.ssh/id_rsa
+</defaultValue>
           <trim>false</trim>
         </hudson.model.TextParameterDefinition>
         <jenkins.plugins.parameter__separator.ParameterSeparatorDefinition plugin="parameter-separator@1.0">
-          <name>separator-4fcd0ed7-766d-41d6-ad2f-f132affc8715</name>
+          <name>separator-8890dec4-f641-47fe-ba98-6f6702a9eed7</name>
           <description></description>
           <sectionHeader>Tags</sectionHeader>
           <sectionHeaderStyle></sectionHeaderStyle>
@@ -153,7 +166,7 @@ test-ubuntu ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansibl
     }
     
     stages {
-        stage(&apos;Preparation&apos;) { // for display purposes
+        stage(&apos;Workspace Preparation&apos;) { // for display purposes
             steps{
                 // Clean workspace
                 cleanWs()
@@ -165,19 +178,33 @@ test-ubuntu ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansibl
                 sh label: &apos;Copy ansible.cfg to /etc/ansible/ansible.cfg&apos;, script: &apos;mkdir -p /etc/ansible &amp;&amp; cp -f ./cicd/ansible/config/ansible.cfg /etc/ansible/ansible.cfg&apos;
             }
         }
-        stage(&apos;Deploy&apos;) {
+        stage(&apos;Virtual Deployment&apos;) {
             steps{
                 script {
                     tags = sh(returnStdout: true, script: &apos;bash ./cicd/jenkins/create-tags.sh&apos;).trim()
                 }
-                ansiblePlaybook colorized: true, disableHostKeyChecking: true, installation: &apos;ansible&apos;, inventory: &apos;cicd/ansible/hosts&apos;, playbook: &apos;cicd/ansible/site.yml&apos;, tags: &quot;${tags}&quot;    
-                
+                ansiblePlaybook colorized: true, disableHostKeyChecking: true, installation: &apos;ansible&apos;, inventory: &apos;cicd/ansible/hosts&apos;, extras: &apos;--limit=&quot;virtual&quot;&apos; , playbook: &apos;cicd/ansible/site.yml&apos;, tags: &quot;${tags}&quot;    
+                junit &apos;junit/site-*.xml&apos; 
             }
         }
-        stage(&apos;Results&apos;) {
+        stage(&apos;Virtual Tests&apos;) {
             steps {
-                junit &apos;junit/site-*.xml&apos;
-                // archiveArtifacts &apos;target/*.jar&apos;
+                sh label: &apos;Newman scripts for virtual tests&apos;, script: &apos;echo PLACEHOLDER&apos;
+            }
+        }    
+        stage(&apos;Metal Deployment&apos;) {
+            steps{
+                script {
+                    tags = sh(returnStdout: true, script: &apos;bash ./cicd/jenkins/create-tags.sh&apos;).trim()
+                }
+                ansiblePlaybook colorized: true, disableHostKeyChecking: true, installation: &apos;ansible&apos;, inventory: &apos;cicd/ansible/hosts&apos;, extras: &apos;--limit=&quot;metal&quot;&apos; , playbook: &apos;cicd/ansible/site.yml&apos;, tags: &quot;${tags}&quot;    
+                junit &apos;junit/site-*.xml&apos; 
+            }
+        }    
+        
+        stage(&apos;Metal Tests&apos;) {
+            steps {
+                sh label: &apos;Newman scripts for metal tests&apos;, script: &apos;echo PLACEHOLDER&apos;
             }
         }    
     }
