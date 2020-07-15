@@ -66,6 +66,20 @@ unclassified:
     useTls: false
   pollSCM:
     pollingThreadCount: 10
+  themeManager:
+    disableUserThemes: true
+    theme: "darkSystem" # use 'dark' for forcing the dark theme regardless of OS settings
+  lockableResourcesManager:
+    declaredResources:
+      - name: "linux-wayne"
+        description: "Linux-Wayne Ubuntu server"
+        labels: "metal"
+      - name: "50centos"
+        description: "50centos CentOS server"
+        labels: "metal"
+      - name: "ali-bel"
+        description: "ali-bel raspberry pi"
+        labels: "metal"
 tool:
   ansibleInstallation:
     installations:

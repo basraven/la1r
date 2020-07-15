@@ -7,29 +7,34 @@
         <string>jenkins.model.BuildDiscarderProperty</string>
         <string>org.jenkinsci.plugins.workflow.job.properties.DisableResumeJobProperty</string>
       </jobProperties>
-      <triggers/>
+      <triggers>
+        <string>hudson.triggers.SCMTrigger</string>
+      </triggers>
       <parameters>
-        <string>tag_nfs-client</string>
-        <string>tag_join-kubernetes</string>
-        <string>tag_returnvalue</string>
-        <string>hosts</string>
         <string>tag_docker</string>
         <string>tag_kubernetes-server</string>
         <string>tag_init-kubernetes</string>
         <string>tag_helper</string>
+        <string>tag_openvpn-client</string>
+        <string>tag_toolbox</string>
+        <string>tag_node_exporter</string>
+        <string>tag_users</string>
+        <string>tag_dns-server</string>
+        <string>tag_nfs-client</string>
+        <string>tag_join-kubernetes</string>
+        <string>tag_returnvalue</string>
+        <string>hosts</string>
         <string>tag_nfs-server</string>
         <string>tag_security</string>
         <string>tag_update</string>
-        <string>tag_openvpn-client</string>
         <string>tag_delete-ovpn-user</string>
         <string>tag_initial</string>
-        <string>tag_create_ovpn_user</string>
-        <string>join-kubernetes-token</string>
-        <string>tag_toolbox</string>
-        <string>tag_node_exporter</string>
+        <string>join_kubernetes_token</string>
+        <string>kubernetes_network_cidr</string>
         <string>tag_openvpn-server</string>
-        <string>tag_users</string>
-        <string>tag_dns-server</string>
+        <string>create_ovpn_user_name</string>
+        <string>delete_ovpn_user_name</string>
+        <string>tag_create-ovpn-user</string>
         <string>newman-tests</string>
       </parameters>
       <options/>
@@ -38,6 +43,14 @@
   <description></description>
   <keepDependencies>false</keepDependencies>
   <properties>
+    <org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
+      <triggers>
+        <hudson.triggers.SCMTrigger>
+          <spec></spec>
+          <ignorePostCommitHooks>false</ignorePostCommitHooks>
+        </hudson.triggers.SCMTrigger>
+      </triggers>
+    </org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
     <jenkins.model.BuildDiscarderProperty>
       <strategy class="hudson.tasks.LogRotator">
         <daysToKeep>-1</daysToKeep>
@@ -141,15 +154,27 @@
           <defaultValue>false</defaultValue>
         </hudson.model.BooleanParameterDefinition>
         <hudson.model.BooleanParameterDefinition>
-          <name>tag_create_ovpn_user</name>
+          <name>tag_create-ovpn-user</name>
           <description>Tag: Create a new OpenVPN user certificate</description>
           <defaultValue>false</defaultValue>
         </hudson.model.BooleanParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>create_ovpn_user_name</name>
+          <description>Username for new OpenVpn user</description>
+          <defaultValue></defaultValue>
+          <trim>true</trim>
+        </hudson.model.StringParameterDefinition>
         <hudson.model.BooleanParameterDefinition>
           <name>tag_delete-ovpn-user</name>
           <description>Tag: Delete an existing OpenVPN user certificate and revoke access</description>
           <defaultValue>false</defaultValue>
         </hudson.model.BooleanParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>delete_ovpn_user_name</name>
+          <description>Username for the OpenVpn user to delete</description>
+          <defaultValue></defaultValue>
+          <trim>true</trim>
+        </hudson.model.StringParameterDefinition>
         <hudson.model.BooleanParameterDefinition>
           <name>tag_docker</name>
           <description>Tag: Install Docker</description>
@@ -165,18 +190,19 @@
           <description>Tag: Run kubeadm init</description>
           <defaultValue>false</defaultValue>
         </hudson.model.BooleanParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>kubernetes_network_cidr</name>
+          <description>Kubernetes network CIDR for the new cluster</description>
+          <defaultValue></defaultValue>
+          <trim>true</trim>
+        </hudson.model.StringParameterDefinition>
         <hudson.model.BooleanParameterDefinition>
           <name>tag_join-kubernetes</name>
           <description>Tag: Join a kubernetes cluster with host</description>
           <defaultValue>false</defaultValue>
         </hudson.model.BooleanParameterDefinition>
-        <hudson.model.BooleanParameterDefinition>
-          <name>join-kubernetes-token</name>
-          <description>Tag: Join a kubernetes cluster with host</description>
-          <defaultValue>false</defaultValue>
-        </hudson.model.BooleanParameterDefinition>
         <hudson.model.StringParameterDefinition>
-          <name>join-kubernetes-token</name>
+          <name>join_kubernetes_token</name>
           <description>The join token to join the Kubernetes cluster</description>
           <defaultValue></defaultValue>
           <trim>true</trim>

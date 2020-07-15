@@ -1,9 +1,11 @@
 FROM jenkins/jenkins
 USER root
 
+
 # Install docker in docker
 RUN apt-get update && \
     apt-get -y install apt-transport-https \
+      apt-utils \
       ca-certificates \
       curl \
       gnupg2 \
@@ -44,6 +46,8 @@ RUN ssh-keygen -f /root/.ssh/id_rsa -t rsa -N ''
 
 # allows to skip Jenkins setup wizard
 ENV JAVA_OPTS -Djenkins.install.runSetupWizard=false
+
+ENV CASC_JENKINS_CONFIG=/var/jenkins_home/casc_configs/jenkins.yaml
 
 # Jenkins runs all grovy files from init.groovy.d dir
 # use this for creating default admin user

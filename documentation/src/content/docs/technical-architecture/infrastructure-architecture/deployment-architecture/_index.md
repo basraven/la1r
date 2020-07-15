@@ -35,6 +35,7 @@ The following tags are used in Ansible:
 * node_exporter         - Install prometheus_node_exporter
 * kubernetes-server     - Install Kubernetes
 * init-kubernetes       - Run kubeadm init
+  * Optional ```---extra-vars "kubernetes_cidr=10.244.0.0/16"```
 * join-kubernetes       - Join a kubernetes cluster
   * Requires ```---extra-vars "kubernetes_master=1.1.1.1"```
   * Requires ```/credentials/kubernetes/join-token.yaml"```

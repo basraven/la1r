@@ -20,4 +20,6 @@ ws-cleanup
 test-results-aggregator
 parameter-separator
 dark-theme
-
+lockable-resources
+ansicolor
+test-results-analyzer

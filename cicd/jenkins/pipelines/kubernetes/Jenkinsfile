@@ -8,6 +8,9 @@ pipeline{
         
         booleanParam defaultValue: false, description: 'Perform newman tests', name: 'newman-tests'
         
+        booleanParam defaultValue: false, description: 'Deploy network architecture', name: 'network-deploy'
+        booleanParam defaultValue: false, description: 'Deploy Kubernetes Dashboard', name: 'dashboard-deploy'
+        
     }
 
     agent {
@@ -35,16 +38,14 @@ pipeline{
         stage('Virtual Deployment') {
             steps{
                 script {
-                    tags = sh(returnStdout: true, script: 'bash ./cicd/jenkins/pipelines/ansible/create-tags.sh').trim()
+                    deployKubernetes('virtual')
                 }
-                ansiblePlaybook colorized: true, disableHostKeyChecking: true, installation: 'ansible', inventory: 'cicd/ansible/hosts', extras: '--limit="virtual"' , playbook: 'cicd/ansible/site.yml', tags: "${tags}"    
-                junit 'junit/site-*.xml' 
             }
         }
         stage('Virtual Tests') {
             steps {
                 script{
-                    if($newman-tests != false){
+                    if("${newman-tests}" != "false"){
                         sh label: 'Execute Newman', 
                         script: '''mkdir -p ./newman ; 
                         cd ./newman ; 
@@ -57,17 +58,15 @@ pipeline{
         stage('Metal Deployment') {
             steps{
                 script {
-                    tags = sh(returnStdout: true, script: 'bash ./cicd/jenkins/pipelines/ansible/create-tags.sh').trim()
+                    deployKubernetes('metal')
                 }
-                ansiblePlaybook colorized: true, disableHostKeyChecking: true, installation: 'ansible', inventory: 'cicd/ansible/hosts', extras: '--limit="metal"' , playbook: 'cicd/ansible/site.yml', tags: "${tags}"    
-                junit 'junit/site-*.xml' 
             }
         }    
         
         stage('Metal Tests') {
             steps{
                 script{
-                    if("${newman-tests}" != false){
+                    if("${newman-tests}" != "false"){
                         sh label: 'Execute Newman', 
                         script: '''mkdir -p ./newman ; 
                         cd ./newman ; 
@@ -78,4 +77,31 @@ pipeline{
             }
         }    
     }
+}
+
+// Primary deployment function for virtual and metal
+def deployKubernetes(String environment){
+    echo 'Deploying Kubernetes Assets...'
+    if("${network-deploy}" != "false"){
+        networkDeploy(environment)
+    }
+
+}
+
+// def network-deploy(String a) {
+def networkDeploy(String environment) {
+    echo 'Deploying on' + environment
+    // - kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
+
+    // - kubectl apply -f https://raw.githubusercontent.com/weaveworks/scope/master/examples/k8s/ns.yaml
+    // - kubectl apply -f https://raw.githubusercontent.com/weaveworks/scope/master/examples/k8s/cluster-role-binding.yaml
+    // - kubectl apply -f https://raw.githubusercontent.com/weaveworks/scope/master/examples/k8s/cluster-role.yaml
+    // - kubectl apply -f https://raw.githubusercontent.com/weaveworks/scope/master/examples/k8s/deploy.yaml
+    // # - kubectl apply -f https://raw.githubusercontent.com/weaveworks/scope/master/examples/k8s/ds.yaml # untaint for pi
+    // - kubectl apply -f kube-system/weave-scope/ds.yaml
+    // - kubectl apply -f https://raw.githubusercontent.com/weaveworks/scope/master/examples/k8s/probe-deploy.yaml
+    // - kubectl apply -f https://raw.githubusercontent.com/weaveworks/scope/master/examples/k8s/psp.yaml
+    // - kubectl apply -f https://raw.githubusercontent.com/weaveworks/scope/master/examples/k8s/sa.yaml
+    // - kubectl apply -f https://raw.githubusercontent.com/weaveworks/scope/master/examples/k8s/svc.yaml
+    // - kubectl apply -f kube-system/weave-scope/scope-ingress.yam
 }

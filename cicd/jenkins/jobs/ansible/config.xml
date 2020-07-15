@@ -11,15 +11,15 @@
     <com.cloudbees.hudson.plugins.folder.properties.FolderCredentialsProvider_-FolderCredentialsProperty>
       <domainCredentialsMap class="hudson.util.CopyOnWriteMap$Hash">
         <entry>
-          <com.cloudbees.plugins.credentials.domains.Domain plugin="credentials@2.3.11">
+          <com.cloudbees.plugins.credentials.domains.Domain plugin="credentials@2.3.12">
             <specifications/>
           </com.cloudbees.plugins.credentials.domains.Domain>
           <java.util.concurrent.CopyOnWriteArrayList>
-            <com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl plugin="credentials@2.3.11">
+            <com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl plugin="credentials@2.3.12">
               <id>b96bf1c5-749b-41f3-9930-e10afc129498</id>
               <description>vagrant default</description>
               <username>vagrant</username>
-              <password>{AQAAABAAAAAQy/UJtZxfNfr4rwNuEvqyY8vplYMHlIhwC/Sor8r3vXI=}</password>
+              <password>{AQAAABAAAADQWwJGZNhqULfUEeB/EcyEO1VZrGoeYsfLc+ILSsG4BkdM3cVyj5zLOaL149ECTi+fV2ZNk/OxeR/2XDZgXI2Qk0xxCAMKCCL8sSNW0cQdbYIi/Pq9JwZFg3ICvfu/lcng8jOJF16w5WDYoJ7uvrtkoEYoJ1+CE/ErS8S2k4Hhy4CR23iDZr3BGBmVuk8BviypuEpofjVg+ypkBwwHBj40putcmjb5p8gENnHXCdSNeLl4yDf5q8leyxdDJorK9kSruiGl8mB82Rd9HghSensu+aeeXog+yEQ4YQ63uUokOOk=}</password>
             </com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl>
           </java.util.concurrent.CopyOnWriteArrayList>
         </entry>
