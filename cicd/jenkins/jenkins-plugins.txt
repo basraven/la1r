@@ -19,3 +19,5 @@ greenballs
 ws-cleanup
 test-results-aggregator
 parameter-separator
+dark-theme
+

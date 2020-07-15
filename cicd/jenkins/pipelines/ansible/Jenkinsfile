@@ -1,0 +1,129 @@
+pipeline{
+    options {
+        buildDiscarder logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '3')
+        disableResume()
+    }
+
+    parameters {
+        text defaultValue: '''
+                [virtual]
+                test-ubuntu ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.1.195
+                # test-centos ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.1.195
+
+
+                [metal]
+                metal-ubuntu ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.1.195
+                # test-centos ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.1.195
+
+
+                [qemu]
+                # test-raspi  ansible_port=5022  ansible_user=pi       ansible_ssh_pass=raspberry ansible_host=192.168.1.234
+                # linux-wayne ansible_host=10.8.0.1
+                # raspi2 ansible_host=10.8.0.10
+                # ali-bel ansible_host=10.8.0.10
+                # carrot ansible_host=10.8.0.26
+
+                #[raspis:vars]
+                #ansible_ssh_private_key_file=~/.ssh/id_rsa
+            ''', description: 'Hosts to apply Ansible script on', name: 'hosts'
+
+        booleanParam defaultValue: false, description: 'Perform newman tests', name: 'newman-tests'
+        booleanParam defaultValue: true,  description: 'Tag: Helper scripts for the run itself, e.g. determine OS', name: 'tag_helper'
+        booleanParam defaultValue: true,  description: 'Tag: Script needed for a first ever run of the OS', name: 'tag_initial'
+        booleanParam defaultValue: false, description: 'Tag: Creation of users', name: 'tag_users'
+        booleanParam defaultValue: true,  description: 'Tag: Update the package managers', name: 'tag_update'
+        booleanParam defaultValue: false, description: 'Tag: Security related packages and updates', name: 'tag_security'
+        booleanParam defaultValue: true,  description: 'Tag: Placement of /cicd/ansible/toolbox scripts, used for infrastructure management', name: 'tag_toolbox'
+        
+        booleanParam defaultValue: false, description: 'Tag: Install node_exporter', name: 'tag_node_exporter'
+        
+        booleanParam defaultValue: false, description: 'Tag: Install DNS server', name: 'tag_dns-server'
+        
+        booleanParam defaultValue: false, description: 'Tag: Install NFS Client', name: 'tag_nfs-client'
+        booleanParam defaultValue: false, description: 'Tag: Install NFS Server', name: 'tag_nfs-server'
+        
+        booleanParam defaultValue: false, description: 'Tag: Install OpenVPN client', name: 'tag_openvpn-client'
+        booleanParam defaultValue: false, description: 'Tag: Install OpenVPN server and create new CA (backup old)', name: 'tag_openvpn-server'
+        booleanParam defaultValue: false, description: 'Tag: Create a new OpenVPN user certificate', name: 'tag_create_ovpn_user'
+        booleanParam defaultValue: false, description: 'Tag: Delete an existing OpenVPN user certificate and revoke access', name: 'tag_delete-ovpn-user'
+        
+
+        booleanParam defaultValue: false, description: 'Tag: Install Docker', name: 'tag_docker'
+        booleanParam defaultValue: false, description: 'Tag: Install kubernetes', name: 'tag_kubernetes-server'
+        booleanParam defaultValue: false, description: 'Tag: Run kubeadm init', name: 'tag_init-kubernetes'
+        booleanParam defaultValue: false, description: 'Tag: Join a kubernetes cluster with host', name: 'tag_join-kubernetes'
+        booleanParam defaultValue: false, description: 'Tag: Join a kubernetes cluster with host', name: 'join-kubernetes-token'
+        string defaultValue: '', description: 'The join token to join the Kubernetes cluster', name: 'join-kubernetes-token', trim: true
+
+        booleanParam defaultValue: false, description: 'Tag: Set return value of the playbook', name: 'tag_returnvalue'
+    }
+
+    agent {
+        label '!windows'
+    }
+    
+    environment {
+        JUNIT_OUTPUT_DIR    = 'junit/'
+        
+    }
+    
+    stages {
+        stage('Workspace Preparation') { // for display purposes
+            steps{
+                // Clean workspace
+                cleanWs()
+
+                // Get code from a GitHub repository
+                checkout([$class: 'GitSCM', branches: [[name: '*/rick']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'CloneOption', noTags: true, reference: '', shallow: true], [$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: false, recursiveSubmodules: true, reference: '', shallow: true, trackingSubmodules: false]], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/basraven/la1r.git']]])
+                sh label: 'Create hosts', script: 'printf "[la1r]\n$os $hosts" > ./cicd/ansible/hosts'
+                sh label: "Create ${JUNIT_OUTPUT_DIR}", script: "mkdir -p ${JUNIT_OUTPUT_DIR}"
+                sh label: 'Copy ansible.cfg to /etc/ansible/ansible.cfg', script: 'mkdir -p /etc/ansible && cp -f ./cicd/ansible/config/ansible.cfg /etc/ansible/ansible.cfg'
+            }
+        }
+        stage('Virtual Deployment') {
+            steps{
+                script {
+                    tags = sh(returnStdout: true, script: 'bash ./cicd/jenkins/pipelines/ansible/create-tags.sh').trim()
+                }
+                ansiblePlaybook colorized: true, disableHostKeyChecking: true, installation: 'ansible', inventory: 'cicd/ansible/hosts', extras: '--limit="virtual"' , playbook: 'cicd/ansible/site.yml', tags: "${tags}"    
+                junit 'junit/site-*.xml' 
+            }
+        }
+        stage('Virtual Tests') {
+            steps {
+                script{
+                    if($newman-tests != false){
+                        sh label: 'Execute Newman', 
+                        script: '''mkdir -p ./newman ; 
+                        cd ./newman ; 
+                        npm install --prefix ./ newman ;
+                        node ./node_modules/newman/bin/newman.js run ../cicd/jenkins/tests/newman/newman-ansible.json -e ../cicd/jenkins/tests/newman/environments/virtual.json --reporters cli,junit --reporter-junit-export ./newman-junit.xml'''
+                    }
+                }
+            }
+        }    
+        stage('Metal Deployment') {
+            steps{
+                script {
+                    tags = sh(returnStdout: true, script: 'bash ./cicd/jenkins/pipelines/ansible/create-tags.sh').trim()
+                }
+                ansiblePlaybook colorized: true, disableHostKeyChecking: true, installation: 'ansible', inventory: 'cicd/ansible/hosts', extras: '--limit="metal"' , playbook: 'cicd/ansible/site.yml', tags: "${tags}"    
+                junit 'junit/site-*.xml' 
+            }
+        }    
+        
+        stage('Metal Tests') {
+            steps{
+                script{
+                    if($newman-tests != false){
+                        sh label: 'Execute Newman', 
+                        script: '''mkdir -p ./newman ; 
+                        cd ./newman ; 
+                        npm install --prefix ./ newman ;
+                        node ./node_modules/newman/bin/newman.js run ../cicd/jenkins/tests/newman/newman-ansible.json -e ../cicd/jenkins/tests/newman/environments/virtual.json --reporters cli,junit --reporter-junit-export ./newman-junit.xml'''
+                    }
+                }
+            }
+        }    
+    }
+}

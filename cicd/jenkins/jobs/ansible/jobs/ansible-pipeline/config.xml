@@ -1,0 +1,214 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@2.39">
+  <actions>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction plugin="pipeline-model-definition@1.7.1"/>
+    <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction plugin="pipeline-model-definition@1.7.1">
+      <jobProperties>
+        <string>jenkins.model.BuildDiscarderProperty</string>
+        <string>org.jenkinsci.plugins.workflow.job.properties.DisableResumeJobProperty</string>
+      </jobProperties>
+      <triggers/>
+      <parameters>
+        <string>tag_nfs-client</string>
+        <string>tag_join-kubernetes</string>
+        <string>tag_returnvalue</string>
+        <string>hosts</string>
+        <string>tag_docker</string>
+        <string>tag_kubernetes-server</string>
+        <string>tag_init-kubernetes</string>
+        <string>tag_helper</string>
+        <string>tag_nfs-server</string>
+        <string>tag_security</string>
+        <string>tag_update</string>
+        <string>tag_openvpn-client</string>
+        <string>tag_delete-ovpn-user</string>
+        <string>tag_initial</string>
+        <string>tag_create_ovpn_user</string>
+        <string>join-kubernetes-token</string>
+        <string>tag_toolbox</string>
+        <string>tag_node_exporter</string>
+        <string>tag_openvpn-server</string>
+        <string>tag_users</string>
+        <string>tag_dns-server</string>
+        <string>newman-tests</string>
+      </parameters>
+      <options/>
+    </org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction>
+  </actions>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <jenkins.model.BuildDiscarderProperty>
+      <strategy class="hudson.tasks.LogRotator">
+        <daysToKeep>-1</daysToKeep>
+        <numToKeep>3</numToKeep>
+        <artifactDaysToKeep>-1</artifactDaysToKeep>
+        <artifactNumToKeep>-1</artifactNumToKeep>
+      </strategy>
+    </jenkins.model.BuildDiscarderProperty>
+    <org.jenkinsci.plugins.workflow.job.properties.DisableResumeJobProperty/>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.TextParameterDefinition>
+          <name>hosts</name>
+          <description>Hosts to apply Ansible script on</description>
+          <defaultValue>
+                [virtual]
+                test-ubuntu ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.1.195
+                # test-centos ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.1.195
+
+
+                [metal]
+                metal-ubuntu ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.1.195
+                # test-centos ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.1.195
+
+
+                [qemu]
+                # test-raspi  ansible_port=5022  ansible_user=pi       ansible_ssh_pass=raspberry ansible_host=192.168.1.234
+                # linux-wayne ansible_host=10.8.0.1
+                # raspi2 ansible_host=10.8.0.10
+                # ali-bel ansible_host=10.8.0.10
+                # carrot ansible_host=10.8.0.26
+
+                #[raspis:vars]
+                #ansible_ssh_private_key_file=~/.ssh/id_rsa
+            </defaultValue>
+          <trim>false</trim>
+        </hudson.model.TextParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>newman-tests</name>
+          <description>Perform newman tests</description>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>tag_helper</name>
+          <description>Tag: Helper scripts for the run itself, e.g. determine OS</description>
+          <defaultValue>true</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>tag_initial</name>
+          <description>Tag: Script needed for a first ever run of the OS</description>
+          <defaultValue>true</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>tag_users</name>
+          <description>Tag: Creation of users</description>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>tag_update</name>
+          <description>Tag: Update the package managers</description>
+          <defaultValue>true</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>tag_security</name>
+          <description>Tag: Security related packages and updates</description>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>tag_toolbox</name>
+          <description>Tag: Placement of /cicd/ansible/toolbox scripts, used for infrastructure management</description>
+          <defaultValue>true</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>tag_node_exporter</name>
+          <description>Tag: Install node_exporter</description>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>tag_dns-server</name>
+          <description>Tag: Install DNS server</description>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>tag_nfs-client</name>
+          <description>Tag: Install NFS Client</description>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>tag_nfs-server</name>
+          <description>Tag: Install NFS Server</description>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>tag_openvpn-client</name>
+          <description>Tag: Install OpenVPN client</description>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>tag_openvpn-server</name>
+          <description>Tag: Install OpenVPN server and create new CA (backup old)</description>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>tag_create_ovpn_user</name>
+          <description>Tag: Create a new OpenVPN user certificate</description>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>tag_delete-ovpn-user</name>
+          <description>Tag: Delete an existing OpenVPN user certificate and revoke access</description>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>tag_docker</name>
+          <description>Tag: Install Docker</description>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>tag_kubernetes-server</name>
+          <description>Tag: Install kubernetes</description>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>tag_init-kubernetes</name>
+          <description>Tag: Run kubeadm init</description>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>tag_join-kubernetes</name>
+          <description>Tag: Join a kubernetes cluster with host</description>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>join-kubernetes-token</name>
+          <description>Tag: Join a kubernetes cluster with host</description>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>join-kubernetes-token</name>
+          <description>The join token to join the Kubernetes cluster</description>
+          <defaultValue></defaultValue>
+          <trim>true</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>tag_returnvalue</name>
+          <description>Tag: Set return value of the playbook</description>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition" plugin="workflow-cps@2.81">
+    <scm class="hudson.plugins.git.GitSCM" plugin="git@4.3.0">
+      <configVersion>2</configVersion>
+      <userRemoteConfigs>
+        <hudson.plugins.git.UserRemoteConfig>
+          <url>https://github.com/basraven/la1r.git</url>
+        </hudson.plugins.git.UserRemoteConfig>
+      </userRemoteConfigs>
+      <branches>
+        <hudson.plugins.git.BranchSpec>
+          <name>*/rick</name>
+        </hudson.plugins.git.BranchSpec>
+      </branches>
+      <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+      <submoduleCfg class="list"/>
+      <extensions/>
+    </scm>
+    <scriptPath>cicd/jenkins/pipelines/ansible/Jenkinsfile</scriptPath>
+    <lightweight>true</lightweight>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>
