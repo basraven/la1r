@@ -181,7 +181,7 @@ metal-ubuntu ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansib
         stage(&apos;Virtual Deployment&apos;) {
             steps{
                 script {
-                    tags = sh(returnStdout: true, script: &apos;bash ./cicd/jenkins/scripts/create-tags.sh&apos;).trim()
+                    tags = sh(returnStdout: true, script: &apos;bash ./cicd/jenkins/pipelines/ansible/create-tags.sh&apos;).trim()
                 }
                 ansiblePlaybook colorized: true, disableHostKeyChecking: true, installation: &apos;ansible&apos;, inventory: &apos;cicd/ansible/hosts&apos;, extras: &apos;--limit=&quot;virtual&quot;&apos; , playbook: &apos;cicd/ansible/site.yml&apos;, tags: &quot;${tags}&quot;    
                 junit &apos;junit/site-*.xml&apos; 
@@ -199,7 +199,7 @@ metal-ubuntu ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansib
         stage(&apos;Metal Deployment&apos;) {
             steps{
                 script {
-                    tags = sh(returnStdout: true, script: &apos;bash ./cicd/jenkins/scripts/create-tags.sh&apos;).trim()
+                    tags = sh(returnStdout: true, script: &apos;bash ./cicd/jenkins/pipelines/ansible/create-tags.sh&apos;).trim()
                 }
                 ansiblePlaybook colorized: true, disableHostKeyChecking: true, installation: &apos;ansible&apos;, inventory: &apos;cicd/ansible/hosts&apos;, extras: &apos;--limit=&quot;metal&quot;&apos; , playbook: &apos;cicd/ansible/site.yml&apos;, tags: &quot;${tags}&quot;    
                 junit &apos;junit/site-*.xml&apos; 
