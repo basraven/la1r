@@ -1,0 +1,9 @@
+---
+- name: Reset Kubernetes / Reset Kubernetes
+  become: yes
+  shell: |
+    kubeadm reset --force
+  args:
+    executable: /bin/bash
+  async: 600
+  poll: 5

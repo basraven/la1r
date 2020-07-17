@@ -1,15 +1,23 @@
 pipeline{
+    triggers {
+        pollSCM ''
+    }
     options {
-        buildDiscarder logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '3')
+        // buildDiscarder logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '10', daysToKeepStr: '', numToKeepStr: '10')
         disableResume()
+        ansiColor('xterm')
     }
 
     parameters {
         
-        booleanParam defaultValue: false, description: 'Perform newman tests', name: 'newman-tests'
+        booleanParam defaultValue: false, description: 'Deploy to Metal', name: 'deploy_to_metal'
+        booleanParam defaultValue: false, description: 'Perform newman tests', name: 'newman_tests'
         
-        booleanParam defaultValue: false, description: 'Deploy network architecture', name: 'network-deploy'
-        booleanParam defaultValue: false, description: 'Deploy Kubernetes Dashboard', name: 'dashboard-deploy'
+        booleanParam defaultValue: false, description: 'Untaint the Kubernetes Master Node to receive pods', name: 'deploy_untaint_master'
+        booleanParam defaultValue: false, description: 'Deploy network architecture', name: 'deploy_network'
+        booleanParam defaultValue: true,  description: 'Deploy Kubernetes Dashboard', name: 'deploy_dashboard'
+        booleanParam defaultValue: false, description: 'Deploy Storage (Rook/Ceph)', name: 'deploy_storage'
+        booleanParam defaultValue: false, description: 'Deploy Metal LB', name: 'deploy_metallb'
         
     }
 
@@ -26,36 +34,86 @@ pipeline{
         stage('Workspace Preparation') { // for display purposes
             steps{
                 // Clean workspace
-                cleanWs()
+                deleteDir()
 
                 // Get code from a GitHub repository
-                checkout([$class: 'GitSCM', branches: [[name: '*/rick']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'CloneOption', noTags: true, reference: '', shallow: true], [$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: false, recursiveSubmodules: true, reference: '', shallow: true, trackingSubmodules: false]], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/basraven/la1r.git']]])
-                sh label: 'Create hosts', script: 'printf "[la1r]\n$os $hosts" > ./cicd/ansible/hosts'
-                sh label: "Create ${JUNIT_OUTPUT_DIR}", script: "mkdir -p ${JUNIT_OUTPUT_DIR}"
-                sh label: 'Copy ansible.cfg to /etc/ansible/ansible.cfg', script: 'mkdir -p /etc/ansible && cp -f ./cicd/ansible/config/ansible.cfg /etc/ansible/ansible.cfg'
+                git branch: 'rick', url: 'https://github.com/basraven/la1r.git'
             }
         }
         stage('Virtual Deployment') {
-            steps{
+            steps {
                 script {
-                    deployKubernetes('virtual')
+                    if(params.deploy_untaint_master){
+                        sh label: 'Untaint master', returnStatus: true, script: "kubectl taint nodes --all node-role.kubernetes.io/master-"
+                    }
+                    if(params.deploy_network){
+                        sh label: 'Deploy WeaveWorks', returnStatus: true, script: 'kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d \'\\n\')"'
+                        // sh label: 'Deploy Flannel', returnStatus: true, script: 'kubectl apply -f "https://github.com/coreos/flannel/raw/master/Documentation/kube-flannel.yml"'
+                        
+                    }
+                    if(params.deploy_dashboard){
+                        sh label: 'Deploy Dashboard', returnStatus: true, script: 'kubectl apply -f "https://raw.githubusercontent.com/kubernetes/dashboard/v2.0.3/aio/deploy/recommended.yaml"'
+                        sh label: 'Deploy Dashboard Admin Account', returnStatus: true, script: 'kubectl apply -f kubernetes/kubernetes-dashboard/dashboard-admin.yaml'
+                        sh label: 'Deploy Dashboard Readonly Account', returnStatus: true, script: 'kubectl apply -f kubernetes/kubernetes-dashboard/dashboard-readonly.yaml'
+                        sh label: 'Get ', script: '''dashboardtoken=`kubectl -n kubernetes-dashboard describe secret $(kubectl -n kubernetes-dashboard get secret | grep admin-user | awk \'{print $1}\') | sed -En "s/token:\\w*\\r*\\s*(.*)$/\\1/p" | tail -n 1` '''
+                    }
+                    if(params.deploy_storage){
+                        sh label: 'Rook Ceph - Deploy Operator', returnStatus: true, script: '''git clone --single-branch --branch release-1.3 https://github.com/rook/rook.git
+                        cd rook/cluster/examples/kubernetes/ceph
+                        kubectl apply -f common.yaml
+                        kubectl apply -f operator.yaml
+                        kubectl apply -f cluster.yaml
+                        '''
+                        sh label: 'Rook Ceph - Deploy Configuration', returnStatus: true, script: ''' kubectl apply -f kubernetes/rook/rook.yml '''
+                        
+                        sh label: 'Rook Ceph - Get Admin Token', returnStatus: true, script: ''' kubectl -n rook-ceph get secret rook-ceph-dashboard-password -o jsonpath="{['data']['password']}" | base64 --decode && echo '''
+                    }
+                    if(params.deploy_metallb){
+                        sh label: 'Deploy Metallb - strict arp', returnStatus: true, script: '''# actually apply the changes, returns nonzero returncode on errors only
+                        kubectl get configmap kube-proxy -n kube-system -o yaml | \
+                        sed -e "s/strictARP: false/strictARP: true/" | \
+                        kubectl apply -f - -n kube-system
+                        '''
+                        sh label: 'Deploy Metallb - Install definitions', returnStatus: true, script: '''# applying the definitions
+                        kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.3/manifests/namespace.yaml
+                        kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.9.3/manifests/metallb.yaml
+                        # On first install only
+                        kubectl create secret generic -n metallb-system memberlist --from-literal=secretkey="$(openssl rand -base64 128)"
+                        '''
+                        sh label: 'Deploy Metallb - Deploy config, making it start', returnStatus: true, script: '''# Deploying configmap to trigger the run
+                        kubectl apply -f kubernetes/metallb-system/metallb.yml
+                        '''
+                        
+                        sh label: 'Deploy Metallb - Deploy example', returnStatus: true, script: '''# Deploying example app for metallb
+                        kubectl apply -f kubernetes/metallb-system/example.yml
+                        '''
+                    }
                 }
             }
+
         }
         stage('Virtual Tests') {
+            when {
+                expression { 
+                    params.newman_tests == true
+                }
+            }
             steps {
                 script{
-                    if("${newman-tests}" != "false"){
-                        sh label: 'Execute Newman', 
-                        script: '''mkdir -p ./newman ; 
-                        cd ./newman ; 
-                        npm install --prefix ./ newman ;
-                        node ./node_modules/newman/bin/newman.js run ../cicd/jenkins/tests/newman/newman-ansible.json -e ../cicd/jenkins/tests/newman/environments/virtual.json --reporters cli,junit --reporter-junit-export ./newman-junit.xml'''
-                    }
+                    sh label: 'Execute Newman', 
+                    script: '''mkdir -p ./newman ; 
+                    cd ./newman ; 
+                    npm install --prefix ./ newman ;
+                    node ./node_modules/newman/bin/newman.js run ../cicd/jenkins/tests/newman/newman-ansible.json -e ../cicd/jenkins/tests/newman/environments/virtual.json --reporters cli,junit --reporter-junit-export ./newman-junit.xml'''
                 }
             }
         }    
         stage('Metal Deployment') {
+            when {
+                expression { 
+                    params.deploy_to_metal == true
+                }
+            }
             steps{
                 script {
                     deployKubernetes('metal')
@@ -64,44 +122,23 @@ pipeline{
         }    
         
         stage('Metal Tests') {
+            when {
+                expression { 
+                    params.newman_tests == true &&
+                    params.deploy_to_metal == true
+
+                }
+            }
             steps{
                 script{
-                    if("${newman-tests}" != "false"){
-                        sh label: 'Execute Newman', 
-                        script: '''mkdir -p ./newman ; 
-                        cd ./newman ; 
-                        npm install --prefix ./ newman ;
-                        node ./node_modules/newman/bin/newman.js run ../cicd/jenkins/tests/newman/newman-ansible.json -e ../cicd/jenkins/tests/newman/environments/virtual.json --reporters cli,junit --reporter-junit-export ./newman-junit.xml'''
-                    }
+                    sh label: 'Execute Newman', 
+                    script: '''mkdir -p ./newman ; 
+                    cd ./newman ; 
+                    npm install --prefix ./ newman ;
+                    node ./node_modules/newman/bin/newman.js run ../cicd/jenkins/tests/newman/newman-ansible.json -e ../cicd/jenkins/tests/newman/environments/virtual.json --reporters cli,junit --reporter-junit-export ./newman-junit.xml'''
                 }
             }
         }    
     }
 }
 
-// Primary deployment function for virtual and metal
-def deployKubernetes(String environment){
-    echo 'Deploying Kubernetes Assets...'
-    if("${network-deploy}" != "false"){
-        networkDeploy(environment)
-    }
-
-}
-
-// def network-deploy(String a) {
-def networkDeploy(String environment) {
-    echo 'Deploying on' + environment
-    // - kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
-
-    // - kubectl apply -f https://raw.githubusercontent.com/weaveworks/scope/master/examples/k8s/ns.yaml
-    // - kubectl apply -f https://raw.githubusercontent.com/weaveworks/scope/master/examples/k8s/cluster-role-binding.yaml
-    // - kubectl apply -f https://raw.githubusercontent.com/weaveworks/scope/master/examples/k8s/cluster-role.yaml
-    // - kubectl apply -f https://raw.githubusercontent.com/weaveworks/scope/master/examples/k8s/deploy.yaml
-    // # - kubectl apply -f https://raw.githubusercontent.com/weaveworks/scope/master/examples/k8s/ds.yaml # untaint for pi
-    // - kubectl apply -f kube-system/weave-scope/ds.yaml
-    // - kubectl apply -f https://raw.githubusercontent.com/weaveworks/scope/master/examples/k8s/probe-deploy.yaml
-    // - kubectl apply -f https://raw.githubusercontent.com/weaveworks/scope/master/examples/k8s/psp.yaml
-    // - kubectl apply -f https://raw.githubusercontent.com/weaveworks/scope/master/examples/k8s/sa.yaml
-    // - kubectl apply -f https://raw.githubusercontent.com/weaveworks/scope/master/examples/k8s/svc.yaml
-    // - kubectl apply -f kube-system/weave-scope/scope-ingress.yam
-}

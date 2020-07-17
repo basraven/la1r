@@ -71,6 +71,12 @@ unclassified:
     theme: "darkSystem" # use 'dark' for forcing the dark theme regardless of OS settings
   lockableResourcesManager:
     declaredResources:
+      - name: "virtual-ubuntu"
+        description: "Local Ubuntu VM"
+        labels: "virtual"
+      - name: "virtual-centos"
+        description: "Local CentOS VM"
+        labels: "virtual"
       - name: "linux-wayne"
         description: "Linux-Wayne Ubuntu server"
         labels: "metal"

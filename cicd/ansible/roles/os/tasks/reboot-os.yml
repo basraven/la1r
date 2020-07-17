@@ -1,0 +1,6 @@
+---
+- name: "Reboot / Reboot machine"
+  become: yes
+  reboot:
+    msg: "Ansible: Rebooting machine!"
+    reboot_timeout: 300

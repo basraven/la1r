@@ -1,18 +1,18 @@
 ---
 - include: create-backup-user.yml
   tags:
-    - nfs-server
-    - nfs-client 
+    - nfs_server
+    - nfs_client 
 - include: nfs-folders.yml
   tags: 
-    - nfs-server
-    - nfs-client 
+    - nfs_server
+    - nfs_client 
 - include: nfs-common.yml
   tags: 
-    - nfs-server
-    - nfs-client 
+    - nfs_server
+    - nfs_client 
 - include: nfs-server.yml
-  tags: nfs-server
+  tags: nfs_server
 - include: nfs-client.yml
-  tags: nfs-client
+  tags: nfs_client
 

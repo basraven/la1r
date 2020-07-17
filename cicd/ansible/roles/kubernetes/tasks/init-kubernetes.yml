@@ -1,5 +1,6 @@
 ---
-- name: Init K8s
+- name: Init Kubernetes / Init Kubernetes
+  become: yes
   shell: |
     kubeadm init --pod-network-cidr="{{kubernetes_cidr}}" \
     --ignore-preflight-errors=all \
@@ -9,4 +10,12 @@
   async: 600
   poll: 5
 
+- name: "Init Kubernetes / Copy kubeconfig to {{ target_user_name }} home directory"
+  become: yes
+  shell: |
+    mkdir -p ~/.kube
+    cp -f /etc/kubernetes/admin.conf ~/.kube/config
+    chown -f "{{ target_user_name }}:{{ target_user_name }}" ~/.kube/config
+  args:
+    executable: /bin/bash
         

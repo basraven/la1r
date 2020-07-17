@@ -4,3 +4,10 @@
     - helper
     - define-os
     - initial
+- include: reboot-os.yml
+  tags:
+    - reboot
+- include: set-hostname.yml
+  tags:
+    - hostname
+    - initial

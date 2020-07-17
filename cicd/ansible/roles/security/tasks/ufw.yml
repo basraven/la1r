@@ -9,6 +9,16 @@
   ufw:
     state: enabled
   when: '"qemu" not in group_names' # QEMU raspberry doesn't like this for some reason, not wasting time on this now, good luck future Seb (:
+
+- name: UFW / Disable firewalld for CentOS, we are using ufw
+  become: yes
+  systemd:
+    name: firewalld
+    state: stopped
+    enabled: no
+    force: yes
+  when: ansible_facts['distribution'] == "CentOS"
+  
 - name: UFW / Allow SSH
   become: yes
   ufw:

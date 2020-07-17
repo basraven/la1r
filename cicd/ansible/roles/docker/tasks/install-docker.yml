@@ -5,15 +5,20 @@
   become: yes
   shell: |
     dnf config-manager --add-repo=https://download.docker.com/linux/centos/docker-ce.repo
-    dnf install --nobest docker-ce
+    dnf install -y --nobest docker-ce
   args:
     executable: /bin/bash
   when: ansible_facts['distribution'] == "CentOS"
+  async: 300
+  poll: 5
 
 - name: Install Docker / Disable firewalld for CentOS, we are using ufw
   become: yes
-  firewalld:
-    state: disabled
+  systemd:
+    name: firewalld
+    state: stopped
+    enabled: no
+    force: yes
   when: ansible_facts['distribution'] == "CentOS"
 
 # Non CentOS
@@ -23,6 +28,8 @@
   args:
     executable: /bin/bash
   when: ansible_facts['distribution'] != "CentOS"
+  async: 300
+  poll: 5
 
 
 # Common

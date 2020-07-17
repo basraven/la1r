@@ -1,7 +1,7 @@
 ---
 - include: dnsmasq.yml
-  tags: dns-server
+  tags: dns_server
 - include: ufw.yml
-  tags: dns-server
+  tags: dns_server
 - include: fail2ban.yml
-  tags: dns-server
+  tags: dns_server

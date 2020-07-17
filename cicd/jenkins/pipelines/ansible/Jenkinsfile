@@ -1,25 +1,27 @@
 def EXTRA_VARS
+def KUBERNETES_DEFAULT_CIDR = '10.244.0.0/16'
 pipeline{
     triggers {
         pollSCM ''
     }
-
+      
     options {
-        buildDiscarder logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '', numToKeepStr: '3')
+        // buildDiscarder logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '10', daysToKeepStr: '', numToKeepStr: '10')
         disableResume()
         ansiColor('xterm')
     }
-
+    // https://codurance.com/2019/05/30/accessing-and-dumping-jenkins-credentials/
+    // https://tutorials.releaseworksacademy.com/learn/how-to-add-jenkins-credentials-with-curl-or-ansible
     parameters {
         text defaultValue: '''
                 [virtual]
-                test-ubuntu ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.1.195
-                # test-centos ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.1.195
+                test-ubuntu ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.2.197
+                # test-centos ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.2.195
 
 
                 [metal]
-                metal-ubuntu ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.1.195
-                # test-centos ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.1.195
+                metal-ubuntu ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.2.195
+                # test-centos ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.2.195
 
 
                 [qemu]
@@ -33,35 +35,41 @@ pipeline{
                 #ansible_ssh_private_key_file=~/.ssh/id_rsa
             ''', description: 'Hosts to apply Ansible script on', name: 'hosts'
 
-        booleanParam defaultValue: false, description: 'Perform newman tests', name: 'newman-tests'
+        booleanParam defaultValue: false, description: 'Deploy to Metal', name: 'deploy_to_metal'
+        booleanParam defaultValue: false, description: 'Perform newman tests', name: 'newman_tests'
+        booleanParam defaultValue: false, description: 'Tag: Reboot Machine', name: 'tag_reboot'
         booleanParam defaultValue: true,  description: 'Tag: Helper scripts for the run itself, e.g. determine OS', name: 'tag_helper'
-        booleanParam defaultValue: true,  description: 'Tag: Script needed for a first ever run of the OS', name: 'tag_initial'
+        // booleanParam defaultValue: true,  description: 'Tag: Script needed for a first ever run of the OS', name: 'tag_initial'
         booleanParam defaultValue: false, description: 'Tag: Creation of users', name: 'tag_users'
         booleanParam defaultValue: true,  description: 'Tag: Update the package managers', name: 'tag_update'
+        booleanParam defaultValue: false, description: 'Tag: Set hostname as inventory file', name: 'tag_hostname'
         booleanParam defaultValue: false, description: 'Tag: Security related packages and updates', name: 'tag_security'
         booleanParam defaultValue: true,  description: 'Tag: Placement of /cicd/ansible/toolbox scripts, used for infrastructure management', name: 'tag_toolbox'
         
         booleanParam defaultValue: false, description: 'Tag: Install node_exporter', name: 'tag_node_exporter'
         
-        booleanParam defaultValue: false, description: 'Tag: Install DNS server', name: 'tag_dns-server'
+        booleanParam defaultValue: false, description: 'Tag: Install DNS server', name: 'tag_dns_server'
         
-        booleanParam defaultValue: false, description: 'Tag: Install NFS Client', name: 'tag_nfs-client'
-        booleanParam defaultValue: false, description: 'Tag: Install NFS Server', name: 'tag_nfs-server'
+        booleanParam defaultValue: false, description: 'Tag: Install NFS Client', name: 'tag_nfs_client'
+        booleanParam defaultValue: false, description: 'Tag: Install NFS Server', name: 'tag_nfs_server'
         
-        booleanParam defaultValue: false, description: 'Tag: Install OpenVPN client', name: 'tag_openvpn-client'
-        booleanParam defaultValue: false, description: 'Tag: Install OpenVPN server and create new CA (backup old)', name: 'tag_openvpn-server'
-        booleanParam defaultValue: false, description: 'Tag: Create a new OpenVPN user certificate', name: 'tag_create-ovpn-user'
+        booleanParam defaultValue: false, description: 'Tag: Install OpenVPN client', name: 'tag_openvpn_client'
+        booleanParam defaultValue: false, description: 'Tag: Install OpenVPN server and create new CA (backup old)', name: 'tag_openvpn_server'
+        booleanParam defaultValue: false, description: 'Tag: Create a new OpenVPN user certificate', name: 'tag_create_ovpn_user'
         string defaultValue: '', description: 'Username for new OpenVpn user', name: 'create_ovpn_user_name', trim: true
-        booleanParam defaultValue: false, description: 'Tag: Delete an existing OpenVPN user certificate and revoke access', name: 'tag_delete-ovpn-user'
+        booleanParam defaultValue: false, description: 'Tag: Delete an existing OpenVPN user certificate and revoke access', name: 'tag_delete_ovpn_user'
         string defaultValue: '', description: 'Username for the OpenVpn user to delete', name: 'delete_ovpn_user_name', trim: true
         
 
         booleanParam defaultValue: false, description: 'Tag: Install Docker', name: 'tag_docker'
-        booleanParam defaultValue: false, description: 'Tag: Install kubernetes', name: 'tag_kubernetes-server'
-        booleanParam defaultValue: false, description: 'Tag: Run kubeadm init', name: 'tag_init-kubernetes'
-        string defaultValue: '', description: 'Kubernetes network CIDR for the new cluster', name: 'kubernetes_network_cidr', trim: true
+        booleanParam defaultValue: false, description: 'Tag: Install kubernetes', name: 'tag_kubernetes_server'
+        booleanParam defaultValue: false, description: 'Tag: Reset from kubeadm init and join', name: 'tag_reset_kubernetes'
+        booleanParam defaultValue: false, description: 'Tag: Run kubeadm init', name: 'tag_init_kubernetes'
+        string defaultValue: "${KUBERNETES_DEFAULT_CIDR}", description: 'Kubernetes network CIDR for the new cluster', name: 'kubernetes_cidr', trim: true
+        booleanParam defaultValue: false, description: 'Tag: Fetch Kubernetes config and put it in a Jenkins credential', name: 'tag_fetch_kubernetes'
         booleanParam defaultValue: false, description: 'Tag: Join a kubernetes cluster with host', name: 'tag_join-kubernetes'
         string defaultValue: '', description: 'The join token to join the Kubernetes cluster', name: 'join_kubernetes_token', trim: true
+        booleanParam defaultValue: false, description: 'Tag: Kubernetes: Prep for storage', name: 'tag_storage_kubernetes'
 
         booleanParam defaultValue: false, description: 'Tag: Set return value of the playbook', name: 'tag_returnvalue'
     }
@@ -69,41 +77,49 @@ pipeline{
     agent {
         label '!windows'
     }
-    
+
     environment {
         JUNIT_OUTPUT_DIR    = 'junit/'
-
+        tag_initial = true // Default param
     }
+
+  
     
     stages {
         stage('Workspace Preparation') { // for display purposes
             steps{
                 script {
-                    EXTRA_VARS = ' '
-                    if (kubernetes_network_cidr != '') {
-                        EXTRA_VARS = EXTRA_VARS + ", kubernetes_cidr=$kubernetes_network_cidr"
+                    EXTRA_VARS = '--extra-vars="'
+                    if (params.join_kubernetes_token != '') {
+                        EXTRA_VARS = EXTRA_VARS + "kubernetes_master=$join_kubernetes_token, "
                     }
-                    if (join_kubernetes_token != '') {
-                        EXTRA_VARS = EXTRA_VARS + ", kubernetes_master=$join_kubernetes_token"
+                    if (params.create_ovpn_user_name != '') {
+                        EXTRA_VARS = EXTRA_VARS + "openvpn_user=$create_ovpn_user_name, "
                     }
-                    if (create_ovpn_user_name != '') {
-                        EXTRA_VARS = EXTRA_VARS + ", openvpn-user=$create_ovpn_user_name"
+                    if (params.delete_ovpn_user_name != '') {
+                        EXTRA_VARS = EXTRA_VARS + "openvpn_user=$delete_ovpn_user_name, "
                     }
-                    if (delete_ovpn_user_name != '') {
-                        EXTRA_VARS = EXTRA_VARS + ", openvpn-user=$delete_ovpn_user_name"
+                    if (params.tag_init_kubernetes != '' && params.kubernetes_cidr != "${KUBERNETES_DEFAULT_CIDR}") {
+                        EXTRA_VARS = EXTRA_VARS + "kubernetes_cidr=$kubernetes_cidr, "
                     }
-                    echo "#################################################"
+
+
+                    // Closing or wiping if empty
+                    if (EXTRA_VARS != '--extra-vars="'){
+                        EXTRA_VARS = EXTRA_VARS.substring(0, (EXTRA_VARS.length() -2) ) 
+                        EXTRA_VARS = EXTRA_VARS + '"'
+                    }else{
+                        EXTRA_VARS = ' '
+                    }
+                    echo "#######################################################################"
                     echo "### Following EXTRA_VARS will be used: " + EXTRA_VARS
-                    echo "#################################################"
+                    echo "#######################################################################"
                 }
                 
                 // Clean workspace
-                cleanWs()
+                deleteDir()
 
                 git branch: 'rick', url: 'https://github.com/basraven/la1r.git'
-
-                // Get code from a GitHub repository
-                // checkout([$class: 'GitSCM', branches: [[name: '*/rick']], doGenerateSubmoduleConfigurations: false, extensions: [[$class: 'CloneOption', noTags: true, reference: '', shallow: true], [$class: 'SubmoduleOption', disableSubmodules: false, parentCredentials: false, recursiveSubmodules: true, reference: '', shallow: true, trackingSubmodules: false]], submoduleCfg: [], userRemoteConfigs: [[url: 'https://github.com/basraven/la1r.git']]])
                 sh label: 'Create hosts', script: 'printf "[la1r]\n$os $hosts" > ./cicd/ansible/hosts'
                 sh label: "Create ${JUNIT_OUTPUT_DIR}", script: "mkdir -p ${JUNIT_OUTPUT_DIR}"
                 sh label: 'Copy ansible.cfg to /etc/ansible/ansible.cfg', script: 'mkdir -p /etc/ansible && cp -f ./cicd/ansible/config/ansible.cfg /etc/ansible/ansible.cfg'
@@ -113,49 +129,71 @@ pipeline{
             steps{
                 script {
                     tags = sh(returnStdout: true, script: 'bash ./cicd/jenkins/pipelines/ansible/create-tags.sh').trim()
-                    echo "#################################################"
-                    echo tags
-                    echo "#################################################"
+                    echo "#######################################################################"
+                    echo "### Executing these tags on virtual: " + tags
+                    echo "#######################################################################"
                 }
-                ansiblePlaybook colorized: true, disableHostKeyChecking: true, installation: 'ansible', inventory: 'cicd/ansible/hosts', extras: '--limit="virtual" --extra-vars="'+EXTRA_VARS+'"' , playbook: 'cicd/ansible/site.yml', tags: "${tags}"    
+                lock(label: 'virtual', variable: 'LOCK_NAME', resource: null){
+                    ansiblePlaybook colorized: true, disableHostKeyChecking: true, installation: 'ansible', inventory: 'cicd/ansible/hosts', extras: '--limit="virtual" ' + EXTRA_VARS, playbook: 'cicd/ansible/site.yml', tags: "${tags}"    
+                }
                 junit 'junit/site-*.xml' 
             }
         }
-        // stage('Virtual Tests') {
-        //     steps {
-        //         script{
-        //             if(${newman-tests} != false){
-        //                 sh label: 'Execute Newman', 
-        //                 script: '''mkdir -p ./newman ; 
-        //                 cd ./newman ; 
-        //                 npm install --prefix ./ newman ;
-        //                 node ./node_modules/newman/bin/newman.js run ../cicd/jenkins/tests/newman/newman-ansible.json -e ../cicd/jenkins/tests/newman/environments/virtual.json --reporters cli,junit --reporter-junit-export ./newman-junit.xml'''
-        //             }
-        //         }
-        //     }
-        // }    
-        // stage('Metal Deployment') {
-        //     steps{
-        //         script {
-        //             tags = sh(returnStdout: true, script: 'bash ./cicd/jenkins/pipelines/ansible/create-tags.sh').trim()
-        //         }
-        //         ansiblePlaybook colorized: true, disableHostKeyChecking: true, installation: 'ansible', inventory: 'cicd/ansible/hosts', extras: '--limit="metal" ''--limit="virtual" --extra-vars="'+EXTRA_VARS+'"'  , playbook: 'cicd/ansible/site.yml', tags: "${tags}"    
-        //         junit 'junit/site-*.xml' 
-        //     }
-        // }    
+        stage('Virtual Tests') {
+            when {
+                expression { 
+                    params.newman_tests == true
+                }
+            }
+            steps {
+                script{
+                    if(newman_tests != false){
+                        sh label: 'Execute Newman', 
+                        script: '''mkdir -p ./newman ; 
+                        cd ./newman ; 
+                        npm install --prefix ./ newman ;
+                        node ./node_modules/newman/bin/newman.js run ../cicd/jenkins/tests/newman/newman-ansible.json -e ../cicd/jenkins/tests/newman/environments/virtual.json --reporters cli,junit --reporter-junit-export ./newman-junit.xml'''
+                    }
+                }
+            }
+        }    
+        stage('Metal Deployment') {
+            when {
+                expression { 
+                    params.deploy_to_metal == true
+                }
+            }
+            steps{
+                script {
+                    tags = sh(returnStdout: true, script: 'bash ./cicd/jenkins/pipelines/ansible/create-tags.sh').trim()
+                    echo "#######################################################################"
+                    echo "### Executing these tags on metal: " + tags
+                    echo "#######################################################################"
+                }
+                lock(label: 'metal', variable: 'LOCK_NAME', resource: null){
+                    ansiblePlaybook colorized: true, disableHostKeyChecking: true, installation: 'ansible', inventory: 'cicd/ansible/hosts', extras: '--limit="metal" ' + EXTRA_VARS, playbook: 'cicd/ansible/site.yml', tags: "${tags}"    
+                }
+                junit 'junit/site-*.xml' 
+            }
+        }    
         
-        // stage('Metal Tests') {
-        //     steps{
-        //         script{
-        //             if(${newman-tests} != false){
-        //                 sh label: 'Execute Newman', 
-        //                 script: '''mkdir -p ./newman ; 
-        //                 cd ./newman ; 
-        //                 npm install --prefix ./ newman ;
-        //                 node ./node_modules/newman/bin/newman.js run ../cicd/jenkins/tests/newman/newman-ansible.json -e ../cicd/jenkins/tests/newman/environments/virtual.json --reporters cli,junit --reporter-junit-export ./newman-junit.xml'''
-        //             }
-        //         }
-        //     }
-        // }    
+        stage('Metal Tests') {
+            when {
+                expression { 
+                    params.newman_tests == true &&
+                    params.deploy_to_metal == true
+
+                }
+            }
+            steps{
+                script{
+                    sh label: 'Execute Newman', 
+                    script: '''mkdir -p ./newman ; 
+                    cd ./newman ; 
+                    npm install --prefix ./ newman ;
+                    node ./node_modules/newman/bin/newman.js run ../cicd/jenkins/tests/newman/newman-ansible.json -e ../cicd/jenkins/tests/newman/environments/virtual.json --reporters cli,junit --reporter-junit-export ./newman-junit.xml'''
+                }
+            }
+        }    
     }
 }

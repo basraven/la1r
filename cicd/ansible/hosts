@@ -1,11 +1,11 @@
 [virtual]
-test-ubuntu ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.1.195
-# test-centos ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.1.195
+test-ubuntu ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.2.195
+# test-centos ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.2.195
 
 
 [metal]
-metal-ubuntu ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.1.195
-# test-centos ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.1.195
+metal-ubuntu ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.2.195
+# test-centos ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.2.195
 
 
 [qemu]

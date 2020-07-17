@@ -19,6 +19,6 @@
 # This sample shows how to prevent push of commits where the log message starts
 # with "WIP" (work in progress).
 echo "####> Pre-push hook"
-nohup bash -c 'sleep 3 ; curl http://localhost:8080/git/notifyCommit?url=https://github.com/basraven/la1r.git' > /dev/null 2>&1&
+nohup bash -c 'sleep 3 ; curl http://localhost:8088/git/notifyCommit?url=https://github.com/basraven/la1r.git' > /dev/null 2>&1&
 
 exit 0

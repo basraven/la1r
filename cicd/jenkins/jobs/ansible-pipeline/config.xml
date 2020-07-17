@@ -4,38 +4,43 @@
     <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobAction plugin="pipeline-model-definition@1.7.1"/>
     <org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction plugin="pipeline-model-definition@1.7.1">
       <jobProperties>
-        <string>jenkins.model.BuildDiscarderProperty</string>
         <string>org.jenkinsci.plugins.workflow.job.properties.DisableResumeJobProperty</string>
       </jobProperties>
       <triggers>
         <string>hudson.triggers.SCMTrigger</string>
       </triggers>
       <parameters>
+        <string>tag_hostname</string>
         <string>tag_docker</string>
-        <string>tag_kubernetes-server</string>
-        <string>tag_init-kubernetes</string>
         <string>tag_helper</string>
-        <string>tag_openvpn-client</string>
+        <string>tag_create_ovpn_user</string>
+        <string>tag_init_kubernetes</string>
         <string>tag_toolbox</string>
         <string>tag_node_exporter</string>
+        <string>tag_openvpn_server</string>
+        <string>tag_storage_kubernetes</string>
+        <string>newman_tests</string>
         <string>tag_users</string>
-        <string>tag_dns-server</string>
-        <string>tag_nfs-client</string>
         <string>tag_join-kubernetes</string>
         <string>tag_returnvalue</string>
+        <string>tag_nfs_server</string>
         <string>hosts</string>
-        <string>tag_nfs-server</string>
+        <string>tag_reset_kubernetes</string>
+        <string>tag_delete_ovpn_user</string>
+        <string>tag_nfs_client</string>
+        <string>tag_reboot</string>
         <string>tag_security</string>
         <string>tag_update</string>
-        <string>tag_delete-ovpn-user</string>
         <string>tag_initial</string>
         <string>join_kubernetes_token</string>
-        <string>kubernetes_network_cidr</string>
-        <string>tag_openvpn-server</string>
+        <string>tag_dns_server</string>
+        <string>tag_kubernetes_server</string>
+        <string>kubernetes_cidr</string>
         <string>create_ovpn_user_name</string>
         <string>delete_ovpn_user_name</string>
-        <string>tag_create-ovpn-user</string>
-        <string>newman-tests</string>
+        <string>tag_fetch_kubernetes</string>
+        <string>deploy_to_metal</string>
+        <string>tag_openvpn_client</string>
       </parameters>
       <options/>
     </org.jenkinsci.plugins.pipeline.modeldefinition.actions.DeclarativeJobPropertyTrackerAction>
@@ -51,14 +56,6 @@
         </hudson.triggers.SCMTrigger>
       </triggers>
     </org.jenkinsci.plugins.workflow.job.properties.PipelineTriggersJobProperty>
-    <jenkins.model.BuildDiscarderProperty>
-      <strategy class="hudson.tasks.LogRotator">
-        <daysToKeep>-1</daysToKeep>
-        <numToKeep>3</numToKeep>
-        <artifactDaysToKeep>-1</artifactDaysToKeep>
-        <artifactNumToKeep>-1</artifactNumToKeep>
-      </strategy>
-    </jenkins.model.BuildDiscarderProperty>
     <org.jenkinsci.plugins.workflow.job.properties.DisableResumeJobProperty/>
     <hudson.model.ParametersDefinitionProperty>
       <parameterDefinitions>
@@ -67,13 +64,13 @@
           <description>Hosts to apply Ansible script on</description>
           <defaultValue>
                 [virtual]
-                test-ubuntu ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.1.195
-                # test-centos ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.1.195
+                test-ubuntu ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.2.197
+                # test-centos ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.2.195
 
 
                 [metal]
-                metal-ubuntu ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.1.195
-                # test-centos ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.1.195
+                metal-ubuntu ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.2.195
+                # test-centos ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.2.195
 
 
                 [qemu]
@@ -89,8 +86,18 @@
           <trim>false</trim>
         </hudson.model.TextParameterDefinition>
         <hudson.model.BooleanParameterDefinition>
-          <name>newman-tests</name>
+          <name>deploy_to_metal</name>
+          <description>Deploy to Metal</description>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>newman_tests</name>
           <description>Perform newman tests</description>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>tag_reboot</name>
+          <description>Tag: Reboot Machine</description>
           <defaultValue>false</defaultValue>
         </hudson.model.BooleanParameterDefinition>
         <hudson.model.BooleanParameterDefinition>
@@ -114,6 +121,11 @@
           <defaultValue>true</defaultValue>
         </hudson.model.BooleanParameterDefinition>
         <hudson.model.BooleanParameterDefinition>
+          <name>tag_hostname</name>
+          <description>Tag: Set hostname as inventory file</description>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
           <name>tag_security</name>
           <description>Tag: Security related packages and updates</description>
           <defaultValue>false</defaultValue>
@@ -129,32 +141,32 @@
           <defaultValue>false</defaultValue>
         </hudson.model.BooleanParameterDefinition>
         <hudson.model.BooleanParameterDefinition>
-          <name>tag_dns-server</name>
+          <name>tag_dns_server</name>
           <description>Tag: Install DNS server</description>
           <defaultValue>false</defaultValue>
         </hudson.model.BooleanParameterDefinition>
         <hudson.model.BooleanParameterDefinition>
-          <name>tag_nfs-client</name>
+          <name>tag_nfs_client</name>
           <description>Tag: Install NFS Client</description>
           <defaultValue>false</defaultValue>
         </hudson.model.BooleanParameterDefinition>
         <hudson.model.BooleanParameterDefinition>
-          <name>tag_nfs-server</name>
+          <name>tag_nfs_server</name>
           <description>Tag: Install NFS Server</description>
           <defaultValue>false</defaultValue>
         </hudson.model.BooleanParameterDefinition>
         <hudson.model.BooleanParameterDefinition>
-          <name>tag_openvpn-client</name>
+          <name>tag_openvpn_client</name>
           <description>Tag: Install OpenVPN client</description>
           <defaultValue>false</defaultValue>
         </hudson.model.BooleanParameterDefinition>
         <hudson.model.BooleanParameterDefinition>
-          <name>tag_openvpn-server</name>
+          <name>tag_openvpn_server</name>
           <description>Tag: Install OpenVPN server and create new CA (backup old)</description>
           <defaultValue>false</defaultValue>
         </hudson.model.BooleanParameterDefinition>
         <hudson.model.BooleanParameterDefinition>
-          <name>tag_create-ovpn-user</name>
+          <name>tag_create_ovpn_user</name>
           <description>Tag: Create a new OpenVPN user certificate</description>
           <defaultValue>false</defaultValue>
         </hudson.model.BooleanParameterDefinition>
@@ -165,7 +177,7 @@
           <trim>true</trim>
         </hudson.model.StringParameterDefinition>
         <hudson.model.BooleanParameterDefinition>
-          <name>tag_delete-ovpn-user</name>
+          <name>tag_delete_ovpn_user</name>
           <description>Tag: Delete an existing OpenVPN user certificate and revoke access</description>
           <defaultValue>false</defaultValue>
         </hudson.model.BooleanParameterDefinition>
@@ -181,21 +193,31 @@
           <defaultValue>false</defaultValue>
         </hudson.model.BooleanParameterDefinition>
         <hudson.model.BooleanParameterDefinition>
-          <name>tag_kubernetes-server</name>
+          <name>tag_kubernetes_server</name>
           <description>Tag: Install kubernetes</description>
           <defaultValue>false</defaultValue>
         </hudson.model.BooleanParameterDefinition>
         <hudson.model.BooleanParameterDefinition>
-          <name>tag_init-kubernetes</name>
+          <name>tag_reset_kubernetes</name>
+          <description>Tag: Reset from kubeadm init and join</description>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>tag_init_kubernetes</name>
           <description>Tag: Run kubeadm init</description>
           <defaultValue>false</defaultValue>
         </hudson.model.BooleanParameterDefinition>
         <hudson.model.StringParameterDefinition>
-          <name>kubernetes_network_cidr</name>
+          <name>kubernetes_cidr</name>
           <description>Kubernetes network CIDR for the new cluster</description>
-          <defaultValue></defaultValue>
+          <defaultValue>10.244.0.0/16</defaultValue>
           <trim>true</trim>
         </hudson.model.StringParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>tag_fetch_kubernetes</name>
+          <description>Tag: Fetch Kubernetes config and put it in a Jenkins credential</description>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
         <hudson.model.BooleanParameterDefinition>
           <name>tag_join-kubernetes</name>
           <description>Tag: Join a kubernetes cluster with host</description>
@@ -207,6 +229,11 @@
           <defaultValue></defaultValue>
           <trim>true</trim>
         </hudson.model.StringParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>tag_storage_kubernetes</name>
+          <description>Tag: Kubernetes: Prep for storage</description>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
         <hudson.model.BooleanParameterDefinition>
           <name>tag_returnvalue</name>
           <description>Tag: Set return value of the playbook</description>

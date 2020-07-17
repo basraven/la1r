@@ -17,25 +17,30 @@ These Ansible scripts can be found on <https://github.com/basraven/la1r/ansible>
 The following tags are used in Ansible:
 * helper                - Helper scripts for the run itself, e.g. to determine OS
 * initial               - Script needed for a first ever run of the OS
+* hostname              - Set hostname of server
+* reboot                - Reboots the machine
 * returnvalue           - Set return value of the playbook
 * update                - Update the package managers
 * security              - Security related packages and update
 * toolbox               - Placement of /cicd/ansible/toolbox scripts, used for infrastructure management
 * users                 - Creation of users
-* dns-server            - Install DNS Server
+* dns_server            - Install DNS Server
 * docker                - Install docker
-* nfs-client            - Install nfs-client
-* nfs-server            - Install nfs-server
-* openvpn-client        - Install openvpn client and place certificate from /credentials
-* openvpn-server        - Install openvpn server and creates new CA
-* create-ovpn-user      - Create a new certificate for openvpn,
-  * Requires ```---extra-vars "openvpn-user=someusername"```
-* delete-ovpn-user   - Create a new certificate for openvpn
-  * Requires ```---extra-vars "openvpn-user=someusername"```
+* nfs_client            - Install nfs-client
+* nfs_server            - Install nfs-server
+* openvpn_client        - Install openvpn client and place certificate from /credentials
+* openvpn_server        - Install openvpn server and creates new CA
+* create_ovpn_user      - Create a new certificate for openvpn,
+  * Requires ```---extra-vars "openvpn_user=someusername"```
+* delete_ovpn_user   - Create a new certificate for openvpn
+  * Requires ```---extra-vars "openvpn_user=someusername"```
 * node_exporter         - Install prometheus_node_exporter
-* kubernetes-server     - Install Kubernetes
-* init-kubernetes       - Run kubeadm init
+* kubernetes_server     - Install Kubernetes
+* init_kubernetes       - Run kubeadm init
   * Optional ```---extra-vars "kubernetes_cidr=10.244.0.0/16"```
+* reset_kubernetes      - Reset from changes made by kubeadm init and kubeadm join
+* fetch_kubernetes      - Fetch the Kubernetes config file and put it in the local folder
+* storage_kubernetes    - Install packages as prep for the storage provider
 * join-kubernetes       - Join a kubernetes cluster
   * Requires ```---extra-vars "kubernetes_master=1.1.1.1"```
   * Requires ```/credentials/kubernetes/join-token.yaml"```
