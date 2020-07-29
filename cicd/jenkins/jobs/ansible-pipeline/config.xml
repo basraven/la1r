@@ -12,10 +12,8 @@
       <parameters>
         <string>tag_hostname</string>
         <string>tag_docker</string>
-        <string>tag_helper</string>
         <string>tag_create_ovpn_user</string>
         <string>tag_init_kubernetes</string>
-        <string>tag_toolbox</string>
         <string>tag_node_exporter</string>
         <string>tag_openvpn_server</string>
         <string>tag_storage_kubernetes</string>
@@ -31,7 +29,6 @@
         <string>tag_reboot</string>
         <string>tag_security</string>
         <string>tag_update</string>
-        <string>tag_initial</string>
         <string>join_kubernetes_token</string>
         <string>tag_dns_server</string>
         <string>tag_kubernetes_server</string>
@@ -101,16 +98,6 @@
           <defaultValue>false</defaultValue>
         </hudson.model.BooleanParameterDefinition>
         <hudson.model.BooleanParameterDefinition>
-          <name>tag_helper</name>
-          <description>Tag: Helper scripts for the run itself, e.g. determine OS</description>
-          <defaultValue>true</defaultValue>
-        </hudson.model.BooleanParameterDefinition>
-        <hudson.model.BooleanParameterDefinition>
-          <name>tag_initial</name>
-          <description>Tag: Script needed for a first ever run of the OS</description>
-          <defaultValue>true</defaultValue>
-        </hudson.model.BooleanParameterDefinition>
-        <hudson.model.BooleanParameterDefinition>
           <name>tag_users</name>
           <description>Tag: Creation of users</description>
           <defaultValue>false</defaultValue>
@@ -118,7 +105,7 @@
         <hudson.model.BooleanParameterDefinition>
           <name>tag_update</name>
           <description>Tag: Update the package managers</description>
-          <defaultValue>true</defaultValue>
+          <defaultValue>false</defaultValue>
         </hudson.model.BooleanParameterDefinition>
         <hudson.model.BooleanParameterDefinition>
           <name>tag_hostname</name>
@@ -129,11 +116,6 @@
           <name>tag_security</name>
           <description>Tag: Security related packages and updates</description>
           <defaultValue>false</defaultValue>
-        </hudson.model.BooleanParameterDefinition>
-        <hudson.model.BooleanParameterDefinition>
-          <name>tag_toolbox</name>
-          <description>Tag: Placement of /cicd/ansible/toolbox scripts, used for infrastructure management</description>
-          <defaultValue>true</defaultValue>
         </hudson.model.BooleanParameterDefinition>
         <hudson.model.BooleanParameterDefinition>
           <name>tag_node_exporter</name>

@@ -1,5 +1,4 @@
 ---
 - include: copy-toolbox.yml
   tags:
-    - initial
     - toolbox

@@ -19,64 +19,75 @@ spec:
     - name: pg_autoscaler
       enabled: true
   dashboard:
-    enabled: true
-    port: 8443
-    ssl: false
+    enabled: false
+    # enabled: true
+    # port: 8443
+    # ssl: false
   storage:
     useAllNodes: true
-    useAllDevices: true
+    useAllDevices: false
+    deviceFilter:
+    location:
+    config:
+      # databaseSizeMB: "1024"
+      # journalSizeMB: "1024"
+      osdsPerDevice: "3"
+    nodes:
+    - name: "test-centos"
+      devices:
+      - name: "sdb"
 
 
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: rook-ceph-tools
-  namespace: rook-ceph
-  labels:
-    app: rook-ceph-tools
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: rook-ceph-tools
-  template:
-    metadata:
-      labels:
-        app: rook-ceph-tools
-    spec:
-      dnsPolicy: ClusterFirstWithHostNet
-      containers:
-      - name: rook-ceph-tools
-        image: rook/ceph:v1.3.8
-        command: ["/tini"]
-        args: ["-g", "--", "/usr/local/bin/toolbox.sh"]
-        imagePullPolicy: IfNotPresent
-        env:
-          - name: ROOK_ADMIN_SECRET
-            valueFrom:
-              secretKeyRef:
-                name: rook-ceph-mon
-                key: admin-secret
-        volumeMounts:
-          - mountPath: /etc/ceph
-            name: ceph-config
-          - name: mon-endpoint-volume
-            mountPath: /etc/rook
-      volumes:
-        - name: mon-endpoint-volume
-          configMap:
-            name: rook-ceph-mon-endpoints
-            items:
-            - key: data
-              path: mon-endpoints
-        - name: ceph-config
-          emptyDir: {}
-      tolerations:
-        - key: "node.kubernetes.io/unreachable"
-          operator: "Exists"
-          effect: "NoExecute"
-          tolerationSeconds: 5
+# ---
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: rook-ceph-tools
+#   namespace: rook-ceph
+#   labels:
+#     app: rook-ceph-tools
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: rook-ceph-tools
+#   template:
+#     metadata:
+#       labels:
+#         app: rook-ceph-tools
+#     spec:
+#       dnsPolicy: ClusterFirstWithHostNet
+#       containers:
+#       - name: rook-ceph-tools
+#         image: rook/ceph:v1.3.8
+#         command: ["/tini"]
+#         args: ["-g", "--", "/usr/local/bin/toolbox.sh"]
+#         imagePullPolicy: IfNotPresent
+#         env:
+#           - name: ROOK_ADMIN_SECRET
+#             valueFrom:
+#               secretKeyRef:
+#                 name: rook-ceph-mon
+#                 key: admin-secret
+#         volumeMounts:
+#           - mountPath: /etc/ceph
+#             name: ceph-config
+#           - name: mon-endpoint-volume
+#             mountPath: /etc/rook
+#       volumes:
+#         - name: mon-endpoint-volume
+#           configMap:
+#             name: rook-ceph-mon-endpoints
+#             items:
+#             - key: data
+#               path: mon-endpoints
+#         - name: ceph-config
+#           emptyDir: {}
+#       tolerations:
+#         - key: "node.kubernetes.io/unreachable"
+#           operator: "Exists"
+#           effect: "NoExecute"
+#           tolerationSeconds: 5
 ---
 apiVersion: v1
 kind: Service
@@ -98,3 +109,50 @@ spec:
     rook_cluster: rook-ceph
   sessionAffinity: None
   type: NodePort
+
+
+
+---
+
+
+apiVersion: ceph.rook.io/v1
+kind: CephBlockPool
+metadata:
+  name: replicapool
+  namespace: rook-ceph
+spec:
+  failureDomain: host
+  replicated:
+    size: 3
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+   name: rook-ceph-block
+# Change "rook-ceph" provisioner prefix to match the operator namespace if needed
+provisioner: rook-ceph.rbd.csi.ceph.com
+parameters:
+    # clusterID is the namespace where the rook cluster is running
+    clusterID: rook-ceph
+    # Ceph pool into which the RBD image shall be created
+    pool: replicapool
+
+    # RBD image format. Defaults to "2".
+    imageFormat: "2"
+
+    # RBD image features. Available for imageFormat: "2". CSI RBD currently supports only `layering` feature.
+    imageFeatures: layering
+
+    # The secrets contain Ceph admin credentials.
+    csi.storage.k8s.io/provisioner-secret-name: rook-csi-rbd-provisioner
+    csi.storage.k8s.io/provisioner-secret-namespace: rook-ceph
+    csi.storage.k8s.io/node-stage-secret-name: rook-csi-rbd-node
+    csi.storage.k8s.io/node-stage-secret-namespace: rook-ceph
+
+    # Specify the filesystem type of the volume. If not specified, csi-provisioner
+    # will set default as `ext4`. Note that `xfs` is not recommended due to potential deadlock
+    # in hyperconverged settings where the volume is mounted on the same node as the osds.
+    csi.storage.k8s.io/fstype: ext4
+
+# Delete the rbd volume when a PVC is deleted
+reclaimPolicy: Delete

@@ -28,12 +28,15 @@
   args:
     executable: /bin/bash
   when: ansible_facts['distribution'] != "CentOS"
-  async: 300
-  poll: 5
-
 
 # Common
-- name: Add {{ target_user_name }} to docker group
+
+- name: Install Docker / Ensure docker group exists
+  group:
+    name: docker
+    state: present
+
+- name: Install Docker / Add {{ target_user_name }} to docker group
   become: yes
   user:
     name: "{{ target_user_name }}"
@@ -41,7 +44,7 @@
       - docker 
     append: yes
 
-- name: Start service docker, if not started
+- name: Install Docker / Start service docker, if not started
   become: yes
   service:
     name: docker

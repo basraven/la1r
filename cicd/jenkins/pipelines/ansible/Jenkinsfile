@@ -38,13 +38,12 @@ pipeline{
         booleanParam defaultValue: false, description: 'Deploy to Metal', name: 'deploy_to_metal'
         booleanParam defaultValue: false, description: 'Perform newman tests', name: 'newman_tests'
         booleanParam defaultValue: false, description: 'Tag: Reboot Machine', name: 'tag_reboot'
-        booleanParam defaultValue: true,  description: 'Tag: Helper scripts for the run itself, e.g. determine OS', name: 'tag_helper'
-        // booleanParam defaultValue: true,  description: 'Tag: Script needed for a first ever run of the OS', name: 'tag_initial'
+        // booleanParam defaultValue: true,  description: 'Tag: Helper scripts for the run itself, e.g. determine OS', name: 'tag_helper'
         booleanParam defaultValue: false, description: 'Tag: Creation of users', name: 'tag_users'
-        booleanParam defaultValue: true,  description: 'Tag: Update the package managers', name: 'tag_update'
+        booleanParam defaultValue: false,  description: 'Tag: Update the package managers', name: 'tag_update'
         booleanParam defaultValue: false, description: 'Tag: Set hostname as inventory file', name: 'tag_hostname'
         booleanParam defaultValue: false, description: 'Tag: Security related packages and updates', name: 'tag_security'
-        booleanParam defaultValue: true,  description: 'Tag: Placement of /cicd/ansible/toolbox scripts, used for infrastructure management', name: 'tag_toolbox'
+        // booleanParam defaultValue: true,  description: 'Tag: Placement of /cicd/ansible/toolbox scripts, used for infrastructure management', name: 'tag_toolbox'
         
         booleanParam defaultValue: false, description: 'Tag: Install node_exporter', name: 'tag_node_exporter'
         
@@ -80,7 +79,8 @@ pipeline{
 
     environment {
         JUNIT_OUTPUT_DIR    = 'junit/'
-        tag_initial = true // Default param
+        tag_helper = true // Default param
+        tag_toolbox = true // Default param
     }
 
   

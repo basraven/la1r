@@ -16,7 +16,6 @@ These Ansible scripts can be found on <https://github.com/basraven/la1r/ansible>
 ### Ansible Tags
 The following tags are used in Ansible:
 * helper                - Helper scripts for the run itself, e.g. to determine OS
-* initial               - Script needed for a first ever run of the OS
 * hostname              - Set hostname of server
 * reboot                - Reboots the machine
 * returnvalue           - Set return value of the playbook
