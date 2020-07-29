@@ -3,10 +3,8 @@
   notify:
     - "ssh restart"
   tags: 
-    - initial
     - users
 - include: transform-user.yml
   tags: 
-    - initial
     - users
   when: target_user_exists != true

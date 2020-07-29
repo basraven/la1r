@@ -33,3 +33,35 @@ spec:
     app: nginx
   type: LoadBalancer
   loadBalancerIP: 192.168.2.241
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dns-ilb
+  namespace: kube-system
+  labels:
+    k8s-app: kube-dns
+spec:
+  ports:
+  - name: dns
+    port: 53
+    protocol: UDP
+  selector:
+    k8s-app: kube-dns
+  type: LoadBalancer
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: example-pv-claim
+  labels:
+    app: example
+spec:
+  storageClassName: rook-ceph-block
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
