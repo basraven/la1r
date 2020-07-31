@@ -1,12 +1,23 @@
 ---
+- name: Nfs Server / Make sure folder exists
+  become: yes
+  file:
+    path: "{{ nfs_storage_classes[item]['hostpath']  }}"
+    state: directory
+    mode: '0755'
+    recurse: yes
+  with_items: "{{ nfs_storage_capabilities }}"
+
 - name: Nfs Server / Set export
   become: yes
   lineinfile:
     dest: /etc/exports
-    regexp: "^{{ nfs_backup_folder_path }}"
-    line: "{{ nfs_backup_folder_path }} *(rw,async,no_subtree_check,anonuid=1040,anongid=1040)"
+    regexp: "^{{ nfs_storage_classes[item]['hostpath'] }}"
+    # (original) line: "{{ nfs_storage_classes[item]['hostpath'] }} *(rw,async,no_subtree_check,anonuid=1040,anongid=1040)"
+    line: "{{ nfs_storage_classes[item]['hostpath'] }} *(rw,sync,no_subtree_check)"
     state: present
     backup: yes
+  with_items: "{{ nfs_storage_capabilities }}"
 
 - name: Nfs Server / Unmask nfs-common
   become: yes

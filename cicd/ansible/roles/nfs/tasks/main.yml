@@ -3,16 +3,12 @@
   tags:
     - nfs_server
     - nfs_client 
-- include: nfs-folders.yml
-  tags: 
-    - nfs_server
-    - nfs_client 
 - include: nfs-common.yml
   tags: 
     - nfs_server
     - nfs_client 
 - include: nfs-server.yml
   tags: nfs_server
-- include: nfs-client.yml
-  tags: nfs_client
+# - include: nfs-client.yml
+#   tags: nfs_client
 

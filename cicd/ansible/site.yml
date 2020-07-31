@@ -6,7 +6,7 @@
   - users
   - security
   - dnsmasq
-  # - nfs
+  - nfs
   - samba
   - docker
   - openvpn

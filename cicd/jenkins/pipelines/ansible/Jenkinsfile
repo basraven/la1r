@@ -13,28 +13,6 @@ pipeline{
     // https://codurance.com/2019/05/30/accessing-and-dumping-jenkins-credentials/
     // https://tutorials.releaseworksacademy.com/learn/how-to-add-jenkins-credentials-with-curl-or-ansible
     parameters {
-        text defaultValue: '''
-                [virtual]
-                test-ubuntu ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.2.197
-                # test-centos ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.2.195
-
-
-                [metal]
-                metal-ubuntu ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.2.195
-                # test-centos ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.2.195
-
-
-                [qemu]
-                # test-raspi  ansible_port=5022  ansible_user=pi       ansible_ssh_pass=raspberry ansible_host=192.168.1.234
-                # linux-wayne ansible_host=10.8.0.1
-                # raspi2 ansible_host=10.8.0.10
-                # ali-bel ansible_host=10.8.0.10
-                # carrot ansible_host=10.8.0.26
-
-                #[raspis:vars]
-                #ansible_ssh_private_key_file=~/.ssh/id_rsa
-            ''', description: 'Hosts to apply Ansible script on', name: 'hosts'
-
         booleanParam defaultValue: false, description: 'Deploy to Metal', name: 'deploy_to_metal'
         booleanParam defaultValue: false, description: 'Perform newman tests', name: 'newman_tests'
         booleanParam defaultValue: false, description: 'Tag: Reboot Machine', name: 'tag_reboot'
@@ -70,7 +48,6 @@ pipeline{
         string defaultValue: '', description: 'The join token to join the Kubernetes cluster', name: 'join_kubernetes_token', trim: true
         booleanParam defaultValue: false, description: 'Tag: Kubernetes: Prep for storage', name: 'tag_storage_kubernetes'
 
-        booleanParam defaultValue: false, description: 'Tag: Set return value of the playbook', name: 'tag_returnvalue'
     }
 
     agent {
@@ -120,7 +97,7 @@ pipeline{
                 deleteDir()
 
                 git branch: 'rick', url: 'https://github.com/basraven/la1r.git'
-                sh label: 'Create hosts', script: 'printf "[la1r]\n$os $hosts" > ./cicd/ansible/hosts'
+                // sh label: 'Create inventory', script: 'printf "$hosts" > ./cicd/ansible/hosts.yaml'
                 sh label: "Create ${JUNIT_OUTPUT_DIR}", script: "mkdir -p ${JUNIT_OUTPUT_DIR}"
                 sh label: 'Copy ansible.cfg to /etc/ansible/ansible.cfg', script: 'mkdir -p /etc/ansible && cp -f ./cicd/ansible/config/ansible.cfg /etc/ansible/ansible.cfg'
             }
@@ -134,7 +111,7 @@ pipeline{
                     echo "#######################################################################"
                 }
                 lock(label: 'virtual', variable: 'LOCK_NAME', resource: null){
-                    ansiblePlaybook colorized: true, disableHostKeyChecking: true, installation: 'ansible', inventory: 'cicd/ansible/hosts', extras: '--limit="virtual" ' + EXTRA_VARS, playbook: 'cicd/ansible/site.yml', tags: "${tags}"    
+                    ansiblePlaybook colorized: true, disableHostKeyChecking: true, installation: 'ansible', inventory: 'cicd/ansible/hosts.yml', extras: '--limit="virtual" ' + EXTRA_VARS, playbook: 'cicd/ansible/site.yml', tags: "${tags}"    
                 }
                 junit 'junit/site-*.xml' 
             }
@@ -171,7 +148,7 @@ pipeline{
                     echo "#######################################################################"
                 }
                 lock(label: 'metal', variable: 'LOCK_NAME', resource: null){
-                    ansiblePlaybook colorized: true, disableHostKeyChecking: true, installation: 'ansible', inventory: 'cicd/ansible/hosts', extras: '--limit="metal" ' + EXTRA_VARS, playbook: 'cicd/ansible/site.yml', tags: "${tags}"    
+                    ansiblePlaybook colorized: true, disableHostKeyChecking: true, installation: 'ansible', inventory: 'cicd/ansible/hosts.yml', extras: '--limit="metal" ' + EXTRA_VARS, playbook: 'cicd/ansible/site.yml', tags: "${tags}"    
                 }
                 junit 'junit/site-*.xml' 
             }
