@@ -1,3 +1,16 @@
 ---
-nfs_backup_folder_path: "/mnt/remote/backup"
 nfs_server_address: "10.8.0.18"
+
+nfs_storage_classes:
+  111:
+    hostpath: "/mnt/ssd/ha"
+  211:
+    hostpath: "/mnt/ssd/na"
+  112:
+    hostpath: "/mnt/hdd/ha"
+  212:
+    hostpath: "/mnt/hdd/na"
+  113:
+    hostpath: "/mnt/slhdd/ha"
+  213:
+    hostpath: "/mnt/slhdd/na"

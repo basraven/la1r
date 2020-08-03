@@ -12,3 +12,7 @@
   tags: 
     - security
   when: baremetal is defined and baremetal
+- include: kerberos.yml
+  tags: 
+    - security
+    - kerberos

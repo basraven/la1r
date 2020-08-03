@@ -5,6 +5,13 @@ The infrastructure setup is one of the biggest topics of this project in terms o
 ## How its made
 How all of this infrastructure is deployed can be found in [the deployment architecture].
 
+## Server Inventory
+Currently the following servers are being used:
+| ID  | Hostname    | OS                     | Hardware Description          |
+| --- | ---         | ---                    | ---                           |
+| 1   | linux-wayne | Ubuntu server (latest) | Core i5 Desktop with SSD      |
+| 2   | 50centos    | CentOS 8               | Core i7 Laptop with HDD only  |
+ 
 ## Kubernetes (k8s)
 The majority of the applications are hosted through Kubernetes.
 K8s can be implemented in a million different ways. The implementation on La1r follows a few principles:

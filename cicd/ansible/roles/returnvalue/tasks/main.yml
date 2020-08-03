@@ -1,5 +1,0 @@
----
-- name: Return Values / Set completed machines
-  local_action: shell echo "hai"
-  tags:
-    - returnvalue

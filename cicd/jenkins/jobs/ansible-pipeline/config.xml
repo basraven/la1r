@@ -20,7 +20,6 @@
         <string>newman_tests</string>
         <string>tag_users</string>
         <string>tag_join-kubernetes</string>
-        <string>tag_returnvalue</string>
         <string>tag_nfs_server</string>
         <string>hosts</string>
         <string>tag_reset_kubernetes</string>
@@ -60,25 +59,17 @@
           <name>hosts</name>
           <description>Hosts to apply Ansible script on</description>
           <defaultValue>
-                [virtual]
-                test-ubuntu ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.2.196
-                # test-centos ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.2.195
-
-
-                [metal]
-                metal-ubuntu ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.2.195
-                # test-centos ansible_port=22 ansible_user=vagrant ansible_ssh_pass=vagrant ansible_host=192.168.2.195
-
-
-                [qemu]
-                # test-raspi  ansible_port=5022  ansible_user=pi       ansible_ssh_pass=raspberry ansible_host=192.168.1.234
-                # linux-wayne ansible_host=10.8.0.1
-                # raspi2 ansible_host=10.8.0.10
-                # ali-bel ansible_host=10.8.0.10
-                # carrot ansible_host=10.8.0.26
-
-                #[raspis:vars]
-                #ansible_ssh_private_key_file=~/.ssh/id_rsa
+all:
+  hosts:
+  children:
+    virtual:
+        vars:
+          ansible_user: vagrant
+          ansible_ssh_pass: vagrant
+        hosts:
+            test-ubuntu:
+                ansible_port: 22
+                ansible_host: 192.168.2.195
             </defaultValue>
           <trim>false</trim>
         </hudson.model.TextParameterDefinition>
@@ -214,11 +205,6 @@
         <hudson.model.BooleanParameterDefinition>
           <name>tag_storage_kubernetes</name>
           <description>Tag: Kubernetes: Prep for storage</description>
-          <defaultValue>false</defaultValue>
-        </hudson.model.BooleanParameterDefinition>
-        <hudson.model.BooleanParameterDefinition>
-          <name>tag_returnvalue</name>
-          <description>Tag: Set return value of the playbook</description>
           <defaultValue>false</defaultValue>
         </hudson.model.BooleanParameterDefinition>
       </parameterDefinitions>

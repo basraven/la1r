@@ -18,9 +18,9 @@ The following tags are used in Ansible:
 * helper                - Helper scripts for the run itself, e.g. to determine OS
 * hostname              - Set hostname of server
 * reboot                - Reboots the machine
-* returnvalue           - Set return value of the playbook
 * update                - Update the package managers
 * security              - Security related packages and update
+* kerberos              - Install Kerberos (MIT) client and get keys. Server will install if hosts file contains ```kerberos: server``` for this server.
 * toolbox               - Placement of /cicd/ansible/toolbox scripts, used for infrastructure management
 * users                 - Creation of users
 * dns_server            - Install DNS Server

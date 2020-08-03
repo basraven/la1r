@@ -1,0 +1,25 @@
+# Storage Architecture
+Storage architecture can be a complicated topic when working with (Bare Metal) Kubernetes clusters.
+There are a lot of War stories of organizations unable to restore their storage solution, e.g. in a complex RAID setup on in a distributed storage solutions such as Ceph, GlusterFS or StorageOS.
+
+It took a significant amount of time to weigh the pros and cons of these solutions, but eventually I went for the "safest" solution, at least a solution which could not produce unrestoreable storage solutions as mentioned before:
+
+* Dynamically provisioned NFS storage in Kubernetes
+
+## Storage Tiers
+A few predefined folder structures are used in this setup, each folder to simulate To simulate the behavior of more complex storage solutions:
+
+| **B**ackup | **V**olatility | **S**peed |
+| ---        | ---            | ---       |
+| - 1: Backed-up (**H**igh **A**vailability) <br/> - 2: Not Backed-up (**N**ormal **A**vailability)      | - 1: Persistent, retained after node restart <br/> - 2: Volatile, removed after node restart <br/> - 3: Volatile, removed after pod restart | - 1: High speed SSD storage <br/> - 2: Normal speed HDD Storage <br/> - 3: Slower speed HDD storage |
+
+### Instances:
+
+| Class Code | Implemented server(s) | Hostpath                          |
+| ---        | ---                   | ---                               |
+| 111        | 1: linux-wayne        | /mnt/ssd/ha/<service_name>        |
+| 211        | 1: linux-wayne        | /mnt/ssd/na/<service_name>        |
+| 112        | 1: linux-wayne        | /mnt/hdd/ha/<service_name>        |
+| 212        | 1: linux-wayne        | /mnt/hdd/na/<service_name>        |
+| 113        | 2: 50centos           | /mnt/slhdd/ha/<service_name>      |
+| 213        | 2: 50centos           | /mnt/slhdd/na/<service_name>      |

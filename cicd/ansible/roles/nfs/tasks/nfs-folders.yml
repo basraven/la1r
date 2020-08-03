@@ -2,7 +2,8 @@
 - name: Nfs Folders / Make sure folder exists
   become: yes
   file:
-    path: "{{ nfs_backup_folder_path }}"
+    path: "{{ nfs_storage_classes[item]['hostpath']  }}"
     state: directory
-    mode: '0777'
+    mode: '0755'
     recurse: yes
+  with_items: "{{ nfs_storage_capabilities }}"

@@ -7,3 +7,13 @@ An option could be an Ansible secret vault, but since I'm not a madman who loves
 
 On each git clone on machines I need to use, I also store a /credentials folder which stores all credentials needed for my cluster.
 I know it's not save either, and I should for sure pgp encrypt that stuff, it still feels more safe than the carrot-stick approach.
+
+
+## Kerberos
+Kerberos v5 (MIT) is used for securing all NFS Shares. The settings for this is as follows:
+| Attribute | Value |
+| ---       | ---   |
+| Kerberos server | kerberos.la1r.com |
+| realm | la1r.com |
+| admin principal | admin/admin |
+| client principal | <hostname> e.g. 50centos |
