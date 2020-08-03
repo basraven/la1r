@@ -1,22 +1,16 @@
 ---
 # TODO: use pretty mapping here
-- name: Nfs Common / Check if packages are installed non CentOS
-  become: yes
-  package:
-    name: "{{ item }}"
-    state: present
-  with_items:
-      - nfs-kernel-server 
-      - nfs-common
-      - rpcbind
-  when: ansible_facts['distribution'] != "CentOS"
-
-- name: Nfs Common / Check if packages are installed CentOS
+- name: Nfs Common / Check if packages are installed
   become: yes
   package: 
-    name: "{{ item }}"
+    name: "{{ item.package }}"
     state: present
   with_items:
-      - nfs-utils
-      - rpcbind
-  when: ansible_facts['distribution'] == "CentOS"
+    - { package: 'nfs-utils',           when: "{{ ansible_facts['distribution'] == 'CentOS' }} "}
+    - { package: 'rpcbind',             when: "{{ ansible_facts['distribution'] == 'CentOS' }} "}
+    - { package: 'nfs-kernel-server ',  when: "{{ ansible_facts['distribution'] != 'CentOS' }} "}
+    - { package: 'nfs-common',          when: "{{ ansible_facts['distribution'] != 'CentOS' }} "}
+    - { package: 'rpcbind',             when: "{{ ansible_facts['distribution'] != 'CentOS' }} "}
+    - { package: 'krb5-user',           when: "{{ ansible_facts['distribution'] != 'CentOS' }} "}
+    - { package: 'libpam-krb5 ',        when: "{{ ansible_facts['distribution'] != 'CentOS' }} "}
+  when: "{{ item.when }}"

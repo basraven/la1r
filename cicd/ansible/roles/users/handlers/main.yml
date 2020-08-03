@@ -7,6 +7,8 @@
     enabled: yes
   when: ansible_facts['distribution'] != "CentOS"
   listen: restart ssh
+  async: 45
+  poll: 0
 
 - name: restart ssh on centos
   become: yes
@@ -16,3 +18,5 @@
     enabled: yes
   when: ansible_facts['distribution'] == "CentOS"
   listen: restart ssh
+  async: 45
+  poll: 0

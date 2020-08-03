@@ -46,8 +46,9 @@ pipeline{
         booleanParam defaultValue: false, description: 'Tag: Fetch Kubernetes config and put it in a Jenkins credential', name: 'tag_fetch_kubernetes'
         booleanParam defaultValue: false, description: 'Tag: Join a kubernetes cluster with host', name: 'tag_join-kubernetes'
         string defaultValue: '', description: 'The join token to join the Kubernetes cluster', name: 'join_kubernetes_token', trim: true
-        booleanParam defaultValue: false, description: 'Tag: Kubernetes: Prep for storage', name: 'tag_storage_kubernetes'
 
+        booleanParam defaultValue: false, description: 'Tag: Install Kerberos client', name: 'tag_kerberos_client'
+        booleanParam defaultValue: false, description: 'Tag: Install Kerberos server', name: 'tag_kerberos_server'
     }
 
     agent {

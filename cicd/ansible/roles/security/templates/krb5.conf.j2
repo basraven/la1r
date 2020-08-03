@@ -1,0 +1,21 @@
+[logging]
+    default = FILE:/var/log/krb5.log
+
+[libdefaults]
+    default_realm = LA1R.COM
+    kdc_timesync = 1
+    ccache_type = 4
+    forwardable = true
+    proxiable = true
+    default_keytab_name = FILE:/home/basraven/raver.keytab
+
+[realms]
+    LA1R.COM = {
+        kdc = kerberos.la1r.com:88
+        admin_server = kerberos.la1r.com
+        default_domain = LA1R.COM
+    }
+
+[domain_realm]
+    .la1r.com = LA1R.COM
+    la1r.com = LA1R.COM

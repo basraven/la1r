@@ -1,28 +1,36 @@
 ---
 - name: ssh / Disable Password Authentication
   lineinfile:
-    dest=/etc/ssh/sshd_config
-    regexp='^PasswordAuthentication'
-    line="PasswordAuthentication no"
-    state=present
-    backup=yes
-  notify:
-    - restart ssh
+    dest: /etc/ssh/sshd_config
+    regexp: '^PasswordAuthentication'
+    line: "PasswordAuthentication no"
+    state: present
+    backup: yes
 - name: ssh / Enable pubkey Authentication
   lineinfile:
-    dest=/etc/ssh/sshd_config
-    regexp='^PubkeyAuthentication'
-    line="PubkeyAuthentication yes"
-    state=present
-    backup=yes
-  notify:
-    - restart ssh
+    dest: /etc/ssh/sshd_config
+    regexp: '^PubkeyAuthentication'
+    line: "PubkeyAuthentication yes"
+    state: present
+    backup: yes
 - name: ssh / Disable Root Login
   lineinfile:
-    dest=/etc/ssh/sshd_config
-    regexp='^PermitRootLogin'
-    line="PermitRootLogin no"
-    state=present
-    backup=yes
-  notify:
-    - restart ssh
+    dest: /etc/ssh/sshd_config
+    regexp: '^PermitRootLogin'
+    line: "PermitRootLogin no"
+    state: present
+    backup: yes
+
+- name: restart ssh
+  become: yes
+  service:
+    name: "{{item.service}}"
+    state: restarted
+    enabled: yes
+  with_items:
+  - { service: 'ssh', when: "{{ ansible_facts['distribution'] != 'CentOS' }} "}
+  - { service: 'sshd',       when: "{{ ansible_facts['distribution'] == 'CentOS' }} "}
+  when: "{{ item.when }}"
+  async: 30
+  poll: 5
+

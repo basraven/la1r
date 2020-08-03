@@ -21,7 +21,6 @@
         <string>tag_users</string>
         <string>tag_join-kubernetes</string>
         <string>tag_nfs_server</string>
-        <string>hosts</string>
         <string>tag_reset_kubernetes</string>
         <string>tag_delete_ovpn_user</string>
         <string>tag_nfs_client</string>
@@ -55,24 +54,6 @@
     <org.jenkinsci.plugins.workflow.job.properties.DisableResumeJobProperty/>
     <hudson.model.ParametersDefinitionProperty>
       <parameterDefinitions>
-        <hudson.model.TextParameterDefinition>
-          <name>hosts</name>
-          <description>Hosts to apply Ansible script on</description>
-          <defaultValue>
-all:
-  hosts:
-  children:
-    virtual:
-        vars:
-          ansible_user: vagrant
-          ansible_ssh_pass: vagrant
-        hosts:
-            test-ubuntu:
-                ansible_port: 22
-                ansible_host: 192.168.2.195
-            </defaultValue>
-          <trim>false</trim>
-        </hudson.model.TextParameterDefinition>
         <hudson.model.BooleanParameterDefinition>
           <name>deploy_to_metal</name>
           <description>Deploy to Metal</description>
