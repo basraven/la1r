@@ -15,3 +15,7 @@
         ; supported_enctypes = des3-hmac-sha1:normal des-cbc-crc:normal des:normal des:v4 des:norealm des:onlyrealm
         ; default_principal_flags = +preauth
     }
+
+[logging]
+    kdc = FILE:/var/log/kdc.log
+    admin_server = FILE:/var/log/kadmin.log

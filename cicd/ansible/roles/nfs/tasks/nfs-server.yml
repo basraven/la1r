@@ -8,13 +8,24 @@
     recurse: yes
   with_items: "{{ nfs_storage_capabilities }}"
 
+
+- name: Nfs Server / Enable nfs-kernel kerberos
+  become: yes
+  lineinfile:
+    dest: /etc/default/nfs-kernel-server
+    regexp: "^NEED_SVCGSSD="
+    line: "NEED_SVCGSSD=yes"
+    state: present
+    backup: yes
+
 - name: Nfs Server / Set export
   become: yes
   lineinfile:
     dest: /etc/exports
     regexp: "^{{ nfs_storage_classes[item]['hostpath'] }}"
     # (original) line: "{{ nfs_storage_classes[item]['hostpath'] }} *(rw,async,no_subtree_check,anonuid=1040,anongid=1040)"
-    line: "{{ nfs_storage_classes[item]['hostpath'] }} *(rw,sync,no_subtree_check)"
+    # line: "{{ nfs_storage_classes[item]['hostpath'] }} *(rw,sync,no_subtree_check)"
+    line: "{{ nfs_storage_classes[item]['hostpath'] }} *(rw,fsid=0,insecure,no_subtree_check,async,anonuid=65534,anongid=65534)"
     state: present
     backup: yes
   with_items: "{{ nfs_storage_capabilities }}"
@@ -34,3 +45,10 @@
   with_items:
       - nfs-server 
       - rpcbind
+
+
+- name: Nfs Server / Allow in UFW
+  become: yes
+  ufw:
+    rule: allow
+    port: "2049"
