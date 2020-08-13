@@ -5,7 +5,8 @@ bookToc: false
 weight: 2
 ---
 
-## Conceptual details
+## Capability Architecture - (In need of recursive revision!)
+
 To give a 1-minute overview: this is the conceptual model driving La1r:
 ![Conceptual](/svg/conceptual.svg)
 

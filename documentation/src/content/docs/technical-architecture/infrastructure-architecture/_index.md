@@ -7,6 +7,7 @@ How all of this infrastructure is deployed can be found in [the deployment archi
 
 ## Server Inventory
 Currently the following servers are being used:
+
 | ID  | Hostname    | OS                     | Hardware Description          |
 | --- | ---         | ---                    | ---                           |
 | 1   | linux-wayne | Ubuntu server (latest) | Core i5 Desktop with SSD      |

@@ -11,33 +11,39 @@ For this reason I created this planning page in which I track and prioritize wha
 Feel free to add comments on this through Github!
 
 ## In progress
-1. New network configuration
-1. Prototype based configuration management
+1. New network configuration with new network hardware
+2. NFS based dynamic storage provisioning
+3. New multi-cluster setup with kube-proxy
 
 ## Planned
-1. Grafana backup script with: https://github.com/ysde/grafana-backup-tool
-2. GoCD CI/CD for prototype based config management (2 ways)
-3. Kibana log analysis
-4. Fail2ban new filters for ALL services
-5. Traefik auth proxy middleware with Authelia
-6. MetalLB tests
-7. "View in repo" button for all pages of the la1r documentation. While reading documentation, for example about Ansible, the visitor should be able to view which scripts are currently discussed by clicking a button to the git repository.
-8. Deploy a Kafka bus as structured event bus instead of mqtt
-9.  Spark 2.x Cluster in k8s
-10. Streaming analytics pipeline with Spark 2.x and Kafka
-11. An event data dashboard for kafka
-12. Streaming Facial recognition from images and streaming video
-13. Object recognition (garbage bin outside of our house) combined with garbage collection iCal (https://inzamelkalender.gad.nl/ical/0402200001574396)
-14. Formal managed bare-metal security camera setup
-15. Refactor Mosquito to [vernemq](https://vernemq.com/)
+4. Metallb implementation
+5. CollectD, replacing node_exporter
+6.  New doorbell security firmware
+7.  Video security storage process   
+8.  kube-state-metrics in grafana
+9.  DNS black-hole with pihole
+10. Grafana backup script with: https://github.com/ysde/grafana-backup-tool
+11. Kibana log analysis
+12. Fail2ban new filters for ALL services
+13. Traefik auth proxy middleware with Authelia
+14. "View in repo" button for all pages of the la1r documentation. While reading documentation, for example about Ansible, the visitor should be able to view which scripts are currently discussed by clicking a button to the git repository.
+15. find-lf - wifi tracking as input events on the Event Bus based on AI models
 
-## Parked
-1. Ceph file system based rook.io or on this guide: https://owncloud.org/news/running-owncloud-in-kubernetes-with-rook-ceph-storage-step-by-step/
+
+## Longstay parking
+16. Deploy a Kafka bus as structured event bus instead of mqtt
+17. Spark 2.x Cluster in k8s
+18. Streaming analytics pipeline with Spark 2.x and Kafka
+19. An event data dashboard for kafka
+20. Streaming Facial recognition from images and streaming video
+21. Formal managed bare-metal security camera setup
+22. Object recognition (garbage bin outside of our house) combined with garbage collection iCal (https://inzamelkalender.gad.nl/ical/0402200001574396)
+23. Refactor Mosquito to [vernemq](https://vernemq.com/) 
 
 ## Completed
-
-1. new dns configuration
-1. Refactor backup facilities to use compression and dual backup (weekly and bi-daily)
-1. OpenLDAP implementation
-1. Formal service bus definition and separation of raw data and defined event data in MQTT
-1. find-lf - wifi tracking as input events on the Event Bus based on AI models
+1. Kerberos setup
+2. Metallb tests
+3. new dns configuration
+4. Refactor backup facilities to use compression and dual backup (weekly and bi-daily)
+5. OpenLDAP implementation
+6. Formal service bus definition and separation of raw data and defined event data in MQTT
