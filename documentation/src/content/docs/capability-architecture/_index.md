@@ -5,7 +5,8 @@ bookToc: false
 weight: 2
 ---
 
-## Capability Architecture - (In need of recursive revision!)
+## Capability Architecture
+> **TODO: Update contents recursively, not up-to-date anymore** 
 
 To give a 1-minute overview: this is the conceptual model driving La1r:
 ![Conceptual](/svg/conceptual.svg)

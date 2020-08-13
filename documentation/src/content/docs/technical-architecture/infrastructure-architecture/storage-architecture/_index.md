@@ -1,4 +1,8 @@
-# Storage Architecture
+---
+bookToc: false
+bookCollapseSection : false
+---
+## Storage Architecture
 Storage architecture can be a complicated topic when working with (Bare Metal) Kubernetes clusters.
 There are a lot of War stories of organizations unable to restore their storage solution, e.g. in a complex RAID setup on in a distributed storage solutions such as Ceph, GlusterFS or StorageOS.
 
@@ -6,14 +10,14 @@ It took a significant amount of time to weigh the pros and cons of these solutio
 
 * Dynamically provisioned NFS storage in Kubernetes
 
-## Storage Tiers
+### Storage Tiers
 A few predefined folder structures are used in this setup, each folder to simulate To simulate the behavior of more complex storage solutions:
 
 | **B**ackup | **V**olatility | **S**peed |
 | ---        | ---            | ---       |
 | - 1: Backed-up (**H**igh **A**vailability) <br/> - 2: Not Backed-up (**N**ormal **A**vailability)      | - 1: Persistent, retained indefinite <br/> - 2: Volatile, removed after 2 weeks | - 1: High speed SSD storage <br/> - 2: Normal speed HDD Storage <br/> - 3: Slower speed HDD storage |
 
-### Instances
+#### Instances
 
 | Class Code | Implemented server(s) | **B**ackup | **V**olatility | **S**peed | Hostpath                          |
 | ---        | ---                   | ---        | ---            | ---       | ---                               |

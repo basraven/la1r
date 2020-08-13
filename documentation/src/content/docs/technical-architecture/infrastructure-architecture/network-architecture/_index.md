@@ -1,7 +1,8 @@
 ---
 title: Network Architecture
 type: docs
-bookToc: false
+bookToc: true
+bookCollapseSection : true
 ---
 ## Network Architecture
 The network setup is of la1r.com is not a simple one, this due to several reasons:
@@ -19,13 +20,36 @@ To break down these complexities we can split the network architecture into two 
 2. Data Layer - ([OSI](https://en.wikipedia.org/wiki/OSI_model#:~:text=The%20Open%20Systems%20Interconnection%20model,underlying%20internal%20structure%20and%20technology) layers 5 - 7)
 
 ### Technical Layer
-The Technical Layer is structured as follows:
+> **TODO: Update diagram with new hardware**
+
+The Technical Layer is structured as follows: 
 
 ![](/images/la1r-diagrams-Network%20Arch%20-%20Technical%20Layer.png)
 
+#### Network topology table
+The following table summarizes all network cidrs and addresses
+
+| Prefix    | IP       | Target                                                     | vlan              |
+| ---       | ---      | ---                                                        | ---               |
+| 192.168   | 1.0/24   | Empty, not used, will indicate wrongly configured devices  | -                 |
+| 192.168   | 2.0/24   | Common devices, laptops, phones, etc.                      | 2                 |
+| 192.168   | 3.0/24   | IOT Devices with dedicated connection to server            | 3                 |
+| 192.168   | 4.0/24   | Network infrastructure, switches, routers, etc             | 4                 |
+| 192.168   | 4.1      | Router and DHCP Server                                     | 1                 |
+| 192.168   | 4.2      | Central network switch                                     | 1                 |
+| 192.168   | 4.3      | Access Point living room                                   | 1                 |
+| 192.168   | 4.4      | Access Point office                                        | 1                 |
+| 192.168   | 5.0/24   | Servers                                                    | 5                 |
+| 192.168   | 5.1      | linux-wayne                                                | 5                 |
+| 192.168   | 5.2      | 50centos                                                   | 5                 |
+| 10.244    | 0.0/16   | Kubernetes internal cidr                                   | kubernetes.local  |
+| 10.8      | 2.0/24   | Shared VPN access                                          | openvpn shared    |
+| 10.8      | 2.1      | Shared VPN server                                          | openvpn shared    |
+| 10.8      | 4.0/24   | Private VPN access                                         | openvpn private   |
+| 10.8      | 4.1      | Private VPN server                                         | openvpn private   |
 
 ### Network with WeaveWorks
-Initially the decision was made to use flannel as network provider, since this is a pretty standard choice for many k8s implementations. Unfortunately this gave several networking, performance and upgrading issues over time, especially with our multi cpu architects environment. After a tool selection process weave works came out best because:
+Initially the decision was made to use flannel as network provider, since this is a pretty standard choice for many k8s implementations. Unfortunately this gave several networking, performance and upgrading issues over time, especially with our multi cpu architecture environment. After a tool selection process weave works came out best because:
 
 * Substantial performance and stability improvements
 * Capable of complex network segregation which flannel was not able to do

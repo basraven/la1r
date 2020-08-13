@@ -1,11 +1,12 @@
 ---
 title: Technical Architecture
 type: docs
-bookToc: True
+bookToc: false
+bookCollapseSection : true
 weight: 3
 ---
 
-## How it's made
+## Technical Architecture
 The technical architecture of La1r is my personal take on how to properly implement the capability architecture as described on this site. This does not mean that all implementations are matching the infrastructure context, on the contrary. Implementations in La1r are aimed on enterprise scale setups, which often make them an overkill for the hardware it is running. 
 The reason for this is that the technical architecture tries to comply to several application architecture principles which are focussed on maximizing my personal learning experiences and are often near enterprise scale. 
 

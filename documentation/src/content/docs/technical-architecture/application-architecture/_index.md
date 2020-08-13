@@ -1,8 +1,8 @@
 ---
 title: Application Architecture
 type: docs
-bookToc: false
-bookCollapseSection : false
+bookToc: true
+bookCollapseSection : true
 weight: 4
 ---
 ## Application Architecture
@@ -10,14 +10,6 @@ There is a large variety of applications currently running on the platform. \
 This page gives an overview of all these applications and also acts as a formal catalog.
 For that reason, this page will probably change a lot.
 All applications with date added 14-06-2020 are applications which were added when this page was written and add date was unknown.
-
-### Contents
-- [Application Architecture](#application-architecture)
-  - [Contents](#contents)
-  - [Local machine](#local-machine)
-  - [Ansible](#ansible)
-  - [Kubernetes](#kubernetes)
-  - [Brian - Experimental AI](#brian---experimental-ai)
 
 ### Local machine
 | Application Name              | Status                                                                        | Purpose                                                           | Namespace (if existing)           | Folder link                                                                   | Url                                   |
