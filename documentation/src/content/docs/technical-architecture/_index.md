@@ -16,14 +16,14 @@ The technical architecture can be divided into area's:
 ### Application Architecture
 The overview and catalog of all the technical and functional applications running on the platform.
 
-[Read more](application-architecture/_index.md)
+[Read more](application-architecture/)
 
 <--->
 
 ### Data Architecture
 All data processing, migration and storage principles, including AI and Automation.
 
-[Read more](data-architecture/_index.md)
+[Read more](data-architecture/)
 
 {{< /columns >}}
 
@@ -32,20 +32,20 @@ All data processing, migration and storage principles, including AI and Automati
 ### Infrastructure Architecture
 Infrastructure Architecture Design, discussing both Ansible, for initial setup and bare-metal services and Kubernetes, for running all other services.
 
-[Read more](infrastructure-architecture/_index.md)
+[Read more](infrastructure-architecture/)
 
 <--->
 
 ### Security Architecture
 Setup of several security concepts which are an integral part of the technical architecture.
 
-[Read more](security-architecture/_index.md)
+[Read more](security-architecture/)
 
 {{< /columns >}}
 
 ### Technical Architecture principles
 The la1r architecture follows several technical principles which components in its architecture should follow.
-Since this will not capture conceptual principles, a section on conceptual principles is describe [in the capability architecture page](../capability-architecture/_index.md)
+Since this will not capture conceptual principles, a section on conceptual principles is describe [in the capability architecture page](../capability-architecture/)
 
 1. Only the paranoid survive, apply and practice backup scenarios. - Backup scenarios should not only be implemented as tick in the box for our list of non functional requirements (NFRS), but should also be practiced where possible.
 2. Aim for near horizontal scaling - all services should be able to scale with cluster size. The infrastructure architecture of my current implementation is rather rigid, but the applications on it should be aimed on flexible and horizontally scalable underlying infrastructure.

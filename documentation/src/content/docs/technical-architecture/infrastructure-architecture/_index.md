@@ -36,4 +36,4 @@ Here my personal preference is to not follow the custom resource definition (CRD
 
 ## Network Architecture
 Since the network architecture of the project is not straight-forward, it is handled with several applications, all making a single cluster.
-[ Read more ](./network-architecture/_index.md)
+[ Read more ](./network-architecture/)
