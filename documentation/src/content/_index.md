@@ -21,7 +21,7 @@ The following key topics will be touched to showcase la1r:
 
 {{< columns >}}
 ### Capability Architecture
-This documentation captures the underlying capabilities, concepts, goals and roadmap for the La1r project from a functional perspective.
+This documentation captures the underlying capabilities, concepts, goals and roadmap for the La1r project from a functional perspective. \
 **In need of recursive revision!**
 
 [Read more](docs/capability-architecture/)
