@@ -5,6 +5,7 @@
   args:
     executable: /bin/bash
 - name: Remove Default User / Delete
+  become: yes
   user:
     name: "{{ default_user }}"
     state: absent

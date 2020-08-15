@@ -1,7 +1,10 @@
 ---
 - name: Update / Update yum
   become: yes
-  shell:  'yum update -y --skip-broken --nobest'
+  shell: |
+    yum install epel-release -y
+    yum update -y --skip-broken --nobest
+
   args:
     executable: /bin/bash
   when: ansible_facts['distribution'] == "CentOS"

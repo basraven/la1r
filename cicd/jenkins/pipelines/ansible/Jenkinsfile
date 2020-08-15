@@ -13,6 +13,7 @@ pipeline{
     // https://codurance.com/2019/05/30/accessing-and-dumping-jenkins-credentials/
     // https://tutorials.releaseworksacademy.com/learn/how-to-add-jenkins-credentials-with-curl-or-ansible
     parameters {
+        booleanParam defaultValue: true, description: 'Deploy to Metal', name: 'deploy_to_virtual'
         booleanParam defaultValue: false, description: 'Deploy to Metal', name: 'deploy_to_metal'
         booleanParam defaultValue: false, description: 'Perform newman tests', name: 'newman_tests'
         booleanParam defaultValue: false, description: 'Tag: Reboot Machine', name: 'tag_reboot'
@@ -104,6 +105,9 @@ pipeline{
             }
         }
         stage('Virtual Deployment') {
+            expression { 
+                params.deploy_to_virtual == true
+            }
             steps{
                 script {
                     tags = sh(returnStdout: true, script: 'bash ./cicd/jenkins/pipelines/ansible/create-tags.sh').trim()
@@ -120,7 +124,8 @@ pipeline{
         stage('Virtual Tests') {
             when {
                 expression { 
-                    params.newman_tests == true
+                    params.newman_tests == true &&
+                    params.deploy_to_virtual == true
                 }
             }
             steps {
