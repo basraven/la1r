@@ -66,8 +66,8 @@
 #     - { command: "kdb5_util create -s -P {{ kerberos_admin }} ",      when: "{{ ansible_facts['distribution'] == 'CentOS' }} "}
 #   when: "{{ item.when }}"
   
-  # TO REMOVE DB:
-  # kdb5_util destroy -f
+# TO REMOVE DB:
+# kdb5_util destroy -f
 
 - name: Kerberos / Make sure log file has correct permissions
   become: yes
@@ -86,7 +86,9 @@
 - name: Kerberos / Add principal with keytab
   become: yes
   shell:  |
-    kadmin.local -q 'add_principal -pw bas raver/admin'
+    keytab_location=/home/{{ target_user_name }}/raver.keytab
+    kadmin.local -q 'add_principal -pw "{{ kerberos_admin }}" raver/admin'
+    kadmin.local -q 'ktadd $keytab_location raver/admin'
     kadmin.local -q 'addprinc -randkey nfs/nfs-server.domain'
     kadmin.local -q 'addprinc -randkey nfs/nfs-client.domain'
     kadmin.local -q 'addprinc -randkey nfs/test-ubuntu'
