@@ -29,4 +29,4 @@ A few predefined folder structures are used in this setup, each folder to simula
 | 222        | 1: linux-wayne        | 2          | 2              | 2         | /mnt/hdd/tmp/<service_name>       |
 | 113        | 2: 50centos           | 1          | 1              | 3         | /mnt/slhdd/ha/<service_name>      |
 | 213        | 2: 50centos           | 2          | 1              | 3         | /mnt/slhdd/na/<service_name>      |
-| 223        | 2: 50centos           | 2          | 2              | 1         | /mnt/slhdd/tmp/<service_name>     |
+| 223        | 2: 50centos           | 2          | 2              | 3         | /mnt/slhdd/tmp/<service_name>     |
