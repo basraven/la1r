@@ -32,10 +32,8 @@
     regexp: "{{ item.regexp }}"
     line: "{{ item.line }}"
   with_items:
-    - { regexp: '^127.0.0.1 kerberos.la1r.com localhost kerberos',
-    line: '127.0.0.1 kerberos.la1r.com localhost kerberos' }
-    # - { regexp: '^127.0.0.1 la1r.com localhost la1r',
-    # line: '127.0.0.1 la1r.com localhost la1r' }
+    - { regexp: '^192.168.5.1 kerberos.la1r.com localhost kerberos',
+    line: '192.168.5.1 kerberos.la1r.com localhost kerberos' }
   when: "{{ kerberos == 'server' }} "
 
 # - name: Kerberos / Change default server ACL config
@@ -53,7 +51,8 @@
     mode: "0755"
   with_items:
     - { config: '/etc/krb5kdc/kdc.conf',            when: "{{ ansible_facts['distribution'] != 'CentOS' }} "}
-    - { config: '/var/kerberos/krb5kdc/kdc.conf',   when: "{{ ansible_facts['distribution'] == 'CentOS' }} "}
+    - { config: '/etc/krb5kdc/kdc.conf',            when: "{{ ansible_facts['distribution'] == 'CentOS' }} "}
+    # - { config: '/var/kerberos/krb5kdc/kdc.conf',   when: "{{ ansible_facts['distribution'] == 'CentOS' }} "}
   when: "{{ item.when }}"
 
 - name: Kerberos / Include Kerberos credentials

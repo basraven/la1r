@@ -22,16 +22,16 @@
     dest: "/etc/krb5.conf"
     mode: "0755"
 
-- name: Kerberos / Add to /etc/hosts
-  become: yes
-  lineinfile:
-    dest: "/etc/hosts"
-    regexp: "{{ item.regexp }}"
-    line: "{{ item.line }}"
-  with_items:
-    - { regexp: '^127.0.0.1 kerberos.la1r.com localhost kerberos',
-    line: '127.0.0.1 kerberos.la1r.com localhost kerberos' }
-  when: "{{ kerberos == 'server' }} "
+# - name: Kerberos / Add to /etc/hosts
+#   become: yes
+#   lineinfile:
+#     dest: "/etc/hosts"
+#     regexp: "{{ item.regexp }}"
+#     line: "{{ item.line }}"
+#   with_items:
+#     - { regexp: '^127.0.0.1 kerberos.la1r.com localhost kerberos',
+#     line: '127.0.0.1 kerberos.la1r.com localhost kerberos' }
+#   when: "{{ kerberos == 'server' }} "
 
 - name: Kerberos / Change default server ACL config
   become: yes
@@ -62,8 +62,8 @@
 #   args:
 #     executable: /bin/bash
 #   with_items:
-#     - { command: "set +e && printf \"{{ kerberos_admin }}\n{{ kerberos_admin }}\" | krb5_newrealm && set -e ", when: "{{ ansible_facts['distribution'] != 'CentOS' }} "}
-#     - { command: "kdb5_util create -s -P {{ kerberos_admin }} ",      when: "{{ ansible_facts['distribution'] == 'CentOS' }} "}
+#     - { command: "set +e && printf \"{{ kerberos_admin_pw }}\n{{ kerberos_admin_pw }}\" | krb5_newrealm && set -e ", when: "{{ ansible_facts['distribution'] != 'CentOS' }} "}
+#     - { command: "kdb5_util create -s -P {{ kerberos_admin_pw }} ",      when: "{{ ansible_facts['distribution'] == 'CentOS' }} "}
 #   when: "{{ item.when }}"
   
 # TO REMOVE DB:
@@ -86,19 +86,17 @@
 - name: Kerberos / Add principal with keytab
   become: yes
   shell:  |
-    keytab_location=/home/{{ target_user_name }}/raver.keytab
-    kadmin.local -q 'add_principal -pw "{{ kerberos_admin }}" raver/admin'
-    kadmin.local -q 'ktadd $keytab_location raver/admin'
+    kadmin.local -q 'add_principal -pw "{{ kerberos_admin_pw }}" raver/admin'
+    kadmin.local -q 'ktadd {{keytab_location }} raver/admin'
     kadmin.local -q 'addprinc -randkey nfs/nfs-server.domain'
     kadmin.local -q 'addprinc -randkey nfs/nfs-client.domain'
-    kadmin.local -q 'addprinc -randkey nfs/test-ubuntu'
-    kadmin.local -q 'addprinc -randkey nfs/ubuntu2004.localdomain'
-    kadmin.local -q "ktadd /home/basraven/raver.keytab raver/admin"
-    kadmin.local -q "ktadd /home/basraven/raver.keytab nfs/nfs-server.domain"
-    kadmin.local -q "ktadd /home/basraven/raver.keytab nfs/test-ubuntu"
-    kadmin.local -q "ktadd /home/basraven/raver.keytab nfs/ubuntu2004.localdomain"
-    chown {{ target_user_name }}:{{ target_user_name }} $keytab_location  
-    
+    kadmin.local -q 'addprinc -randkey nfs/linux-wayne'
+    kadmin.local -q 'addprinc -randkey nfs/50centos'
+    kadmin.local -q "ktadd {{ keytab_location }} raver/admin"
+    kadmin.local -q "ktadd {{ keytab_location }} nfs/nfs-server.domain"
+    kadmin.local -q "ktadd {{ keytab_location }} nfs/linux-wayne"
+    kadmin.local -q "ktadd {{ keytab_location }} nfs/50centos"
+    chown {{ target_user_name }}:{{ target_user_name }} {{keytab_location }}  
   args:
     executable: /bin/bash
 

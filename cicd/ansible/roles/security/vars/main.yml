@@ -1,0 +1,2 @@
+---
+keytab_location : "/etc/krb5kdc/rave.keytab"

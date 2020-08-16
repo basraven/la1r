@@ -14,18 +14,19 @@
   lineinfile:
     dest: /etc/default/nfs-kernel-server
     regexp: "^NEED_SVCGSSD="
-    line: "NEED_SVCGSSD=yes"
+    line: "NEED_SVCGSSD=no"
     state: present
     backup: yes
+  when: ansible_facts['distribution'] != "CentOS"
 
 - name: Nfs Server / Set export
   become: yes
   lineinfile:
     dest: /etc/exports
     regexp: "^{{ nfs_storage_classes[item]['hostpath'] }}"
+    line: "{{ nfs_storage_classes[item]['hostpath'] }} *(rw,async,no_subtree_check,anonuid=1040,anongid=1040)"
     # (original) line: "{{ nfs_storage_classes[item]['hostpath'] }} *(rw,async,no_subtree_check,anonuid=1040,anongid=1040)"
-    # line: "{{ nfs_storage_classes[item]['hostpath'] }} *(rw,sync,no_subtree_check)"
-    line: "{{ nfs_storage_classes[item]['hostpath'] }} *(rw,fsid=0,insecure,no_subtree_check,async,anonuid=65534,anongid=65534)"
+    # (with kerberos) line: "{{ nfs_storage_classes[item]['hostpath'] }} *(rw,fsid=0,insecure,no_subtree_check,async,anonuid=65534,anongid=65534)"
     state: present
     backup: yes
   with_items: "{{ nfs_storage_capabilities }}"
