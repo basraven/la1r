@@ -1,0 +1,16 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dns-ilb
+  namespace: kube-system
+  labels:
+    k8s-app: kube-dns
+spec:
+  ports:
+  - name: dns
+    port: 53
+    protocol: UDP
+  selector:
+    k8s-app: kube-dns
+  type: LoadBalancer

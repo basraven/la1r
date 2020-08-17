@@ -13,8 +13,8 @@ pipeline{
     // https://codurance.com/2019/05/30/accessing-and-dumping-jenkins-credentials/
     // https://tutorials.releaseworksacademy.com/learn/how-to-add-jenkins-credentials-with-curl-or-ansible
     parameters {
-        booleanParam defaultValue: true, description: 'Deploy to Virtual', name: 'deploy_to_virtual'
-        booleanParam defaultValue: false, description: 'Deploy to Metal', name: 'deploy_to_metal'
+        booleanParam defaultValue: false, description: 'Deploy to Virtual', name: 'deploy_to_virtual'
+        booleanParam defaultValue: true, description: 'Deploy to Metal', name: 'deploy_to_metal'
         booleanParam defaultValue: false, description: 'Perform newman tests', name: 'newman_tests'
         booleanParam defaultValue: false, description: 'Tag: Reboot Machine', name: 'tag_reboot'
         // booleanParam defaultValue: true,  description: 'Tag: Helper scripts for the run itself, e.g. determine OS', name: 'tag_helper'
@@ -68,7 +68,7 @@ pipeline{
         stage('Workspace Preparation') { // for display purposes
             steps{
                 script {
-                    EXTRA_VARS = '--extra-vars="'
+                    EXTRA_VARS = '--extra-vars="ansible_user=basraven ansible_ssh_private_key_file=/root/.ssh/host_id_rsa '
                     if (params.join_kubernetes_token != '') {
                         EXTRA_VARS = EXTRA_VARS + "kubernetes_master=$join_kubernetes_token, "
                     }
@@ -84,12 +84,8 @@ pipeline{
 
 
                     // Closing or wiping if empty
-                    if (EXTRA_VARS != '--extra-vars="'){
-                        EXTRA_VARS = EXTRA_VARS.substring(0, (EXTRA_VARS.length() -2) ) 
-                        EXTRA_VARS = EXTRA_VARS + '"'
-                    }else{
-                        EXTRA_VARS = ' '
-                    }
+                    EXTRA_VARS = EXTRA_VARS + '"'
+
                     echo "#######################################################################"
                     echo "### Following EXTRA_VARS will be used: " + EXTRA_VARS
                     echo "#######################################################################"
@@ -102,6 +98,7 @@ pipeline{
                 // sh label: 'Create inventory', script: 'printf "$hosts" > ./cicd/ansible/hosts.yaml'
                 sh label: "Create ${JUNIT_OUTPUT_DIR}", script: "mkdir -p ${JUNIT_OUTPUT_DIR}"
                 sh label: 'Copy ansible.cfg to /etc/ansible/ansible.cfg', script: 'mkdir -p /etc/ansible && cp -f ./cicd/ansible/config/ansible.cfg /etc/ansible/ansible.cfg'
+                sh label: 'perpare ssh key', script: 'cp /credentials/ssh/id_rsa /root/.ssh/host_id_rsa && chmod 600 /root/.ssh/host_id_rsa'
             }
         }
         stage('Virtual Deployment') {

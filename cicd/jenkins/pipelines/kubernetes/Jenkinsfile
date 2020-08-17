@@ -16,7 +16,6 @@ pipeline{
         booleanParam defaultValue: false, description: 'Untaint the Kubernetes Master Node to receive pods', name: 'deploy_untaint_master'
         booleanParam defaultValue: false, description: 'Deploy network architecture', name: 'deploy_network'
         booleanParam defaultValue: true,  description: 'Deploy Kubernetes Dashboard', name: 'deploy_dashboard'
-        booleanParam defaultValue: false, description: 'Deploy Storage (Rook/Ceph)', name: 'deploy_storage'
         booleanParam defaultValue: false, description: 'Deploy Metal LB', name: 'deploy_metallb'
         
     }
@@ -56,17 +55,6 @@ pipeline{
                         sh label: 'Deploy Dashboard Admin Account', returnStatus: true, script: 'kubectl apply -f kubernetes/kubernetes-dashboard/dashboard-admin.yaml'
                         sh label: 'Deploy Dashboard Readonly Account', returnStatus: true, script: 'kubectl apply -f kubernetes/kubernetes-dashboard/dashboard-readonly.yaml'
                         sh label: 'Get ', script: '''dashboardtoken=`kubectl -n kubernetes-dashboard describe secret $(kubectl -n kubernetes-dashboard get secret | grep admin-user | awk \'{print $1}\') | sed -En "s/token:\\w*\\r*\\s*(.*)$/\\1/p" | tail -n 1` '''
-                    }
-                    if(params.deploy_storage){
-                        sh label: 'Rook Ceph - Deploy Operator', returnStatus: true, script: '''git clone --single-branch --branch release-1.3 https://github.com/rook/rook.git
-                        cd rook/cluster/examples/kubernetes/ceph
-                        kubectl apply -f common.yaml
-                        kubectl apply -f operator.yaml
-                        kubectl apply -f cluster.yaml
-                        '''
-                        sh label: 'Rook Ceph - Deploy Configuration', returnStatus: true, script: ''' kubectl apply -f kubernetes/rook/rook.yml '''
-                        
-                        sh label: 'Rook Ceph - Get Admin Token', returnStatus: true, script: ''' kubectl -n rook-ceph get secret rook-ceph-dashboard-password -o jsonpath="{['data']['password']}" | base64 --decode && echo '''
                     }
                     if(params.deploy_metallb){
                         sh label: 'Deploy Metallb - strict arp', returnStatus: true, script: '''# actually apply the changes, returns nonzero returncode on errors only

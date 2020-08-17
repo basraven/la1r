@@ -13,7 +13,6 @@
         <string>deploy_untaint_master</string>
         <string>newman_tests</string>
         <string>deploy_dashboard</string>
-        <string>deploy_storage</string>
         <string>deploy_to_metal</string>
         <string>deploy_metallb</string>
         <string>deploy_network</string>
@@ -59,11 +58,6 @@
           <name>deploy_dashboard</name>
           <description>Deploy Kubernetes Dashboard</description>
           <defaultValue>true</defaultValue>
-        </hudson.model.BooleanParameterDefinition>
-        <hudson.model.BooleanParameterDefinition>
-          <name>deploy_storage</name>
-          <description>Deploy Storage (Rook/Ceph)</description>
-          <defaultValue>false</defaultValue>
         </hudson.model.BooleanParameterDefinition>
         <hudson.model.BooleanParameterDefinition>
           <name>deploy_metallb</name>

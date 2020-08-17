@@ -11,12 +11,12 @@
       </triggers>
       <parameters>
         <string>tag_hostname</string>
+        <string>tag_kerberos_client</string>
         <string>tag_docker</string>
         <string>tag_create_ovpn_user</string>
         <string>tag_init_kubernetes</string>
         <string>tag_node_exporter</string>
         <string>tag_openvpn_server</string>
-        <string>tag_storage_kubernetes</string>
         <string>newman_tests</string>
         <string>tag_users</string>
         <string>tag_join-kubernetes</string>
@@ -31,9 +31,11 @@
         <string>tag_dns_server</string>
         <string>tag_kubernetes_server</string>
         <string>kubernetes_cidr</string>
+        <string>deploy_to_virtual</string>
         <string>create_ovpn_user_name</string>
         <string>delete_ovpn_user_name</string>
         <string>tag_fetch_kubernetes</string>
+        <string>tag_kerberos_server</string>
         <string>deploy_to_metal</string>
         <string>tag_openvpn_client</string>
       </parameters>
@@ -55,9 +57,14 @@
     <hudson.model.ParametersDefinitionProperty>
       <parameterDefinitions>
         <hudson.model.BooleanParameterDefinition>
+          <name>deploy_to_virtual</name>
+          <description>Deploy to Virtual</description>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
           <name>deploy_to_metal</name>
           <description>Deploy to Metal</description>
-          <defaultValue>false</defaultValue>
+          <defaultValue>true</defaultValue>
         </hudson.model.BooleanParameterDefinition>
         <hudson.model.BooleanParameterDefinition>
           <name>newman_tests</name>
@@ -184,8 +191,13 @@
           <trim>true</trim>
         </hudson.model.StringParameterDefinition>
         <hudson.model.BooleanParameterDefinition>
-          <name>tag_storage_kubernetes</name>
-          <description>Tag: Kubernetes: Prep for storage</description>
+          <name>tag_kerberos_client</name>
+          <description>Tag: Install Kerberos client</description>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>tag_kerberos_server</name>
+          <description>Tag: Install Kerberos server</description>
           <defaultValue>false</defaultValue>
         </hudson.model.BooleanParameterDefinition>
       </parameterDefinitions>
