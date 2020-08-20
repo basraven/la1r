@@ -1,4 +1,6 @@
 [logging]
+    kdc  = FILE:/var/log/kdc.log
+    admin_server = FILE:/var/log/krb5_admin_server.log
     default = FILE:/var/log/krb5.log
 
 [libdefaults]
@@ -14,6 +16,7 @@
         kdc = kerberos.la1r.com:88
         admin_server = kerberos.la1r.com
         default_domain = LA1R.COM
+        auto_to_local = raver/admin
     }
 
 [domain_realm]
