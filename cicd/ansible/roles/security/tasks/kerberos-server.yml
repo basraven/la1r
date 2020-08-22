@@ -83,22 +83,22 @@
     enabled: yes
     state: restarted
 
-- name: Kerberos / Add principal with keytab
-  become: yes
-  shell:  |
-    kadmin.local -q 'add_principal -pw "{{ kerberos_admin_pw }}" raver/admin'
-    kadmin.local -q 'ktadd {{keytab_location }} raver/admin'
-    kadmin.local -q 'addprinc -randkey nfs/nfs-server.domain'
-    kadmin.local -q 'addprinc -randkey nfs/nfs-client.domain'
-    kadmin.local -q 'addprinc -randkey nfs/linux-wayne'
-    kadmin.local -q 'addprinc -randkey nfs/50centos'
-    kadmin.local -q "ktadd {{ keytab_location }} raver/admin"
-    kadmin.local -q "ktadd {{ keytab_location }} nfs/nfs-server.domain"
-    kadmin.local -q "ktadd {{ keytab_location }} nfs/linux-wayne"
-    kadmin.local -q "ktadd {{ keytab_location }} nfs/50centos"
-    chown {{ target_user_name }}:{{ target_user_name }} {{keytab_location }}  
-  args:
-    executable: /bin/bash
+# - name: Kerberos / Add principal with keytab
+#   become: yes
+#   shell:  |
+#     kadmin.local -q 'add_principal -pw "{{ kerberos_admin_pw }}" raver/admin'
+#     kadmin.local -q 'ktadd {{keytab_location }} raver/admin'
+#     kadmin.local -q 'addprinc -randkey nfs/nfs-server.domain'
+#     kadmin.local -q 'addprinc -randkey nfs/nfs-client.domain'
+#     kadmin.local -q 'addprinc -randkey nfs/linux-wayne'
+#     kadmin.local -q 'addprinc -randkey nfs/50centos'
+#     kadmin.local -q "ktadd {{ keytab_location }} raver/admin"
+#     kadmin.local -q "ktadd {{ keytab_location }} nfs/nfs-server.domain"
+#     kadmin.local -q "ktadd {{ keytab_location }} nfs/linux-wayne"
+#     kadmin.local -q "ktadd {{ keytab_location }} nfs/50centos"
+#     chown {{ target_user_name }}:{{ target_user_name }} {{keytab_location }}  
+#   args:
+#     executable: /bin/bash
 
 - name: Kerberos / Allow in UFW
   become: yes
@@ -106,3 +106,18 @@
     rule: allow
     port: "88"
 
+FIXME:
+# Still requires a lot of manual work,
+# Based on https://examples.javacodegeeks.com/enterprise-java/apache-hadoop/hadoop-kerberos-authentication-tutorial/:
+# 1. kdb5_util create -r LA1R.COM -s
+# 2. kadmin.local
+# 3. change_password kadmin/admin
+# 4. addprinc kadmin/50centos
+# 4. addprinc -randkey nfs/50centos
+# 5. addprinc -randkey nfs/linux-wayne
+# 6. ktadd nfs/linux-wayne
+
+# On client:
+# 7. kinit kadmin/admin
+# 8. kadmin
+# 9. ktadd nfs/50centos

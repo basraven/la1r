@@ -104,3 +104,12 @@ spec:
 
 # DIT MOET IK EERST TESTEN!!!
 # mount -t nfs 192.168.5.1:/mnt/hdd/tmp /mnt/baz
+
+
+/export       192.168.5.0/24(rw,fsid=0,insecure, no_subtree_check,async,anonuid=65534,anongid=65534)
+/export       gss/krb5(rw,fsid=0,insecure, no_subtree_check,async,anonuid=65534,anongid=65534)
+/export/users 192.168.5.0/24(rw,nohide,insecure, no_subtree_check,async,anonuid=65534,anongid=65534)
+/export/users gss/krb5(rw,nohide,insecure, no_subtree_check,async,anonuid=65534,anongid=65534) 
+
+# /mnt/hdd/tmp *(rw,fsid=0,insecure,no_subtree_check,async,anonuid=65534,anongid=65534)
+# /mnt/hdd/tmp gss/krb5(rw,fsid=0,insecure, no_subtree_check,async,anonuid=65534,anongid=65534)
