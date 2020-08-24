@@ -11,6 +11,6 @@
     - { package: 'nfs-kernel-server ',  when: "{{ ansible_facts['distribution'] != 'CentOS' }} "}
     - { package: 'nfs-common',          when: "{{ ansible_facts['distribution'] != 'CentOS' }} "}
     - { package: 'rpcbind',             when: "{{ ansible_facts['distribution'] != 'CentOS' }} "}
-    - { package: 'krb5-user',           when: "{{ ansible_facts['distribution'] != 'CentOS' }} "}
-    - { package: 'libpam-krb5 ',        when: "{{ ansible_facts['distribution'] != 'CentOS' }} "}
+    # - { package: 'krb5-user',           when: "{{ ansible_facts['distribution'] != 'CentOS' }} "}
+    # - { package: 'libpam-krb5 ',        when: "{{ ansible_facts['distribution'] != 'CentOS' }} "}
   when: "{{ item.when }}"
