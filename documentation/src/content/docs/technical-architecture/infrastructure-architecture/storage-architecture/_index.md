@@ -17,7 +17,7 @@ A few predefined folder structures are used in this setup, each folder to simula
 | ---        | ---            | ---       |
 | - 1: Backed-up (**H**igh **A**vailability) <br/> - 2: Not Backed-up (**N**ormal **A**vailability)      | - 1: Persistent, retained indefinite <br/> - 2: Volatile, removed after 2 weeks | - 1: High speed SSD storage <br/> - 2: Normal speed HDD Storage <br/> - 3: Slower speed HDD storage |
 
-#### Instances
+#### Generic Instances
 
 | Class Code | Implemented server(s) | **B**ackup | **V**olatility | **S**peed | Hostpath                          |
 | ---        | ---                   | ---        | ---            | ---       | ---                               |
@@ -30,3 +30,10 @@ A few predefined folder structures are used in this setup, each folder to simula
 | 113        | 2: 50centos           | 1          | 1              | 3         | /mnt/slhdd/ha/<service_name>      |
 | 213        | 2: 50centos           | 2          | 1              | 3         | /mnt/slhdd/na/<service_name>      |
 | 223        | 2: 50centos           | 2          | 2              | 3         | /mnt/slhdd/tmp/<service_name>     |
+
+#### Specific Instances
+
+| Class Code | Implemented server(s) | **B**ackup | **V**olatility | **S**peed | Persistent Volume (PV) name    | Hostpath                          |
+| ---        | ---                   | ---        | ---            | ---       | ---                            | ---                               |
+| 211        | 1: linux-wayne        | 2          | 1              | 1         | nextcloud-config               | /mnt/ssd/ha/nextcloud/config/     |
+| 212        | 1: linux-wayne        | 2          | 1              | 2         | nextcloud-data                 | /mnt/hdd/ha/nextcloud/data/       |

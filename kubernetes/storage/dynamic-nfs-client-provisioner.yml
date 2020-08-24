@@ -30,7 +30,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: nfs-pod-provisioner-sa # defined on top of file
-    namespace: default
+    namespace: storage
 roleRef: # binding cluster role to service account
   kind: ClusterRole
   name: nfs-provisioner-clusterRole # name defined in clusterRole
@@ -65,9 +65,11 @@ kind: StorageClass
 metadata:
   name: nfs-storageclass # IMPORTANT pvc needs to mention this name
 provisioner: nfs-test # name can be anything
+reclaimPolicy: "Delete"
 parameters:
   archiveOnDelete: "false"
-
+  allowVolumeExpansion: "true"
+  defaultClass: "false" # Set as the default StorageClass
 ---
 kind: Deployment
 apiVersion: apps/v1
