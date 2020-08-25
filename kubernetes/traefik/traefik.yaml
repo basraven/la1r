@@ -3,63 +3,55 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: traefik-extra-config
-  namespace: kube-system
+  namespace: traefik
 data:
   extra.toml: |-
     # in files/extra.toml
 
-    [[tls.certificates]]
-      certFile = "/ssl/kubernetes/tls.crt" 
-      keyFile = "/ssl/kubernetes/tls.key"
+    # [[tls.certificates]]
+    #   certFile = "/ssl/kubernetes/tls.crt" 
+    #   keyFile = "/ssl/kubernetes/tls.key"
     
-    [[tls.certificates]]
-      certFile = "/ssl/cloud/tls.crt" 
-      keyFile = "/ssl/cloud/tls.key"
+    # [[tls.certificates]]
+    #   certFile = "/ssl/cloud/tls.crt" 
+    #   keyFile = "/ssl/cloud/tls.key"
     
-    [[tls.certificates]]
-      certFile = "/ssl/grafana/tls.crt" 
-      keyFile = "/ssl/grafana/tls.key"
+    # [[tls.certificates]]
+    #   certFile = "/ssl/grafana/tls.crt" 
+    #   keyFile = "/ssl/grafana/tls.key"
     
-    [[tls.certificates]]
-      certFile = "/ssl/torrent/tls.crt" 
-      keyFile = "/ssl/torrent/tls.key"
+    # [[tls.certificates]]
+    #   certFile = "/ssl/torrent/tls.crt" 
+    #   keyFile = "/ssl/torrent/tls.key"
     
-    [[tls.certificates]]
-      certFile = "/ssl/plex/tls.crt" 
-      keyFile = "/ssl/plex/tls.key"
+    # [[tls.certificates]]
+    #   certFile = "/ssl/plex/tls.crt" 
+    #   keyFile = "/ssl/plex/tls.key"
     
-    [[tls.certificates]]
-      certFile = "/ssl/sonarr/tls.crt" 
-      keyFile = "/ssl/sonarr/tls.key"
+    # [[tls.certificates]]
+    #   certFile = "/ssl/sonarr/tls.crt" 
+    #   keyFile = "/ssl/sonarr/tls.key"
     
-    [[tls.certificates]]
-      certFile = "/ssl/radarr/tls.crt" 
-      keyFile = "/ssl/radarr/tls.key"
-    
----
-# source: https://medium.com/@patrickeasters/using-traefik-with-tls-on-kubernetes-cb67fb43a948
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: traefik-ingress-controller
-  namespace: kube-system
+    # [[tls.certificates]]
+    #   certFile = "/ssl/radarr/tls.crt" 
+    #   keyFile = "/ssl/radarr/tls.key"
 ---
 kind: Deployment
 apiVersion: apps/v1
 metadata:
   name: traefik-ingress-controller
-  namespace: kube-system
+  namespace: traefik
   labels:
-    k8s-app: traefik-ingress-lb
+    k8s-app: traefik-ingress-controller
 spec:
   selector:
     matchLabels:
-      name: traefik-ingress-lb
+      name: traefik-ingress-controller
   template:
     metadata:
       labels:
-        k8s-app: traefik-ingress-lb
-        name: traefik-ingress-lb
+        k8s-app: traefik-ingress-controller
+        name: traefik-ingress-controller
     spec:
       volumes:
       - name: traefik-extra-config
@@ -69,35 +61,35 @@ spec:
           - key: extra.toml
             path: extra.toml
       # FIXME: Can't remember why we have these cert volumes
-      - name: kubernetes-cert-volume
-        secret:
-          secretName: kubernetes-cert
-      - name: cloud-cert-volume
-        secret:
-          secretName: cloud-cert
-      - name: grafana-cert-volume
-        secret:
-          secretName: grafana-cert
-      - name: torrent-cert-volume
-        secret:
-          secretName: torrent-cert
-      - name: plex-cert-volume
-        secret:
-          secretName: plex-cert
-      - name: sonarr-cert-volume
-        secret:
-          secretName: sonarr-cert
-      - name: radarr-cert-volume
-        secret:
-          secretName: radarr-cert
+      # - name: kubernetes-cert-volume
+      #   secret:
+      #     secretName: kubernetes-cert
+      # - name: cloud-cert-volume
+      #   secret:
+      #     secretName: cloud-cert
+      # - name: grafana-cert-volume
+      #   secret:
+      #     secretName: grafana-cert
+      # - name: torrent-cert-volume
+      #   secret:
+      #     secretName: torrent-cert
+      # - name: plex-cert-volume
+      #   secret:
+      #     secretName: plex-cert
+      # - name: sonarr-cert-volume
+      #   secret:
+      #     secretName: sonarr-cert
+      # - name: radarr-cert-volume
+      #   secret:
+      #     secretName: radarr-cert
 
 
 
       serviceAccountName: traefik-ingress-controller
       # terminationGracePeriodSeconds: 60
       containers:
-      - name: traefik-ingress-lb
-        image: traefik:v2.0
+      - name: traefik-ingress-controller
+        image: traefik:v2.3
         volumeMounts:
         - name: traefik-extra-config
           mountPath: /extra/extra.toml
@@ -105,20 +97,20 @@ spec:
 
 
 
-        - name: kubernetes-cert-volume
-          mountPath: /ssl/kubernetes/
-        - name: cloud-cert-volume
-          mountPath: /ssl/cloud/
-        - name: grafana-cert-volume
-          mountPath: /ssl/grafana/
-        - name: torrent-cert-volume
-          mountPath: /ssl/torrent/
-        - name: plex-cert-volume
-          mountPath: /ssl/plex/
-        - name: sonarr-cert-volume
-          mountPath: /ssl/sonarr/
-        - name: radarr-cert-volume
-          mountPath: /ssl/radarr/
+        # - name: kubernetes-cert-volume
+        #   mountPath: /ssl/kubernetes/
+        # - name: cloud-cert-volume
+        #   mountPath: /ssl/cloud/
+        # - name: grafana-cert-volume
+        #   mountPath: /ssl/grafana/
+        # - name: torrent-cert-volume
+        #   mountPath: /ssl/torrent/
+        # - name: plex-cert-volume
+        #   mountPath: /ssl/plex/
+        # - name: sonarr-cert-volume
+        #   mountPath: /ssl/sonarr/
+        # - name: radarr-cert-volume
+        #   mountPath: /ssl/radarr/
 
 
 
@@ -170,10 +162,11 @@ kind: Service
 apiVersion: v1
 metadata:
   name: traefik-ingress-service
-  namespace: kube-system
+  namespace: traefik
 spec:
+  type: ClusterIP
   selector:
-    k8s-app: traefik-ingress-lb
+    k8s-app: traefik-ingress-controller
   ports:
     - protocol: TCP
       port: 80
@@ -186,12 +179,35 @@ spec:
       name: admin
     - port: 8082
       name: prometheus
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: traefik-loadbalancer-service
+  namespace: traefik
+spec:
+  loadBalancerIP: 192.168.6.1
+  ports:
+    - protocol: TCP
+      port: 80
+      name: web
+    - protocol: TCP
+      port: 443
+      name: websecure
+    - protocol: TCP
+      port: 8080
+      name: admin
+  selector:
+    k8s-app: traefik-ingress-controller
+  type: LoadBalancer
+
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   name: traefik-web-ui
-  namespace: kube-system
+  namespace: traefik
 spec:
   rules:
   - host: traefik.bas

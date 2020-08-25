@@ -56,7 +56,7 @@ data:
       scrape_interval: 3s
       static_configs:
       - targets:
-        - traefik-ingress-service.kube-system:8082
+        - traefik-ingress-service.traefik:8082
     - job_name: traefik-online
       scrape_interval: 3s
       static_configs:

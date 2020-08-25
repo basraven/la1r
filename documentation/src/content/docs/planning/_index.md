@@ -11,19 +11,18 @@ For this reason I created this planning page in which I track and prioritize wha
 Feel free to add comments on this through Github!
 
 ## In progress
-1. Traefik 2.x
+1.  DNS on LAN implementation
 
 ## Planned
 2. Nextcloud reimplementation
 3. Backup reimplementation
 4. Torrent reimplementation
-6. Monitoring reimplementation
-7. Monitoring with kube-state-metrics in grafana
-8. Monitoring extension
-9.  DNS on LAN implementation
-10. DNS black-hole with pihole
-11. Online reimplementation
-12. Home automation reimplementation
+5. Monitoring reimplementation
+6. Monitoring with kube-state-metrics in grafana
+7. Monitoring extension
+8.  DNS black-hole with pihole
+9.  Online reimplementation
+10. Home automation reimplementation
 
 ## Longstay parking
 13. CollectD, replacing node_exporter
@@ -45,6 +44,7 @@ Feel free to add comments on this through Github!
 29. Refactor Mosquito to [vernemq](https://vernemq.com/) 
 
 ## Completed
+* Traefik 2.x reimplementation
 * Metallb implementation
 * NFS based dynamic storage provisioning
 * New multi-cluster setup with kube-proxy

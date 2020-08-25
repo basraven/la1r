@@ -37,12 +37,11 @@ The following table summarizes all network cidrs and addresses
 | 192.168   | 5.2/20   | 5.2   | 50centos                                                   | 1                 |
 | 192.168   | 6.0/24   |       | Kubernetes MetalLB services                                | 1                 |
 | 192.168   | 6.0/25   |       | LAN Kubernetes MetalLB services                            | 1                 |
-| 192.168   | 6.0/25   | 6.1   | LAN Traefik 2.x on linux-wayne                             | 1                 |
-| 192.168   | 6.0/25   | 6.2   | LAN Traefik 2.x on 50centos                                | 1                 |
+| 192.168   | 6.0/25   | 6.1   | LAN Traefik 2.x                                            | 1                 |
+| 192.168   | 6.0/25   | 6.90  | Consul LAN DNS                                             | 1                 |
 | 192.168   | 6.0/25   | 6.100 | DNS Blackhole (pihole)                                     | 1                 |
 | 192.168   | 6.128/25 |       | Online Kubernetes MetalLB services                         | 1                 |
-| 192.168   | 6.128/25 | 6.128 | Online Traefik 2.x on linux-wayne                          | 1                 |
-| 192.168   | 6.128/25 | 6.129 | Online Traefik 2.x on 50centos                             | 1                 |
+| 192.168   | 6.128/25 | 6.128 | Online Traefik 2.x                                         | 1                 |
 | 10.244    | 0.0/16   |       | Kubernetes internal cidr                                   | kubernetes.local  |
 | 10.8      | 2.0/24   |       | Shared VPN access                                          | openvpn shared    |
 | 10.8      | 2.0/24   | 2.1   | Shared VPN server                                          | openvpn shared    |
