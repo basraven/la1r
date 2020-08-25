@@ -1,5 +1,6 @@
 # This section includes base Calico installation configuration.
 # For more information, see: https://docs.projectcalico.org/v3.15/reference/installation/api#operator.tigera.io/v1.Installation
+# Source: https://docs.projectcalico.org/manifests/custom-resources.yaml
 apiVersion: operator.tigera.io/v1
 kind: Installation
 metadata:
@@ -8,10 +9,13 @@ spec:
   # Configures Calico networking.
   calicoNetwork:
     # Note: The ipPools section cannot be modified post-install.
+    nodeAddressAutodetectionV4:
+      # interface: "enp.*"
+      skipInterface: "tun.*"
     ipPools:
-    - blockSize: 26 # ipv4
+    - blockSize: 26 
       cidr: 10.244.0.0/16
       encapsulation: VXLANCrossSubnet
+      # encapsulation: IPIPCrossSubnet
       natOutgoing: Enabled
       nodeSelector: all()
-
