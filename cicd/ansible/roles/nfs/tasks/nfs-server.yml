@@ -24,7 +24,7 @@
   lineinfile:
     dest: /etc/exports
     regexp: "^{{ nfs_storage_classes[item]['hostpath'] }}"
-    line: "{{ nfs_storage_classes[item]['hostpath'] }} *(rw,async,no_subtree_check)"
+    line: "{{ nfs_storage_classes[item]['hostpath'] }} 192.168.5.0/20(rw,no_all_squash,no_subtree_check,async)"
     # (with backup user) line: "{{ nfs_storage_classes[item]['hostpath'] }} *(rw,async,no_subtree_check,anonuid=1040,anongid=1040)"
     # (original) line: "{{ nfs_storage_classes[item]['hostpath'] }} *(rw,async,no_subtree_check,anonuid=1040,anongid=1040)"
     # (with kerberos) line: "{{ nfs_storage_classes[item]['hostpath'] }} *(rw,fsid=0,insecure,no_subtree_check,async,anonuid=65534,anongid=65534)"

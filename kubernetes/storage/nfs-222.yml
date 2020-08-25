@@ -1,0 +1,58 @@
+
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: nfs-222 # IMPORTANT pvc needs to mention this name
+provisioner: nfs-222 # name can be anything
+parameters:
+  archiveOnDelete: "false"  
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: nfs-222-provisioner
+  namespace: storage
+  labels:
+    classCode: "222"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nfs-222-provisioner
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: nfs-222-provisioner
+        classCode: "222"
+    spec:
+      # affinity:
+      #   nodeAffinity:
+      #     requiredDuringSchedulingIgnoredDuringExecution :
+      #       nodeSelectorTerms:
+      #       - matchExpressions:
+      #         - key: kubernetes.io/hostname
+      #           operator: In
+      #           values:
+      #           - 50centos
+      serviceAccountName: nfs-pod-provisioner-sa # name of service account created in rbac.yaml
+      containers:
+        - name: nfs-222-provisioner
+          image: quay.io/external_storage/nfs-client-provisioner:latest
+          volumeMounts:
+            - name: nfs-provisioner-v
+              mountPath: /persistentvolumes
+          env:
+            - name: PROVISIONER_NAME # do not change
+              value: nfs-222 # SAME AS PROVISONER NAME VALUE IN STORAGECLASS
+            - name: NFS_SERVER # do not change
+              value: 192.168.5.1 # Ip of the NFS SERVER
+            - name: NFS_PATH # do not change
+              value: /mnt/hdd/tmp # path to nfs directory setup
+      volumes:
+       - name: nfs-provisioner-v # same as volume mounts name
+         nfs:
+           server: 192.168.5.1
+           path: /mnt/hdd/tmp
