@@ -40,6 +40,7 @@ The following tags are used in Ansible:
 * delete_ovpn_user   - Create a new certificate for openvpn
   * Requires ```---extra-vars "openvpn_user=someusername"```
 * node_exporter         - Install prometheus_node_exporter
+* haproxy               - Install haproxy
 * kubernetes_server     - Install Kubernetes
 * init_kubernetes       - Run kubeadm init
   * Optional ```---extra-vars "kubernetes_cidr=10.244.0.0/16"```

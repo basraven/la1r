@@ -35,6 +35,7 @@ The following table summarizes all network cidrs and addresses
 | 192.168   | 5.0/20   |       | Servers                                                    | 1                 |
 | 192.168   | 5.1/20   | 5.1   | linux-wayne                                                | 1                 |
 | 192.168   | 5.2/20   | 5.2   | 50centos                                                   | 1                 |
+| 192.168   | 5.2/20   | 5.100 | haproxy entrypoint                                         | 1                 |
 | 192.168   | 6.0/24   |       | Kubernetes MetalLB services                                | 1                 |
 | 192.168   | 6.0/25   |       | LAN Kubernetes MetalLB services                            | 1                 |
 | 192.168   | 6.0/25   | 6.1   | LAN Traefik 2.x                                            | 1                 |

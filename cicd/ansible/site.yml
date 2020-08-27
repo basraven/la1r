@@ -10,5 +10,6 @@
   - samba
   - docker
   - openvpn
+  - haproxy
   - prometheus_node_exporter
   - kubernetes

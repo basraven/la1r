@@ -1,0 +1,45 @@
+{# /etc/keepalived/keepalived.conf #}
+global_defs {
+
+    smtp_server localhost
+
+    {#
+    vrrp_skip_check_adv_addr
+    vrrp_strict
+    vrrp_garp_interval 0
+    vrrp_gna_interval 0
+    #}
+}
+
+vrrp_script check_haproxy {
+    script "/bin/pidof haproxy"
+    interval 2
+    weight 2
+}
+
+vrrp_instance VI_{{ inventory_hostname }} {
+    
+    state {{ ha_proxy_node_state }} {# MASTER or BACKUP #}
+    
+    interface {{ ha_proxy_node_interface }} 
+    virtual_router_id 51
+    priority {{ ha_proxy_node_prio }} {# Master should be higher than BACKUP #}
+    
+    unicast_src_ip {{ ansible_host }}
+    unicast_peer {
+        {{ keepalived_peers }}
+    }
+    
+    authentication {
+        auth_type PASS
+        auth_pass {{ ha_proxy_pw }}
+    } 
+    virtual_ipaddress {
+        {{ ha_proxy_vir_ip }}
+    }
+
+    
+    track_script {
+        check_haproxy
+    }
+}

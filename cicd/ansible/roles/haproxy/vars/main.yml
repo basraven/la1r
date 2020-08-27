@@ -1,0 +1,4 @@
+---
+ha_proxy_vir_ip: "192.168.5.100"
+ha_proxy_pw: "66d5cee7d4d9466c43da503798cd58dc51a925c9"
+# ha_proxy_pw: "1111"

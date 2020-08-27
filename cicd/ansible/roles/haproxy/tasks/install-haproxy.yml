@@ -1,0 +1,35 @@
+---
+- name: Install haproxy / Install haproxy and keepalived
+  become: yes
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items: 
+    - gcc
+    - keepalived
+    - haproxy
+    # - openssl-devel
+    # - openssl-devel
+    # - kernel-headers
+    # - kernel-devel
+- name: Install haproxy / set haproxy.conf
+  become: yes
+  template:
+    src: haproxy.cfg.j2
+    dest: /etc/haproxy/haproxy.cfg
+    mode: "0644"
+- name: Install haproxy / set keepalived.conf
+  become: yes
+  template:
+    src: keepalived.conf.j2
+    dest: /etc/keepalived/keepalived.conf
+    mode: "0644"
+- name: Install haproxy / Restart system services
+  become: yes
+  service: 
+    name: "{{item}}"
+    enabled: yes
+    state: restarted
+  with_items:
+      - keepalived
+      - haproxy

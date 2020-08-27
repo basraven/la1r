@@ -50,6 +50,7 @@ pipeline{
 
         booleanParam defaultValue: false, description: 'Tag: Install Kerberos client', name: 'tag_kerberos_client'
         booleanParam defaultValue: false, description: 'Tag: Install Kerberos server', name: 'tag_kerberos_server'
+        booleanParam defaultValue: false, description: 'Tag: Install HA Proxy', name: 'tag_ha_proxy'
     }
 
     agent {

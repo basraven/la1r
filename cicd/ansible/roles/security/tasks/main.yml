@@ -12,9 +12,9 @@
   tags: 
     - security
   when: baremetal is defined and baremetal
-- include: kerberos-server.yml
-  tags: 
-    - kerberos_server
-- include: kerberos-client.yml
-  tags: 
-    - kerberos_client
+# - include: kerberos-server.yml
+#   tags: 
+#     - kerberos_server
+# - include: kerberos-client.yml
+#   tags: 
+#     - kerberos_client

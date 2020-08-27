@@ -1,0 +1,3 @@
+---
+- include: install-haproxy.yml
+  tags: haproxy
