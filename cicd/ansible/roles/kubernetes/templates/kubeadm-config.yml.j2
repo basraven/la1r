@@ -5,6 +5,15 @@ clusterName: {{ kubernetes_cluster_name }}
 {# apiServerCertSANs:
 - "kubernetes.la1r.com" #}
 controlPlaneEndpoint: "{{ ha_proxy_vir_ip }}:443"
+kubelet:
+  extraArgs:
+    node-status-update-frequency: 4s
+controllerManager:
+  extraArgs:
+    node-monitor-period: 2s
+    node-monitor-grace-period: 13s
+    pod-eviction-timeout: 13s
+    resource-quota-sync-period: 1m
 etcd:
   local: 
     endpoints:

@@ -2,220 +2,54 @@
 # Never deploy more than 1 buoy!
 # Requires the followinng commands:
 # ADD:
-# kubectl exec -n kube-system -it etcd-50centos sh -- etcdctl member add "buoy50centos" --peer-urls=http://192.168.5.2:31389  --cert=/etc/kubernetes/pki/etcd/server.crt --key=/etc/kubernetes/pki/etcd/server.key --cacert=/etc/kubernetes/pki/etcd/ca.crt
-# REMOVE:
-# kubectl exec -n kube-system -it etcd-50centos sh  -- etcdctl member remove  d303f6098b4c3970 --cert=/etc/kubernetes/pki/etcd/server.crt --key=/etc/kubernetes/pki/etcd/server.key --cacert=/etc/kubernetes/pki/etcd/ca.crt
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  # annotations:
-    # kubeadm.kubernetes.io/etcd.advertise-client-urls: https://192.168.5.2:2379
-  #   kubernetes.io/config.hash: 08d100e6a3989d07bd3250d007639f9f
-  #   kubernetes.io/config.mirror: 08d100e6a3989d07bd3250d007639f9f
-  #   kubernetes.io/config.seen: "2020-09-01T15:12:33.322205359+02:00"
-  #   kubernetes.io/config.source: file
-  labels:
-    component: etcdbuoy50centos
-    tier: control-plane
-  name: etcd-buoy-50centos
-  namespace: kube-system
-spec:
-  selector:
-    matchLabels:
-      app: etcdbuoy50centos
-  template:
-    metadata:
-      labels:
-        app: etcdbuoy50centos
-    spec:
-      affinity:
-        # podAntiAffinity:
-        #   requiredDuringSchedulingIgnoredDuringExecution:
-        #     - labelSelector:
-        #         matchExpressions:
-        #           - key: app
-        #             operator: In
-        #             values:
-        #               - etcdbuoy50centos
-        #       topologyKey: kubernetes.io/hostname
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-            - matchExpressions:
-              - key: kubernetes.io/hostname
-                operator: In
-                values:
-                - 50centos
-      containers:
-      - command:
-        - etcd
-        - "--advertise-client-urls=http://$(POD_IP):31379"
-        - --client-cert-auth=true
-        - --auto-tls
-        - --peer-auto-tls
-        # - --data-dir=/var/lib/etcd
-        - "--initial-advertise-peer-urls=http://$(POD_IP):31389"
-        # - "--initial-cluster=linux-wayne=https://192.168.5.1:2380,50centos=https://192.168.5.2:2380,buoy$(NODE_NAME)=http://$(POD_IP):31389"
-        - "--initial-cluster=linux-wayne=https://192.168.5.1:2380,buoy50centos=http://192.168.5.2:31389,50centos=https://192.168.5.2:2380,buoylinux-wayne=http://192.168.5.1:31389"
-        - --initial-cluster-state=existing
-        # - --cert-file=/etc/kubernetes/pki/etcd/server.crt
-        # - --key-file=/etc/kubernetes/pki/etcd/server.key
-        - "--listen-client-urls=http://$(POD_IP):31379"
-        # - --listen-metrics-urls=http://127.0.0.1:32381
-        - --listen-peer-urls=http://$(POD_IP):31389
-        - "--name=buoy$(NODE_NAME)"
-        - --peer-cert-file=/etc/kubernetes/pki/etcd/peer.crt
-        - --peer-key-file=/etc/kubernetes/pki/etcd/peer.key
-        - --peer-client-cert-auth=false
-        - --peer-trusted-ca-file=/etc/kubernetes/pki/etcd/ca.crt
-        - --snapshot-count=10000
-        - --trusted-ca-file=/etc/kubernetes/pki/etcd/ca.crt
-        image: k8s.gcr.io/etcd:3.4.9-1
-        imagePullPolicy: IfNotPresent
-        env:
-        - name: POD_IP
-          valueFrom:
-            fieldRef:
-              fieldPath: status.podIP
-        - name: NODE_IP
-          valueFrom:
-            fieldRef:
-              fieldPath: status.hostIP
-        - name: NODE_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: spec.nodeName
-        # - name: NAMESPACE
-        #   valueFrom:
-        #     fieldRef:
-        #       fieldPath: metadata.namespace
-        # ports:
-        #     - name: clients
-        #       containerPort: 31379
-        #       hostPort: 31379
-        #     - name: peers
-        #       containerPort: 31389
-        #       hostPort: 31389
-        #     - name: metrics
-        #       containerPort: 2381
-        #       hostPort: 32381
-        # livenessProbe:
-        #   failureThreshold: 8
-        #   httpGet:
-        #     host: 127.0.0.1
-        #     path: /health
-        #     port: 32381
-        #     scheme: HTTP
-        #   initialDelaySeconds: 10
-        #   periodSeconds: 10
-        #   successThreshold: 1
-        #   timeoutSeconds: 15
-        name: etcd-buoy-50centos
-        resources: {}
-        # startupProbe:
-        #   failureThreshold: 24
-        #   httpGet:
-        #     host: 127.0.0.1
-        #     path: /health
-        #     port: 32381
-        #     scheme: HTTP
-        #   initialDelaySeconds: 10
-        #   periodSeconds: 10
-        #   successThreshold: 1
-        #   timeoutSeconds: 15
-        terminationMessagePath: /dev/termination-log
-        terminationMessagePolicy: File
-        volumeMounts:
-        - mountPath: /etc/kubernetes/pki/etcd
-          name: etcd-certs
-      # dnsPolicy: ClusterFirst
-      # enableServiceLinks: true
-      hostNetwork: true
-      # nodeName: 50centos
-      preemptionPolicy: PreemptLowerPriority
-      priority: 2000001000
-      priorityClassName: system-node-critical
-      restartPolicy: Always
-      # schedulerName: default-scheduler
-      securityContext: {}
-      terminationGracePeriodSeconds: 30
-      tolerations:
-      - effect: NoExecute
-        operator: Exists
-      volumes:
-      - hostPath:
-          path: /etc/kubernetes/pki/etcd
-          type: DirectoryOrCreate
-        name: etcd-certs
-      # - hostPath:
-      #     path: /var/lib/etcd2
-      #     type: DirectoryOrCreate
-      #   name: etcd-data
----
-# Never deploy more than 1 buoy!
-# Requires the followinng commands:
-# ADD:
-# kubectl exec -n kube-system -it etcd-linux-wayne sh -- etcdctl member add "buoylinux-wayne" --peer-urls=http://192.168.5.1:31389  --cert=/etc/kubernetes/pki/etcd/server.crt --key=/etc/kubernetes/pki/etcd/server.key --cacert=/etc/kubernetes/pki/etcd/ca.crt
+# kubectl exec -n kube-system -it etcd-linux-wayne sh -- etcdctl member add "buoy" --peer-urls=http://192.168.5.100:31389  --cert=/etc/kubernetes/pki/etcd/server.crt --key=/etc/kubernetes/pki/etcd/server.key --cacert=/etc/kubernetes/pki/etcd/ca.crt
 # REMOVE:
 # kubectl exec -n kube-system -it etcd-linux-wayne sh  -- etcdctl member remove  d303f6098b4c3970 --cert=/etc/kubernetes/pki/etcd/server.crt --key=/etc/kubernetes/pki/etcd/server.key --cacert=/etc/kubernetes/pki/etcd/ca.crt
 apiVersion: apps/v1
-kind: Deployment
+kind: DaemonSet
 metadata:
-  # annotations:
-    # kubeadm.kubernetes.io/etcd.advertise-client-urls: https://192.168.5.2:2379
-  #   kubernetes.io/config.hash: 08d100e6a3989d07bd3250d007639f9f
-  #   kubernetes.io/config.mirror: 08d100e6a3989d07bd3250d007639f9f
-  #   kubernetes.io/config.seen: "2020-09-01T15:12:33.322205359+02:00"
-  #   kubernetes.io/config.source: file
   labels:
-    component: etcdbuoylinux-wayne
+    component: etcdbuoy
     tier: control-plane
-  name: etcd-buoy-linux-wayne
+  name: etcd-buoy
   namespace: kube-system
 spec:
   selector:
     matchLabels:
-      app: etcdbuoylinux-wayne
+      app: etcdbuoy
   template:
     metadata:
       labels:
-        app: etcdbuoylinux-wayne
+        app: etcdbuoy
     spec:
       affinity:
-        # podAntiAffinity:
-        #   requiredDuringSchedulingIgnoredDuringExecution:
-        #     - labelSelector:
-        #         matchExpressions:
-        #           - key: app
-        #             operator: In
-        #             values:
-        #               - etcdbuoy50centos
-        #       topologyKey: kubernetes.io/hostname
-        nodeAffinity:
+        podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-            - matchExpressions:
-              - key: kubernetes.io/hostname
-                operator: In
-                values:
-                - linux-wayne
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - etcdbuoy
+              topologyKey: node-role.kubernetes.io/master
       containers:
       - command:
         - etcd
-        - "--advertise-client-urls=http://$(POD_IP):31379"
+        - "--advertise-client-urls=http://192.168.5.100:31379"
         - --client-cert-auth=true
         - --auto-tls
         - --peer-auto-tls
         # - --data-dir=/var/lib/etcd
-        - "--initial-advertise-peer-urls=http://$(POD_IP):31389"
-        - "--initial-cluster=linux-wayne=https://192.168.5.1:2380,50centos=https://192.168.5.2:2380,buoy$(NODE_NAME)=http://$(POD_IP):31389"
+        - "--initial-advertise-peer-urls=http://192.168.5.100:31389"
+        # - "--initial-cluster=linux-wayne=https://192.168.5.1:2380,50centos=https://192.168.5.2:2380,buoy$(NODE_NAME)=http://192.168.5.100:31389"
+        - "--initial-cluster=linux-wayne=https://192.168.5.1:2380,50centos=https://192.168.5.2:2380,buoy=http://192.168.5.100:31389"
         - --initial-cluster-state=existing
         # - --cert-file=/etc/kubernetes/pki/etcd/server.crt
         # - --key-file=/etc/kubernetes/pki/etcd/server.key
-        - "--listen-client-urls=http://$(POD_IP):31379"
+        - "--listen-client-urls=http://192.168.5.100:31379"
         # - --listen-metrics-urls=http://127.0.0.1:32381
-        - --listen-peer-urls=http://$(POD_IP):31389
-        - "--name=buoy$(NODE_NAME)"
+        - --listen-peer-urls=http://192.168.5.100:31389
+        - "--name=buoy"
         - --peer-cert-file=/etc/kubernetes/pki/etcd/peer.crt
         - --peer-key-file=/etc/kubernetes/pki/etcd/peer.key
         - --peer-client-cert-auth=false
@@ -262,7 +96,7 @@ spec:
         #   periodSeconds: 10
         #   successThreshold: 1
         #   timeoutSeconds: 15
-        name: etcd-buoy-linux-wayne
+        name: etcd-buoy
         resources: {}
         # startupProbe:
         #   failureThreshold: 24
@@ -290,10 +124,16 @@ spec:
       restartPolicy: Always
       # schedulerName: default-scheduler
       securityContext: {}
-      terminationGracePeriodSeconds: 30
+      terminationGracePeriodSeconds: 0
       tolerations:
       - effect: NoExecute
         operator: Exists
+      - key: node.kubernetes.io/not-ready
+        effect: NoExecute
+        tolerationSeconds: 0
+      - key: node.kubernetes.io/unreachable
+        effect: NoExecute
+        tolerationSeconds: 0
       volumes:
       - hostPath:
           path: /etc/kubernetes/pki/etcd
