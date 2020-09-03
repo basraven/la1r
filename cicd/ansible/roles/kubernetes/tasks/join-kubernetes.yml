@@ -3,6 +3,13 @@
   include_vars:
     file: "{{credentials_dir}}/kubernetes/join-token.yaml"
 
+- name: Join Kubernetes / set kubeadm-config.yml
+  become: yes
+  template:
+    src: kubeadm-config.yml.j2
+    dest: /etc/kubernetes/kubeadm-config.yml
+    mode: "0775"
+
 - name: Join Kubernetes / Join K8s
   command: kubeadm join {{kubernetes_master}}:6443 --token {{k8s_join_token}} --discovery-token-unsafe-skip-ca-verification --ignore-preflight-errors=all
   ignore_errors: yes

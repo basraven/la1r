@@ -67,8 +67,10 @@ spec:
     port: 80
     protocol: TCP
     targetPort: 80
+    nodePort: 32261
   selector:
     app: nginx
-  clusterIP: None
+  type: NodePort
+  # clusterIP: None
 #   type: LoadBalancer
   # loadBalancerIP: 192.168.6.101

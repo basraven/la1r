@@ -1,0 +1,30 @@
+apiVersion: kubeadm.k8s.io/v1beta2
+kind: ClusterConfiguration
+kubernetesVersion: stable
+clusterName: {{ kubernetes_cluster_name }}
+{# apiServerCertSANs:
+- "kubernetes.la1r.com" #}
+controlPlaneEndpoint: "{{ ha_proxy_vir_ip }}:443"
+etcd:
+  local: 
+    endpoints:
+    - 192.168.5.1
+    - 192.168.5.2
+  {# 
+    extraArgs:
+      initial-cluster: "{{ inventory_hostname }}=https://{{ ansible_host }}:2380,{{ inventory_hostname }}-buoy=https://{{ ansible_host }}:31389"
+  
+      listen-client-urls: "https://127.0.0.1:2379,https://{{ ansible_host }}:2379"
+      advertise-client-urls: "https://{{ ansible_host }}:2379"
+      listen-peer-urls: "https://{{ ansible_host }}:2380"
+      initial-advertise-peer-urls: "https://{{ ansible_host }}:2380"
+    serverCertSANs:
+      - {{ ansible_host }}
+    peerCertSANs:
+      - {{ ansible_host }} #}
+     
+networking:
+    podSubnet: {{ kubernetes_pod_cidr }}
+    serviceSubnet: {{ kubernetes_service_cidr }}
+    {# FIXME: This doesn't work, see  https://stackoverflow.com/questions/60176343/how-to-make-the-pod-cidr-range-larger-in-kubernetes-cluster-deployed-with-kubead #}
+

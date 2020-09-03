@@ -49,7 +49,8 @@ frontend http_stats
    stats uri /haproxy?stats
 
 frontend haproxy_kube
-    bind {{ ansible_host }}:80
+    bind {{ ha_proxy_vir_ip }}:443
+    bind {{ ansible_host }}:443
     bind 127.0.0.1:80
     mode tcp
     option tcplog
@@ -63,8 +64,8 @@ backend masters
     balance roundrobin
     {# timeout server  10800s #}
     default-server inter 10s downinter 5s rise 2 fall 2 slowstart 60s maxconn 250 maxqueue 256 weight 100
-    server linux-wayne 192.168.5.1:8000 check
-    server 50centos 192.168.5.2:8000 check
+    server linux-wayne 192.168.5.1:6443 check port 6443 inter 5000 fall 5
+    server 50centos 192.168.5.2:6443 check port 6443 inter 5000 fall 5
     {# server k8s-master03 192.168.11.15:6443 check #}
 
 

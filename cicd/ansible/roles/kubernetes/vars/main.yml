@@ -1,2 +1,4 @@
 ---
-kubernetes_cidr: "10.244.0.0/16"
+kubernetes_pod_cidr: "10.244.0.0/16"
+kubernetes_service_cidr: "10.96.0.0/12"
+kubernetes_cluster_name: "rave"

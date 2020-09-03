@@ -1,21 +1,48 @@
 ---
-- name: Init Kubernetes / Init Kubernetes
+- name: Init Kubernetes / set kubeadm-config.yml
   become: yes
-  shell: |
-    kubeadm init --pod-network-cidr="{{kubernetes_cidr}}" \
-    --ignore-preflight-errors=all \
-    --apiserver-advertise-address="{{ ansible_default_ipv4.address }}"
-  args:
-    executable: /bin/bash
-  async: 600
-  poll: 5
+  template:
+    src: kubeadm-config.yml.j2
+    dest: /etc/kubernetes/kubeadm-config.yml
+    mode: "0775"
+# - name: Init Kubernetes / Init Kubernetes
+#   become: yes
+#   shell: |
+#     kubeadm init --pod-network-cidr="{{kubernetes_pod_cidr}}" \
+#     --config /etc/kubernetes/kubeadm-config.yml \
+#      --upload-certs \
+#     --ignore-preflight-errors=all \
+#     --apiserver-advertise-address="{{ ansible_default_ipv4.address }}"
+#   args:
+#     executable: /bin/bash
+#   async: 600
+#   poll: 5
 
-- name: "Init Kubernetes / Copy kubeconfig to {{ target_user_name }} home directory"
-  become: yes
-  shell: |
-    mkdir -p ~/.kube
-    cp -f /etc/kubernetes/admin.conf ~/.kube/config
-    chown -f "{{ target_user_name }}:{{ target_user_name }}" ~/.kube/config
-  args:
-    executable: /bin/bash
+# - name: "Init Kubernetes / Copy kubeconfig to {{ target_user_name }} home directory"
+#   become: yes
+#   shell: |
+#     mkdir -p ~/.kube
+#     cp -f /etc/kubernetes/admin.conf ~/.kube/config
+#     chown -f "{{ target_user_name }}:{{ target_user_name }}" ~/.kube/config
+#   args:
+#     executable: /bin/bash
         
+# - name: Init Kubernetes / Fetch Kubernetes pki and admin.conf
+#   become: yes
+#   fetch:
+#     src: "{{ item }}"
+#     dest: "./"
+#     flat: false
+#     force: yes
+#   with_items:
+#     - /etc/kubernetes/admin.conf
+#     - /etc/kubernetes/pki/ca.crt
+#     - /etc/kubernetes/pki/ca.key
+#     - /etc/kubernetes/pki/sa.pub
+#     - /etc/kubernetes/pki/sa.key
+#     - /etc/kubernetes/pki/front-proxy-ca.crt
+#     - /etc/kubernetes/pki/front-proxy-ca.key
+#     - /etc/kubernetes/pki/etcd/ca.crt
+#     - /etc/kubernetes/pki/etcd/ca.key
+
+    # TODO: Put the PKI on the other nodes

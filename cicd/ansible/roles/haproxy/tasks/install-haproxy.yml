@@ -1,4 +1,21 @@
 ---
+- name: Install haproxy /etc/sysctl.conf
+  become: true
+  lineinfile:
+    dest: "/etc/sysctl.conf"
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+  with_items:
+    - { regexp: '^net.ipv4.ip_nonlocal_bind = ',  line: 'net.ipv4.ip_nonlocal_bind = 1' }
+
+- name: Install haproxy / reload sysctl
+  become: yes
+  shell: |
+    sysctl -p
+    ip --brief add
+  args:
+    executable: /bin/bash
+
 - name: Install haproxy / Install haproxy and keepalived
   become: yes
   package:
