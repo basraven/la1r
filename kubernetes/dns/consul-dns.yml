@@ -1,134 +1,3 @@
-# ---
-# apiVersion: apps/v1
-# kind: StatefulSet
-# metadata:
-#   name: consul-dns
-#   namespace: dns
-#   labels:
-#     app: consul-dns
-# spec:
-#   serviceName: consul-dns
-#   replicas: 3
-#   selector:
-#     matchLabels:
-#       app: consul-dns
-#   template:
-#     metadata:
-#       labels:
-#         app: consul-dns
-#     spec:
-#       containers:
-#       - name: consul-dns
-#         image: consul
-#         env:
-#         - name: POD_IP
-#           valueFrom:
-#             fieldRef:
-#               fieldPath: status.podIP
-#         - name: NAMESPACE
-#           valueFrom:
-#             fieldRef:
-#               fieldPath: metadata.namespace
-#         ports:
-#         - name: webui
-#           containerPort: 8500
-#         - containerPort: 8301
-#           name: serflan
-#         - containerPort: 8302
-#           name: serfwan
-#         - containerPort: 8600
-#           name: consuldns
-#         - containerPort: 8300
-#           name: server
-#         # env:
-#         #   - name: "CONSUL_BIND_INTERFACE"
-#         #     value: "eth0"
-#         args:
-#           - agent
-#           - -server
-#           - -bootstrap-expect=3
-#           - "-advertise=$(POD_IP)"
-#           - "-retry-join=consul-dns-0.consul.$(NAMESPACE).svc.cluster.local"
-#           - "-retry-join=consul-dns-1.consul.$(NAMESPACE).svc.cluster.local"
-#           - "-retry-join=consul-dns-2.consul.$(NAMESPACE).svc.cluster.local"
-#           - -ui
-#           - -client=0.0.0.0
-#           - -recursor=1.1.1.1
-#           - "-domain=cluster.local"
-#           - "-disable-host-node-id"
-#           - -datacenter=rave
-#           # - "-advertise=$(POD_IP)"
-#           # - -dns-port=8600
-
-# ---
-# apiVersion: v1
-# kind: Service
-# metadata:
-#   labels:
-#     app: consul-dns
-#   name: consul-dns
-#   namespace: dns
-# spec:
-#   # Headless service
-#   clusterIP: None
-#   ports:
-#   - name: serflan-tcp
-#     protocol: "TCP"
-#     port: 8301
-#     targetPort: 8301
-#   - name: serflan-udp
-#     protocol: "UDP"
-#     port: 8301
-#     targetPort: 8301
-#   - name: serfwan-tcp
-#     protocol: "TCP"
-#     port: 8302
-#     targetPort: 8302
-#   - name: serfwan-udp
-#     protocol: "UDP"
-#     port: 8302
-#     targetPort: 8302
-#   - name: server
-#     port: 8300
-#     targetPort: 8300
-#   - name: consuldns
-#     port: 8600
-#     targetPort: 8600
-#   selector:
-#     app: consul-dns
-# ---
-# apiVersion: extensions/v1beta1
-# kind: Ingress
-# metadata:
-#   name: consul-dns
-#   namespace: dns
-# spec:
-#   rules:
-#   - host: consul-dns.bas
-#     http:
-#       paths:
-#       - path: /
-#         backend:
-#           serviceName: consul-dns
-#           servicePort: 80 
-
-# ---
-# apiVersion: v1
-# kind: Service
-# metadata:
-#   name: consul-dns-dns-loadbalancer-service
-#   namespace: dns
-# spec:
-#   loadBalancerIP: 192.168.6.90
-#   type: LoadBalancer
-#   ports:
-#     - name: dns
-#       protocol: UDP
-#       port: 53
-#       targetPort: 8600
-#   selector:
-#     app: consul-dns
-
 ---
 apiVersion: v1
 kind: Service
@@ -144,17 +13,19 @@ spec:
       targetPort: 8500
       port: 80
   selector:
-    app: consul
+    app: consul-dns
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: consul
+  name: consul-dns
   namespace: dns
   labels:
-    name: consul
+    name: consul-dns
 spec:
+  selector:
+    app: consul-dns
   clusterIP: None
   ports:
     - name: http
@@ -182,28 +53,26 @@ spec:
     - name: consuldns
       port: 8600
       targetPort: 8600
-  selector:
-    app: consul
 
 
 ---
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: consul
+  name: consul-dns
   namespace: dns
 spec:
-  serviceName: consul
+  serviceName: consul-dns
   selector:
     matchLabels:
-      app: consul
+      app: consul-dns
   replicas: 3
   template:
     metadata:
       labels:
-        app: consul
+        app: consul-dns
     spec:
-      affinity:
+      # affinity:
         # podAntiAffinity:
         #   requiredDuringSchedulingIgnoredDuringExecution:
         #     - labelSelector:
@@ -225,7 +94,7 @@ spec:
       securityContext:
         fsGroup: 1000
       containers:
-        - name: consul
+        - name: consul-dns
           image: "consul"
           env:
             - name: POD_IP
@@ -240,9 +109,9 @@ spec:
             - "agent"
             - "-advertise=$(POD_IP)"
             - "-bootstrap-expect=2"
-            - "-retry-join=consul-0.consul.$(NAMESPACE).svc.cluster.local"
-            - "-retry-join=consul-1.consul.$(NAMESPACE).svc.cluster.local"
-            - "-retry-join=consul-2.consul.$(NAMESPACE).svc.cluster.local"
+            - "-retry-join=consul-dns-0.consul-dns.$(NAMESPACE).svc.cluster.local"
+            - "-retry-join=consul-dns-1.consul-dns.$(NAMESPACE).svc.cluster.local"
+            - "-retry-join=consul-dns-2.consul-dns.$(NAMESPACE).svc.cluster.local"
             - "-client=0.0.0.0"
             - "-bind=0.0.0.0"
             - "-datacenter=rave"
