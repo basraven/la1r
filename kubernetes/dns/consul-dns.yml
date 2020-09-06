@@ -77,15 +77,26 @@ data:
     # (53). Setting this to zero completely disables DNS function,
     # leaving only DHCP and/or TFTP.
     port=53
+    
+    log-dhcp
+    log-queries
+    # log-facility=/var/log/dnsmasq.log
 
+    strict-order
 
     # FIXME: Translations
-    # server=/.bas/.service.bas/
-    # server=/.bas/.service.bas/127.0.0.1#8600
+    # address=/service.bas/bas/
+    # address=/bas/service.bas/
+    # address=/.bas/.service.bas
+    # server=/bas/baz/
     
+    #server=/bas/service.bas/127.0.0.1#8600
+    #server=/bas/service.bas/
     
     server=127.0.0.1#8600
+    no-resolv
        
+    # dhcp-option=6,127.0.0.1#8600
     
 ---
 apiVersion: apps/v1
@@ -143,16 +154,44 @@ spec:
             mountPath: /etc/dnsmasq.conf
             subPath: dnsmasq.conf
           image: alpine
+          env:
+          - name: POD_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
           command: 
           - "sh"
           args: 
           - "-c"
           - |
               apk --no-cache add dnsmasq
+              # echo "nameserver 127.0.0.1:8600" > /etc/resolv.conf
               dnsmasq -k
           ports:
             - containerPort: 53
               name: dns
+        # - name: dnsmasq
+        #   volumeMounts:
+        #   - name: consul-dns-dnsmasq-volume
+        #     mountPath: /etc/dnsmasq.conf
+        #     subPath: dnsmasq.conf
+        #   image: alpine
+        #   env:
+        #   - name: POD_IP
+        #     valueFrom:
+        #       fieldRef:
+        #         fieldPath: status.podIP
+        #   command: 
+        #   - "sh"
+        #   args: 
+        #   - "-c"
+        #   - |
+        #       apk --no-cache add dnsmasq
+        #       # echo "nameserver 127.0.0.1:8600" > /etc/resolv.conf
+        #       dnsmasq -k
+        #   ports:
+        #     - containerPort: 53
+        #       name: dns
         - name: consul-dns
           volumeMounts:
           - name: consul-ingresses-storage-volume
@@ -176,8 +215,11 @@ spec:
             - "-retry-join=consul-dns-2.consul-dns.$(NAMESPACE).svc.cluster.local"
             - "-client=0.0.0.0"
             - "-bind=0.0.0.0"
+            - "-recursor=1.1.1.1"
             - "-datacenter=rave"
             - "-domain=bas"
+            - "-alt-domain=service.bas"
+            - "-alt-domain=svc.cluster.local"
             - "-server"
             - "-ui"
             - "-disable-host-node-id"
