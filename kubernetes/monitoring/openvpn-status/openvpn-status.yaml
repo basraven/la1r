@@ -71,7 +71,7 @@ spec:
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: openvpn-status
+  name: openvpn-status-ingress
   namespace: monitoring
 spec:
   rules:

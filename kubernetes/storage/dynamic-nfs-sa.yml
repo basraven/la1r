@@ -4,11 +4,13 @@ kind: ServiceAccount
 apiVersion: v1
 metadata:
   name: nfs-pod-provisioner-sa
+  namespace: storage 
 ---
 kind: ClusterRole # Role of kubernetes
 apiVersion: rbac.authorization.k8s.io/v1 # auth API
 metadata:
   name: nfs-provisioner-clusterRole
+  namespace: storage 
 rules:
   - apiGroups: [""] # rules on persistentvolumes
     resources: ["persistentvolumes"]
@@ -40,6 +42,7 @@ kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: nfs-pod-provisioner-otherRoles
+  namespace: storage
 rules:
   - apiGroups: [""]
     resources: ["endpoints"]
@@ -49,6 +52,7 @@ kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: nfs-pod-provisioner-otherRoles
+  namespace: storage
 subjects:
   - kind: ServiceAccount
     name: nfs-pod-provisioner-sa # same as top of the file

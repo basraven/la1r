@@ -69,9 +69,23 @@ spec:
             - -deny-k8s-namespace=kube-system
             # - -allow-k8s-namespace=default
             # - -allow-k8s-namespace=kube-system
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: consul-ingresses-storage
+  namespace: dns
+spec:
+  storageClassName: nfs-223 # SAME NAME AS THE STORAGECLASS
+  accessModes:
+    - ReadWriteMany #  must be the same as PersistentVolume
+  resources:
+    requests:
+      storage: 50Mi
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: DaemonSet
 metadata:
   name: consul-k8s-ingress
   namespace: dns
@@ -85,9 +99,17 @@ spec:
         app: consul-k8s-ingress
     spec:
       serviceAccountName: consul-k8s
+      restartPolicy: Always
+      volumes:
+      - name: consul-ingresses-storage-volume
+        persistentVolumeClaim:
+          claimName: consul-ingresses-storage
       containers:
         - name: consul-k8s-ingress
           image: "python"
+          volumeMounts:
+          - name: consul-ingresses-storage-volume
+            mountPath: /ingresses
           command:
             - sh
           args:
@@ -95,6 +117,31 @@ spec:
             - |
               GIT_SSH_COMMAND='ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' \
               git clone -q https://github.com/basraven/consulk8s.git ;
-              pip3 install consulk8s ;
-              consulk8s write-ingresses -s /etc/consul.d/k8s_services.json
-              "
+              pip3 install ./consulk8s ;
+              export K8S_TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+              export K8S_CA_AUTH="$(cat /var/run/secrets/kubernetes.io/serviceaccount/ca.crt | base64 -w 0 )"
+              mkdir -p ~/.kube
+
+              echo "apiVersion: v1
+              kind: Config
+              users:
+              - name: svcs-acct-dply
+                user:
+                  token: $K8S_TOKEN
+              clusters:
+              - cluster:
+                  certificate-authority-data: $K8S_CA_AUTH
+                  token: $K8S_TOKEN
+                  server: https://192.168.5.100:443
+                name: self-hosted-cluster
+              contexts:
+              - context:
+                  cluster: self-hosted-cluster
+                  user: svcs-acct-dply
+                name: svcs-acct-context
+              current-context: svcs-acct-context
+              " > ~/.kube/config
+              
+              while sleep 30; do consulk8s write-ingresses -s /ingresses/k8s_services.json ; done
+              
+              
