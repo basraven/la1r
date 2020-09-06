@@ -23,8 +23,10 @@ Feel free to add comments on this through Github!
 8.  DNS black-hole with pihole
 9.  Online reimplementation
 10. Home automation reimplementation
+11. consulk8s implemented ```consul reload``` on submit option
 
 ## Longstay parking
+12. SNMP of DHCP server to consul/nodes for live node status info (added with a health check / ping performed by consul)
 13. CollectD, replacing node_exporter
 14. New doorbell security firmware
 15. Video security storage process   

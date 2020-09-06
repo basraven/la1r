@@ -75,10 +75,10 @@ metadata:
   namespace: monitoring
 spec:
   rules:
-  - host: openvpn.bas
+  - host: openvpn.bas 
     http:
       paths:
       - path: /
         backend:
-          serviceName: http
+          serviceName: openvpn-status
           servicePort: 80

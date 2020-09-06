@@ -9,12 +9,29 @@ spec:
   type: LoadBalancer
   ports:
     - name: webui
-      # protocol: TCP
+      protocol: TCP
       targetPort: 8500
       port: 80
+    # - name: dns
+    #   protocol: TCP
+    #   targetPort: dns-tcp
+    #   port: 53
+  selector:
+    app: consul-dns
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: consul-dns-loadbalancer-service
+  namespace: dns
+spec:
+  loadBalancerIP: 192.168.6.90
+  type: LoadBalancer
+  ports:
     - name: dns
-      # protocol: TCP
-      targetPort: 53
+      protocol: UDP
+      targetPort: dns-udp
       port: 53
   selector:
     app: consul-dns
@@ -63,41 +80,24 @@ spec:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: consul-dns-dnsmasq
+  name: consul-dns-coredns
   namespace: dns
 data:
-  dnsmasq.conf: |-
-    # Configuration file for dnsmasq.
-    #
-    # Format is one option per line, legal options are the same
-    # as the long options legal on the command line. See
-    # "/usr/sbin/dnsmasq --help" or "man 8 dnsmasq" for details.
-
-    # Listen on this specific port instead of the standard DNS port
-    # (53). Setting this to zero completely disables DNS function,
-    # leaving only DHCP and/or TFTP.
-    port=53
-    
-    log-dhcp
-    log-queries
-    # log-facility=/var/log/dnsmasq.log
-
-    strict-order
-
-    # FIXME: Translations
-    # address=/service.bas/bas/
-    # address=/bas/service.bas/
-    # address=/.bas/.service.bas
-    # server=/bas/baz/
-    
-    #server=/bas/service.bas/127.0.0.1#8600
-    #server=/bas/service.bas/
-    
-    server=127.0.0.1#8600
-    no-resolv
-       
-    # dhcp-option=6,127.0.0.1#8600
-    
+  Corefile: |-
+    bas.:53 {
+        rewrite stop {
+          name regex (.*)\.bas {1}.service.bas
+          answer name (.*)\.service\.bas {1}.bas
+        }
+        forward . 127.0.0.1:8600
+        log
+        errors
+    }      
+    .:53 {
+        forward . 8.8.8.8 8.8.4.4 
+        log
+        errors
+    }      
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -137,65 +137,63 @@ spec:
       securityContext:
         fsGroup: 1000
       volumes:
-      - name: consul-ingresses-storage-volume
-        persistentVolumeClaim:
-          claimName: consul-ingresses-storage
-      - name: consul-dns-dnsmasq-volume
+      - name: consul-dns-coredns-volume
         configMap:
-          name: consul-dns-dnsmasq
+          name: consul-dns-coredns
           items:
-          - key: dnsmasq.conf
-            path: dnsmasq.conf
+          - key: Corefile
+            path: Corefile
           defaultMode: 0600
       containers:
-        - name: dnsmasq
+        - name: coredns
           volumeMounts:
-          - name: consul-dns-dnsmasq-volume
-            mountPath: /etc/dnsmasq.conf
-            subPath: dnsmasq.conf
-          image: alpine
-          env:
-          - name: POD_IP
-            valueFrom:
-              fieldRef:
-                fieldPath: status.podIP
-          command: 
-          - "sh"
-          args: 
-          - "-c"
-          - |
-              apk --no-cache add dnsmasq
-              # echo "nameserver 127.0.0.1:8600" > /etc/resolv.conf
-              dnsmasq -k
+          - name: consul-dns-coredns-volume
+            mountPath: /etc/coredns/Corefile
+            subPath: Corefile
+          image: coredns/coredns
+          args: [ "-conf", "/etc/coredns/Corefile" ]
           ports:
-            - containerPort: 53
-              name: dns
-        # - name: dnsmasq
-        #   volumeMounts:
-        #   - name: consul-dns-dnsmasq-volume
-        #     mountPath: /etc/dnsmasq.conf
-        #     subPath: dnsmasq.conf
-        #   image: alpine
-        #   env:
-        #   - name: POD_IP
-        #     valueFrom:
-        #       fieldRef:
-        #         fieldPath: status.podIP
-        #   command: 
-        #   - "sh"
-        #   args: 
-        #   - "-c"
-        #   - |
-        #       apk --no-cache add dnsmasq
-        #       # echo "nameserver 127.0.0.1:8600" > /etc/resolv.conf
-        #       dnsmasq -k
-        #   ports:
-        #     - containerPort: 53
-        #       name: dns
+          - name: dns-tcp
+            containerPort: 53
+            protocol: TCP
+          - name: dns-udp
+            containerPort: 53
+            protocol: UDP
+          # livenessProbe:
+          #   httpGet:
+          #     path: /health
+          #     port: 8080
+          #     scheme: HTTP
+          #   initialDelaySeconds: 60
+          #   timeoutSeconds: 5
+          #   successThreshold: 1
+          #   failureThreshold: 5
+          # readinessProbe:
+          #   httpGet:
+          #     path: /ready
+          #     port: 8181
+          #     scheme: HTTP
+          #   initialDelaySeconds: 10
+          #   timeoutSeconds: 5
+          #   successThreshold: 1
+          #   failureThreshold: 5
+          # env:
+          # - name: POD_IP
+          #   valueFrom:
+          #     fieldRef:
+          #       fieldPath: status.podIP
+          # command: 
+          # - "sh"
+          # args: 
+          # - "-c"
+          # - |
+          #     apk --no-cache add coredns
+          #     # echo "nameserver 127.0.0.1:8600" > /etc/resolv.conf
+          #     coredns -k
+          # ports:
+          #   - containerPort: 53
+          #     name: dns
         - name: consul-dns
-          volumeMounts:
-          - name: consul-ingresses-storage-volume
-            mountPath: /ingresses
           image: "consul"
           env:
             - name: POD_IP
@@ -223,7 +221,6 @@ spec:
             - "-server"
             - "-ui"
             - "-disable-host-node-id"
-            - "-config-dir=/ingresses"
             # - "-data-dir=/consul/data"
           # volumeMounts:
           #   - name: data
