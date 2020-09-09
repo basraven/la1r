@@ -59,6 +59,7 @@ spec:
         - name: consul-k8s
           image: "hashicorp/consul-k8s"
           command:
+            # TODO: Consul reload on configdir change
             - consul-k8s
           args:
             - sync-catalog
@@ -70,19 +71,6 @@ spec:
             # - -allow-k8s-namespace=default
             # - -allow-k8s-namespace=kube-system
 
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: consul-ingresses-storage
-  namespace: dns
-spec:
-  storageClassName: nfs-223 # SAME NAME AS THE STORAGECLASS
-  accessModes:
-    - ReadWriteMany #  must be the same as PersistentVolume
-  resources:
-    requests:
-      storage: 50Mi
 ---
 apiVersion: apps/v1
 kind: DaemonSet
@@ -100,16 +88,9 @@ spec:
     spec:
       serviceAccountName: consul-k8s
       restartPolicy: Always
-      volumes:
-      - name: consul-ingresses-storage-volume
-        persistentVolumeClaim:
-          claimName: consul-ingresses-storage
       containers:
         - name: consul-k8s-ingress
           image: "python"
-          volumeMounts:
-          - name: consul-ingresses-storage-volume
-            mountPath: /ingresses
           command:
             - sh
           args:
@@ -117,6 +98,7 @@ spec:
             - |
               GIT_SSH_COMMAND='ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' \
               git clone -q https://github.com/basraven/consulk8s.git ;
+              cd consulk8s ; git checkout feature/consul-sink ; cd ..
               pip3 install ./consulk8s ;
               export K8S_TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
               export K8S_CA_AUTH="$(cat /var/run/secrets/kubernetes.io/serviceaccount/ca.crt | base64 -w 0 )"
@@ -142,6 +124,6 @@ spec:
               current-context: svcs-acct-context
               " > ~/.kube/config
               
-              while sleep 30; do consulk8s write-ingresses -s /ingresses/k8s_services.json ; done
+              while sleep 30; do consulk8s write-ingresses --default-ip 192.168.6.1 --consul-sink-url='192.168.6.91:80' --consul-sink-domain='.bas' --host-as-name --skip-checks ; done
               
               

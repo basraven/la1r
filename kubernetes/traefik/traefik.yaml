@@ -36,7 +36,7 @@ data:
     #   certFile = "/ssl/radarr/tls.crt" 
     #   keyFile = "/ssl/radarr/tls.key"
 ---
-kind: Deployment
+kind: DaemonSet
 apiVersion: apps/v1
 metadata:
   name: traefik-ingress-controller
