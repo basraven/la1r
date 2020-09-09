@@ -58,7 +58,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: openvpn-status
+  name: openvpn-status-service
   namespace: monitoring
 spec:
   ports:
@@ -66,7 +66,7 @@ spec:
     port: 80
     targetPort: 80
   selector:
-    app: openvpn-status
+    app: openvpn-status-service
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress

@@ -1,83 +1,5 @@
 ---
 apiVersion: v1
-kind: Service
-metadata:
-  name: consul-dns-webui-loadbalancer-service
-  namespace: dns
-spec:
-  loadBalancerIP: 192.168.6.91
-  type: LoadBalancer
-  ports:
-    - name: webui
-      protocol: TCP
-      targetPort: 8500
-      port: 80
-    # - name: dns
-    #   protocol: TCP
-    #   targetPort: dns-tcp
-    #   port: 53
-  selector:
-    app: consul-dns
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: consul-dns-loadbalancer-service
-  namespace: dns
-spec:
-  loadBalancerIP: 192.168.6.90
-  type: LoadBalancer
-  ports:
-    - name: dns
-      protocol: UDP
-      targetPort: dns-udp
-      port: 53
-  selector:
-    app: consul-dns
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: consul-dns
-  namespace: dns
-  labels:
-    name: consul-dns
-spec:
-  selector:
-    app: consul-dns
-  clusterIP: None
-  ports:
-    - name: http
-      port: 8500
-      targetPort: 8500
-    - name: serflan-tcp
-      protocol: "TCP"
-      port: 8301
-      targetPort: 8301
-    - name: serflan-udp
-      protocol: "UDP"
-      port: 8301
-      targetPort: 8301
-    - name: serfwan-tcp
-      protocol: "TCP"
-      port: 8302
-      targetPort: 8302
-    - name: serfwan-udp
-      protocol: "UDP"
-      port: 8302
-      targetPort: 8302
-    - name: server
-      port: 8300
-      targetPort: 8300
-    - name: consuldns
-      port: 8600
-      targetPort: 8600
-
-
----
-apiVersion: v1
 kind: ConfigMap
 metadata:
   name: consul-dns-coredns
@@ -250,3 +172,98 @@ spec:
             limits:
               cpu: "200m"
               memory: "100Mi"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: consul-dns
+  namespace: dns
+  labels:
+    name: consul-dns
+spec:
+  selector:
+    app: consul-dns
+  clusterIP: None
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8500
+    - name: serflan-tcp
+      protocol: "TCP"
+      port: 8301
+      targetPort: 8301
+    - name: serflan-udp
+      protocol: "UDP"
+      port: 8301
+      targetPort: 8301
+    - name: serfwan-tcp
+      protocol: "TCP"
+      port: 8302
+      targetPort: 8302
+    - name: serfwan-udp
+      protocol: "UDP"
+      port: 8302
+      targetPort: 8302
+    - name: server
+      port: 8300
+      targetPort: 8300
+    - name: consuldns
+      port: 8600
+      targetPort: 8600
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: consul-dns-loadbalancer-service
+  namespace: dns
+spec:
+  loadBalancerIP: 192.168.6.90
+  type: LoadBalancer
+  ports:
+    - name: dns-udp
+      protocol: UDP
+      targetPort: dns-udp
+      port: 53
+    # MIXED TYPES ARE NOT ALLOWED
+    # - name: dns-tcp
+    #   protocol: TCP
+    #   targetPort: dns-tcp
+    #   port: 53
+  selector:
+    app: consul-dns
+
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: consul-dns-ui-loadbalancer-service
+#   namespace: dns
+# spec:
+#   loadBalancerIP: 192.168.6.91
+#   type: LoadBalancer
+#   ports:
+#     - name: http
+#       protocol: TCP
+#       targetPort: 8500
+#       port: 80
+#   selector:
+#     app: consul-dns
+
+
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: consul-dns
+  namespace: dns
+spec:
+  rules:
+  - host: dns.bas 
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: consul-dns
+          servicePort: 80
