@@ -1,9 +1,9 @@
 ---
 title: Planning
-type: docs
 bookToc: false
 weight: 99
 ---
+
 ## What's next?
 Since I'm (currently) only developing la1r by myself, there are only so many things you can do at once. 
 (Feel free to reach out through Github if you want to get involved!)
@@ -11,7 +11,7 @@ For this reason I created this planning page in which I track and prioritize wha
 Feel free to add comments on this through Github!
 
 ## In progress
-1.  DNS on LAN implementation
+1.  
 
 ## Planned
 2. Nextcloud reimplementation
@@ -46,6 +46,7 @@ Feel free to add comments on this through Github!
 29. Refactor Mosquito to [vernemq](https://vernemq.com/) 
 
 ## Completed
+* DNS on LAN implementation
 * Traefik 2.x reimplementation
 * Metallb implementation
 * NFS based dynamic storage provisioning
