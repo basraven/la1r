@@ -20,6 +20,7 @@ Feel free to add comments on this through Github!
 5. Monitoring reimplementation
 6. Monitoring with kube-state-metrics in grafana
 7. Monitoring extension
+7. Prometheus alert manager implementation
 8.  DNS black-hole with pihole
 9.  Online reimplementation
 10. Home automation reimplementation
