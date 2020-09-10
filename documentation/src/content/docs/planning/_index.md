@@ -14,37 +14,36 @@ Feel free to add comments on this through Github!
 1.  
 
 ## Planned
-2. Nextcloud reimplementation
-3. Backup reimplementation
-4. Torrent reimplementation
-5. Monitoring reimplementation
-6. Monitoring with kube-state-metrics in grafana
-7. Monitoring extension
-7. Prometheus alert manager implementation
-8.  DNS black-hole with pihole
-9.  Online reimplementation
-10. Home automation reimplementation
+1. Backup reimplementation
+2. Torrent reimplementation
+3. Monitoring reimplementation
+4. Monitoring with kube-state-metrics in grafana
+5. Monitoring extension
+6. Prometheus alert manager implementation
+7.  DNS black-hole with pihole
+8.  Online reimplementation
+9.  Home automation reimplementation
 
 ## Longstay parking
-12. SNMP of DHCP server to consul/nodes for live node status info (added with a health check / ping performed by consul)
-13. CollectD, replacing node_exporter
-14. New doorbell security firmware
-15. Video security storage process   
-16. Grafana backup script with: https://github.com/ysde/grafana-backup-tool
-17. Kibana log analysis
-18. Fail2ban new filters for ALL services
-19. Traefik auth proxy middleware with Authelia
-20. "View in repo" button for all pages of the la1r documentation. While reading documentation, for example about Ansible, the visitor should be able to view which scripts are currently discussed by clicking a button to the git repository.
-21. find-lf - wifi tracking as input events on the Event Bus based on AI model
-22. Cronacle cron manager https://github.com/jhuckaby/Cronicle
-22. Deploy a Kafka bus as structured event bus instead of mqtt
-23. Spark 2.x Cluster in k8s
-24. Streaming analytics pipeline with Spark 2.x and Kafka
-25. An event data dashboard for kafka
-26. Streaming Facial recognition from images and streaming video
-27. Formal managed bare-metal security camera setup
-28. Object recognition (garbage bin outside of our house) combined with garbage collection iCal (https://inzamelkalender.gad.nl/ical/0402200001574396)
-29. Refactor Mosquito to [vernemq](https://vernemq.com/) 
+* SNMP of DHCP server to consul/nodes for live node status info (added with a health check / ping performed by consul)
+* CollectD, replacing node_exporter
+* New doorbell security firmware
+* Video security storage process   
+* Grafana backup script with: https://github.com/ysde/grafana-backup-tool
+* Kibana log analysis
+* Fail2ban new filters for ALL services
+* Traefik auth proxy middleware with Authelia
+* "View in repo" button for all pages of the la1r documentation. While reading documentation, for example about Ansible, the visitor should be able to view which scripts are currently discussed by clicking a button to the git repository.
+* find-lf - wifi tracking as input events on the Event Bus based on AI model
+* Cronacle cron manager https://github.com/jhuckaby/Cronicle
+* Deploy a Kafka bus as structured event bus instead of mqtt
+* Spark 2.x Cluster in k8s
+* Streaming analytics pipeline with Spark 2.x and Kafka
+* An event data dashboard for kafka
+* Streaming Facial recognition from images and streaming video
+* Formal managed bare-metal security camera setup
+* Object recognition (garbage bin outside of our house) combined with garbage collection iCal (https://inzamelkalender.gad.nl/ical/0402200001574396)
+* Refactor Mosquito to [vernemq](https://vernemq.com/) 
 
 ## Completed
 * DNS on LAN implementation
