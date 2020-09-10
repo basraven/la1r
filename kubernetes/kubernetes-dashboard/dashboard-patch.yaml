@@ -1,4 +1,4 @@
-# kubectl -n kubernetes-dashboard patch deployment kubernetes-dashboard -p "$(cat kubernetes-dashboard/dashboard-patch.yaml)"
+# kubectl -n kubernetes-dashboard patch deployment kubernetes-dashboard -p "$(cat kubernetes/kubernetes-dashboard/dashboard-patch.yaml)"
 spec:
   template:
     spec:

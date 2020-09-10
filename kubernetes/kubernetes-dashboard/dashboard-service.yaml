@@ -1,20 +1,4 @@
 ---
-
-kind: Service
-apiVersion: v1
-metadata:
-  labels:
-    k8s-app: kubernetes-dashboard
-  name: kubernetes-dashboard
-  namespace: kubernetes-dashboard
-spec:
-  ports:
-    - port: 443
-      targetPort: 8443
-  type: ClusterIP
-  selector:
-    k8s-app: kubernetes-dashboard
----
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
@@ -24,7 +8,7 @@ spec:
   entryPoints:
     - web
   routes:
-  - match: Host(`kubernetes.bas`) && PathPrefix(`/`)
+  - match: Host(`k8s.bas`) && PathPrefix(`/`)
     kind: Rule
     services:
     - name: kubernetes-dashboard
@@ -41,7 +25,7 @@ spec:
   entryPoints:
     - websecure
   routes:
-  - match: Host(`kubernetes.bas`) && PathPrefix(`/`)
+  - match: Host(`k8s.bas`) && PathPrefix(`/`)
     kind: Rule
     services:
     - name: kubernetes-dashboard
