@@ -5,6 +5,7 @@ kind: StorageClass
 metadata:
   name: nfs-111 # IMPORTANT pvc needs to mention this name
 provisioner: nfs-111 # name can be anything
+reclaimPolicy: Retain
 parameters:
   archiveOnDelete: "false"  
 ---

@@ -2,47 +2,50 @@
 kind: PersistentVolume
 apiVersion: v1
 metadata:
-  name: nextcloud-pv-web
+  name: nextcloud-config-pv
   labels:
-    contenttype: "web"
+    contenttype: "nextcloud-config"
 spec:
   capacity:
-    storage: 5Gi
-  storageClassName: local-storage
+    storage: 30Gi
+  storageClassName: nextcloud-config
   persistentVolumeReclaimPolicy: Retain
   accessModes:
-  - ReadWriteMany 
-  local:
-    path: /mnt/largessd/configs/nextcloud
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-      - matchExpressions:
-        - key: kubernetes.io/hostname
-          operator: In
-          values:
-          - linux-wayne
+  - ReadWriteMany
+  nfs:
+    server: 192.168.5.1 # ip addres of nfs server
+    path: "/mnt/ssd/ha/nextcloud/config" # path to directory
 ---
 kind: PersistentVolume
 apiVersion: v1
 metadata:
-  name: nextcloud-pv-data
+  name: nextcloud-web-pv
   labels:
-    contenttype: "data"
+    contenttype: "nextcloud-web"
+spec:
+  capacity:
+    storage: 5Gi
+  storageClassName: nextcloud-web
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteMany
+  nfs:
+    server: 192.168.5.1 # ip addres of nfs server
+    path: "/mnt/ssd/ha/nextcloud/web" # path to directory
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: nextcloud-data-pv
+  labels:
+    contenttype: "nextcloud-data"
 spec:
   capacity:
     storage: 800Gi
-  storageClassName: local-storage
+  storageClassName: nextcloud-data
   persistentVolumeReclaimPolicy: Retain
   accessModes:
-  - ReadWriteMany 
-  local:
-    path: /mnt/largehdd/nextcloud/data
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-      - matchExpressions:
-        - key: kubernetes.io/hostname
-          operator: In
-          values:
-          - linux-wayne
+  - ReadWriteMany
+  nfs:
+    server: 192.168.5.1 # ip addres of nfs server
+    path: "/mnt/hdd/ha/nextcloud/data" # path to directory

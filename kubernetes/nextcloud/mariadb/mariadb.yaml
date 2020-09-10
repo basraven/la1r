@@ -42,15 +42,15 @@ data:
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: mariadb-claim
+  name: nextcloud-mariadb-claim
   namespace: nextcloud
 spec:
   accessModes:
   - ReadWriteMany
-  storageClassName: local-storage
+  storageClassName: nextcloud-mariadb
   selector:
     matchLabels:
-      contenttype: "db"
+      contenttype: "nextcloud-mariadb"
   resources:
     requests:
       storage: 30Gi
@@ -81,7 +81,7 @@ spec:
             path: my.cnf
       - name: mariadb
         persistentVolumeClaim:
-          claimName: mariadb-claim
+          claimName: nextcloud-mariadb-claim
       containers:
       - name: mariadb
         image: mariadb
@@ -93,19 +93,19 @@ spec:
           valueFrom:
             secretKeyRef:
               name: mariadbsecret
-              key: password
+              key: MYSQL_ROOT_PASSWORD
         - name: MYSQL_DATABASE
           value: nextcloud
         - name: MYSQL_USER
           valueFrom:
             secretKeyRef:
               name: mariadbsecret
-              key: username
+              key: MYSQL_USER
         - name: MYSQL_PASSWORD
           valueFrom:
             secretKeyRef:
               name: mariadbsecret
-              key: password
+              key: MYSQL_PASSWORD
         volumeMounts:
           - name: mycnf-volume
             mountPath: /etc/mysql/conf.d

@@ -48,10 +48,10 @@ metadata:
 spec:
   accessModes:
   - ReadWriteMany 
-  storageClassName: local-storage
+  storageClassName: nextcloud-web
   selector:
     matchLabels:
-      contenttype: "web"
+      contenttype: "nextcloud-web"
   resources:
     requests:
       storage: 5Gi
@@ -64,10 +64,10 @@ metadata:
 spec:
   accessModes:
   - ReadWriteMany  
-  storageClassName: local-storage
+  storageClassName: nextcloud-data
   selector:
     matchLabels:
-      contenttype: "data"
+      contenttype: "nextcloud-data"
   resources:
     requests:
       storage: 800Gi
@@ -130,12 +130,12 @@ spec:
           valueFrom:
             secretKeyRef:
               name: mariadbsecret
-              key: username
+              key: MYSQL_USER
         - name: MYSQL_PASSWORD
           valueFrom:
             secretKeyRef:
               name: mariadbsecret
-              key: password
+              key: MYSQL_PASSWORD
         volumeMounts:
           - name: nextcloud-web
             mountPath: "/var/www/html"
@@ -152,7 +152,7 @@ kind: Service
 metadata:
   labels:
     app: nextcloud
-  name: nextcloud
+  name: nextcloud-service
   namespace: nextcloud
 spec:
   ports:
@@ -165,7 +165,7 @@ spec:
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: nextcloudingress
+  name: nextcloud-ingress
   namespace: nextcloud
   # annotations:
   #   kubernetes.io/ingress.class: traefik
@@ -176,14 +176,7 @@ spec:
       paths:
       - path: /
         backend:
-          serviceName: nextcloud
-          servicePort: 80
-  - host: cloud.thuis
-    http:
-      paths:
-      - path: /
-        backend:
-          serviceName: nextcloud
+          serviceName: nextcloud-service
           servicePort: 80
   tls:
   - hosts:

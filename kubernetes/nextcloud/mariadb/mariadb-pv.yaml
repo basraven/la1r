@@ -2,23 +2,16 @@
 kind: PersistentVolume
 apiVersion: v1
 metadata:
-  name: mariadb-pv
+  name: nextcloud-mariadb-pv
   labels:
-    contenttype: "db"
+    contenttype: "nextcloud-mariadb"
 spec:
   capacity:
     storage: 30Gi
-  storageClassName: local-storage
+  storageClassName: nextcloud-mariadb
   persistentVolumeReclaimPolicy: Retain
   accessModes:
   - ReadWriteMany
-  local:
-    path: /mnt/largehdd/nextcloud/mariadb
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-      - matchExpressions:
-        - key: kubernetes.io/hostname
-          operator: In
-          values:
-          - linux-wayne
+  nfs:
+    server: 192.168.5.1 # ip addres of nfs server
+    path: "/mnt/ssd/ha/nextcloud/database" # path to directory
