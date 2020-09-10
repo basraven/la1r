@@ -35,7 +35,8 @@ Feel free to add comments on this through Github!
 18. Fail2ban new filters for ALL services
 19. Traefik auth proxy middleware with Authelia
 20. "View in repo" button for all pages of the la1r documentation. While reading documentation, for example about Ansible, the visitor should be able to view which scripts are currently discussed by clicking a button to the git repository.
-21. find-lf - wifi tracking as input events on the Event Bus based on AI models
+21. find-lf - wifi tracking as input events on the Event Bus based on AI model
+22. Cronacle cron manager https://github.com/jhuckaby/Cronicle
 22. Deploy a Kafka bus as structured event bus instead of mqtt
 23. Spark 2.x Cluster in k8s
 24. Streaming analytics pipeline with Spark 2.x and Kafka
