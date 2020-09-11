@@ -14,13 +14,14 @@ Feel free to add comments on this through Github!
 *  
 
 ## Planned
-* Backup reimplementation
 * Torrent reimplementation
+* DNS black-hole with pihole
+* Backup reimplementation
 * Monitoring reimplementation
 * Monitoring with kube-state-metrics in grafana
 * Monitoring extension, e.g. with alert manager and https://github.com/benjojo/alertmanager-discord
 * Prometheus alert manager implementation
-*  DNS black-hole with pihole
+* Apache airflow to integrate with streaming pipelines for event-driven home: https://airflow.apache.org/docs/stable/kubernetes.html
 *  Online reimplementation
 *  Home automation reimplementation
 

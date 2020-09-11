@@ -1,67 +1,42 @@
 ---
-kind: PersistentVolumeClaim
 apiVersion: v1
-metadata:
-  name: plex-torrent-claim
-  namespace: torrent
-spec:
-  accessModes:
-  - ReadWriteMany 
-  storageClassName: local-storage
-  selector:
-    matchLabels:
-      contenttype: "plex-torrent"
-  resources:
-    requests:
-      storage: 2000Gi
----
 kind: PersistentVolumeClaim
-apiVersion: v1
 metadata:
   name: plex-data-claim
   namespace: torrent
 spec:
+  storageClassName: nfs-212
   accessModes:
-  - ReadWriteMany 
-  storageClassName: local-storage
-  selector:
-    matchLabels:
-      contenttype: "plex-data"
+    - ReadWriteMany
   resources:
     requests:
-      storage: 50Gi
+      storage: 20Gi
 ---
-kind: PersistentVolumeClaim
 apiVersion: v1
+kind: PersistentVolumeClaim
 metadata:
   name: plex-transcode-claim
   namespace: torrent
 spec:
+  storageClassName: nfs-221
   accessModes:
-  - ReadWriteMany 
-  storageClassName: local-storage
-  selector:
-    matchLabels:
-      contenttype: "plex-transcode"
+    - ReadWriteMany
   resources:
     requests:
       storage: 50Gi
 ---
-kind: PersistentVolumeClaim
 apiVersion: v1
+kind: PersistentVolumeClaim
 metadata:
   name: plex-config-claim
   namespace: torrent
 spec:
+  storageClassName: nfs-111
   accessModes:
-  - ReadWriteMany 
-  storageClassName: local-storage
-  selector:
-    matchLabels:
-      contenttype: "plex-config"
+    - ReadWriteMany
   resources:
     requests:
-      storage: 20Gi
+      storage: 5Gi
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -83,7 +58,7 @@ spec:
       volumes:
         - name: plex-torrent-volume
           persistentVolumeClaim:
-            claimName: plex-torrent-claim
+            claimName: torrent-data-claim
         - name: plex-data-volume
           persistentVolumeClaim:
             claimName: plex-data-claim
@@ -147,13 +122,6 @@ metadata:
 spec:
   rules:
   - host: plex.bas
-    http:
-      paths:
-      - path: /
-        backend:
-          serviceName: plex
-          servicePort: 80
-  - host: plex.thuis
     http:
       paths:
       - path: /

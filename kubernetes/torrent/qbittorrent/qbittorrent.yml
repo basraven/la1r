@@ -1,19 +1,27 @@
 ---
-kind: PersistentVolumeClaim
 apiVersion: v1
+kind: PersistentVolumeClaim
 metadata:
   name: qbittorrent-state-claim
   namespace: torrent
 spec:
   accessModes:
-  - ReadWriteMany 
-  storageClassName: local-storage
-  selector:
-    matchLabels:
-      contenttype: "qbittorrent-state"
+    - ReadWriteMany
   resources:
     requests:
-      storage: 20Gi
+      storage: 2Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: torrent-data-claim
+  namespace: torrent
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 2000Gi
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -129,22 +137,6 @@ data:
     WebUI\Username=admin
   
 ---
-kind: PersistentVolumeClaim
-apiVersion: v1
-metadata:
-  name: qbittorrent-torrent-claim
-  namespace: torrent
-spec:
-  accessModes:
-  - ReadWriteMany 
-  storageClassName: local-storage
-  selector:
-    matchLabels:
-      contenttype: "qbittorrent-torrent"
-  resources:
-    requests:
-      storage: 2000Gi
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -197,9 +189,9 @@ spec:
             path: set-goose.sh
           defaultMode: 0744
       
-      - name: torrent
+      - name: torrent-volume
         persistentVolumeClaim:
-          claimName: qbittorrent-torrent-claim
+          claimName: torrent-data-claim
       - name: qbittorrent-state
         persistentVolumeClaim:
           claimName: qbittorrent-state-claim
@@ -240,7 +232,7 @@ spec:
         - name: WEBUI_PORT
           value: "8080"
         volumeMounts:
-          - name: torrent
+          - name: torrent-volume
             mountPath: /downloads
           - name: qbittorrent-config-client
             mountPath: /config/qBittorrent/qBittorrent.conf
@@ -289,12 +281,6 @@ metadata:
 spec:
   rules:
   - host: torrent.bas
-    http:
-      paths:
-      - backend:
-          serviceName: qbittorrent
-          servicePort: 80
-  - host: torrent.thuis
     http:
       paths:
       - backend:

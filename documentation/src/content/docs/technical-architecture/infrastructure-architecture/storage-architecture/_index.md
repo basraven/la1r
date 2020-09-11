@@ -19,20 +19,20 @@ A few predefined folder structures are used in this setup, each folder to simula
 
 #### Generic Instances
 
-| Class Code | Implemented server(s) | **B**ackup | **V**olatility | **S**peed | Hostpath                          | Reclaim   |
-| ---        | ---                   | ---        | ---            | ---       | ---                               | ---       |
-| 111        | 1: linux-wayne        | 1          | 1              | 1         | /mnt/ssd/ha/<service_name>        | manual    |
-| 211        | 1: linux-wayne        | 2          | 1              | 1         | /mnt/ssd/na/<service_name>        | automatic |
-| 221        | 1: linux-wayne        | 2          | 2              | 1         | /mnt/ssd/tmp/<service_name>       | automatic |
-| 112        | 1: linux-wayne        | 1          | 1              | 2         | /mnt/hdd/ha/<service_name>        | manual    |
-| 212        | 1: linux-wayne        | 2          | 1              | 2         | /mnt/hdd/na/<service_name>        | automatic |
-| 222        | 1: linux-wayne        | 2          | 2              | 2         | /mnt/hdd/tmp/<service_name>       | automatic |
-| 113        | 2: 50centos           | 1          | 1              | 3         | /mnt/slhdd/ha/<service_name>      | manual    |
-| 213        | 2: 50centos           | 2          | 1              | 3         | /mnt/slhdd/na/<service_name>      | automatic |
-| 223        | 2: 50centos           | 2          | 2              | 3         | /mnt/slhdd/tmp/<service_name>     | automatic |
+| Class Code    | Implemented server(s) | **B**ackup | **V**olatility | **S**peed | Hostpath                          | Reclaim   |
+| ---           | ---                   | ---        | ---            | ---       | ---                               | ---       |
+| 111           | 1: linux-wayne        | 1          | 1              | 1         | /mnt/ssd/ha/<service_name>        | manual    |
+| 211           | 1: linux-wayne        | 2          | 1              | 1         | /mnt/ssd/na/<service_name>        | automatic |
+| 221           | 1: linux-wayne        | 2          | 2              | 1         | /mnt/ssd/tmp/<service_name>       | automatic |
+| 112           | 1: linux-wayne        | 1          | 1              | 2         | /mnt/hdd/ha/<service_name>        | manual    |
+| 212 (default) | 1: linux-wayne        | 2          | 1              | 2         | /mnt/hdd/na/<service_name>        | automatic |
+| 222           | 1: linux-wayne        | 2          | 2              | 2         | /mnt/hdd/tmp/<service_name>       | automatic |
+| 113           | 2: 50centos           | 1          | 1              | 3         | /mnt/slhdd/ha/<service_name>      | manual    |
+| 213           | 2: 50centos           | 2          | 1              | 3         | /mnt/slhdd/na/<service_name>      | automatic |
+| 223           | 2: 50centos           | 2          | 2              | 3         | /mnt/slhdd/tmp/<service_name>     | automatic |
 
 #### Specific Instances
-
+TODO: update
 | Class Code | Implemented server(s) | **B**ackup | **V**olatility | **S**peed | Persistent Volume (PV) name    | Hostpath                          |
 | ---        | ---                   | ---        | ---            | ---       | ---                            | ---                               |
 | 211        | 1: linux-wayne        | 2          | 1              | 1         | nextcloud-config               | /mnt/ssd/ha/nextcloud/config/     |
