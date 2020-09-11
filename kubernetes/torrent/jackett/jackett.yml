@@ -1,16 +1,12 @@
 ---
-kind: PersistentVolumeClaim
 apiVersion: v1
+kind: PersistentVolumeClaim
 metadata:
   name: jackett-config-claim
   namespace: torrent
 spec:
   accessModes:
-  - ReadWriteMany 
-  storageClassName: local-storage
-  selector:
-    matchLabels:
-      contenttype: "jackett-config"
+    - ReadWriteMany
   resources:
     requests:
       storage: 1Gi

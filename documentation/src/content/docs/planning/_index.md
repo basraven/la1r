@@ -11,11 +11,9 @@ For this reason I created this planning page in which I track and prioritize wha
 Feel free to add comments on this through Github!
 
 ## In progress
-*  
+* DNS black-hole with pihole 
 
 ## Planned
-* Torrent reimplementation
-* DNS black-hole with pihole
 * Backup reimplementation
 * Monitoring reimplementation
 * Monitoring with kube-state-metrics in grafana

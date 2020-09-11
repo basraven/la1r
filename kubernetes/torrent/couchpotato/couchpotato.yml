@@ -1,16 +1,12 @@
 ---
-kind: PersistentVolumeClaim
 apiVersion: v1
+kind: PersistentVolumeClaim
 metadata:
   name: couchpotato-config-claim
   namespace: torrent
 spec:
   accessModes:
-  - ReadWriteMany 
-  storageClassName: local-storage
-  selector:
-    matchLabels:
-      contenttype: "couchpotato-config"
+    - ReadWriteMany
   resources:
     requests:
       storage: 1Gi
@@ -91,13 +87,6 @@ metadata:
 spec:
   rules:
   - host: couch.bas
-    http:
-      paths:
-      - path: /
-        backend:
-          serviceName: couchpotato
-          servicePort: 80
-  - host: couch.thuis
     http:
       paths:
       - path: /
