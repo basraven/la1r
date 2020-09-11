@@ -11,18 +11,18 @@ For this reason I created this planning page in which I track and prioritize wha
 Feel free to add comments on this through Github!
 
 ## In progress
-1.  
+*  
 
 ## Planned
-1. Backup reimplementation
-2. Torrent reimplementation
-3. Monitoring reimplementation
-4. Monitoring with kube-state-metrics in grafana
-5. Monitoring extension
-6. Prometheus alert manager implementation
-7.  DNS black-hole with pihole
-8.  Online reimplementation
-9.  Home automation reimplementation
+* Backup reimplementation
+* Torrent reimplementation
+* Monitoring reimplementation
+* Monitoring with kube-state-metrics in grafana
+* Monitoring extension, e.g. with alert manager and https://github.com/benjojo/alertmanager-discord
+* Prometheus alert manager implementation
+*  DNS black-hole with pihole
+*  Online reimplementation
+*  Home automation reimplementation
 
 ## Longstay parking
 * SNMP of DHCP server to consul/nodes for live node status info (added with a health check / ping performed by consul)
