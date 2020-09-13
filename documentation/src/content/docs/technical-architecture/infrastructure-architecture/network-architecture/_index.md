@@ -41,7 +41,7 @@ The following table summarizes all network cidrs and addresses
 | 192.168   | 6.0/25   | 6.1   | LAN Traefik 2.x                                            | 1                 |
 | 192.168   | 6.0/25   | 6.90  | Consul LAN DNS (DNS UDP)                                   | 1                 |
 | 192.168   | 6.0/25   | 6.91  | Consul LAN DNS (Admin UI)                                  | 1                 |
-| 192.168   | 6.0/25   | 6.100 | DNS Blackhole (pihole)                                     | 1                 |
+| 192.168   | 6.0/25   | 6.99  | DNS Blackhole (pihole)                                     | 1                 |
 | 192.168   | 6.128/25 |       | Online Kubernetes MetalLB services                         | 1                 |
 | 192.168   | 6.128/25 | 6.128 | Online Traefik 2.x                                         | 1                 |
 | 10.244    | 0.0/16   |       | Kubernetes internal cidr                                   | kubernetes.local  |

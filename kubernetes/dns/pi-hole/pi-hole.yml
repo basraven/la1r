@@ -1,0 +1,147 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pi-hole-config-claim
+  namespace: dns
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pi-hole-dnsmasq-claim
+  namespace: dns
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pi-hole
+  namespace: dns
+  labels:
+    app: pi-hole
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pi-hole
+  template:
+    metadata:
+      labels:
+        app: pi-hole
+    spec:
+      volumes:
+        - name: pi-hole-config-volume
+          persistentVolumeClaim:
+            claimName: pi-hole-config-claim
+        - name: pi-hole-dnsmasq-volume
+          persistentVolumeClaim:
+            claimName: pi-hole-dnsmasq-claim
+      containers:
+      - name: pi-hole
+        image: pi-hole/pi-hole
+        ports:
+        - name: dns-udp
+          protocol: UDP
+          containerPort: 53
+        - name: dns-tcp
+          protocol: TCP
+          containerPort: 53
+        - name: http
+          containerPort: 80
+        - name: dhcp
+          containerPort: 67
+        - name: https
+          containerPort: 443
+        env:
+        - name: WEBPASSWORD
+          value: admin
+        - name: TZ
+          value: Europe/Amsterdam
+        # - name: PGID
+        #   value: "1000"
+        # - name: PUID
+        #   value: "1000"
+        volumeMounts:
+          - name: pi-hole-config-volume
+            mountPath: /etc/pihole/
+          - name: pi-hole-dnsmasq-volume
+            mountPath: /etc/dnsmasq/
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: pi-hole
+  name: pi-hole
+  namespace: dns
+spec:
+  ports:
+  - name: dns-udp
+    protocol: UDP
+    targetPort: 53
+    port: 53
+  - name: dns-tcp
+    protocol: TCP
+    targetPort: 53
+    port: 53
+  - name: http
+    targetPort: 80
+    port: 80
+  - name: dhcp
+    targetPort: 67
+    port: 67
+  - name: https
+    targetPort: 443
+    port: 443
+  selector:
+    app: pi-hole
+  type: ClusterIP
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: pi-holeingress
+  namespace: dns
+  # annotations:
+  #   kubernetes.io/ingress.class: traefik
+spec:
+  rules:
+  - host: pi-hole.bas
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: pi-hole
+          servicePort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pi-hole-loadbalancer-service
+  namespace: dns
+spec:
+  loadBalancerIP: 192.168.6.99
+  type: LoadBalancer
+  ports:
+    - name: dns-udp
+      protocol: UDP
+      targetPort: dns-udp
+      port: 53
+    # MIXED TYPES ARE NOT ALLOWED
+    # - name: dns-tcp
+    #   protocol: TCP
+    #   targetPort: dns-tcp
+    #   port: 53
+  selector:
+    app: pi-hole
