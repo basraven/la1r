@@ -24,14 +24,14 @@ spec:
       storage: 5Gi
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: DaemonSet
 metadata:
   name: pi-hole
   namespace: dns
   labels:
     app: pi-hole
 spec:
-  replicas: 1
+  # replicas: 1
   selector:
     matchLabels:
       app: pi-hole
@@ -68,6 +68,12 @@ spec:
           value: admin
         - name: TZ
           value: Europe/Amsterdam
+        - name: VIRTUAL_HOST
+          value: "pi-hole.bas"
+        - name: DNS1
+          value: "8.8.8.8"
+        - name: DNS2
+          value: "8.8.4.4"
         # - name: PGID
         #   value: "1000"
         # - name: PUID
@@ -124,6 +130,9 @@ spec:
         backend:
           serviceName: pi-hole-service
           servicePort: 80
+  tls:
+  - hosts:
+    - pi-hole.bas
 ---
 apiVersion: v1
 kind: Service
