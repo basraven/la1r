@@ -1,0 +1,39 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: plex-data-claim
+  namespace: torrent
+spec:
+  storageClassName: nfs-212
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: plex-transcode-claim
+  namespace: torrent
+spec:
+  storageClassName: nfs-221
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 50Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: plex-config-claim
+  namespace: torrent
+spec:
+  storageClassName: nfs-111
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi

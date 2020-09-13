@@ -1,17 +1,4 @@
 ---
-kind: PersistentVolumeClaim
-apiVersion: v1
-metadata:
-  name: redis-claim
-  namespace: nextcloud
-spec:
-  accessModes:
-  - ReadWriteMany 
-  storageClassName: nfs-211
-  resources:
-    requests:
-      storage: 5Gi
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:

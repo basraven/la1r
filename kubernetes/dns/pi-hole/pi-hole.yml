@@ -49,7 +49,7 @@ spec:
             claimName: pi-hole-dnsmasq-claim
       containers:
       - name: pi-hole
-        image: pi-hole/pi-hole
+        image: pihole/pihole
         ports:
         - name: dns-udp
           protocol: UDP
@@ -83,7 +83,7 @@ kind: Service
 metadata:
   labels:
     app: pi-hole
-  name: pi-hole
+  name: pi-hole-service
   namespace: dns
 spec:
   ports:
@@ -122,7 +122,7 @@ spec:
       paths:
       - path: /
         backend:
-          serviceName: pi-hole
+          serviceName: pi-hole-service
           servicePort: 80
 ---
 apiVersion: v1
