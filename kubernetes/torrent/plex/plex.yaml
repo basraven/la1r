@@ -92,3 +92,19 @@ spec:
   tls:
   - hosts:
     - plex.bas
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: plex-lb-service
+  namespace: torrent
+spec:
+  ports:
+  - name: http
+    port: 80
+    targetPort: 32400
+  selector:
+    app: plex
+  type: LoadBalancer
+  loadBalancerIP: 192.168.6.60

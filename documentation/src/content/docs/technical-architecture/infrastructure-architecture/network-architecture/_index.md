@@ -39,6 +39,7 @@ The following table summarizes all network cidrs and addresses
 | 192.168   | 6.0/24   |       | Kubernetes MetalLB services                                | 1                 |
 | 192.168   | 6.0/25   |       | LAN Kubernetes MetalLB services                            | 1                 |
 | 192.168   | 6.0/25   | 6.1   | LAN Traefik 2.x                                            | 1                 |
+| 192.168   | 6.0/25   | 6.60  | Plex server                                                | 1                 |
 | 192.168   | 6.0/25   | 6.90  | Consul LAN DNS (DNS UDP)                                   | 1                 |
 | 192.168   | 6.0/25   | 6.91  | Consul LAN DNS (Admin UI)                                  | 1                 |
 | 192.168   | 6.0/25   | 6.99  | DNS Blackhole (pihole)                                     | 1                 |
