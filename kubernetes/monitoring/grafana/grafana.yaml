@@ -1,20 +1,4 @@
 ---
-kind: PersistentVolumeClaim
-apiVersion: v1
-metadata:
-  name: grafana-claim
-  namespace: monitoring
-spec:
-  accessModes:
-  - ReadWriteMany 
-  storageClassName: local-storage
-  selector:
-    matchLabels:
-      contenttype: "grafana"
-  resources:
-    requests:
-      storage: 2Gi
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -33,7 +17,6 @@ spec:
     spec:
       containers:
       - name: grafana
-        # image: k8s.gcr.io/heapster-grafana-amd64:v4.4.3
         image: grafana/grafana
         ports:
         - containerPort: 3000
@@ -83,9 +66,6 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  labels:
-    kubernetes.io/cluster-service: 'true'
-    kubernetes.io/name: monitoring-grafana
   name: monitoring-grafana
   namespace: monitoring
 spec:
@@ -103,13 +83,6 @@ metadata:
 spec:
   rules:
   - host: grafana.bas
-    http:
-      paths:
-      - path: /
-        backend:
-          serviceName: monitoring-grafana
-          servicePort: 80
-  - host: grafana.thuis
     http:
       paths:
       - path: /

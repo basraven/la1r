@@ -11,12 +11,10 @@ For this reason I created this planning page in which I track and prioritize wha
 Feel free to add comments on this through Github!
 
 ## In progress
-* DNS black-hole with pihole 
+* Monitoring with kube-state-metrics in grafana
 
 ## Planned
 * Backup reimplementation
-* Monitoring reimplementation
-* Monitoring with kube-state-metrics in grafana
 * Monitoring extension, e.g. with alert manager and https://github.com/benjojo/alertmanager-discord
 * Prometheus alert manager implementation
 * Apache airflow to integrate with streaming pipelines for event-driven home: https://airflow.apache.org/docs/stable/kubernetes.html
@@ -45,6 +43,8 @@ Feel free to add comments on this through Github!
 * Refactor Mosquito to [vernemq](https://vernemq.com/) 
 
 ## Completed
+* DNS black-hole with pihole 
+* Monitoring reimplementation
 * DNS on LAN implementation
 * Traefik 2.x reimplementation
 * Metallb implementation

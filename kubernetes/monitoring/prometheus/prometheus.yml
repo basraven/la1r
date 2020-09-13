@@ -1,20 +1,4 @@
 ---
-kind: PersistentVolumeClaim
-apiVersion: v1
-metadata:
-  name: prometheus-claim
-  namespace: monitoring
-spec:
-  accessModes:
-    - ReadWriteMany 
-  storageClassName: local-storage
-  selector:
-    matchLabels:
-      contenttype: prometheus
-  resources:
-    requests:
-      storage: 20Gi
----
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -47,30 +31,27 @@ data:
       static_configs:
       - targets:
         - exporter-qbittorent:80
-    - job_name: openvpn
-      scrape_interval: 5s
+    - job_name: 'linux-wayne'
       static_configs:
-      - targets:
-        - exporter-openvpn:80
-    - job_name: traefik
-      scrape_interval: 3s
+      - targets: ['192.168.5.1:9100']
+    - job_name: '50centos'
       static_configs:
-      - targets:
-        - traefik-ingress-service.traefik:8082
-    - job_name: traefik-online
-      scrape_interval: 3s
-      static_configs:
-      - targets:
-        - online-traefik-ingress-service.online:8082
-    - job_name: 'bigraver-node'
-      static_configs:
-      - targets: ['10.8.0.1:9100']
-    - job_name: 'raspi2-node'
-      static_configs:
-      - targets: ['10.8.0.10:9100']
-    - job_name: 'carrot-node'
-      static_configs:
-      - targets: ['10.8.0.26:9100']
+      - targets: ['192.168.5.2:9100']
+    # - job_name: openvpn
+    #   scrape_interval: 5s
+    #   static_configs:
+    #   - targets:
+    #     - exporter-openvpn:80
+    # - job_name: traefik
+    #   scrape_interval: 3s
+    #   static_configs:
+    #   - targets:
+    #     - traefik-ingress-service.traefik:8082
+    # - job_name: traefik-online
+    #   scrape_interval: 3s
+    #   static_configs:
+    #   - targets:
+    #     - online-traefik-ingress-service.online:8082
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -116,10 +97,6 @@ kind: Service
 metadata:
   labels:
     task: monitoring
-    # For use as a Cluster add-on (https://github.com/kubernetes/kubernetes/tree/master/cluster/addons)
-    # If you are NOT using this as an addon, you should comment out this line.
-    kubernetes.io/cluster-service: 'true'
-    kubernetes.io/name: monitoring-prometheus
   name: monitoring-prometheus
   namespace: monitoring
 spec:
