@@ -124,6 +124,6 @@ spec:
               current-context: svcs-acct-context
               " > ~/.kube/config
               
-              while sleep 30; do consulk8s write-ingresses --default-ip 192.168.6.1 --consul-sink-url='192.168.6.91:80' --consul-sink-domain='.bas' --host-as-name --skip-checks ; done
+              while sleep 15; do consulk8s write-ingresses --default-ip 192.168.6.1 --consul-sink-url='192.168.6.91:80' --consul-sink-domain='.bas' --host-as-name --skip-checks ; done
               
               

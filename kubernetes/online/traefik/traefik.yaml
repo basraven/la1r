@@ -255,7 +255,7 @@ spec:
       - path: /
         backend:
           serviceName: online-traefik-ingress-lb
-          servicePort: admin
+          servicePort: 8080
 
 ---
 # Source: https://docs.traefik.io/v2.0/middlewares/ratelimit/
