@@ -20,20 +20,20 @@ all:
           ansible_user: basraven
           ansible_port: 22
         hosts:
-            linux-wayne:
-              #FIXME:  kerberos: server
-              ha_proxy_node_state: MASTER
-              ha_proxy_node_prio: 105
-              ha_proxy_node_interface: "enp3s0"
-              keepalived_peers: 192.168.5.2
-              ansible_host: 192.168.5.1
-              nfs_storage_capabilities:
-                - 111
-                - 211
-                - 221
-                - 112
-                - 212
-                - 222
+            # linux-wayne:
+            #   #FIXME:  kerberos: server
+            #   ha_proxy_node_state: MASTER
+            #   ha_proxy_node_prio: 105
+            #   ha_proxy_node_interface: "enp3s0"
+            #   keepalived_peers: 192.168.5.2
+            #   ansible_host: 192.168.5.1
+            #   nfs_storage_capabilities:
+            #     - 111
+            #     - 211
+            #     - 221
+            #     - 112
+            #     - 212
+            #     - 222
 
             50centos:
               kerberos: client

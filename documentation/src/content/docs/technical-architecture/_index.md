@@ -2,7 +2,6 @@
 title: Technical Architecture
 type: docs
 bookToc: false
-bookCollapseSection : true
 weight: 3
 ---
 

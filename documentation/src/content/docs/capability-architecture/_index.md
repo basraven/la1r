@@ -2,6 +2,7 @@
 title: Capability Architecture
 type: docs
 bookToc: false
+bookCollapseSection: true
 weight: 2
 ---
 

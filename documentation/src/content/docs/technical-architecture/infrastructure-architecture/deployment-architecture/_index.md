@@ -18,7 +18,7 @@ Since there's always a need for installing packages on the nodes directly and I 
 The goal here is to document every step, it does not matter how small, into an Ansible Playbook script.
 These Ansible scripts can be found on <https://github.com/basraven/la1r/ansible>
 
-#### Ansible Tags
+#### Ansible Technical Tags
 The following tags are used in Ansible:
 * helper                - Helper scripts for the run itself, e.g. to determine OS
 * hostname              - Set hostname of server
