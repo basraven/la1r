@@ -116,7 +116,7 @@ pipeline{
                     echo "#######################################################################"
                 }
                 lock(label: 'virtual', variable: 'LOCK_NAME', resource: null){
-                    ansiblePlaybook colorized: true, disableHostKeyChecking: true, installation: 'ansible', inventory: 'cicd/ansible/1-cluster.yml', extras: '--limit="virtual" ' + EXTRA_VARS, playbook: 'cicd/ansible/site.yml', tags: "${tags}"    
+                    ansiblePlaybook colorized: true, disableHostKeyChecking: true, installation: 'ansible', inventory: 'cicd/ansible/hosts.yml', extras: '--limit="virtual" ' + EXTRA_VARS, playbook: 'cicd/ansible/site.yml', tags: "${tags}"    
                 }
                 junit 'junit/site-*.xml' 
             }
@@ -154,7 +154,7 @@ pipeline{
                     echo "#######################################################################"
                 }
                 lock(label: 'metal', variable: 'LOCK_NAME', resource: null){
-                    ansiblePlaybook colorized: true, disableHostKeyChecking: true, installation: 'ansible', inventory: 'cicd/ansible/1-cluster.yml', extras: '--limit="metal" ' + EXTRA_VARS, playbook: 'cicd/ansible/site.yml', tags: "${tags}"    
+                    ansiblePlaybook colorized: true, disableHostKeyChecking: true, installation: 'ansible', inventory: 'cicd/ansible/hosts.yml', extras: '--limit="metal" ' + EXTRA_VARS, playbook: 'cicd/ansible/site.yml', tags: "${tags}"    
                 }
                 junit 'junit/site-*.xml' 
             }

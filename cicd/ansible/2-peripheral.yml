@@ -1,18 +1,9 @@
-all:
-  hosts:
-  children:
-    virtual:
-        vars:
-          ansible_user: vagrant
-          ansible_ssh_pass: vagrant
-    metal:
-        vars:
-          ansible_user: basraven
-          ansible_port: 22
-        tags: helper
-        hosts:
-            50centos:
-              ansible_host: 192.168.5.2
-
-#[raspis:vars]
-#ansible_ssh_private_key_file=~/.ssh/id_rsa
+---
+- hosts: peripheral 
+  roles:
+  - define-os
+  - toolbox
+  - hostname
+  - users
+  - prometheus_node_exporter
+  - reboot

@@ -1,0 +1,4 @@
+---
+- include: reboot-os.yml
+  tags:
+    - reboot

@@ -4,7 +4,7 @@
   user:
     name: "{{ target_user_name }}"
     comment: "{{ target_user_comment }}"
-    groups : "{{ 'sudo' if ansible_os_family == 'Debian' else 'wheel' }}" 
+    groups : "{{ 'sudo' if ansible_os_family == 'Debian' else '' }}" 
     append: yes
     state: present
     createhome: yes

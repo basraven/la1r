@@ -37,6 +37,12 @@ data:
     - job_name: '50centos'
       static_configs:
       - targets: ['192.168.5.2:9100']
+    - job_name: 'ali-bel'
+      static_configs:
+      - targets: ['192.168.9.71:9100']
+    - job_name: 'kodi-e'
+      static_configs:
+      - targets: ['192.168.15.243:9100']
     # - job_name: openvpn
     #   scrape_interval: 5s
     #   static_configs:

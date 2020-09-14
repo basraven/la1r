@@ -1,15 +1,3 @@
 ---
-- hosts: all
-  roles:
-  - toolbox
-  - os
-  - users
-  - security
-  - dnsmasq
-  - nfs
-  - samba
-  - docker
-  - openvpn
-  - haproxy
-  - prometheus_node_exporter
-  - kubernetes
+- import_playbook: 1-cluster.yml
+- import_playbook: 2-peripheral.yml
