@@ -1,50 +1,50 @@
-# ---
-# apiVersion: traefik.containo.us/v1alpha1
-# kind: IngressRoute
-# metadata:
-#   name: kubernetes-dashboard-non-tls
-#   namespace: kubernetes-dashboard
-# spec:
-#   entryPoints:
-#     - web
-#   routes:
-#   - match: Host(`k8s.bas`) && PathPrefix(`/`)
-#     kind: Rule
-#     services:
-#     - name: kubernetes-dashboard
-#       port: 443
-#     middlewares:
-#     - name: http-redirect-to-https
-# ---
-# apiVersion: traefik.containo.us/v1alpha1
-# kind: IngressRoute
-# metadata:
-#   name: kubernetes-dashboard-tls
-#   namespace: kubernetes-dashboard
-# spec:
-#   entryPoints:
-#     - websecure
-#   routes:
-#   - match: Host(`k8s.bas`) && PathPrefix(`/`)
-#     kind: Rule
-#     services:
-#     - name: kubernetes-dashboard
-#       port: 443
-#   tls: {}
-# ---
-# # Redirect to https
-# apiVersion: traefik.containo.us/v1alpha1
-# kind: Middleware
-# metadata:
-#   name: http-redirect-to-https
-#   namespace: kubernetes-dashboard
-# spec:
-#   redirectScheme:
-#     scheme: https
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: kubernetes-dashboard-non-tls
+  namespace: kubernetes-dashboard
+spec:
+  entryPoints:
+    - web
+  routes:
+  - match: Host(`k8s.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: kubernetes-dashboard
+      port: 443
+    middlewares:
+    - name: http-redirect-to-https
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: kubernetes-dashboard-tls
+  namespace: kubernetes-dashboard
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`k8s.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: kubernetes-dashboard
+      port: 443
+  tls: {}
+---
+# Redirect to https
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: http-redirect-to-https
+  namespace: kubernetes-dashboard
+spec:
+  redirectScheme:
+    scheme: https
 
 
 ---
-# (Top part doesn't work for consulk8s)
+# (used for consul)
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:

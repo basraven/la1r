@@ -29,8 +29,7 @@ data:
     - job_name: qbittorent
       scrape_interval: 5s
       static_configs:
-      - targets:
-        - exporter-qbittorent:80
+      - targets: ['exporter-qbittorent.monitoring:80']
     - job_name: 'linux-wayne'
       static_configs:
       - targets: ['192.168.5.1:9100']
@@ -43,16 +42,19 @@ data:
     - job_name: 'kodi-e'
       static_configs:
       - targets: ['192.168.15.243:9100']
+    - job_name: traefik
+      scrape_interval: 3s
+      static_configs:
+      - targets:
+        - traefik-ingress-service.traefik:8082
+    - job_name: 'kube-state-metrics'
+      static_configs:
+      - targets: ['kube-state-metrics.kube-system:8080']
     # - job_name: openvpn
     #   scrape_interval: 5s
     #   static_configs:
     #   - targets:
     #     - exporter-openvpn:80
-    # - job_name: traefik
-    #   scrape_interval: 3s
-    #   static_configs:
-    #   - targets:
-    #     - traefik-ingress-service.traefik:8082
     # - job_name: traefik-online
     #   scrape_interval: 3s
     #   static_configs:

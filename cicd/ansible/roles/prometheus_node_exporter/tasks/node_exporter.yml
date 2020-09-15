@@ -20,7 +20,18 @@
   args:
       executable: /bin/bash
   when:
-    - ansible_architecture.find('arm') != -1
+    - ansible_architecture.find('armv7') != -1
+
+- name: Node_exporter / Install node_exporter for ARM6 (Raspberry Pi 1 and Zero)
+  become: yes
+  shell: |
+    wget https://github.com/prometheus/node_exporter/releases/download/v0.18.1/node_exporter-0.18.1.linux-armv6.tar.gz
+    tar xvfz node_exporter-0.18.1.linux-armv6.tar.gz
+    cp -f node_exporter-0.18.1.linux-armv6/node_exporter /usr/sbin/
+  args:
+      executable: /bin/bash
+  when:
+    - ansible_architecture.find('armv6') != -1
 
 - name: Node_exporter / Create service
   become: yes

@@ -144,7 +144,7 @@ subjects:
   namespace: kube-system
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: DaemonSet
 metadata:
   labels:
     app.kubernetes.io/name: kube-state-metrics
@@ -152,7 +152,7 @@ metadata:
   name: kube-state-metrics
   namespace: kube-system
 spec:
-  replicas: 1
+  # replicas: 1
   selector:
     matchLabels:
       app.kubernetes.io/name: kube-state-metrics
