@@ -15,18 +15,27 @@ spec:
         task: monitoring
         k8s-app: grafana
     spec:
+      # dnsPolicy: "None"
+      # dnsConfig:
+      #   nameservers:
+      #     - 8.8.8.8
+          # - 192.168.6.90
+        # - consul-dns-0.consul-dns.dns.svc.cluster.local
+          # - 8.8.4.4
       containers:
       - name: grafana
+        resources: {}
         image: grafana/grafana
         ports:
         - containerPort: 3000
           protocol: TCP
         volumeMounts:
-        - mountPath: /etc/ssl/certs
-          name: ca-certificates
-          readOnly: true
+        # - mountPath: /etc/ssl/certs
+        #   name: ca-certificates
+        #   readOnly: true
         - mountPath: /var/lib/grafana
           name: grafana
+
         env:
         # - name: INFLUXDB_HOST
         #   value: monitoring-influxdb
@@ -50,15 +59,20 @@ spec:
           value: "email.network:25"
         - name: GF_SMTP_FROM_ADDRESS
           value: "admin@basraven.nl"
+        - name: REQUESTS_CA_BUNDLE 
+          value: "false"
         - name: GF_SERVER_ROOT_URL
           # If you're only using the API Server proxy, set this value instead:
           # value: /api/v1/namespaces/monitoring/services/monitoring-grafana/proxy
           value: /
+        # - name: plugins
+        #   value: "vonage-status-panel"
+          # value: "grafana-clock-panel,grafana-simple-json-datasource"
       volumes:
-      - name: ca-certificates
+      # - name: ca-certificates
         # hostPath:
         #   path: /etc/ssl/certs
-        emptyDir: {}
+        # emptyDir: {}
       - name: grafana
         persistentVolumeClaim:
           claimName: grafana-claim

@@ -5,6 +5,7 @@ metadata:
   name: grafana-claim
   namespace: monitoring
 spec:
+  storageClassName: nfs-112
   accessModes:
     - ReadWriteMany
   resources:
