@@ -39,35 +39,35 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: admin
----
-apiVersion: apps/v1
-kind: DaemonSet
-metadata:
-  name: consul-k8s
-  namespace: dns
-spec:
-  selector:
-    matchLabels:
-      app: consul-k8s
-  template:
-    metadata:
-      labels:
-        app: consul-k8s
-    spec:
-      serviceAccountName: consul-k8s
-      containers:
-        - name: consul-k8s
-          image: "hashicorp/consul-k8s"
-          command:
-            # TODO: Consul reload on configdir change
-            - consul-k8s
-          args:
-            - sync-catalog
-            - -to-consul=true
-            - -to-k8s=false
-            - -http-addr=http://consul-dns:8500
-            - -allow-k8s-namespace=*
-            - -deny-k8s-namespace=kube-system
+# ---
+# apiVersion: apps/v1
+# kind: DaemonSet
+# metadata:
+#   name: consul-k8s
+#   namespace: dns
+# spec:
+#   selector:
+#     matchLabels:
+#       app: consul-k8s
+#   template:
+#     metadata:
+#       labels:
+#         app: consul-k8s
+#     spec:
+#       serviceAccountName: consul-k8s
+#       containers:
+#         - name: consul-k8s
+#           image: "hashicorp/consul-k8s"
+#           command:
+#             # TODO: Consul reload on configdir change
+#             - consul-k8s
+#           args:
+#             - sync-catalog
+#             - -to-consul=true
+#             - -to-k8s=false
+#             - -http-addr=http://consul-dns:8500
+#             - -allow-k8s-namespace=*
+#             - -deny-k8s-namespace=kube-system
             # - -allow-k8s-namespace=default
             # - -allow-k8s-namespace=kube-system
 

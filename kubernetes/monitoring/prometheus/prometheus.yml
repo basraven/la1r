@@ -17,53 +17,11 @@ data:
         scheme: http
         timeout: 10s
     scrape_configs:
-    - job_name: prometheus
-      honor_timestamps: true
-      scrape_interval: 15s
-      scrape_timeout: 10s
-      metrics_path: /metrics
-      scheme: http
-      static_configs:
-      - targets:
-        - localhost:9090
-        labels:
-          jobscope: 'application'
-    - job_name: 'linux-wayne'
-      static_configs:
-      - targets: ['192.168.5.1:9100']
-        labels: 
-          jobscope: 'node'
-          nodetype: 'cluster-node'
-    - job_name: '50centos'
-      static_configs:
-      - targets: ['192.168.5.2:9100']
-        labels: 
-          jobscope: 'node'
-          nodetype: 'cluster-node'
-    - job_name: 'ali-bel'
-      static_configs:
-      - targets: ['192.168.9.71:9100']
-        labels: 
-          jobscope: 'node'
-          nodetype: 'peripheral-node'
-    - job_name: 'kodi-e'
-      static_configs:
-      - targets: ['192.168.15.243:9100']
-        labels: 
-          jobscope: 'node'
-          nodetype: 'peripheral-node'
-    - job_name: traefik
-      scrape_interval: 3s
-      static_configs:
-      - targets:
-        - traefik-ingress-service.traefik:8082
-        labels:
-          jobscope: 'application'
-    - job_name: 'kube-state-metrics'
-      static_configs:
-      - targets: ['kube-state-metrics.kube-system:8080']
-        labels:
-          jobscope: 'application'
+    - job_name: 'targetsjson'
+      file_sd_configs:
+      - files:
+        - '/etc/prometheus/targets.json'
+
     # - job_name: qbittorent
     #   scrape_interval: 5s
     #   static_configs:
@@ -84,6 +42,86 @@ data:
     #     - online-traefik-ingress-service.online:8082
     #     labels:
     #       jobscope: 'application'
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-targets
+  namespace: monitoring
+data:
+  targets.json: |-
+    [
+      {
+        "targets": [
+          "localhost:9090"
+        ],
+        "labels": {
+          "targetname": "prometheus-local",
+          "jobscope": "application"
+        }
+      },
+      {
+        "targets": [
+          "192.168.5.1:9100"
+        ],
+        "labels": {
+          "targetname": "linux-wayne",
+          "jobscope": "node",
+          "nodetype": "cluster-node"
+        }
+      },
+      {
+        "targets": [
+          "192.168.5.2:9100"
+        ],
+        "labels": {
+          "targetname": "50centos",
+          "jobscope": "node",
+          "nodetype": "cluster-node"
+        }
+      },
+      {
+        "targets": [
+          "192.168.9.71:9100"
+        ],
+        "labels": {
+          "targetname": "ali-bel",
+          "jobscope": "node",
+          "nodetype": "peripheral-node"
+        }
+      },
+      {
+        "targets": [
+          "192.168.15.243:9100"
+        ],
+        "labels": {
+          "targetname": "kodi-e",
+          "jobscope": "node",
+          "nodetype": "peripheral-node"
+        }
+      },
+      {
+        "targets": [
+          "traefik-ingress-service.traefik:8082"
+        ],
+        "labels": {
+          "targetname": "traefik",
+          "jobscope": "application"
+        }
+      },
+      {
+        "targets": [
+          "kube-state-metrics.kube-system:8080"
+        ],
+        "labels": {
+          "targetname": "kube-state-metrics",
+          "jobscope": "application"
+        }
+      }
+    ]
+
+
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -112,6 +150,9 @@ spec:
         - name: prometheus-config
           mountPath: /etc/prometheus/prometheus.yml
           subPath: prometheus.yml
+        - name: prometheus-targets
+          mountPath: /etc/prometheus/targets.json
+          subPath: targets.json
       volumes:
       - name: prometheus
         persistentVolumeClaim:
@@ -122,6 +163,13 @@ spec:
           items:
           - key: prometheus.yml
             path: prometheus.yml
+          defaultMode: 0744
+      - name: prometheus-targets
+        configMap:
+          name: prometheus-targets
+          items:
+          - key: targets.json
+            path: targets.json
           defaultMode: 0744
 ---
 apiVersion: v1
