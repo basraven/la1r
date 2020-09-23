@@ -22,7 +22,7 @@ data:
       - scheme: http
         static_configs:
         - targets:
-          - "monitoring-alertmanager:9093"
+          - "monitoring-alertmanager-service:9093"
 
     # - job_name: qbittorent
     #   scrape_interval: 5s

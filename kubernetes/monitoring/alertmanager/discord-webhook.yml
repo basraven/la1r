@@ -1,0 +1,43 @@
+---
+# source: https://github.com/mateobur/prometheus-monitoring-guide/tree/master/alertmanager-example
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: monitoring-discord-webhook
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: monitoring-discord-webhook
+  template:
+    metadata:
+      labels:
+        task: monitoring
+        k8s-app: monitoring-discord-webhook
+    spec:
+      containers:
+      - name: discord-webhook
+        ports:
+        - containerPort: 9094
+        image: benjojo/alertmanager-discord
+        env:
+          - name: DISCORD_WEBHOOK 
+            valueFrom:
+              secretKeyRef:
+                name: discord-webhook
+                key: DISCORD_WEBHOOK
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    task: monitoring
+  name: monitoring-discord-webhook
+  namespace: monitoring
+spec:
+  ports:
+  - port: 9094
+    targetPort: 9094
+  selector:
+    k8s-app: monitoring-discord-webhook

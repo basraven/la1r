@@ -14,12 +14,17 @@ data:
       group_wait: 10s
       group_interval: 10s
       repeat_interval: 1h
-      receiver: 'prometheus-msteams'
+      receiver: discord_webhook
+
     receivers:
-      - name: prometheus-msteams
+      - name: discord_webhook
         webhook_configs:
-        - url: "http://prometheus-msteams:2000/alertmanager"
+        - url: "http://monitoring-discord-webhook:9094"
           send_resolved: true
+      # - name: http_webhook
+      #   webhook_configs:
+      #   - url: "http://requestbin.net/r/1kbudtc1"
+      #     send_resolved: true
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -65,11 +70,33 @@ kind: Service
 metadata:
   labels:
     task: monitoring
-  name: monitoring-alertmanager
+  name: monitoring-alertmanager-service
   namespace: monitoring
 spec:
   ports:
-  - port: 9093
+  - name: alsohttp
+    port: 9093
+    targetPort: 9093
+  - name: http
+    port: 80
     targetPort: 9093
   selector:
     k8s-app: monitoring-alertmanager
+
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: monitoring-alertmanager-ingress
+  namespace: monitoring
+  # annotations:
+  #   kubernetes.io/ingress.class: traefik
+spec:
+  rules:
+  - host: alerts.bas
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: monitoring-alertmanager-service
+          servicePort: 80
