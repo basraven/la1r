@@ -1,0 +1,74 @@
+---
+# source: https://github.com/mateobur/prometheus-monitoring-guide/tree/master/alertmanager-example
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-config
+  namespace: monitoring
+data:
+  alertmanager.yml: |-
+    global:
+      resolve_timeout: 5m
+    route:
+      group_by: ['alertname']
+      group_wait: 10s
+      group_interval: 10s
+      repeat_interval: 1h
+      receiver: 'sysdig-test'
+    receivers:
+      - name: 'sysdig-test'
+        webhook_configs:
+        - url: 'https://hookb.in/9XgmZDLRqdS600eMobN9' 
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: monitoring-alertmanager
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: monitoring-alertmanager
+  template:
+    metadata:
+      labels:
+        task: monitoring
+        k8s-app: monitoring-alertmanager
+    spec:
+      containers:
+      - name: alertmanager
+        ports:
+        - containerPort: 9093
+        image: prom/alertmanager
+        volumeMounts:
+        # - name: alertmanager
+        #   mountPath: /alertmanager
+        - name: alertmanager-config
+          mountPath: /etc/alertmanager/alertmanager.yml
+          subPath: alertmanager.yml
+      volumes:
+      # - name: alertmanager
+      #   persistentVolumeClaim:
+      #     claimName: alertmanager-claim
+      - name: alertmanager-config
+        configMap:
+          name: alertmanager-config
+          items:
+          - key: alertmanager.yml
+            path: alertmanager.yml
+          defaultMode: 0744
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    task: monitoring
+  name: monitoring-alertmanager
+  namespace: monitoring
+spec:
+  ports:
+  - port: 9093
+    targetPort: 9093
+  selector:
+    k8s-app: monitoring-alertmanager
