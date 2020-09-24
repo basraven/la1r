@@ -327,6 +327,15 @@ data:
     [
       {
         "targets": [
+          "monitoring-prometheus-push-gateway:80"
+        ],
+        "labels": {
+          "targetname": "prometheus-push",
+          "jobscope": "application"
+        }
+      },
+      {
+        "targets": [
           "localhost:9090"
         ],
         "labels": {

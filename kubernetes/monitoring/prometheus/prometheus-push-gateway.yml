@@ -1,0 +1,60 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: monitoring-prometheus-push-gateway
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: monitoring-prometheus-push-gateway
+  template:
+    metadata:
+      labels:
+        k8s-app: monitoring-prometheus-push-gateway
+    spec:
+      containers:
+      - name: prometheus-push-gateway
+        ports:
+        - containerPort: 9091
+        image: prom/pushgateway
+        args:
+          - --web.enable-admin-api
+          - --persistence.file=/pushgatewaydata/persistence
+        volumeMounts:
+        - name: prometheus-push-gateway-volume
+          mountPath: /pushgatewaydata
+      volumes:
+      - name: prometheus-push-gateway-volume
+        persistentVolumeClaim:
+          claimName: prometheus-push-gateway-claim
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    task: monitoring
+  name: monitoring-prometheus-push-gateway
+  namespace: monitoring
+spec:
+  ports:
+  - port: 80
+    targetPort: 9091
+  selector:
+    k8s-app: monitoring-prometheus-push-gateway
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: prometheus-push-gateway-ingress
+  namespace: monitoring
+spec:
+  rules:
+  - host: prometheus-push.bas
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: monitoring-prometheus-push-gateway
+          servicePort: 80
