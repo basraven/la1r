@@ -418,7 +418,7 @@ spec:
         - containerPort: 9090
         image: prom/prometheus
         volumeMounts:
-        - name: prometheus
+        - name: prometheus-volume
           mountPath: /prometheus
         - name: prometheus-config
           mountPath: /etc/prometheus/prometheus.yml
@@ -429,7 +429,7 @@ spec:
         - name: rules-general
           mountPath: /etc/prometheus/rules/
       volumes:
-      - name: prometheus
+      - name: prometheus-volume
         persistentVolumeClaim:
           claimName: prometheus-claim
       - name: prometheus-config

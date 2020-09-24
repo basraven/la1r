@@ -53,6 +53,8 @@ spec:
         - name: alertmanager-config
           mountPath: /etc/alertmanager/alertmanager.yml
           subPath: alertmanager.yml
+        - mountPath: /alertmanager
+          name: alertmanager-volume
       volumes:
       # - name: alertmanager
       #   persistentVolumeClaim:
@@ -64,6 +66,9 @@ spec:
           - key: alertmanager.yml
             path: alertmanager.yml
           defaultMode: 0744
+      - name: alertmanager-volume
+        persistentVolumeClaim:
+          claimName: alertmanager-claim
 ---
 apiVersion: v1
 kind: Service
@@ -100,3 +105,6 @@ spec:
         backend:
           serviceName: monitoring-alertmanager-service
           servicePort: 80
+  tls:
+  - hosts:
+    - alerts.bas
