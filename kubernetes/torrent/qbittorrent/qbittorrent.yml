@@ -252,8 +252,6 @@ kind: Ingress
 metadata:
   name: qbittorrentingress
   namespace: torrent
-  # annotations:
-  #   kubernetes.io/ingress.class: traefik
 spec:
   rules:
   - host: torrent.bas
@@ -262,6 +260,6 @@ spec:
       - backend:
           serviceName: qbittorrent
           servicePort: 80
-  tls:
-  - hosts:
-    - torrent.bas
+  # tls:
+  # - hosts:
+  #   - torrent.bas
