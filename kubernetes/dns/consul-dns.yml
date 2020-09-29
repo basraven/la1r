@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: consul-dns-coredns
+  name: consul-coredns
   namespace: dns
 data:
   Corefile: |-
@@ -25,18 +25,19 @@ data:
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: consul-dns
+  name: consul
   namespace: dns
 spec:
-  serviceName: consul-dns
+  serviceName: consul
+  podManagementPolicy: "Parallel"
   selector:
     matchLabels:
-      app: consul-dns
+      app: consul
   replicas: 3
   template:
     metadata:
       labels:
-        app: consul-dns
+        app: consul
     spec:
       # affinity:
         # podAntiAffinity:
@@ -60,9 +61,9 @@ spec:
       securityContext:
         fsGroup: 1000
       volumes:
-      - name: consul-dns-coredns-volume
+      - name: consul-coredns-volume
         configMap:
-          name: consul-dns-coredns
+          name: consul-coredns
           items:
           - key: Corefile
             path: Corefile
@@ -70,7 +71,7 @@ spec:
       containers:
         - name: coredns
           volumeMounts:
-          - name: consul-dns-coredns-volume
+          - name: consul-coredns-volume
             mountPath: /etc/coredns/Corefile
             subPath: Corefile
           image: coredns/coredns
@@ -116,7 +117,7 @@ spec:
           # ports:
           #   - containerPort: 53
           #     name: dns
-        - name: consul-dns
+        - name: consul
           image: "consul"
           env:
             - name: POD_IP
@@ -131,10 +132,8 @@ spec:
             - "agent"
             - "-advertise=$(POD_IP)"
             - "-bootstrap-expect=2"
-            - "-retry-join=consul-dns.$(NAMESPACE).svc.cluster.local"
             - "-client=0.0.0.0"
             - "-bind=0.0.0.0"
-            - "-recursor=8.8.8.8"
             - "-datacenter=rave"
             - "-domain=bas"
             - "-alt-domain=service.bas"
@@ -142,6 +141,11 @@ spec:
             - "-server"
             - "-ui"
             - "-disable-host-node-id"
+            - "-retry-join=consul-0.consul.$(NAMESPACE).svc.cluster.local"
+            - "-retry-join=consul-1.consul.$(NAMESPACE).svc.cluster.local"
+            - "-retry-join=consul-2.consul.$(NAMESPACE).svc.cluster.local"
+            # - "-retry-join=consul.$(NAMESPACE).svc.cluster.local"
+            # - "-recursor=8.8.8.8"
             # - "-data-dir=/consul/data"
           # volumeMounts:
           #   - name: data
@@ -176,13 +180,13 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: consul-dns
+  name: consul
   namespace: dns
   labels:
-    name: consul-dns
+    name: consul
 spec:
   selector:
-    app: consul-dns
+    app: consul
   clusterIP: None
   ports:
     - name: http
@@ -215,7 +219,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: consul-dns-loadbalancer-service
+  name: consul-loadbalancer-service
   namespace: dns
 spec:
   loadBalancerIP: 192.168.6.90
@@ -231,13 +235,13 @@ spec:
     #   targetPort: dns-tcp
     #   port: 53
   selector:
-    app: consul-dns
+    app: consul
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: consul-dns-ui-loadbalancer-service
+  name: consul-ui-loadbalancer-service
   namespace: dns
 spec:
   loadBalancerIP: 192.168.6.91
@@ -248,14 +252,14 @@ spec:
       targetPort: 8500
       port: 80
   selector:
-    app: consul-dns
+    app: consul
 
 
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: consul-dns
+  name: consul
   namespace: dns
 spec:
   rules:
@@ -264,5 +268,5 @@ spec:
       paths:
       - path: /
         backend:
-          serviceName: consul-dns
+          serviceName: consul
           servicePort: 80
