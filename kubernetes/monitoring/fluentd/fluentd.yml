@@ -5,7 +5,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: fluentd
-  namespace: efk
+  namespace: monitoring
   labels:
     app: fluentd
 ---
@@ -37,13 +37,13 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: fluentd
-  namespace: efk
+  namespace: monitoring
 ---
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: fluentd
-  namespace: efk
+  namespace: monitoring
   labels:
     app: fluentd
 spec:
@@ -66,14 +66,16 @@ spec:
         # - containerPort: 24224 
         env:
         - name:  FLUENT_ELASTICSEARCH_HOST
-          value: "elasticsearch.efk"
+          value: "elasticsearch.monitoring"
         - name:  FLUENT_ELASTICSEARCH_PORT
           value: "9200"
         - name: FLUENT_ELASTICSEARCH_SCHEME
           value: "http"
         - name: FLUENT_UID
           value: "0"
-        image: fluent/fluentd-kubernetes-daemonset:v1.4-debian-elasticsearch-1
+        - name: FLUENTD_SYSTEMD_CONF
+          value: "disable"
+        image: fluent/fluentd-kubernetes-daemonset:v1.11.2-debian-elasticsearch7-1.0
         volumeMounts:
           - name: varlog
             mountPath: /var/log
@@ -97,7 +99,7 @@ spec:
 #     kubernetes.io/cluster-service: 'true'
 #     kubernetes.io/name: fluentd
 #   name: fluentd
-#   namespace: efk
+#   namespace: monitoring
 # spec:
 #   ports:
 #   - port: 80
@@ -109,7 +111,7 @@ spec:
 # kind: Ingress
 # metadata:
 #   name: fluentd
-#   namespace: efk
+#   namespace: monitoring
 # spec:
 #   rules:
 #   - host: fluentd.bas

@@ -1,10 +1,10 @@
 # ---
-# Source: https://www.digitalocean.com/community/tutorials/how-to-set-up-an-elasticsearch-fluentd-and-kibana-efk-logging-stack-on-kubernetes
+# Source: https://www.digitalocean.com/community/tutorials/how-to-set-up-an-elasticsearch-fluentd-and-kibana-monitoring-logging-stack-on-kubernetes
 # kind: PersistentVolumeClaim
 # apiVersion: v1
 # metadata:
 #   name: kibana-claim
-#   namespace: efk
+#   namespace: monitoring
 # spec:
 #   accessModes:
 #   - ReadWriteMany 
@@ -20,7 +20,7 @@
 # apiVersion: v1
 # metadata:
 #   name: kibana-config-claim-local
-#   namespace: efk
+#   namespace: monitoring
 # spec:
 #   accessModes:
 #   - ReadWriteMany 
@@ -32,27 +32,33 @@
 #     requests:
 #       storage: 20Gi
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: kibana
-  namespace: efk
+  namespace: monitoring
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: kibana
   template:
     metadata:
       labels:
-        task: efk
+        task: monitoring
         k8s-app: kibana
     spec:
       containers:
       - name: kibana
+        resources: {}
         ports:
         - containerPort: 5601 
         env:
-        - name: ELASTICSEARCH_URL
-          value: http://elasticsearch:9200
-        image: kibana:7.0.1
+          - name: ELASTICSEARCH_URL
+            value: http://elasticsearch.monitoring:9200
+          - name: ELASTICSEARCH_HOSTS
+            value: http://elasticsearch.monitoring:9200
+        image: kibana:7.9.1
         # volumeMounts:
         #   - name: kibana
         #     mountPath: /home/coder/project
@@ -85,11 +91,11 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    task: efk
+    task: monitoring
     kubernetes.io/cluster-service: 'true'
     kubernetes.io/name: kibana
   name: kibana
-  namespace: efk
+  namespace: monitoring
 spec:
   ports:
   - port: 80
@@ -101,7 +107,7 @@ apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   name: kibana
-  namespace: efk
+  namespace: monitoring
 spec:
   rules:
   - host: kibana.bas
@@ -111,3 +117,7 @@ spec:
         backend:
           serviceName: kibana
           servicePort: 80
+
+  tls:
+  - hosts:
+    - kibana.bas

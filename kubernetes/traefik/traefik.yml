@@ -1,40 +1,40 @@
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: traefik-extra-config
-  namespace: traefik
-data:
-  extra.toml: |-
-    # in files/extra.toml
+# ---
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   name: traefik-extra-config
+#   namespace: traefik
+# data:
+#   extra.toml: |-
+#     # in files/extra.toml
 
-    # [[tls.certificates]]
-    #   certFile = "/ssl/kubernetes/tls.crt" 
-    #   keyFile = "/ssl/kubernetes/tls.key"
+#     # [[tls.certificates]]
+#     #   certFile = "/ssl/kubernetes/tls.crt" 
+#     #   keyFile = "/ssl/kubernetes/tls.key"
     
-    # [[tls.certificates]]
-    #   certFile = "/ssl/cloud/tls.crt" 
-    #   keyFile = "/ssl/cloud/tls.key"
+#     # [[tls.certificates]]
+#     #   certFile = "/ssl/cloud/tls.crt" 
+#     #   keyFile = "/ssl/cloud/tls.key"
     
-    # [[tls.certificates]]
-    #   certFile = "/ssl/grafana/tls.crt" 
-    #   keyFile = "/ssl/grafana/tls.key"
+#     # [[tls.certificates]]
+#     #   certFile = "/ssl/grafana/tls.crt" 
+#     #   keyFile = "/ssl/grafana/tls.key"
     
-    # [[tls.certificates]]
-    #   certFile = "/ssl/torrent/tls.crt" 
-    #   keyFile = "/ssl/torrent/tls.key"
+#     # [[tls.certificates]]
+#     #   certFile = "/ssl/torrent/tls.crt" 
+#     #   keyFile = "/ssl/torrent/tls.key"
     
-    # [[tls.certificates]]
-    #   certFile = "/ssl/plex/tls.crt" 
-    #   keyFile = "/ssl/plex/tls.key"
+#     # [[tls.certificates]]
+#     #   certFile = "/ssl/plex/tls.crt" 
+#     #   keyFile = "/ssl/plex/tls.key"
     
-    # [[tls.certificates]]
-    #   certFile = "/ssl/sonarr/tls.crt" 
-    #   keyFile = "/ssl/sonarr/tls.key"
+#     # [[tls.certificates]]
+#     #   certFile = "/ssl/sonarr/tls.crt" 
+#     #   keyFile = "/ssl/sonarr/tls.key"
     
-    # [[tls.certificates]]
-    #   certFile = "/ssl/radarr/tls.crt" 
-    #   keyFile = "/ssl/radarr/tls.key"
+#     # [[tls.certificates]]
+#     #   certFile = "/ssl/radarr/tls.crt" 
+#     #   keyFile = "/ssl/radarr/tls.key"
 ---
 kind: DaemonSet
 apiVersion: apps/v1
@@ -54,13 +54,13 @@ spec:
         name: traefik-ingress-controller
     spec:
       volumes:
-      - name: traefik-extra-config
-        configMap:
-          name: traefik-extra-config
-          items:
-          - key: extra.toml
-            path: extra.toml
       # FIXME: Can't remember why we have these cert volumes
+      # - name: traefik-extra-config
+      #   configMap:
+      #     name: traefik-extra-config
+      #     items:
+      #     - key: extra.toml
+      #       path: extra.toml
       # - name: kubernetes-cert-volume
       #   secret:
       #     secretName: kubernetes-cert
@@ -90,10 +90,10 @@ spec:
       containers:
       - name: traefik-ingress-controller
         image: traefik:v2.3
-        volumeMounts:
-        - name: traefik-extra-config
-          mountPath: /extra/extra.toml
-          subPath: extra.toml
+        # volumeMounts:
+        # - name: traefik-extra-config
+        #   mountPath: /extra/extra.toml
+        #   subPath: extra.toml
 
 
 
@@ -137,22 +137,22 @@ spec:
           - --accesslog
           - --metrics=true
           - --serverstransport.insecureskipverify
+          - --metrics.prometheus=true
+          - --metrics.prometheus.entryPoint=metrics
+          - --entrypoints.metrics.Address=:8082
+          - --entrypoints.web.Address=:80
+          - --entrypoints.websecure.Address=:443
+          - --providers.kubernetesingress
+          - --providers.kubernetescrd
+          - --providers.kubernetescrd.labelselector=expose!=online
           # - --metrics.influxdb=true
           # - --metrics.influxdb.address="monitoring-influxdb.monitoring"
           # - --metrics.influxdb.database="traefik"
           # - --metrics.influxdb.username="bas"
           # - --metrics.influxdb.password="Example1"
           # - --metrics.influxdb.pushInterval=10s
-          - --metrics.prometheus=true
-          - --metrics.prometheus.entryPoint=metrics
-          - --entrypoints.metrics.Address=:8082
-          - --entrypoints.web.Address=:80
-          - --entrypoints.websecure.Address=:443
-          - --providers.kubernetescrd
-          - --providers.kubernetescrd.labelselector=expose!=online
-          - --providers.kubernetesingress
-          - --providers.file.directory=/extra/
-          - --providers.file.watch=true
+          # - --providers.file.directory=/extra/
+          # - --providers.file.watch=true
           # - --certificatesresolvers.default.acme.tlschallenge
           # - --certificatesresolvers.default.acme.email=basraven@gmail.com
           # - --certificatesresolvers.default.acme.storage=acme.json

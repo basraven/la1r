@@ -33,13 +33,16 @@
 #     requests:
 #       storage: 20Gi
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: elasticsearch
-  namespace: efk
+  namespace: monitoring
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: elasticsearch
   template:
     metadata:
       labels:
@@ -48,13 +51,16 @@ spec:
     spec:
       containers:
       - name: elasticsearch
+        resources: {}
         ports:
-        - containerPort: 9200 
-        - containerPort: 9300 
+        - name: http
+          containerPort: 9200 
+        - name: integration
+          containerPort: 9300 
         env:
         - name: discovery.type
           value: single-node
-        image: elasticsearch:7.0.1
+        image: elasticsearch:7.9.2
         # volumeMounts:
         #   - name: elasticsearch
         #     mountPath: /home/coder/project
@@ -91,7 +97,7 @@ metadata:
     kubernetes.io/cluster-service: 'true'
     kubernetes.io/name: elasticsearch
   name: elasticsearch
-  namespace: efk
+  namespace: monitoring
 spec:
   ports:
   - name: http
@@ -110,13 +116,16 @@ apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   name: elasticsearch
-  namespace: efk
+  namespace: monitoring
 spec:
   rules:
-  - host: elasticsearch.bas
+  - host: es.bas
     http:
       paths:
       - path: /
         backend:
           serviceName: elasticsearch
           servicePort: 80
+  tls:
+  - hosts:
+    - grafana.bas
