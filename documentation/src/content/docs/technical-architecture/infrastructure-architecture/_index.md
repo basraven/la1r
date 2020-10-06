@@ -12,12 +12,12 @@ How all of this infrastructure is deployed can be found in [the deployment archi
 ### Server Inventory
 Currently the following servers are being used:
 
-| ID  | Hostname    | OS                     | Hardware Description          | Hardware Tier    |
-| --- | ---         | ---                    | ---                           | ---              |
-| 1   | linux-wayne | Ubuntu server (latest) | Core i5 Desktop with SSD      | 1 - cluster      |
-| 2   | 50centos    | CentOS 8               | Core i7 Laptop with HDD only  | 1 - cluster      |
-| 3   | ali-bel     | Raspbian               | Doorbell Raspberry Pi Zero    | 2 - periferal    |
-| 4   | kodi-e      | Raspbian               | Kodi Raspberry Pi 3b bedroom  | 2 - periferal    |
+| ID  | Hostname    | OS                     | Hardware Description          | Hardware Tier    | labels                                                                    |
+| --- | ---         | ---                    | ---                           | ---              | ---                                                                       |
+| 1   | linux-wayne | Ubuntu server (latest) | Core i5 Desktop with SSD      | 1 - cluster      | la1r/ssd: true, la1r/hdd: true, la1r/priority: high                       |
+| 2   | 50centos    | CentOS 8               | Core i7 Laptop with HDD only  | 1 - cluster      | la1r/shdd: true                                                           |
+| 3   | ali-bel     | Raspbian               | Doorbell Raspberry Pi Zero    | 2 - periferal    |                                                                           |
+| 4   | kodi-e      | Raspbian               | Kodi Raspberry Pi 3b bedroom  | 2 - periferal    |                                                                           |
  
 ### Kubernetes (k8s)
 The majority of the applications are hosted through Kubernetes.

@@ -16,6 +16,15 @@ spec:
       labels:
         app: plex
     spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: la1r/priority
+                operator: In
+                values:
+                - high  
       volumes:
         - name: plex-torrent-volume
           persistentVolumeClaim:
@@ -32,9 +41,7 @@ spec:
       containers:
       - name: plex
         image: plexinc/pms-docker
-        resources:
-          limits:
-            memory: "2048Mi"
+        resources: {}
         ports:
         - name: http
           containerPort: 32400

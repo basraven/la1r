@@ -1,0 +1,85 @@
+---
+apiVersion: apps/v1
+# source: https://github.com/prometheus-operator/kube-prometheus/blob/master/manifests/node-exporter-daemonset.yaml
+kind: DaemonSet
+metadata:
+  name: node-exporter
+  namespace: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: node-exporter
+  template:
+    metadata:
+      labels:
+        app: node-exporter
+    spec:
+      hostNetwork: true
+      hostPID: true
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/os
+                operator: In
+                values:
+                - linux
+      containers:
+      - args:
+        - --path.procfs=/host/proc
+        - --path.sysfs=/host/sys
+        - --path.rootfs=/host/root
+        - --collector.filesystem.ignored-mount-points=^/(dev|proc|sys|var/lib/docker/.+|var/lib/kubelet/pods/.+)($|/)
+        - --collector.processes
+        # - --no-collector.wifi
+        # - --collector.systemd # FIXME: not working
+        image: quay.io/prometheus/node-exporter
+        name: node-exporter
+        securityContext:
+          capabilities:
+            add: ["SYS_ADMIN"]
+        resources:
+          limits:
+            cpu: 250m
+            memory: 180Mi
+          requests:
+            cpu: 102m
+            memory: 180Mi
+        volumeMounts:
+        - mountPath: /host/proc
+          mountPropagation: HostToContainer
+          name: proc
+          readOnly: true
+        - mountPath: /host/sys
+          mountPropagation: HostToContainer
+          name: sys
+          readOnly: true
+        - mountPath: /host/root
+          mountPropagation: HostToContainer
+          name: root
+          readOnly: true      
+        
+        - mountPath: /var/run/dbus/system_bus_socket
+          name: system-dbus-socket #systemd # FIXME: not working
+          readOnly: true
+        ports:
+        - containerPort: 9100
+          hostPort: 9100
+          name: http
+      volumes:
+      - hostPath:
+          path: /proc
+        name: proc
+      - hostPath:
+          path: /sys
+        name: sys
+      - hostPath:
+          path: /
+        name: root
+
+      - hostPath: 
+          path: /var/run/dbus/system_bus_socket
+        name: system-dbus-socket #systemd # FIXME: not working
+
+      
