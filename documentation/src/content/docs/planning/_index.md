@@ -11,19 +11,18 @@ For this reason I created this planning page in which I track and prioritize wha
 Feel free to add comments on this through Github!
 
 ## In progress
-* node_exporter in DaemonSet: https://github.com/prometheus-operator/kube-prometheus/blob/master/manifests/node-exporter-daemonset.yaml
+* Event bus with strimzi
 
 ## Planned
 * Backup reimplementation
 * Apache airflow to integrate with streaming pipelines for event-driven home: https://airflow.apache.org/docs/stable/kubernetes.html
-*  Online reimplementation
-*  Home automation reimplementation
+* Online reimplementation
+* Home automation reimplementation
 
 ## Longstay parking
 * SNMP of DHCP server to consul/nodes for live node status info (added with a health check / ping performed by consul)
 * New doorbell security firmware
 * Video security storage process   
-* Grafana backup script with: https://github.com/ysde/grafana-backup-tool
 * Fail2ban new filters for ALL services
 * Traefik auth proxy middleware with Authelia
 * "View in repo" button for all pages of the la1r documentation. While reading documentation, for example about Ansible, the visitor should be able to view which scripts are currently discussed by clicking a button to the git repository.
@@ -39,6 +38,7 @@ Feel free to add comments on this through Github!
 * Refactor Mosquito to [vernemq](https://vernemq.com/) 
 
 ## Completed
+* node_exporter in DaemonSet: https://github.com/prometheus-operator/kube-prometheus/blob/master/manifests/node-exporter-daemonset.yaml
 * Kibana log analysis
 * Monitoring with kube-state-metrics in grafana
 * Monitoring extension, e.g. with alert manager and https://github.com/benjojo/alertmanager-discord

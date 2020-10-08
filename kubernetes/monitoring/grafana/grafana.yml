@@ -50,7 +50,13 @@ spec:
         - name: GF_AUTH_ANONYMOUS_ENABLED
           value: "true"
         - name: GF_AUTH_ANONYMOUS_ORG_ROLE
-          value: Admin
+          value: "Admin"
+        - name: GF_AUTH_DISABLE_LOGIN_FORM
+          value: "true"
+        - name: GF_AUTH_DISABLE_SIGNOUT_MENU
+          value: "true"
+        - name: GF_USERS_ALLOW_SIGN_UP
+          value: "false"
         - name: GF_SMTP_ENABLED
           value: "true"
         - name: GF_SMTP_SKIP_VERIFY
