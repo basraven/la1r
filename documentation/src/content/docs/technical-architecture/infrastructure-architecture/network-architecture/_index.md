@@ -43,6 +43,7 @@ The following table summarizes all network cidrs and addresses
 | 192.168   | 6.0/25   | 6.61  | qBittorent                                                 | 1                 |
 | 192.168   | 6.0/25   | 6.62  | Radarr                                                     | 1                 |
 | 192.168   | 6.0/25   | 6.63  | Sonarr                                                     | 1                 |
+| 192.168   | 6.0/25   | 6.66  | Grafana                                                    | 1                 |
 | 192.168   | 6.0/25   | 6.90  | Consul LAN DNS (DNS UDP)                                   | 1                 |
 | 192.168   | 6.0/25   | 6.91  | Consul LAN DNS (Admin UI backup)                           | 1                 |
 | 192.168   | 6.0/25   | 6.99  | DNS Blackhole (pihole)                                     | 1                 |
