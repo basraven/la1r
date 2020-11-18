@@ -11,6 +11,7 @@ For this reason I created this planning page in which I track and prioritize wha
 Feel free to add comments on this through Github!
 
 ## In progress
+* Hardcode dns on nodes instead of using default LAN dns
 * Event bus with strimzi
 
 ## Planned

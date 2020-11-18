@@ -36,7 +36,7 @@ spec:
           - -bootstrap-expect=1
           - -client=0.0.0.0
           - -dns-port=53
-          - -recursor=1.1.1.1
+          - -recursor=8.8.8.8
 ---
 apiVersion: v1
 kind: Service

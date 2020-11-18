@@ -48,7 +48,7 @@ The following tags are used in Ansible:
 * fetch_kubernetes      - Fetch the Kubernetes config file and put it in the local folder
 * storage_kubernetes    - Install packages as prep for the storage provider
 * join-kubernetes       - Join a kubernetes cluster
-  * Requires ```---extra-vars "kubernetes_master=1.1.1.1"```
+  * Requires ```---extra-vars "kubernetes_master=8.8.8.8"```
   * Requires ```/credentials/kubernetes/join-token.yaml"```
 
 ### CI with Jenkins

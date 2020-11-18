@@ -89,3 +89,19 @@ spec:
   tls:
   - hosts:
     - radarr.bas
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: radarr-lb-service
+  namespace: torrent
+spec:
+  ports:
+  - name: http
+    port: 80
+    targetPort: 7878
+  selector:
+    app: radarr
+  type: LoadBalancer
+  loadBalancerIP: 192.168.6.62
