@@ -33,7 +33,7 @@ To summarize, we identify several conceptual components:
 * **Structured Event Consumer** - This can be any device which consumes events which are published on the Structured Event Stream and acts on it with a certain behavior, for example a light switching on based on an event. This consumer also entails translating the Structured Event into a format a device is able to operate on.
 
 ## Conceptual Architecture Principles
-The la1r architecture followes several conceptual principles which components in its architecture should follow.
+The la1r architecture follows several conceptual principles which components in its architecture should follow.
 Since this will not capture implementation specific / technical principles, a section on technical principles is describe [in the technical architecture page](./technical-architecture)
 
 1. Data is realtime and streaming - Always assume that data, streaming through the la1r infrastructure is in streaming "format". Do not unnecessarily store it, or batch it when realtime streaming solutions can also be applied
