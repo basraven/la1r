@@ -33,9 +33,10 @@ The following table summarizes all network cidrs and addresses
 | 192.168   | 4.0/24   | 4.3   | Access Point living room                                   | 1                 |
 | 192.168   | 4.0/24   | 4.4   | Access Point office                                        | 1                 |
 | 192.168   | 5.0/20   |       | Servers                                                    | 1                 |
-| 192.168   | 5.1/20   | 5.1   | linux-wayne                                                | 1                 |
-| 192.168   | 5.2/20   | 5.2   | 50centos                                                   | 1                 |
-| 192.168   | 5.2/20   | 5.100 | haproxy entrypoint                                         | 1                 |
+| 192.168   | 5.0/20   | 5.1   | linux-wayne                                                | 1                 |
+| 192.168   | 5.0/20   | 5.2   | 50centos                                                   | 1                 |
+| 192.168   | 5.0/20   | 5.3   | jay-c                                                      | 1                 |
+| 192.168   | 5.0/20   | 5.100 | haproxy VIP entrypoint Kubernetes                          | 1                 |
 | 192.168   | 6.0/24   |       | Kubernetes MetalLB services                                | 1                 |
 | 192.168   | 6.0/25   |       | LAN Kubernetes MetalLB services                            | 1                 |
 | 192.168   | 6.0/25   | 6.1   | LAN Traefik 2.x                                            | 1                 |
@@ -44,6 +45,7 @@ The following table summarizes all network cidrs and addresses
 | 192.168   | 6.0/25   | 6.62  | Radarr                                                     | 1                 |
 | 192.168   | 6.0/25   | 6.63  | Sonarr                                                     | 1                 |
 | 192.168   | 6.0/25   | 6.66  | Grafana                                                    | 1                 |
+| 192.168   | 6.0/25   | 6.77  | Log server                                                 | 1                 |
 | 192.168   | 6.0/25   | 6.90  | Consul LAN DNS (DNS UDP)                                   | 1                 |
 | 192.168   | 6.0/25   | 6.91  | Consul LAN DNS (Admin UI backup)                           | 1                 |
 | 192.168   | 6.0/25   | 6.99  | DNS Blackhole (pihole)                                     | 1                 |

@@ -16,8 +16,8 @@ How all of this infrastructure is deployed can be found in [the deployment archi
 
 | ID  | Hostname    | OS                     | Hardware Description                         | Status        | Hardware Tier    | labels                                                                    |
 | --- | ---         | ---                    | ---                                          | ---           | ---              | ---                                                                       |
-| 1   | jay-c	    | CentOS 8               | Ryzen 5600x, 0,5TB NVM                       | Coming Soon   | 1 - cluster      | la1r/nvm: true, la1r/ssd: true, la1r/hdd: true, la1r/priority: high       |
-| 2   | x86bit      | CentOS 8               | Ryzen 5600x, 0,5TB NVM, 2x RAID0 4TB x300    | Available     | 1 - cluster      | la1r/nvm: true, la1r/ssd: true, la1r/hdd: true, la1r/priority: high       |
+| 1   | jay-c	    | CentOS 8               | Ryzen 5600x, 0,5TB NVM                       | Available     | 1 - cluster      | la1r/nvm: true, la1r/ssd: true, la1r/hdd: true, la1r/priority: high       |
+| 2   | x86bit      | CentOS 8               | Ryzen 5600x, 0,5TB NVM, 2x RAID0 4TB x300    | Coming Soon   | 1 - cluster      | la1r/nvm: true, la1r/ssd: true, la1r/hdd: true, la1r/priority: high       |
 | 3   | linux-wayne | Ubuntu server (latest) | Intel Core i5, 0,5TB SSD                     | Available     | 1 - cluster      | la1r/shdd: true                                                           |
 | 4   | ali-bel     | Raspbian               | Doorbell Raspberry Pi Zero                   | Not Available | 2 - periferal    |                                                                           |
 | 5   | kodi-e      | Raspbian               | Kodi Raspberry Pi 3b bedroom                 | Available     | 2 - periferal    |                                                                           |
