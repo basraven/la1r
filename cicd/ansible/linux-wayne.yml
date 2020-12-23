@@ -1,0 +1,16 @@
+---
+- hosts: linux-wayne
+  roles:
+  - define-os
+  - hostname
+  # - users
+  # - security
+  # - reboot
+  # - dnsmasq
+  # - nfs
+  # - samba
+  - containerd
+  # - openvpn
+  - haproxy
+  - prometheus_node_exporter
+  - kubernetes

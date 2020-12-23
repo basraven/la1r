@@ -1,19 +1,14 @@
 ---
-- hosts: 
-  - virtual
-  - metal
+- hosts: jay-c
   roles:
   - define-os
-  - toolbox
   - hostname
   - users
   - security
   - reboot
-  - dnsmasq
   - nfs
-  - samba
-  - docker
-  - openvpn
+  # - samba
+  - containerd
   - haproxy
   - prometheus_node_exporter
   - kubernetes

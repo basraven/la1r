@@ -5,18 +5,18 @@
 - include: networking.yml
   tags:
     - kubernetes_server
-- include: reset-kubernetes.yml
-  tags:
-    - reset_kubernetes
-- include: init-kubernetes.yml
-  tags:
-    - init_kubernetes
 - include: install-storage-prereq.yml
   tags:
     - storage_kubernetes
-- include: fetch-kubeconfig.yml
-  tags:
-    - fetch_kubernetes
-- include: join-kubernetes.yml
-  tags:
-    - join_kubernetes
+# - include: init-kubernetes.yml
+#   tags:
+#     - init_kubernetes
+# - include: fetch-kubeconfig.yml
+#   tags:
+#     - fetch_kubernetes
+# - include: join-kubernetes.yml
+#   tags:
+#     - join_kubernetes
+# - include: reset-kubernetes.yml
+#   tags:
+#     - reset_kubernetes

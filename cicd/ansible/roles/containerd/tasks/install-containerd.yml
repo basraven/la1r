@@ -1,0 +1,62 @@
+---
+
+# CentOS
+- name: Install containerd repository
+  become: yes
+  shell: |
+    yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+  args:
+    executable: /bin/bash
+  when: ansible_facts['distribution'] == "CentOS"
+
+- name: Install required packages for CentOS
+  become: yes
+  apt: name={{item}} state=present
+  with_items:
+    - yum-utils
+    - device-mapper-persistent-data
+    - lvm2
+    - containerd.io
+  when: ansible_facts['distribution'] == "CentOS"
+
+
+- name: Install containerd / Disable firewalld for CentOS, we are using ufw
+  become: yes
+  systemd:
+    name: firewalld
+    state: stopped
+    enabled: no
+    force: yes
+  when: ansible_facts['distribution'] == "CentOS"
+
+# Common
+
+- name: Install containerd / Install containerd 
+  become: yes
+  package:
+    name: containerd
+    state: present
+
+- name: Install containerd / Ensure containerd group exists
+  become: yes
+  group:
+    name: containerd
+    state: present
+
+- name: Install containerd / Add {{ target_user_name }} to containerd group
+  become: yes
+  user:
+    name: "{{ target_user_name }}"
+    groups:
+      - containerd 
+    append: yes
+
+- name: Install containerd / Enable and Unmask containerd.service
+  become: yes
+  systemd:
+    name: containerd
+    masked: no
+    state: started
+    enabled: yes
+
+

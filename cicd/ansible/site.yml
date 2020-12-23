@@ -1,3 +1,0 @@
----
-- import_playbook: 1-cluster.yml
-- import_playbook: 2-peripheral.yml
