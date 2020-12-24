@@ -16,7 +16,7 @@
     name: firewalld
     state: stopped
     force: yes
-  when: ansible_facts['distribution'] == "CentOS"
+  when: ansible_facts['distribution'] == "CentOSStream"
 
 - name: UFW / Disable firewalld for CentOS, we are using ufw
   become: yes
@@ -24,7 +24,7 @@
     name: firewalld
     enabled: no
     force: yes
-  when: ansible_facts['distribution'] == "CentOS"
+  when: ansible_facts['distribution'] == "CentOSStream"
   
 - name: UFW / Allow SSH
   become: yes

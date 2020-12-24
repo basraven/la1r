@@ -16,7 +16,7 @@
     name: sshd
     state: restarted
     enabled: yes
-  when: ansible_facts['distribution'] == "CentOS"
+  when: ansible_facts['distribution'] == "CentOSStream"
   listen: restart ssh
   async: 45
   poll: 0

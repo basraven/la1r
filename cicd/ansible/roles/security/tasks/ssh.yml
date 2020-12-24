@@ -1,5 +1,6 @@
 ---
 - name: ssh / Disable Password Authentication
+  become: yes
   lineinfile:
     dest: /etc/ssh/sshd_config
     regexp: '^PasswordAuthentication'
@@ -7,6 +8,7 @@
     state: present
     backup: yes
 - name: ssh / Enable pubkey Authentication
+  become: yes
   lineinfile:
     dest: /etc/ssh/sshd_config
     regexp: '^PubkeyAuthentication'
@@ -14,6 +16,7 @@
     state: present
     backup: yes
 - name: ssh / Disable Root Login
+  become: yes
   lineinfile:
     dest: /etc/ssh/sshd_config
     regexp: '^PermitRootLogin'

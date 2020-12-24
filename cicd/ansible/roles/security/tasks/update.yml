@@ -3,11 +3,11 @@
   become: yes
   shell: |
     yum install epel-release -y
-    yum update -y --skip-broken --nobest
+    yum update -y
 
   args:
     executable: /bin/bash
-  when: ansible_facts['distribution'] == "CentOS"
+  when: ansible_facts['distribution'] == "CentOSStream"
 
 - name: Update / Update apt
   become: yes

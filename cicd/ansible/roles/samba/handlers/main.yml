@@ -14,5 +14,5 @@
     name: smbd
     state: restarted
     enabled: yes
-  when: ansible_facts['distribution'] == "CentOS"
+  when: ansible_facts['distribution'] == "CentOSStream"
   listen: restart samba

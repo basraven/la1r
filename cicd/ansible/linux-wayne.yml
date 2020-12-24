@@ -3,7 +3,7 @@
   roles:
   - define-os
   - hostname
-  # - users
+  - users
   # - security
   # - reboot
   # - dnsmasq

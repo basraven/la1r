@@ -3,9 +3,9 @@
   roles:
   - define-os
   - hostname
-  - users
-  - security
-  - reboot
+  # - users
+  # - security
+  # - reboot
   - nfs
   # - samba
   - containerd

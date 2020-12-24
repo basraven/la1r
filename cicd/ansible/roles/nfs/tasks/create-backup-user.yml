@@ -20,5 +20,5 @@
   become: yes
   authorized_key:
     user: backup
-    key: "{{ lookup('file', '/credentials/ssh/backup/id_rsa.pub') }}"
+    key: "{{ lookup('file', '../../credentials/ssh/backup/id_rsa.pub') }}"
     state: present
