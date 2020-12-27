@@ -1,0 +1,123 @@
+{
+	"info": {
+		"_postman_id": "6fe99b56-b55e-46e6-925c-144eadacb766",
+		"name": "Integration Platform Test Suite",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Test google.com",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "82fd17ab-1ab1-428e-afc0-7fb45e874d82",
+						"exec": [
+							"pm.test(\"Received 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://google.com",
+					"protocol": "https",
+					"host": [
+						"google",
+						"com"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "requestbin post data",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "12c76665-9f24-4fa2-8d2c-aacffa91a4f0",
+						"exec": [
+							"pm.test(\"Received 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "integration",
+							"value": "fun",
+							"type": "text"
+						},
+						{
+							"key": "automation",
+							"value": "{{automation}}",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://requestbin.net/r/1obpr6w1",
+					"protocol": "http",
+					"host": [
+						"requestbin",
+						"net"
+					],
+					"path": [
+						"r",
+						"1obpr6w1"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "requestbin get ip",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "7ea81afc-b8b3-4d38-9276-5a014eb515be",
+						"exec": [
+							"pm.test(\"Received 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://requestbin.net/r/1obpr6w1",
+					"protocol": "http",
+					"host": [
+						"requestbin",
+						"net"
+					],
+					"path": [
+						"r",
+						"1obpr6w1"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}
