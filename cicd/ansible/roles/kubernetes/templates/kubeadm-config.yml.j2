@@ -8,6 +8,9 @@ controlPlaneEndpoint: "{{ ha_proxy_vir_ip }}:443"
 kubelet:
   extraArgs:
     node-status-update-frequency: 4s
+apiServer:
+  extraArgs:
+    feature-gates: "RemoveSelfLink=false"
 controllerManager:
   extraArgs:
     node-monitor-period: 2s
