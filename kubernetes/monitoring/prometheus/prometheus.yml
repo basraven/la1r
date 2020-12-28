@@ -355,10 +355,10 @@ data:
       },
       {
         "targets": [
-          "192.168.5.2:9100"
+          "192.168.5.3:9100"
         ],
         "labels": {
-          "targetname": "50centos",
+          "targetname": "jay-c",
           "jobscope": "node",
           "nodetype": "cluster-node"
         }
