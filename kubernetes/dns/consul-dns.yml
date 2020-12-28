@@ -39,25 +39,14 @@ spec:
       labels:
         app: consul
     spec:
-      # affinity:
-        # podAntiAffinity:
-        #   requiredDuringSchedulingIgnoredDuringExecution:
-        #     - labelSelector:
-        #         matchExpressions:
-        #           - key: app
-        #             operator: In
-        #             values:
-        #               - consul
-        #       topologyKey: kubernetes.io/hostname
-        # FIXME: doesnt work cross-node...
-        # nodeAffinity:
-        #   requiredDuringSchedulingIgnoredDuringExecution :
-        #     nodeSelectorTerms:
-        #     - matchExpressions:
-        #       - key: kubernetes.io/hostname
-        #         operator: In
-        #         values:
-        #         - linux-wayne
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector:
+          matchLabels:
+            app: consul
+          
       securityContext:
         fsGroup: 1000
       volumes:

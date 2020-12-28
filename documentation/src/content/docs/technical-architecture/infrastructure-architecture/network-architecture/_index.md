@@ -47,6 +47,7 @@ The following table summarizes all network cidrs and addresses
 | 192.168   | 6.0/25   | 6.65  | Kubernetes Dashboard                                       | 1                 |
 | 192.168   | 6.0/25   | 6.66  | Grafana                                                    | 1                 |
 | 192.168   | 6.0/25   | 6.77  | Log server                                                 | 1                 |
+| 192.168   | 6.0/25   | 6.88  | Tekton server                                              | 1                 |
 | 192.168   | 6.0/25   | 6.90  | Consul LAN DNS (DNS UDP)                                   | 1                 |
 | 192.168   | 6.0/25   | 6.91  | Consul LAN DNS (Admin UI backup)                           | 1                 |
 | 192.168   | 6.0/25   | 6.99  | DNS Blackhole (pihole)                                     | 1                 |

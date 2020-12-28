@@ -1,0 +1,62 @@
+---
+# OVERWRITE OF RELEASE VERSION
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: tekton-dashboard
+    app.kubernetes.io/component: dashboard
+    app.kubernetes.io/instance: default
+    app.kubernetes.io/name: dashboard
+    app.kubernetes.io/part-of: tekton-dashboard
+    app.kubernetes.io/version: v0.12.0
+    dashboard.tekton.dev/release: v0.12.0
+    version: v0.12.0
+  name: tekton-dashboard
+  namespace: tekton-pipelines
+spec:
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 9097
+  selector:
+    app.kubernetes.io/component: dashboard
+    app.kubernetes.io/instance: default
+    app.kubernetes.io/name: dashboard
+    app.kubernetes.io/part-of: tekton-dashboard
+    
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: tektoningress
+  namespace: tekton-pipelines
+spec:
+  rules:
+  - host: tekton.bas
+    http:
+      paths:
+      - backend:
+          serviceName: tekton-dashboard
+          servicePort: 80
+  # tls:
+  # - hosts:
+  #   - tekton.bas
+
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tekton-lb-service
+  namespace: tekton-pipelines
+spec:
+  ports:
+  - name: http
+    port: 80
+    targetPort: 9097
+  selector:
+    app: tekton-dashboard
+  type: LoadBalancer
+  loadBalancerIP: 192.168.6.88
