@@ -22,42 +22,42 @@ To break down these complexities we can split the network architecture into two 
 ### Network topology table
 The following table summarizes all network cidrs and addresses
 
-| Prefix    | CIDR     | IP    | Target                                                     | vlan              |
-| ---       | ---      | ---   | ---                                                        | ---               |
-| 192.168   | 1.0/24   |       | Empty, not used, will indicate wrongly configured devices  | -                 |
-| 192.168   | 2.0/24   |       | Common devices, laptops, phones, etc.                      | 1                 |
-| 192.168   | 3.0/24   |       | IOT Devices with dedicated connection to server            | 1                 |
-| 192.168   | 4.0/24   |       | Network infrastructure, switches, routers, etc             | 1                 |
-| 192.168   | 4.0/24   | 4.1   | Router and DHCP Server                                     | 1                 |
-| 192.168   | 4.0/24   | 4.2   | Central network switch                                     | 1                 |
-| 192.168   | 4.0/24   | 4.3   | Access Point living room                                   | 1                 |
-| 192.168   | 4.0/24   | 4.4   | Access Point office                                        | 1                 |
-| 192.168   | 5.0/20   |       | Servers                                                    | 1                 |
-| 192.168   | 5.0/20   | 5.1   | linux-wayne                                                | 1                 |
-| 192.168   | 5.0/20   | 5.2   | 50centos                                                   | 1                 |
-| 192.168   | 5.0/20   | 5.3   | jay-c                                                      | 1                 |
-| 192.168   | 5.0/20   | 5.100 | haproxy VIP entrypoint Kubernetes                          | 1                 |
-| 192.168   | 6.0/24   |       | Kubernetes MetalLB services                                | 1                 |
-| 192.168   | 6.0/25   |       | LAN Kubernetes MetalLB services                            | 1                 |
-| 192.168   | 6.0/25   | 6.1   | LAN Traefik 2.x                                            | 1                 |
-| 192.168   | 6.0/25   | 6.60  | Plex server                                                | 1                 |
-| 192.168   | 6.0/25   | 6.61  | qBittorent                                                 | 1                 |
-| 192.168   | 6.0/25   | 6.62  | Radarr                                                     | 1                 |
-| 192.168   | 6.0/25   | 6.63  | Sonarr                                                     | 1                 |
-| 192.168   | 6.0/25   | 6.65  | Kubernetes Dashboard                                       | 1                 |
-| 192.168   | 6.0/25   | 6.66  | Grafana                                                    | 1                 |
-| 192.168   | 6.0/25   | 6.77  | Log server                                                 | 1                 |
-| 192.168   | 6.0/25   | 6.88  | Tekton server                                              | 1                 |
-| 192.168   | 6.0/25   | 6.90  | Consul LAN DNS (DNS UDP)                                   | 1                 |
-| 192.168   | 6.0/25   | 6.91  | Consul LAN DNS (Admin UI backup)                           | 1                 |
-| 192.168   | 6.0/25   | 6.99  | DNS Blackhole (pihole)                                     | 1                 |
-| 192.168   | 6.128/25 |       | Online Kubernetes MetalLB services                         | 1                 |
-| 192.168   | 6.128/25 | 6.128 | Online Traefik 2.x                                         | 1                 |
-| 10.244    | 0.0/16   |       | Kubernetes internal cidr                                   | kubernetes.local  |
-| 10.8      | 2.0/24   |       | Shared VPN access                                          | openvpn shared    |
-| 10.8      | 2.0/24   | 2.1   | Shared VPN server                                          | openvpn shared    |
-| 10.8      | 4.0/24   |       | Private VPN access                                         | openvpn private   |
-| 10.8      | 4.0/24   | 4.1   | Private VPN server                                         | openvpn private   |
+| Prefix    | CIDR     | IP                             | Target                                                     | vlan              |
+| ---       | ---      | ---                            | ---                                                        | ---               |
+| 192.168   | 1.0/24   |                                | Empty, not used, will indicate wrongly configured devices  | -                 |
+| 192.168   | 2.0/24   |                                | Common devices, laptops, phones, etc.                      | 1                 |
+| 192.168   | 3.0/24   |                                | IOT Devices with dedicated connection to server            | 1                 |
+| 192.168   | 4.0/24   |                                | Network infrastructure, switches, routers, etc             | 1                 |
+| 192.168   | 4.0/24   | [4.1](http://192.168.4.1)      | Router and DHCP Server                                     | 1                 |
+| 192.168   | 4.0/24   | [4.2](http://192.168.4.2)      | Central network switch                                     | 1                 |
+| 192.168   | 4.0/24   | [4.3](http://192.168.4.3)      | Access Point living room                                   | 1                 |
+| 192.168   | 4.0/24   | [4.4](http://192.168.4.4)      | Access Point office                                        | 1                 |
+| 192.168   | 5.0/20   |                                | Servers                                                    | 1                 |
+| 192.168   | 5.0/20   | [5.1](http://192.168.5.1)      | linux-wayne                                                | 1                 |
+| 192.168   | 5.0/20   | [5.2](http://192.168.5.2)      | 50centos                                                   | 1                 |
+| 192.168   | 5.0/20   | [5.3](http://192.168.5.3)      | jay-c                                                      | 1                 |
+| 192.168   | 5.0/20   | [5.100](http://192.168.5.100)  | haproxy VIP entrypoint Kubernetes                          | 1                 |
+| 192.168   | 6.0/24   |                                | Kubernetes MetalLB services                                | 1                 |
+| 192.168   | 6.0/25   |                                | LAN Kubernetes MetalLB services                            | 1                 |
+| 192.168   | 6.0/25   | [6.1](http://192.168.6.1)      | LAN Traefik 2.x                                            | 1                 |
+| 192.168   | 6.0/25   | [6.60](http://192.168.6.60)    | Plex server                                                | 1                 |
+| 192.168   | 6.0/25   | [6.61](http://192.168.6.61)    | qBittorent                                                 | 1                 |
+| 192.168   | 6.0/25   | [6.62](http://192.168.6.62)    | Radarr                                                     | 1                 |
+| 192.168   | 6.0/25   | [6.63](http://192.168.6.63)    | Sonarr                                                     | 1                 |
+| 192.168   | 6.0/25   | [6.65](http://192.168.6.65)    | Kubernetes Dashboard                                       | 1                 |
+| 192.168   | 6.0/25   | [6.66](http://192.168.6.66)    | Grafana                                                    | 1                 |
+| 192.168   | 6.0/25   | [6.77](http://192.168.6.77)    | Log server                                                 | 1                 |
+| 192.168   | 6.0/25   | [6.88](http://192.168.6.88)    | Tekton server                                              | 1                 |
+| 192.168   | 6.0/25   | [6.90](http://192.168.6.90)    | Consul LAN DNS (DNS UDP)                                   | 1                 |
+| 192.168   | 6.0/25   | [6.91](http://192.168.6.91)    | Consul LAN DNS (Admin UI backup)                           | 1                 |
+| 192.168   | 6.0/25   | [6.99](http://192.168.6.99)    | DNS Blackhole (pihole)                                     | 1                 |
+| 192.168   | 6.128/25 |                                | Online Kubernetes MetalLB services                         | 1                 |
+| 192.168   | 6.128/25 | [6.128](http://192.168.6.128)  | Online Traefik 2.x                                         | 1                 |
+| 10.244    | 0.0/16   |                                | Kubernetes internal cidr                                   | kubernetes.local  |
+| 10.8      | 2.0/24   |                                | Shared VPN access                                          | openvpn shared    |
+| 10.8      | 2.0/24   | [2.1](http://10.8.2.1)         | Shared VPN server                                          | openvpn shared    |
+| 10.8      | 4.0/24   |                                | Private VPN access                                         | openvpn private   |
+| 10.8      | 4.0/24   | [4.1](http://10.8.4.0)         | Private VPN server                                         | openvpn private   |
 
 ### Technical Layer
 > **TODO: Update diagram with new hardware**
