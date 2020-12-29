@@ -385,6 +385,16 @@ data:
       },
       {
         "targets": [
+          "192.168.0.64:80"
+        ],
+        "labels": {
+          "targetname": "kirby",
+          "jobscope": "node",
+          "nodetype": "peripheral-node"
+        }
+      },
+      {
+        "targets": [
           "traefik-ingress-service.traefik:8082"
         ],
         "labels": {
