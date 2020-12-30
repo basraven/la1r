@@ -1,0 +1,311 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tekton-polling-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: tekton-polling-operator
+  template:
+    metadata:
+      labels:
+        name: tekton-polling-operator
+    spec:
+      serviceAccountName: tekton-polling-operator
+      containers:
+        - name: tekton-polling-operator
+          image: bigkevmcd/tekton-polling-operator:v0.2.0
+          command:
+          - tekton-polling-operator
+          imagePullPolicy: Always
+          env:
+            - name: WATCH_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OPERATOR_NAME
+              value: "tekton-polling-operator"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  creationTimestamp: null
+  name: tekton-polling-operator
+rules:
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - servicemonitors
+  verbs:
+  - get
+  - create
+- apiGroups:
+  - apps
+  resources:
+  - replicasets
+  - deployments
+  verbs:
+  - get
+- apiGroups:
+  - apps
+  resourceNames:
+  - tekton-polling-operator
+  resources:
+  - deployments/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - services
+  verbs:
+  - create
+- apiGroups:
+  - polling.tekton.dev
+  resources:
+  - '*'
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - tekton.dev
+  resources:
+  - pipelineruns
+  verbs:
+  - create
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - configmaps
+  - secrets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - create
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: tekton-polling-operator
+subjects:
+- kind: ServiceAccount
+  name: tekton-polling-operator
+roleRef:
+  kind: Role
+  name: tekton-polling-operator
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tekton-polling-operator
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: repositories.polling.tekton.dev
+spec:
+  group: polling.tekton.dev
+  names:
+    kind: Repository
+    listKind: RepositoryList
+    plural: repositories
+    singular: repository
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: Repository is the Schema for the repositories API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: RepositorySpec defines a repository to poll.
+            properties:
+              auth:
+                description: AuthSecret references a secret for authenticating the
+                  request.
+                properties:
+                  key:
+                    type: string
+                  secretRef:
+                    description: SecretReference represents a Secret Reference. It
+                      has enough information to retrieve secret in any namespace
+                    properties:
+                      name:
+                        description: Name is unique within a namespace to reference
+                          a secret resource.
+                        type: string
+                      namespace:
+                        description: Namespace defines the space within which the
+                          secret name must be unique.
+                        type: string
+                    type: object
+                type: object
+              frequency:
+                type: string
+              pipelineRef:
+                description: PipelineRef links to the Pipeline to execute.
+                properties:
+                  name:
+                    type: string
+                  namespace:
+                    type: string
+                  params:
+                    items:
+                      properties:
+                        expression:
+                          type: string
+                        name:
+                          type: string
+                      required:
+                      - expression
+                      - name
+                      type: object
+                    type: array
+                  resources:
+                    items:
+                      description: PipelineResourceBinding connects a reference to
+                        an instance of a PipelineResource with a PipelineResource
+                        dependency that the Pipeline has declared
+                      properties:
+                        name:
+                          description: Name is the name of the PipelineResource in
+                            the Pipeline's declaration
+                          type: string
+                        resourceRef:
+                          description: ResourceRef is a reference to the instance
+                            of the actual PipelineResource that should be used
+                          properties:
+                            apiVersion:
+                              description: API version of the referent
+                              type: string
+                            name:
+                              description: 'Name of the referent; More info: http://kubernetes.io/docs/user-guide/identifiers#names'
+                              type: string
+                          type: object
+                        resourceSpec:
+                          description: ResourceSpec is specification of a resource
+                            that should be created and consumed by the task
+                          properties:
+                            description:
+                              description: Description is a user-facing description
+                                of the resource that may be used to populate a UI.
+                              type: string
+                            params:
+                              items:
+                                description: ResourceParam declares a string value
+                                  to use for the parameter called Name, and is used
+                                  in the specific context of PipelineResources.
+                                properties:
+                                  name:
+                                    type: string
+                                  value:
+                                    type: string
+                                required:
+                                - name
+                                - value
+                                type: object
+                              type: array
+                            secrets:
+                              description: Secrets to fetch to populate some of resource
+                                fields
+                              items:
+                                description: SecretParam indicates which secret can
+                                  be used to populate a field of the resource
+                                properties:
+                                  fieldName:
+                                    type: string
+                                  secretKey:
+                                    type: string
+                                  secretName:
+                                    type: string
+                                required:
+                                - fieldName
+                                - secretKey
+                                - secretName
+                                type: object
+                              type: array
+                            type:
+                              type: string
+                          required:
+                          - params
+                          - type
+                          type: object
+                      type: object
+                    type: array
+                required:
+                - name
+                type: object
+              ref:
+                type: string
+              type:
+                description: RepoType defines the protocol to use to talk to the upstream
+                  server.
+                enum:
+                - github
+                - gitlab
+                type: string
+              url:
+                type: string
+            required:
+            - pipelineRef
+            - url
+            type: object
+          status:
+            description: RepositoryStatus defines the observed state of Repository
+            properties:
+              lastError:
+                type: string
+              observedGeneration:
+                format: int64
+                type: integer
+              pollStatus:
+                description: PollStatus represents the last polled state of the repo.
+                properties:
+                  etag:
+                    type: string
+                  ref:
+                    type: string
+                  sha:
+                    type: string
+                required:
+                - etag
+                - ref
+                - sha
+                type: object
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
