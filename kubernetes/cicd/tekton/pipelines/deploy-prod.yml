@@ -108,14 +108,6 @@ spec:
         - echo
       args:
         - "Hello World"
-# ---
-# apiVersion: tekton.dev/v1beta1
-# kind: TaskRun
-# metadata:
-#   name: echo-hello-world-task-run
-# spec:
-#   taskRef:
-#     name: echo-hello-world
     
 ---
 apiVersion: tekton.dev/v1beta1
@@ -138,12 +130,14 @@ spec:
   steps:
     - name: run-kubectl
       image: lachlanevenson/k8s-kubectl
-      command: ["kubectl"]
+      command: ["sh"]
       args:
-        - "--dry-run=client"
-        - "apply"
-        - "-f"
-        - "$(params.path)"
+      - -c
+      - |- 
+        find $(params.path) -type f -name *.y*ml \
+        -not \( -path /workspace/source/kubernetes/storage/example -prune \) \
+        -exec kubectl apply -f {} \;
+    
 
 ---
 apiVersion: tekton.dev/v1beta1
@@ -155,10 +149,10 @@ spec:
     - name: git-lair-rick
       type: git
   tasks:
-    - name: echo-hello
-      taskRef:
-        name: echo-hello-world
-    - name: deploy-web
+    # - name: echo-hello
+    #   taskRef:
+    #     name: echo-hello-world
+    - name: deploy-kubectl
       taskRef:
         name: deploy-using-kubectl
       resources:
@@ -167,7 +161,7 @@ spec:
             resource: git-lair-rick
       params:
         - name: path
-          value: /workspace/source/kubernetes/storage/example/example-ngx-mount.yml #configure: may change according to your source
+          value: /workspace/source/kubernetes/storage #configure: may change according to your source
         - name: yamlPathToImage
           value: "spec.template.spec.containers[0].image"
 
