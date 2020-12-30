@@ -161,7 +161,7 @@ spec:
             resource: git-lair-rick
       params:
         - name: path
-          value: /workspace/source/kubernetes/storage #configure: may change according to your source
+          value: /workspace/source/kubernetes #configure: may change according to your source
         - name: yamlPathToImage
           value: "spec.template.spec.containers[0].image"
 
