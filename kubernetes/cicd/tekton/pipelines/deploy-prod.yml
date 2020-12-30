@@ -135,8 +135,10 @@ spec:
       - -c
       - |- 
         find $(params.path) -type f -name *.y*ml \
-        -not \( -path /workspace/source/kubernetes/storage/example -prune \) \
+        -not \( -path /workspace/source/kubernetes/storage/example/example-ngx-mount.yml -prune \) \
+        -not \( -path /workspace/source/kubernetes\kubernetes-dashboard\dashboard-admin.yaml -prune \) \
         -exec kubectl apply -f {} \;
+        # -exec kubectl --dry-run=client apply -f {} \;
     
 
 ---
