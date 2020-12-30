@@ -1,0 +1,13 @@
+---
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: prod-pipeline
+spec:
+  serviceAccountName: tekton-prod-deploy-sa
+  pipelineRef:
+    name: prod-pipeline
+  resources:
+    - name: git-lair-rick
+      resourceRef:
+        name: git-lair-rick
