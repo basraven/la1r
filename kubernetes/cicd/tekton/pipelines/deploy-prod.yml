@@ -140,6 +140,24 @@ spec:
         -exec kubectl apply -f {} \;
         # -exec kubectl --dry-run=client apply -f {} \;
     
+---
+apiVersion: polling.tekton.dev/v1alpha1
+kind: Repository
+metadata:
+  name: example-repository
+spec:
+  url: https://github.com/basraven/la1r.git
+  ref: main
+  frequency: 1m
+  type: github # can also be gitlab
+  pipelineRef:
+    name: github-poll-pipeline
+    namespace: tekton-pipelines # optional: if provided, the pipelinerun will be created in this namespace to reference the pipeline.
+    params:
+    - name: sha
+      expression: commit.sha
+    - name: repoURL
+      expression: repoURL
 
 ---
 apiVersion: tekton.dev/v1beta1
@@ -150,6 +168,13 @@ spec:
   resources:
     - name: git-lair-rick
       type: git
+  params:
+  - name: sha
+    type: string
+    description: "the SHA of the recently detected change"
+  - name: repoURL
+    type: string
+    description: "the cloneURL that the change was detected in"
   tasks:
     # - name: echo-hello
     #   taskRef:
