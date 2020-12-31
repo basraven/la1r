@@ -8,6 +8,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: tekton-triggers-la1r-minimal
+  namespace: tekton-pipelines
 rules:
 # EventListeners need to be able to fetch all namespaced resources
 - apiGroups: ["triggers.tekton.dev"]
@@ -30,6 +31,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: tekton-triggers-la1r-binding
+  namespace: tekton-pipelines
 subjects:
 - kind: ServiceAccount
   name: tekton-prod-deploy-sa
@@ -42,6 +44,7 @@ kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: tekton-triggers-la1r-clusterrole
+  namespace: tekton-pipelines
 rules:
   # EventListeners need to be able to fetch any clustertriggerbindings
 - apiGroups: ["triggers.tekton.dev"]
@@ -52,6 +55,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: tekton-triggers-la1r-clusterbinding
+  namespace: tekton-pipelines
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -65,6 +69,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: tekton-admin-clusterbinding
+  namespace: tekton-pipelines
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -75,18 +80,12 @@ subjects:
   namespace: tekton-pipelines
 
 
-
-
-
-
-
-
-
 ---
 apiVersion: tekton.dev/v1alpha1
 kind: PipelineResource
 metadata:
-  name: git-lair-rick
+  name: git-la1r-rick
+  namespace: tekton-pipelines
 spec:
   type: git
   params:
@@ -99,21 +98,8 @@ spec:
 apiVersion: tekton.dev/v1beta1
 kind: Task
 metadata:
-  name: echo-hello-world
-spec:
-  steps:
-    - name: echo
-      image: ubuntu
-      command:
-        - echo
-      args:
-        - "Hello World"
-    
----
-apiVersion: tekton.dev/v1beta1
-kind: Task
-metadata:
   name: deploy-using-kubectl
+  namespace: tekton-pipelines
 spec:
   params:
     - name: path
@@ -125,7 +111,7 @@ spec:
         The path to the image to replace in the yaml manifest (arg to yq)
   resources:
     inputs:
-      - name: source
+      - name: git-la1r-rick
         type: git
   steps:
     - name: run-kubectl
@@ -135,39 +121,50 @@ spec:
       - -c
       - |- 
         find $(params.path) -type f -name *.y*ml \
-        -not \( -path /workspace/source/kubernetes/storage/example/example-ngx-mount.yml -prune \) \
-        -not \( -path /workspace/source/kubernetes\kubernetes-dashboard\dashboard-admin.yaml -prune \) \
+        -not \( -path $(params.path)/storage/example/example-ngx-mount.yml -prune \) \
+        -not \( -path $(params.path)/kubernetes-dashboard\dashboard-admin.yaml -prune \) \
         -exec kubectl apply -f {} \;
         # -exec kubectl --dry-run=client apply -f {} \;
-    
+
+
 ---
 apiVersion: polling.tekton.dev/v1alpha1
 kind: Repository
 metadata:
   name: la1r-repository
+  namespace: tekton-pipelines
 spec:
   url: https://github.com/basraven/la1r.git
   ref: rick
   frequency: 1m
   type: github # can also be gitlab
   pipelineRef:
-    name: prod-pipeline
+    name: la1r-poll-pipeline-prod-deploy
     namespace: tekton-pipelines # optional: if provided, the pipelinerun will be created in this namespace to reference the pipeline.
     params:
     - name: sha
       expression: commit.sha
     - name: repoURL
       expression: repoURL
-
+    resources:
+    - name: git-la1r-rick
+      resourceSpec:
+        type: git
+        params:
+        - name: revision
+          value: $(params.sha)
+        - name: url
+          value: $(params.repoURL)
 ---
-apiVersion: tekton.dev/v1beta1
+apiVersion: tekton.dev/v1alpha1
 kind: Pipeline
 metadata:
-  name: prod-pipeline
+  name: la1r-poll-pipeline-prod-deploy
+  namespace: tekton-pipelines
 spec:
   resources:
-    - name: git-lair-rick
-      type: git
+  - name: git-la1r-rick
+    type: git
   params:
   - name: sha
     type: string
@@ -176,19 +173,42 @@ spec:
     type: string
     description: "the cloneURL that the change was detected in"
   tasks:
-    # - name: echo-hello
-    #   taskRef:
-    #     name: echo-hello-world
-    - name: deploy-kubectl
-      taskRef:
-        name: deploy-using-kubectl
-      resources:
-        inputs:
-          - name: source
-            resource: git-lair-rick
-      params:
-        - name: path
-          value: /workspace/source/kubernetes #configure: may change according to your source
-        - name: yamlPathToImage
-          value: "spec.template.spec.containers[0].image"
-
+  - name: deploy-kubectl
+    params:
+    - name: path
+      value: /workspace/git-la1r-rick/kubernetes #configure: may change according to your source
+    - name: yamlPathToImage
+      value: "spec.template.spec.containers[0].image"
+    taskRef:
+      name: deploy-using-kubectl
+    resources:
+      inputs:
+        - name: git-la1r-rick
+          resource: git-la1r-rick
+  # - name: echo-changes
+  #   params:
+  #   - name: sha
+  #     value: $(params.sha)
+  #   - name: repoURL
+  #     value: $(params.repoURL)
+  #   taskSpec:
+  #     inputs:
+  #       resources:
+  #       - name: git-la1r-rick
+  #         type: git
+  #     params:
+  #     - name: sha
+  #       type: string
+  #     - name: repoURL
+  #       type: string
+  #     steps:
+  #     - name: echo
+  #       image: alpine
+  #       script: |
+  #         echo "SHA change detected $(params.sha)"
+  #         echo "                    $(params.repoURL)"
+  #         ls /workspace/git-la1r-rick
+  #   resources:
+  #     inputs:
+  #     - name: git-la1r-rick
+  #       resource: git-la1r-rick
