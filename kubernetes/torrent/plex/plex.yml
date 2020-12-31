@@ -16,15 +16,14 @@ spec:
       labels:
         app: plex
     spec:
-      # affinity:
-      #   nodeAffinity:
-      #     requiredDuringSchedulingIgnoredDuringExecution:
-      #       nodeSelectorTerms:
-      #       - matchExpressions:
-      #         - key: la1r/priority
-      #           operator: In
-      #           values:
-      #           - high  
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution :
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: la1r.storage/111
+                operator: In
+                values: [ "true" ]
       volumes:
         - name: plex-torrent-volume
           persistentVolumeClaim:

@@ -1,0 +1,24 @@
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: linux-wayne
+  labels:
+    la1r.storage/111: "true"
+    la1r.storage/211: "true"
+    la1r.storage/221: "true"
+    la1r.storage/113: "true"
+    la1r.storage/213: "true"
+    la1r.storage/223: "true"
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: jay-c
+  labels:
+    la1r.storage/111: "true"
+    la1r.storage/211: "true"
+    la1r.storage/221: "true"
+    la1r.storage/112: "true"
+    la1r.storage/212: "true"
+    la1r.storage/222: "true"

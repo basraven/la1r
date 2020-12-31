@@ -81,6 +81,14 @@ metadata:
     app: nextcloud
 spec:
   replicas: 1
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution :
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: la1r.storage/111
+            operator: In
+            values: [ "true" ]
   selector:
     matchLabels:
       app: nextcloud

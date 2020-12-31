@@ -28,15 +28,14 @@ spec:
         app: nfs-211-provisioner
         classCode: "211"
     spec:
-      # affinity:
-      #   nodeAffinity:
-      #     requiredDuringSchedulingIgnoredDuringExecution :
-      #       nodeSelectorTerms:
-      #       - matchExpressions:
-      #         - key: kubernetes.io/hostname
-      #           operator: In
-      #           values:
-      #           - 50centos
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution :
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: la1r.storage/211
+                operator: In
+                values: [ "true" ]
       serviceAccountName: nfs-pod-provisioner-sa # name of service account created in rbac.yaml
       containers:
         - name: nfs-211-provisioner
