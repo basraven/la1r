@@ -9,21 +9,35 @@ data:
     #!/bin/sh
     set -eu
     apt-get update
-    apt-get install openvpn -y
+    apt-get install openvpn iputils-ping net-tools curl -y
+    sysctl net.ipv4.ip_forward=1
     echo "## Installs complete"
-    nohup openvpn /etc/openvpn/cert1.conf &
-    # echo AUTOSTART="all" >> /etc/default/openvpn
-    # echo "sleeping 15 secs..."
-    sleep 5
-    # echo "Finished sleeping 15 secs"
+    /usr/sbin/openvpn /etc/openvpn/cert2.conf  &
+    echo "sleeping 10 secs..."
+    sleep 10
+    echo "Finished sleeping 10 secs"
     # ip route del 0.0.0.0/1 | true # TODO: TEMPFIX
     # echo "[OPENVPN] Creating GooseVPN connection"
     # echo "## Connection check:"
     # curl --interface tun0 --connect-timeout 3 --max-time 5 -IsLX GET checkip.amazonaws.com:80
     # echo "## External IP:"
     # curl -s --interface tun0 checkip.amazonaws.com:80
-    # /init
-    sleep 10000
+    VPN_GATEWAY=$(route -n | awk 'NR==3' | awk '{ print $2 }')
+    ip route del 0.0.0.0/1 via $VPN_GATEWAY
+    echo "## Route Updated"
+    sleep infinity
+
+  run-qbittorent.sh: |-
+    #!/bin/sh
+    set -eu
+    echo "## STARTING"
+    apt-get update
+    apt-get install openvpn iputils-ping net-tools curl -y
+    sysctl net.ipv4.ip_forward=1
+    echo "## Installs complete"
+    echo "sleeping 20 secs..."
+    sleep 20
+    /init
   
   update-resolv-conf: |-
     #!/bin/bash
@@ -170,6 +184,9 @@ spec:
       labels:
         app: qbittorrent
     spec:
+      # dnsConfig:
+      #   nameservers:
+      #     - 8.8.8.8
       volumes:
       - name: goose-credentials-volume
         secret:
@@ -211,6 +228,13 @@ spec:
           - key: set-goose.sh
             path: set-goose.sh
           defaultMode: 0744
+      - name: qbittorrent-config-qbit
+        configMap:
+          name: qbittorrent-config
+          items:
+          - key: run-qbittorent.sh
+            path: run-qbittorent.sh
+          defaultMode: 0744
       
       - name: torrent-volume
         persistentVolumeClaim:
@@ -218,32 +242,14 @@ spec:
       - name: qbittorrent-state
         persistentVolumeClaim:
           claimName: qbittorrent-state-claim
+
       containers:
-      - name: qbittorrent
-        # livenessProbe:
-        #   initialDelaySeconds: 15
-        #   periodSeconds: 3
-        #   failureThreshold: 3
-        #   exec:
-        #     command:
-        #       - /bin/sh
-        #       - -c
-        #       - 'curl --interface tun0 --connect-timeout 3 --max-time 5 -IsLX GET checkip.amazonaws.com:80 | grep "200 OK"'
-        # readinessProbe:
-        #   initialDelaySeconds: 15
-        #   periodSeconds: 3
-        #   failureThreshold: 3
-        #   exec:
-        #     command:
-        #       - /bin/sh
-        #       - -c
-        #       - 'curl --interface tun0 --connect-timeout 3 --max-time 5 -IsLX GET google.com:80 | grep "200 OK"'
+      - name: qbit
         resources: {}
-        #   limits:
-        #     memory: 300Mi
-        #     cpu: 100m
         image: linuxserver/qbittorrent
-        command: [ "/goose/set-goose.sh"]
+        command: [ "/goose/run-qbittorent.sh"]
+        stdin: true
+        tty: true
         securityContext:
           allowPrivilegeEscalation: true
           privileged: true
@@ -270,6 +276,54 @@ spec:
           - name: qbittorrent-config-client
             mountPath: /config/qBittorrent/qBittorrent.conf
             subPath: qBittorrent.conf
+          - name: qbittorrent-config-qbit
+            mountPath: /goose/run-qbittorent.sh
+            subPath: run-qbittorent.sh
+          - name: qbittorrent-state
+            mountPath: /config
+      - name: vpn
+        # livenessProbe:
+        #   initialDelaySeconds: 15
+        #   periodSeconds: 3
+        #   failureThreshold: 3
+        #   exec:
+        #     command:
+        #       - /bin/sh
+        #       - -c
+        #       - 'curl --interface tun0 --connect-timeout 3 --max-time 5 -IsLX GET checkip.amazonaws.com:80 | grep "200 OK"'
+        # readinessProbe:
+        #   initialDelaySeconds: 15
+        #   periodSeconds: 3
+        #   failureThreshold: 3
+        #   exec:
+        #     command:
+        #       - /bin/sh
+        #       - -c
+        #       - 'curl --interface tun0 --connect-timeout 3 --max-time 5 -IsLX GET google.com:80 | grep "200 OK"'
+        resources: {}
+        image: ubuntu
+        command: [ "/goose/set-goose.sh"]
+        stdin: true
+        tty: true
+        securityContext:
+          allowPrivilegeEscalation: true
+          privileged: true
+          capabilities:
+            add:
+              - NET_ADMIN
+        ports:
+        - name: http
+          containerPort: 8080
+        - name: bittorrent-port
+          containerPort: 6881
+        env:
+        - name: TZ
+          value: Europe/Amsterdam
+        - name: PGID
+          value: "1000"
+        - name: PUID
+          value: "1000"
+        volumeMounts:
           - name: update-resolv-conf
             mountPath: /etc/openvpn/update-resolv-conf-custom
             subPath: update-resolv-conf-custom
@@ -290,6 +344,7 @@ spec:
           - name: goose-credentials-volume
             mountPath: /goose/login.conf
             subPath: login.conf
+
 ---
 apiVersion: v1
 kind: Service
