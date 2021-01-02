@@ -117,6 +117,10 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
           args:
             - "agent"
             - "-advertise=$(POD_IP)"
@@ -157,6 +161,15 @@ spec:
               name: consuldns
             - containerPort: 8300
               name: server
+          livenessProbe:
+            httpGet:
+              path: /v1/health/node/current
+              port: 8500
+              scheme: HTTP
+            initialDelaySeconds: 60
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
           resources:
             requests:
               cpu: "100m"

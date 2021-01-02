@@ -10,14 +10,78 @@ data:
     set -eu
     apt-get update
     apt-get install openvpn -y
+    nohup openvpn /etc/openvpn/cert3.conf &
     # echo AUTOSTART="all" >> /etc/default/openvpn
-    nohup openvpn /etc/openvpn/cert2.conf &
-    echo "sleeping 15 secs..."
-    sleep 15
-    echo "Finished sleeping 15 secs"
-    ip route del 0.0.0.0/1 | true # TODO: TEMPFIX
-    echo "[OPENVPN] Creating GooseVPN connection"
-    /init
+    # echo "sleeping 15 secs..."
+    # sleep 15
+    # echo "Finished sleeping 15 secs"
+    # ip route del 0.0.0.0/1 | true # TODO: TEMPFIX
+    # echo "[OPENVPN] Creating GooseVPN connection"
+    # /init
+    sleep 10000
+  
+  update-resolv-conf: |-
+    #!/bin/bash
+    #
+    # Parses DHCP options from openvpn to update resolv.conf
+    # To use set as 'up' and 'down' script in your openvpn *.conf:
+    # up /etc/openvpn/update-resolv-conf
+    # down /etc/openvpn/update-resolv-conf
+    #
+    # Used snippets of resolvconf script by Thomas Hood and Chris Hanson.
+    # Licensed under the GNU GPL.  See /usr/share/common-licenses/GPL.
+    #
+    # Example envs set from openvpn:
+    #
+    #     foreign_option_1='dhcp-option DNS 193.43.27.132'
+    #     foreign_option_2='dhcp-option DNS 193.43.27.133'
+    #     foreign_option_3='dhcp-option DOMAIN be.bnc.ch'
+    #
+
+    # bash -c "sleep 5 && echo 'removing 0000 route' && ip route del 0.0.0.0/1 | true" &
+
+    [ -x /sbin/resolvconf ] || exit 0
+    [ "$script_type" ] || exit 0
+    [ "$dev" ] || exit 0
+
+    split_into_parts()
+    {
+            part1="$1"
+            part2="$2"
+            part3="$3"
+    }
+
+    case "$script_type" in
+      up)
+            NMSRVRS=""
+            SRCHS=""
+            for optionvarname in ${!foreign_option_*} ; do
+                    option="${!optionvarname}"
+                    echo "$option"
+                    split_into_parts $option
+                    if [ "$part1" = "dhcp-option" ] ; then
+                            if [ "$part2" = "DNS" ] ; then
+                                    NMSRVRS="${NMSRVRS:+$NMSRVRS }$part3"
+                            elif [ "$part2" = "DOMAIN" ] ; then
+                                    SRCHS="${SRCHS:+$SRCHS }$part3"
+                            fi
+                    fi
+            done
+            R=""
+            [ "$SRCHS" ] && R="search $SRCHS
+    "
+            for NS in $NMSRVRS ; do
+                    R="${R}nameserver $NS
+    "
+            done
+            echo -n "$R" | /sbin/resolvconf -a "${dev}.openvpn"
+            ;;
+      down)
+            /sbin/resolvconf -d "${dev}.openvpn"
+            ;;
+    esac
+   
+  
   qBittorrent.conf: |-
     [AutoRun]
     enabled=false
@@ -121,6 +185,13 @@ spec:
             path: cert3.conf
           defaultMode: 0744
       
+      - name: update-resolv-conf
+        configMap:
+          name: qbittorrent-config
+          items:
+          - key: update-resolv-conf
+            path: update-resolv-conf-custom
+          defaultMode: 0777
       - name: qbittorrent-config-client
         configMap:
           name: qbittorrent-config
@@ -144,15 +215,25 @@ spec:
           claimName: qbittorrent-state-claim
       containers:
       - name: qbittorrent
-        # livenessProbe:
-        #   initialDelaySeconds: 150
-        #   periodSeconds: 120
-        #   exec:
-        #     command:
-        #       - /bin/sh
-        #       - -c
-        #       - 'curl --connect-timeout 10 --max-time 10 --retry 5 --retry-max-time 60 -IsLX GET google.com:80 | grep 200'
-        # resources:
+        livenessProbe:
+          initialDelaySeconds: 15
+          periodSeconds: 3
+          failureThreshold: 3
+          exec:
+            command:
+              - /bin/sh
+              - -c
+              - 'curl --connect-timeout 3 --max-time 5 -IsLX GET google.com:80 | grep 200'
+        readinessProbe:
+          initialDelaySeconds: 15
+          periodSeconds: 3
+          failureThreshold: 3
+          exec:
+            command:
+              - /bin/sh
+              - -c
+              - 'curl --connect-timeout 3 --max-time 5 -IsLX GET google.com:80 | grep 200'
+        resources: {}
         #   limits:
         #     memory: 300Mi
         #     cpu: 100m
@@ -184,6 +265,9 @@ spec:
           - name: qbittorrent-config-client
             mountPath: /config/qBittorrent/qBittorrent.conf
             subPath: qBittorrent.conf
+          - name: update-resolv-conf
+            mountPath: /etc/openvpn/update-resolv-conf-custom
+            subPath: update-resolv-conf-custom
           - name: qbittorrent-config-goose
             mountPath: /goose/set-goose.sh
             subPath: set-goose.sh
