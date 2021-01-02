@@ -1,0 +1,32 @@
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: nextcloud-web-claim
+  namespace: nextcloud
+spec:
+  accessModes:
+  - ReadWriteMany 
+  storageClassName: nextcloud-web
+  selector:
+    matchLabels:
+      contenttype: "nextcloud-web"
+  resources:
+    requests:
+      storage: 5Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: nextcloud-data-claim
+  namespace: nextcloud
+spec:
+  accessModes:
+  - ReadWriteMany  
+  storageClassName: nextcloud-data
+  selector:
+    matchLabels:
+      contenttype: "nextcloud-data"
+  resources:
+    requests:
+      storage: 800Gi

@@ -8,7 +8,6 @@ spec:
   accessModes:
     - ReadWriteMany
   storageClassName: nfs-212
-  persistentVolumeReclaimPolicy: Retain
   resources:
     requests:
       storage: 5Gi
@@ -22,7 +21,6 @@ spec:
   accessModes:
     - ReadWriteMany
   storageClassName: nfs-212
-  persistentVolumeReclaimPolicy: Retain
   resources:
     requests:
       storage: 5Gi
