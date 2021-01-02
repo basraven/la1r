@@ -4,9 +4,6 @@ kind: Node
 metadata:
   name: linux-wayne
   labels:
-    la1r.storage/111: "true"
-    la1r.storage/211: "true"
-    la1r.storage/221: "true"
     la1r.storage/113: "true"
     la1r.storage/213: "true"
     la1r.storage/223: "true"

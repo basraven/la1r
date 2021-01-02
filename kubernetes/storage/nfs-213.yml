@@ -5,8 +5,9 @@ kind: StorageClass
 metadata:
   name: nfs-213 # IMPORTANT pvc needs to mention this name
 provisioner: nfs-213 # name can be anything
+reclaimPolicy: Delete
 parameters:
-  archiveOnDelete: "false"  
+  archiveOnDelete: "true"  
 ---
 kind: Deployment
 apiVersion: apps/v1

@@ -48,11 +48,11 @@ spec:
             - name: PROVISIONER_NAME # do not change
               value: nfs-112 # SAME AS PROVISONER NAME VALUE IN STORAGECLASS
             - name: NFS_SERVER # do not change
-              value: 192.168.5.1 # Ip of the NFS SERVER
+              value: 192.168.5.3 # Ip of the NFS SERVER
             - name: NFS_PATH # do not change
               value: /mnt/hdd/ha # path to nfs directory setup
       volumes:
        - name: nfs-provisioner-v # same as volume mounts name
          nfs:
-           server: 192.168.5.1
+           server: 192.168.5.3
            path: /mnt/hdd/ha

@@ -5,7 +5,7 @@ metadata:
   name: elasticsearch-claim
   namespace: monitoring
 spec:
-  storageClassName: nfs-222
+  storageClassName: nfs-212
   accessModes:
     - ReadWriteMany
   resources:

@@ -33,6 +33,7 @@ A few predefined folder structures are used in this setup, each folder to simula
 
 #### Specific Instances
 TODO: update
+
 | Class Code | Implemented server(s) | **B**ackup | **V**olatility | **S**peed | Persistent Volume (PV) name    | Hostpath                          |
 | ---        | ---                   | ---        | ---            | ---       | ---                            | ---                               |
 | 211        | 1: linux-wayne        | 2          | 1              | 1         | nextcloud-config               | /mnt/ssd/ha/nextcloud/config/     |

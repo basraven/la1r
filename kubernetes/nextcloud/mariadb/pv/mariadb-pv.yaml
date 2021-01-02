@@ -13,5 +13,5 @@ spec:
   accessModes:
   - ReadWriteMany
   nfs:
-    server: 192.168.5.1 # ip addres of nfs server
+    server: 192.168.5.3 # ip addres of nfs server
     path: "/mnt/hdd/ha/nextcloud/database" # path to directory
