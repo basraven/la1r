@@ -60,7 +60,7 @@ spec:
         env:
         - name: discovery.type
           value: single-node
-        image: elasticsearch:7.9.2
+        image: elasticsearch:7.1.0
         # volumeMounts:
         #   - name: elasticsearch
         #     mountPath: /home/coder/project
@@ -112,10 +112,10 @@ spec:
   selector:
     k8s-app: elasticsearch
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: elasticsearch
+  name: elasticsearchingress
   namespace: monitoring
 spec:
   rules:
@@ -123,9 +123,9 @@ spec:
     http:
       paths:
       - path: /
+        pathType: Prefix
         backend:
-          serviceName: elasticsearch
-          servicePort: 80
-  tls:
-  - hosts:
-    - grafana.bas
+          service:
+            name: elasticsearch
+            port:
+              number: 80

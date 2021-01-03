@@ -33,7 +33,7 @@ spec:
   selector:
     matchLabels:
       app: consul
-  replicas: 3
+  replicas: 5
   template:
     metadata:
       labels:
@@ -137,6 +137,8 @@ spec:
             - "-retry-join=consul-0.consul.$(NAMESPACE).svc.cluster.local"
             - "-retry-join=consul-1.consul.$(NAMESPACE).svc.cluster.local"
             - "-retry-join=consul-2.consul.$(NAMESPACE).svc.cluster.local"
+            - "-retry-join=consul-3.consul.$(NAMESPACE).svc.cluster.local"
+            - "-retry-join=consul-4.consul.$(NAMESPACE).svc.cluster.local"
             # - "-retry-join=consul.$(NAMESPACE).svc.cluster.local"
             # - "-recursor=8.8.8.8"
             # - "-data-dir=/consul/data"

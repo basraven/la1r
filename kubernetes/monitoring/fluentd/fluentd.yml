@@ -76,12 +76,12 @@ spec:
         - name: FLUENTD_SYSTEMD_CONF
           value: "disable"
         # TODO: Test Syslog server
-        - name:  SYSLOG_HOST
-          value: "sysloghost"
-        - name:  SYSLOG_PORT
-          value: "514"
-        - name:  SYSLOG_PROTOCOL
-          value: "udp"    
+        # - name:  SYSLOG_HOST
+        #   value: "sysloghost"
+        # - name:  SYSLOG_PORT
+        #   value: "514"
+        # - name:  SYSLOG_PROTOCOL
+        #   value: "udp"    
         image: fluent/fluentd-kubernetes-daemonset:v1.11.2-debian-elasticsearch7-1.0
         volumeMounts:
           - name: varlog
