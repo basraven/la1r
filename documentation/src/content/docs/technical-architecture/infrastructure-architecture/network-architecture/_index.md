@@ -42,6 +42,7 @@ The following table summarizes all network cidrs and addresses
 | 192.168   | 6.0/25   | [6.1](http://192.168.6.1)      | LAN Traefik 2.x                                            | 1                 |
 | 192.168   | 6.0/25   | [6.60](http://192.168.6.60)    | Plex server                                                | 1                 |
 | 192.168   | 6.0/25   | [6.61](http://192.168.6.61)    | qBittorent                                                 | 1                 |
+| 192.168   | 6.0/25   | [6.71](http://192.168.6.71)    | qBittorent listen                                          | 1                 |
 | 192.168   | 6.0/25   | [6.62](http://192.168.6.62)    | Radarr                                                     | 1                 |
 | 192.168   | 6.0/25   | [6.63](http://192.168.6.63)    | Sonarr                                                     | 1                 |
 | 192.168   | 6.0/25   | [6.65](http://192.168.6.65)    | Kubernetes Dashboard                                       | 1                 |

@@ -9,97 +9,30 @@ data:
     #!/bin/sh
     set -eu
     apt-get update
-    apt-get install openvpn iputils-ping net-tools curl -y
+    apt-get install openvpn iputils-ping net-tools curl  jq -y
     sysctl net.ipv4.ip_forward=1
     echo "## Installs complete"
-    /usr/sbin/openvpn /etc/openvpn/cert2.conf  &
-    echo "sleeping 10 secs..."
-    sleep 10
-    echo "Finished sleeping 10 secs"
-    # ip route del 0.0.0.0/1 | true # TODO: TEMPFIX
-    # echo "[OPENVPN] Creating GooseVPN connection"
-    # echo "## Connection check:"
-    # curl --interface tun0 --connect-timeout 3 --max-time 5 -IsLX GET checkip.amazonaws.com:80
-    # echo "## External IP:"
-    # curl -s --interface tun0 checkip.amazonaws.com:80
-    VPN_GATEWAY=$(route -n | awk 'NR==3' | awk '{ print $2 }')
-    ip route del 0.0.0.0/1 via $VPN_GATEWAY
-    echo "## Route Updated"
+    /usr/sbin/openvpn /etc/openvpn/cert2.conf   &
     sleep infinity
 
-  run-qbittorent.sh: |-
+
+  run-qbittorrent.sh: |-
     #!/bin/sh
     set -eu
-    echo "## STARTING"
     apt-get update
-    apt-get install openvpn iputils-ping net-tools curl -y
+    apt-get install iputils-ping net-tools curl jq -y
     sysctl net.ipv4.ip_forward=1
-    echo "## Installs complete"
-    echo "sleeping 20 secs..."
-    sleep 20
+    SLEEPTIME=40
+    echo "## Sleeping $SLEEPTIME secs..."
+    sleep $SLEEPTIME
     /init
-  
-  update-resolv-conf: |-
-    #!/bin/bash
-    #
-    # Parses DHCP options from openvpn to update resolv.conf
-    # To use set as 'up' and 'down' script in your openvpn *.conf:
-    # up /etc/openvpn/update-resolv-conf
-    # down /etc/openvpn/update-resolv-conf
-    #
-    # Used snippets of resolvconf script by Thomas Hood and Chris Hanson.
-    # Licensed under the GNU GPL.  See /usr/share/common-licenses/GPL.
-    #
-    # Example envs set from openvpn:
-    #
-    #     foreign_option_1='dhcp-option DNS 193.43.27.132'
-    #     foreign_option_2='dhcp-option DNS 193.43.27.133'
-    #     foreign_option_3='dhcp-option DOMAIN be.bnc.ch'
-    #
-
-    # bash -c "sleep 5 && echo 'removing 0000 route' && ip route del 0.0.0.0/1 | true" &
-
-    [ -x /sbin/resolvconf ] || exit 0
-    [ "$script_type" ] || exit 0
-    [ "$dev" ] || exit 0
-
-    split_into_parts()
-    {
-            part1="$1"
-            part2="$2"
-            part3="$3"
-    }
-
-    case "$script_type" in
-      up)
-            NMSRVRS=""
-            SRCHS=""
-            for optionvarname in ${!foreign_option_*} ; do
-                    option="${!optionvarname}"
-                    echo "$option"
-                    split_into_parts $option
-                    if [ "$part1" = "dhcp-option" ] ; then
-                            if [ "$part2" = "DNS" ] ; then
-                                    NMSRVRS="${NMSRVRS:+$NMSRVRS }$part3"
-                            elif [ "$part2" = "DOMAIN" ] ; then
-                                    SRCHS="${SRCHS:+$SRCHS }$part3"
-                            fi
-                    fi
-            done
-            R=""
-            [ "$SRCHS" ] && R="search $SRCHS
-    "
-            for NS in $NMSRVRS ; do
-                    R="${R}nameserver $NS
-    "
-            done
-            echo -n "$R" | /sbin/resolvconf -a "${dev}.openvpn"
-            ;;
-      down)
-            /sbin/resolvconf -d "${dev}.openvpn"
-            ;;
-    esac
-   
+ 
+  vpn-delete-route.sh: |-
+    #!/bin/sh
+    echo "## In VPN DELETE ROUTE"
+    export VPN_GATEWAY=$(route -n | awk 'NR==3' | awk '{ print $2 }')
+    nohup bash -c "sleep 3 && echo 'Deleting $VPN_GATEWAY' && ip route del 0.0.0.0/1 via $VPN_GATEWAY && curl ipinfo.io && echo '## Finished delete route' "&
+    nohup bash -c "sleep 2 && ip route add 10.244.0.0/16 via 169.254.1.1 dev eth0" &
   
   qBittorrent.conf: |-
     [AutoRun]
@@ -184,9 +117,21 @@ spec:
       labels:
         app: qbittorrent
     spec:
-      # dnsConfig:
-      #   nameservers:
-      #     - 8.8.8.8
+      # TODO: Only works on that node for some reason...
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution :
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - linux-wayne
+      dnsConfig:
+        # Not sure if this is really needed...
+        nameservers:
+          - 8.8.8.8
+      dnsPolicy: None
       volumes:
       - name: goose-credentials-volume
         secret:
@@ -206,7 +151,6 @@ spec:
           - key: cert3.conf
             path: cert3.conf
           defaultMode: 0744
-      
       - name: update-resolv-conf
         configMap:
           name: qbittorrent-config
@@ -232,8 +176,16 @@ spec:
         configMap:
           name: qbittorrent-config
           items:
-          - key: run-qbittorent.sh
-            path: run-qbittorent.sh
+          - key: run-qbittorrent.sh
+            path: run-qbittorrent.sh
+          defaultMode: 0744
+      
+      - name: vpn-delete-route
+        configMap:
+          name: qbittorrent-config
+          items:
+          - key: vpn-delete-route.sh
+            path: vpn-delete-route.sh
           defaultMode: 0744
       
       - name: torrent-volume
@@ -244,10 +196,75 @@ spec:
           claimName: qbittorrent-state-claim
 
       containers:
+      - name: vpn
+        resources: 
+          limits:
+            memory: "2056Mi"
+            cpu: "2000m"
+        image: ubuntu
+        command: [ "/goose/set-goose.sh"]
+        stdin: true
+        tty: true
+        securityContext:
+          allowPrivilegeEscalation: true
+          privileged: true
+          capabilities:
+            add:
+              - NET_ADMIN
+        env:
+        - name: TZ
+          value: Europe/Amsterdam
+        - name: PGID
+          value: "1000"
+        - name: PUID
+          value: "1000"
+        volumeMounts:
+          - name: qbittorrent-config-goose
+            mountPath: /goose/set-goose.sh
+            subPath: set-goose.sh
+          - name: vpn-delete-route
+            mountPath: /goose/vpn-delete-route.sh
+            subPath: vpn-delete-route.sh
+          - name: set-goose-ovpn-volume
+            mountPath: /etc/openvpn/cert1.conf
+            subPath: cert1.conf
+          - name: set-goose-ovpn-volume
+            mountPath: /etc/openvpn/cert2.conf
+            subPath: cert2.conf
+          - name: set-goose-ovpn-volume
+            mountPath: /etc/openvpn/cert3.conf
+            subPath: cert3.conf
+          - name: goose-credentials-volume
+            mountPath: /goose/login.conf
+            subPath: login.conf
       - name: qbit
-        resources: {}
+        # livenessProbe:
+        #   initialDelaySeconds: 20
+        #   periodSeconds: 20
+        #   failureThreshold: 5
+        #   exec:
+        #     command:
+        #       - /bin/sh
+        #       - -c
+        #       - 'curl ipinfo.io |  jq -r ".timezone" |  grep "Europe/Budapest"'
+        # readinessProbe:
+        #   initialDelaySeconds: 20
+        #   periodSeconds: 10
+        #   failureThreshold: 5
+        #   exec:
+        #     command:
+        #       - /bin/sh
+        #       - -c
+        #       - 'curl ipinfo.io |  jq -r ".timezone" |  grep "Europe/Budapest"'
+        resources: 
+          requests:
+            memory: "1024Mi"
+            cpu: "1000m"
+          limits:
+            memory: "2056Mi"
+            cpu: "2000m"
         image: linuxserver/qbittorrent
-        command: [ "/goose/run-qbittorent.sh"]
+        command: [ "/goose/run-qbittorrent.sh"]
         stdin: true
         tty: true
         securityContext:
@@ -260,7 +277,8 @@ spec:
         - name: http
           containerPort: 8080
         - name: bittorrent-port
-          containerPort: 6881
+          containerPort: 30163
+          protocol: UDP
         env:
         - name: TZ
           value: Europe/Amsterdam
@@ -277,73 +295,10 @@ spec:
             mountPath: /config/qBittorrent/qBittorrent.conf
             subPath: qBittorrent.conf
           - name: qbittorrent-config-qbit
-            mountPath: /goose/run-qbittorent.sh
-            subPath: run-qbittorent.sh
+            mountPath: /goose/run-qbittorrent.sh
+            subPath: run-qbittorrent.sh
           - name: qbittorrent-state
             mountPath: /config
-      - name: vpn
-        # livenessProbe:
-        #   initialDelaySeconds: 15
-        #   periodSeconds: 3
-        #   failureThreshold: 3
-        #   exec:
-        #     command:
-        #       - /bin/sh
-        #       - -c
-        #       - 'curl --interface tun0 --connect-timeout 3 --max-time 5 -IsLX GET checkip.amazonaws.com:80 | grep "200 OK"'
-        # readinessProbe:
-        #   initialDelaySeconds: 15
-        #   periodSeconds: 3
-        #   failureThreshold: 3
-        #   exec:
-        #     command:
-        #       - /bin/sh
-        #       - -c
-        #       - 'curl --interface tun0 --connect-timeout 3 --max-time 5 -IsLX GET google.com:80 | grep "200 OK"'
-        resources: {}
-        image: ubuntu
-        command: [ "/goose/set-goose.sh"]
-        stdin: true
-        tty: true
-        securityContext:
-          allowPrivilegeEscalation: true
-          privileged: true
-          capabilities:
-            add:
-              - NET_ADMIN
-        ports:
-        - name: http
-          containerPort: 8080
-        - name: bittorrent-port
-          containerPort: 6881
-        env:
-        - name: TZ
-          value: Europe/Amsterdam
-        - name: PGID
-          value: "1000"
-        - name: PUID
-          value: "1000"
-        volumeMounts:
-          - name: update-resolv-conf
-            mountPath: /etc/openvpn/update-resolv-conf-custom
-            subPath: update-resolv-conf-custom
-          - name: qbittorrent-config-goose
-            mountPath: /goose/set-goose.sh
-            subPath: set-goose.sh
-          - name: qbittorrent-state
-            mountPath: /config
-          - name: set-goose-ovpn-volume
-            mountPath: /etc/openvpn/cert1.conf
-            subPath: cert1.conf
-          - name: set-goose-ovpn-volume
-            mountPath: /etc/openvpn/cert2.conf
-            subPath: cert2.conf
-          - name: set-goose-ovpn-volume
-            mountPath: /etc/openvpn/cert3.conf
-            subPath: cert3.conf
-          - name: goose-credentials-volume
-            mountPath: /goose/login.conf
-            subPath: login.conf
 
 ---
 apiVersion: v1
@@ -362,7 +317,7 @@ spec:
     app: qbittorrent
   type: ClusterIP
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: qbittorrentingress
@@ -372,19 +327,24 @@ spec:
   - host: torrent.bas
     http:
       paths:
-      - backend:
-          serviceName: qbittorrent
-          servicePort: 80
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: qbittorrent
+            port:
+              number: 80
   # tls:
   # - hosts:
   #   - torrent.bas
+
 
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: qbittorent-lb-service
+  name: qbittorrent-lb-service
   namespace: torrent
 spec:
   ports:
@@ -394,4 +354,23 @@ spec:
   selector:
     app: qbittorrent
   type: LoadBalancer
+  externalTrafficPolicy: Local
   loadBalancerIP: 192.168.6.61
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qbittorrent-lb-torrent-service
+  namespace: torrent
+spec:
+  ports:
+  - name: bittorrent-port
+    port: 30163
+    targetPort: 30163
+    protocol: UDP
+    nodePort: 30163
+  selector:
+    app: qbittorrent
+  type: NodePort
+  # externalTrafficPolicy: Local
+  # loadBalancerIP: 192.168.6.71
