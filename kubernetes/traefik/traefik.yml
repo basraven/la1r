@@ -89,7 +89,7 @@ spec:
       # terminationGracePeriodSeconds: 60
       containers:
       - name: traefik-ingress-controller
-        image: traefik:v2.3
+        image: traefik:v2.4
         # volumeMounts:
         # - name: traefik-extra-config
         #   mountPath: /extra/extra.toml
@@ -180,7 +180,7 @@ spec:
     - port: 8082
       name: prometheus
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: traefik-web-ui
@@ -191,9 +191,12 @@ spec:
     http:
       paths:
       - path: /
+        pathType: Prefix
         backend:
-          serviceName: traefik-ingress-service
-          servicePort: admin
+          service:
+            name: traefik-ingress-service
+            port:
+              name: admin
 ---
 apiVersion: v1
 kind: Service
