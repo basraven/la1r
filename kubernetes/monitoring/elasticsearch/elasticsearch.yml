@@ -60,7 +60,7 @@ spec:
         env:
         - name: discovery.type
           value: single-node
-        image: elasticsearch:7.1.0
+        image: elasticsearch:7.9.1
         # volumeMounts:
         #   - name: elasticsearch
         #     mountPath: /home/coder/project
