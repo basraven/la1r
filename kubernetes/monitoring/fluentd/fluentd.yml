@@ -1,7 +1,6 @@
 
 # Source:   https://www.digitalocean.com/community/tutorials/how-to-set-up-an-elasticsearch-fluentd-and-kibana-efk-logging-stack-on-kubernetes
 # Source 2: https://blog.ptrk.io/how-to-deploy-an-efk-stack-to-kubernetes/
-
 ---
 apiVersion: v1
 metadata:
@@ -10,10 +9,30 @@ metadata:
 kind: ConfigMap
 data:
   fluent.conf: |-
-    include kubernetes.conf
+    <source>
+      @type tail
+      @id in_tail_container_logs
+      path /var/log/containers/*.log
+      pos_file /var/log/fluentd-containers.log.pos
+      tag "#{ENV['FLUENT_CONTAINER_TAIL_TAG'] || 'kubernetes.*'}"
+      exclude_path "#{ENV['FLUENT_CONTAINER_TAIL_EXCLUDE_PATH'] || use_default}"
+      read_from_head true
+      <parse>
+        @type regexp
+        expression /^(?<time>[^ ]+) (?<stream>stdout|stderr) (?<flags>[^ ]+) (?<message>.*)$/
+        time_format %Y-%m-%dT%H:%M:%S.%N%:z
+      </parse>
+    </source>
+
+    <filter kubernetes.**>
+      @type kubernetes_metadata
+      @id filter_kube_metadata
+      kubernetes_url "#{'https://' + ENV.fetch('KUBERNETES_SERVICE_HOST') + ':' + ENV.fetch('KUBERNETES_SERVICE_PORT') + '/api'}"
+    </filter>
+
 
     <match **>
-      type elasticsearch
+      type elasticsearch   
       log_level info
       include_tag_key true
       host "#{ENV['FLUENT_ELASTICSEARCH_HOST']}"
@@ -29,127 +48,7 @@ data:
   kubernetes.conf: |-
     <match fluent.**>
       type null
-      </match>
-
-      <source>
-        type tail
-        path /var/log/containers/*.log
-        pos_file /var/log/es-containers.log.pos
-        time_format %Y-%m-%dT%H:%M:%S.%NZ
-        tag kubernetes.*
-        format json
-        read_from_head true
-      </source>
-
-      <source>
-        type tail
-        format /^(?<time>[^ ]* [^ ,]*)[^\[]*\[[^\]]*\]\[(?<severity>[^ \]]*) *\] (?<message>.*)$/
-        time_format %Y-%m-%d %H:%M:%S
-        path /var/log/salt/minion
-        pos_file /var/log/es-salt.pos
-        tag salt
-      </source>
-
-      <source>
-        type tail
-        format syslog
-        path /var/log/startupscript.log
-        pos_file /var/log/es-startupscript.log.pos
-        tag startupscript
-      </source>
-
-      <source>
-        type tail
-        format /^time="(?<time>[^)]*)" level=(?<severity>[^ ]*) msg="(?<message>[^"]*)"( err="(?<error>[^"]*)")?( statusCode=($<status_code>\d+))?/
-        path /var/log/docker.log
-        pos_file /var/log/es-docker.log.pos
-        tag docker
-      </source>
-
-      <source>
-        type tail
-        format none
-        path /var/log/etcd.log
-        pos_file /var/log/es-etcd.log.pos
-        tag etcd
-      </source>
-
-      <source>
-        type tail
-        format kubernetes
-        multiline_flush_interval 5s
-        path /var/log/kubelet.log
-        pos_file /var/log/es-kubelet.log.pos
-        tag kubelet
-      </source>
-
-      <source>
-        type tail
-        format kubernetes
-        multiline_flush_interval 5s
-        path /var/log/kube-proxy.log
-        pos_file /var/log/es-kube-proxy.log.pos
-        tag kube-proxy
-      </source>
-
-      <source>
-        type tail
-        format kubernetes
-        multiline_flush_interval 5s
-        path /var/log/kube-apiserver.log
-        pos_file /var/log/es-kube-apiserver.log.pos
-        tag kube-apiserver
-      </source>
-
-      <source>
-        type tail
-        format kubernetes
-        multiline_flush_interval 5s
-        path /var/log/kube-controller-manager.log
-        pos_file /var/log/es-kube-controller-manager.log.pos
-        tag kube-controller-manager
-      </source>
-
-      <source>
-        type tail
-        format kubernetes
-        multiline_flush_interval 5s
-        path /var/log/kube-scheduler.log
-        pos_file /var/log/es-kube-scheduler.log.pos
-        tag kube-scheduler
-      </source>
-
-      <source>
-        type tail
-        format kubernetes
-        multiline_flush_interval 5s
-        path /var/log/rescheduler.log
-        pos_file /var/log/es-rescheduler.log.pos
-        tag rescheduler
-      </source>
-
-      <source>
-        type tail
-        format kubernetes
-        multiline_flush_interval 5s
-        path /var/log/glbc.log
-        pos_file /var/log/es-glbc.log.pos
-        tag glbc
-      </source>
-
-      <source>
-        type tail
-        format kubernetes
-        multiline_flush_interval 5s
-        path /var/log/cluster-autoscaler.log
-        pos_file /var/log/es-cluster-autoscaler.log.pos
-        tag cluster-autoscaler
-      </source>
-
-      <filter kubernetes.**>
-        type kubernetes_metadata
-      </filter>
-
+    </match>
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -225,6 +124,12 @@ spec:
           value: "0"
         - name: FLUENTD_SYSTEMD_CONF
           value: "disable"
+        # - name: FLUENTD_ARGS
+        #   value: "--no-supervisor -q"
+        # - name: FLUENT_CONTAINER_TAIL_PARSER_TYPE
+        #   value: /^(?<time>.+) (?<stream>stdout|stderr) [^ ]* (?<log>.*)$/
+        - name: FLUENT_CONTAINER_TAIL_EXCLUDE_PATH
+          value: '["/var/log/containers/fluentd*"]'
         # TODO: Test Syslog server
         # - name:  SYSLOG_HOST
         #   value: "sysloghost"
@@ -232,49 +137,29 @@ spec:
         #   value: "514"
         # - name:  SYSLOG_PROTOCOL
         #   value: "udp"    
-        image: quay.io/fluent/fluentd-kubernetes-daemonset
+        image: fluent/fluentd-kubernetes-daemonset:v1.11-debian-elasticsearch7-1
         volumeMounts:
           - name: varlog
-            mountPath: /var/log/host
-            readOnly: true
-          - name: varlogcontainers
-            mountPath: /var/log/containers
-            readOnly: true
-          - name: varlogpods
-            mountPath: /var/log/pods
+            mountPath: /var/log
+          - name: varlibdockercontainers
+            mountPath: /var/lib/docker/containers
             readOnly: true
           - name: fluentd-config-volume
-            mountPath: /fluent/etc/fluent.conf
-            subPath: fluent.conf
-          - name: kubernetes-config-volume
-            mountPath: /fluent/etc/kubernetes.conf
-            subPath: kubernetes.conf
+            mountPath: /fluentd/etc
+            readOnly: true
       terminationGracePeriodSeconds: 30
       volumes:
       - name: varlog
         hostPath:
           path: /var/log
-      - name: varlogcontainers
+      - name: varlibdockercontainers
         hostPath:
-          path: /var/log/containers
-      - name: varlogpods
-        hostPath:
-          path: /var/log/pods
-          volumes:
+          path: /var/lib/docker/containers
       - name: fluentd-config-volume
         configMap:
           name: fluentd-config
-          items:
-          - key: fluent.conf
-            path: fluent.conf
-          defaultMode: 0744
-      - name: kubernetes-config-volume
-        configMap:
-          name: fluentd-config
-          items:
-          - key: kubernetes.conf
-            path: kubernetes.conf
-          defaultMode: 0744
+
+  
 
 ---
 apiVersion: v1
