@@ -30,6 +30,21 @@ data:
       kubernetes_url "#{'https://' + ENV.fetch('KUBERNETES_SERVICE_HOST') + ':' + ENV.fetch('KUBERNETES_SERVICE_PORT') + '/api'}"
     </filter>
 
+        
+    <source>
+      @type tail
+      <parse>
+        @type multiline
+        multiline_flush_interval 5s
+        format_firstline /^\w+\s*\d{2}\s*\d{2}:\d{2}:\d{2}\s\w+/
+        format1 /^(?<message>.*)/
+      </parse>
+      path /var/log/messages
+      pos_file var.log.messages.pos
+      path_key tailed_path
+      tag omc.var.log.messages
+    </source>
+
 
     <match **>
       type elasticsearch   
@@ -37,6 +52,10 @@ data:
       include_tag_key true
       host "#{ENV['FLUENT_ELASTICSEARCH_HOST']}"
       port "#{ENV['FLUENT_ELASTICSEARCH_PORT']}"
+      # index_name fluentd.${tag}.%Y%m%d
+      # logstash_prefix fluentd
+      user admin
+      password admin
       logstash_format true
       buffer_chunk_limit 2M
       buffer_queue_limit 32

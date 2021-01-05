@@ -60,34 +60,17 @@ spec:
         env:
         - name: discovery.type
           value: single-node
+        - name: ELASTIC_USERNAME
+          value: "admin"
+        - name: ELASTIC_PASSWORD
+          value: "admin"
+        - name: http.cors.enabled
+          value: "true"
+        - name: http.cors.allow-origin
+          value:  "*"
+        - name: XPACK_SECURITY_ENABLED
+          value: "true"
         image: elasticsearch:7.9.1
-        # volumeMounts:
-        #   - name: elasticsearch
-        #     mountPath: /home/coder/project
-        #   - name: elasticsearch-config-local
-        #     mountPath: /home/coder/.local
-        #   - name: elasticsearch-config-vscode
-        #     mountPath: /home/coder/.vscode
-        #   - name: elasticsearch-init
-        #     mountPath: /seb/init.sh
-        #     subPath: init.sh
-      # volumes:
-      #   - name: elasticsearch
-      #     persistentVolumeClaim:
-      #       claimName: elasticsearch-claim
-      #   - name: elasticsearch-config-local
-      #     persistentVolumeClaim:
-      #       claimName: elasticsearch-config-claim-local
-      #   - name: elasticsearch-config-vscode
-      #     persistentVolumeClaim:
-      #       claimName: elasticsearch-config-claim-vscode
-      #   - name: elasticsearch-init
-      #     configMap:
-      #       name: elasticsearch-init
-      #       items:
-      #       - key: init.sh
-      #         path: init.sh
-      #       defaultMode: 0777
 ---
 apiVersion: v1
 kind: Service
