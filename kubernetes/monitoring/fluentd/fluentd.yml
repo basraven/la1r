@@ -9,6 +9,61 @@ metadata:
 kind: ConfigMap
 data:
   fluent.conf: |-
+    @include hostlog.conf
+    @include kubernetes.conf
+    # @include syslog.conf
+
+  hostlog.conf: |-
+    <source>
+      @type tail
+      tag hostlog.messages
+      <parse>
+        @type multiline
+        multiline_flush_interval 5s
+        format_firstline /^\w+\s*\d{2}\s*\d{2}:\d{2}:\d{2}\s\w+/
+        format1 /^(?<message>.*)/
+      </parse>
+      path /var/log/messages
+      pos_file var.log.messages.pos
+      path_key tailed_path_messages
+    </source>
+    
+    <source>
+      @type tail
+      tag hostlog.syslog
+      <parse>
+        @type multiline
+        multiline_flush_interval 5s
+        format1 /^(?<message>.*)/
+      </parse>
+      path /var/log/syslog
+      pos_file var.log.syslog.pos
+      path_key tailed_path_syslog
+    </source>
+ 
+
+    <match hostlog**>
+      @type elasticsearch   
+      @log_level info
+      tag process.hostlog
+      include_tag_key true
+      host "#{ENV['FLUENT_ELASTICSEARCH_HOST']}"
+      port "#{ENV['FLUENT_ELASTICSEARCH_PORT']}"
+      index_name logstash-hostlog.${tag}.%Y%m%d
+      logstash_prefix logstash-hostlog
+      user admin
+      password admin
+      logstash_format true
+      buffer_chunk_limit 2M
+      buffer_queue_limit 32
+      flush_interval 5s
+      max_retry_wait 30
+      disable_retry_limit
+      num_threads 8
+    </match>
+    
+   
+  kubernetes.conf: |-
     <source>
       @type tail
       @id in_tail_container_logs
@@ -30,106 +85,60 @@ data:
       kubernetes_url "#{'https://' + ENV.fetch('KUBERNETES_SERVICE_HOST') + ':' + ENV.fetch('KUBERNETES_SERVICE_PORT') + '/api'}"
     </filter>
 
-        
-    <source>
-      @type tail
-      tag "hostlog.messages"
-      <parse>
-        @type multiline
-        multiline_flush_interval 5s
-        format_firstline /^\w+\s*\d{2}\s*\d{2}:\d{2}:\d{2}\s\w+/
-        format1 /^(?<message>.*)/
-      </parse>
-      path /var/log/messages
-      pos_file var.log.messages.pos
-      path_key tailed_path
-      tag omc.var.log.messages
-    </source>
-    
-    <source>
-      @type tail
-      tag "hostlog.syslog"
-      <parse>
-        @type multiline
-        multiline_flush_interval 5s
-        format_firstline /^\w+\s*\d{2}\s*\d{2}:\d{2}:\d{2}\s\w+/
-        format1 /^(?<message>.*)/
-      </parse>
-      path /var/log/syslog
-      pos_file var.log.syslog.pos
-      path_key tailed_path
-      tag omc.var.log.syslog
-    </source>
+    <match kubernetes**>
+      @type elasticsearch   
+      @log_level info
+      tag process.kubernetes
+      include_tag_key true
+      host "#{ENV['FLUENT_ELASTICSEARCH_HOST']}"
+      port "#{ENV['FLUENT_ELASTICSEARCH_PORT']}"
+      index_name logstash-kubernetes.${tag}.%Y%m%d
+      logstash_prefix logstash-kubernetes
+      user admin
+      password admin
+      logstash_format true
+      buffer_chunk_limit 2M
+      buffer_queue_limit 32
+      flush_interval 5s
+      max_retry_wait 30
+      disable_retry_limit
+      num_threads 8
+    </match>
 
+  syslog.conf: |-
     <source>
       @type syslog
-      tag "syslog.endpoint"
-      protocol_type udp
+      tag server.syslog
+      <transport udp>
+      </transport>
       port 514
       bind 0.0.0.0
+      <parse>
+        @type syslog
+        with_priority true
+        message_format auto
+      </parse>
     </source>
 
-
-    <match kubernetes**>
-      type elasticsearch   
-      log_level info
-      include_tag_key true
+    <match server.syslog**>
+      @type elasticsearch   
+      @log_level info
+      tag process.syslog
+      include_tag_key false
       host "#{ENV['FLUENT_ELASTICSEARCH_HOST']}"
       port "#{ENV['FLUENT_ELASTICSEARCH_PORT']}"
-      index_name logstash-hostlogs.${tag}.%Y%m%d
-      logstash_prefix logstash-hostlogs
-      user admin
-      password admin
-      logstash_format true
-      buffer_chunk_limit 2M
-      buffer_queue_limit 32
-      flush_interval 5s
-      max_retry_wait 30
-      disable_retry_limit
-      num_threads 8
-    </match>
-
-    <match hostlog**>
-      type elasticsearch   
-      log_level info
-      include_tag_key true
-      host "#{ENV['FLUENT_ELASTICSEARCH_HOST']}"
-      port "#{ENV['FLUENT_ELASTICSEARCH_PORT']}"
-      index_name logstash-containers.${tag}.%Y%m%d
-      logstash_prefix logstash-containers
-      user admin
-      password admin
-      logstash_format true
-      buffer_chunk_limit 2M
-      buffer_queue_limit 32
-      flush_interval 5s
-      max_retry_wait 30
-      disable_retry_limit
-      num_threads 8
-    </match>
-    
-    <match syslog**>
-      type elasticsearch   
-      log_level info
-      include_tag_key true
-      host "#{ENV['FLUENT_ELASTICSEARCH_HOST']}"
-      port "#{ENV['FLUENT_ELASTICSEARCH_PORT']}"
-      index_name logstash-syslog.${tag}.%Y%m%d
+      index_name logstash-syslog
       logstash_prefix logstash-syslog
       user admin
       password admin
-      logstash_format true
       buffer_chunk_limit 2M
-      buffer_queue_limit 32
+      buffer_queue_limit 2
       flush_interval 5s
       max_retry_wait 30
       disable_retry_limit
       num_threads 8
     </match>
-  kubernetes.conf: |-
-    <match fluent.**>
-      type null
-    </match>
+    
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -243,6 +252,7 @@ spec:
   - name: udp
     port: 514
     targetPort: 514
+    protocol: UDP
   selector:
     app: fluentd
   type: LoadBalancer
