@@ -61,6 +61,14 @@ data:
       tag omc.var.log.syslog
     </source>
 
+    <source>
+      @type syslog
+      tag "syslog.endpoint"
+      protocol_type udp
+      port 514
+      bind 0.0.0.0
+    </source>
+
 
     <match kubernetes**>
       type elasticsearch   
@@ -89,6 +97,25 @@ data:
       port "#{ENV['FLUENT_ELASTICSEARCH_PORT']}"
       index_name logstash-containers.${tag}.%Y%m%d
       logstash_prefix logstash-containers
+      user admin
+      password admin
+      logstash_format true
+      buffer_chunk_limit 2M
+      buffer_queue_limit 32
+      flush_interval 5s
+      max_retry_wait 30
+      disable_retry_limit
+      num_threads 8
+    </match>
+    
+    <match syslog**>
+      type elasticsearch   
+      log_level info
+      include_tag_key true
+      host "#{ENV['FLUENT_ELASTICSEARCH_HOST']}"
+      port "#{ENV['FLUENT_ELASTICSEARCH_PORT']}"
+      index_name logstash-syslog.${tag}.%Y%m%d
+      logstash_prefix logstash-syslog
       user admin
       password admin
       logstash_format true
@@ -167,6 +194,7 @@ spec:
       - name: fluentd
         ports:
         - containerPort: 514
+          protocol: UDP
         env:
         - name:  FLUENT_ELASTICSEARCH_HOST
           value: "elasticsearch.monitoring"
@@ -178,19 +206,8 @@ spec:
           value: "0"
         - name: FLUENTD_SYSTEMD_CONF
           value: "disable"
-        # - name: FLUENTD_ARGS
-        #   value: "--no-supervisor -q"
-        # - name: FLUENT_CONTAINER_TAIL_PARSER_TYPE
-        #   value: /^(?<time>.+) (?<stream>stdout|stderr) [^ ]* (?<log>.*)$/
         - name: FLUENT_CONTAINER_TAIL_EXCLUDE_PATH
           value: '["/var/log/containers/fluentd*"]'
-        # TODO: Test Syslog server
-        # - name:  SYSLOG_HOST
-        #   value: "sysloghost"
-        # - name:  SYSLOG_PORT
-        #   value: "514"
-        # - name:  SYSLOG_PROTOCOL
-        #   value: "udp"    
         image: fluent/fluentd-kubernetes-daemonset:v1.11-debian-elasticsearch7-1
         volumeMounts:
           - name: varlog
