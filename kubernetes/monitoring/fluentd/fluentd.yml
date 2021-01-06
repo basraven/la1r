@@ -33,6 +33,7 @@ data:
         
     <source>
       @type tail
+      tag "hostlog.messages"
       <parse>
         @type multiline
         multiline_flush_interval 5s
@@ -44,16 +45,50 @@ data:
       path_key tailed_path
       tag omc.var.log.messages
     </source>
+    
+    <source>
+      @type tail
+      tag "hostlog.syslog"
+      <parse>
+        @type multiline
+        multiline_flush_interval 5s
+        format_firstline /^\w+\s*\d{2}\s*\d{2}:\d{2}:\d{2}\s\w+/
+        format1 /^(?<message>.*)/
+      </parse>
+      path /var/log/syslog
+      pos_file var.log.syslog.pos
+      path_key tailed_path
+      tag omc.var.log.syslog
+    </source>
 
 
-    <match **>
+    <match kubernetes**>
       type elasticsearch   
       log_level info
       include_tag_key true
       host "#{ENV['FLUENT_ELASTICSEARCH_HOST']}"
       port "#{ENV['FLUENT_ELASTICSEARCH_PORT']}"
-      # index_name fluentd.${tag}.%Y%m%d
-      # logstash_prefix fluentd
+      index_name logstash-hostlogs.${tag}.%Y%m%d
+      logstash_prefix logstash-hostlogs
+      user admin
+      password admin
+      logstash_format true
+      buffer_chunk_limit 2M
+      buffer_queue_limit 32
+      flush_interval 5s
+      max_retry_wait 30
+      disable_retry_limit
+      num_threads 8
+    </match>
+
+    <match hostlog**>
+      type elasticsearch   
+      log_level info
+      include_tag_key true
+      host "#{ENV['FLUENT_ELASTICSEARCH_HOST']}"
+      port "#{ENV['FLUENT_ELASTICSEARCH_PORT']}"
+      index_name logstash-containers.${tag}.%Y%m%d
+      logstash_prefix logstash-containers
       user admin
       password admin
       logstash_format true
