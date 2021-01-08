@@ -64,20 +64,22 @@ spec:
   selector:
     app: couchpotato
   type: ClusterIP
+
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: couchpotatoingress
   namespace: torrent
-  # annotations:
-  #   kubernetes.io/ingress.class: traefik
 spec:
   rules:
   - host: couch.bas
     http:
       paths:
       - path: /
+        pathType: Prefix
         backend:
-          serviceName: couchpotato
-          servicePort: 80
+          service:
+            name: couchpotato
+            port:
+              number: 80

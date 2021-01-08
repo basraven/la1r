@@ -137,22 +137,20 @@ spec:
     app: nextcloud
   type: ClusterIP
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: nextcloud-ingress
+  name: nextcloudingress
   namespace: nextcloud
-  # annotations:
-  #   kubernetes.io/ingress.class: traefik
 spec:
   rules:
   - host: cloud.bas
     http:
       paths:
       - path: /
+        pathType: Prefix
         backend:
-          serviceName: nextcloud-service
-          servicePort: 80
-  tls:
-  - hosts:
-    - nextcloud.bas
+          service:
+            name: nextcloud-service
+            port:
+              number: 80

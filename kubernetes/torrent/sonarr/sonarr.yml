@@ -69,27 +69,25 @@ spec:
   selector:
     app: sonarr
   type: ClusterIP
+
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: sonarringress
   namespace: torrent
-  # annotations:
-  #   kubernetes.io/ingress.class: traefik
 spec:
   rules:
   - host: sonarr.bas
     http:
       paths:
       - path: /
+        pathType: Prefix
         backend:
-          serviceName: sonarr
-          servicePort: 80
-  tls:
-  - hosts:
-    - sonarr.bas
-
+          service:
+            name: sonarr
+            port:
+              number: 80
 
 ---
 apiVersion: v1

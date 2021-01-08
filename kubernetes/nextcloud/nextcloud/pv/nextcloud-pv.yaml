@@ -13,7 +13,7 @@ spec:
   accessModes:
   - ReadWriteMany
   nfs:
-    server: 192.168.5.3 # ip addres of nfs server
+    server: 192.168.5.100 # ip addres of nfs server
     path: "/mnt/ssd/ha/nextcloud/config" # path to directory
 ---
 kind: PersistentVolume
@@ -30,5 +30,5 @@ spec:
   accessModes:
   - ReadWriteMany
   nfs:
-    server: 192.168.5.3 # ip addres of nfs server
+    server: 192.168.5.100 # ip addres of nfs server
     path: "/mnt/hdd/ha/nextcloud/data" # path to directory

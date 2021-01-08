@@ -14,9 +14,3 @@ nfs_storage_classes:
     hostpath: "/mnt/hdd/na"
   222:
     hostpath: "/mnt/hdd/tmp"
-  113:
-    hostpath: "/mnt/slhdd/ha"
-  213:
-    hostpath: "/mnt/slhdd/na"
-  223:
-    hostpath: "/mnt/slhdd/tmp"

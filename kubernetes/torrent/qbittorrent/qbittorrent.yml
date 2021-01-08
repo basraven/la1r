@@ -316,29 +316,6 @@ spec:
   selector:
     app: qbittorrent
   type: ClusterIP
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: qbittorrentingress
-  namespace: torrent
-spec:
-  rules:
-  - host: torrent.bas
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: qbittorrent
-            port:
-              number: 80
-  # tls:
-  # - hosts:
-  #   - torrent.bas
-
-
 
 ---
 apiVersion: v1
@@ -374,3 +351,22 @@ spec:
   type: NodePort
   # externalTrafficPolicy: Local
   # loadBalancerIP: 192.168.6.71
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: qbittorrentingress
+  namespace: torrent
+spec:
+  rules:
+  - host: torrent.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: qbittorrent
+            port:
+              number: 80

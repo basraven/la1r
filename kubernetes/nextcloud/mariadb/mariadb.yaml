@@ -39,22 +39,6 @@ data:
     innodb_file_format=barracuda
     innodb_file_per_table=1
 ---
-kind: PersistentVolumeClaim
-apiVersion: v1
-metadata:
-  name: nextcloud-mariadb-claim
-  namespace: nextcloud
-spec:
-  accessModes:
-  - ReadWriteMany
-  storageClassName: nextcloud-mariadb
-  selector:
-    matchLabels:
-      contenttype: "nextcloud-mariadb"
-  resources:
-    requests:
-      storage: 30Gi
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
