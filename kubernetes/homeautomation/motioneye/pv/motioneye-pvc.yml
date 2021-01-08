@@ -1,0 +1,28 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: motioneye-config-claim
+  namespace: homeautomation
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: motioneye-data-claim
+  namespace: homeautomation
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: cameara-data
+  selector:
+    matchLabels:
+      contenttype: "cameara-data"
+  resources:
+    requests:
+      storage: 200Gi

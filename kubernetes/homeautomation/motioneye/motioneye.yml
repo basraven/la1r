@@ -1,0 +1,78 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: motioneye
+  namespace: homeautomation
+  labels:
+    app: motioneye
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: motioneye
+  template:
+    metadata:
+      labels:
+        app: motioneye
+    spec:
+      volumes:
+        - name: motioneye-data-volume
+          persistentVolumeClaim:
+            claimName: motioneye-data-claim
+        - name: motioneye-config-volume
+          persistentVolumeClaim:
+            claimName: motioneye-config-claim
+      containers:
+      - name: motioneye
+        image: ccrisan/motioneye:master-amd64
+        ports:
+        - name: http
+          containerPort: 8765
+        env:
+        - name: TZ
+          value: Europe/Amsterdam
+        - name: PGID
+          value: "1000"
+        - name: PUID
+          value: "1000"
+        volumeMounts:
+          - name: motioneye-config-volume
+            mountPath: /etc/motioneye 
+          - name: motioneye-data-volume
+            mountPath: /var/lib/motioneye
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: motioneye
+  name: motioneye
+  namespace: homeautomation
+spec:
+  ports:
+  - name: http
+    targetPort: 8765
+    port: 80
+  selector:
+    app: motioneye
+  type: ClusterIP
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: motioneyeingress
+  namespace: homeautomation
+spec:
+  rules:
+  - host: cam.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: motioneye
+            port:
+              number: 80

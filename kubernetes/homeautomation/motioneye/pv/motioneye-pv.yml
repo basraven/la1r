@@ -1,0 +1,17 @@
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: cameara-data-pv
+  labels:
+    contenttype: "cameara-data"
+spec:
+  capacity:
+    storage: 200Gi
+  storageClassName: cameara-data
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteMany
+  nfs:
+    server: 192.168.5.3 # ip addres of nfs server
+    path: "/mnt/hdd/na/cameras" # path to directory
