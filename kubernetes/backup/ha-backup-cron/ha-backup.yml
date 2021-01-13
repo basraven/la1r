@@ -2,23 +2,23 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: na-backup-script
+  name: ha-backup-script
   namespace: backup
 data:
-  na-backup.sh: |-
+  ha-backup.sh: |-
     #!/bin/sh
     apk add rsync
-    rsync -a -z --no-perms --no-owner --no-group --delete --force --update --progress /na/* /na-mirror
+    rsync -a -z --no-perms --no-owner --no-group --delete --force --update --progress /ha/* /ha-mirror
 ---
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
-  name: na-backup
+  name: ha-backup
   namespace: backup
   labels:
-    app: na-backup
+    app: ha-backup
 spec:
-  schedule: "5 4 * * 0"
+  schedule: "5 2 * * *"
   concurrencyPolicy: Replace
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
@@ -27,7 +27,7 @@ spec:
       template:
         metadata:
           labels:
-            app: na-backup
+            app: ha-backup
         spec:
           affinity:
             nodeAffinity:
@@ -39,35 +39,36 @@ spec:
                     values: [ "true" ]
           restartPolicy: Never    
           volumes:
-          - name: na-data-volume
+          - name: ha-data-volume
+            persistentVolumeClaim:
             nfs: 
               server: 192.168.5.100
-              path: /mnt/hdd/na
-          - name: na-data-mirror-volume
+              path: /mnt/hdd/ha
+          - name: ha-data-mirror-volume
             nfs: 
               server: 192.168.5.1
-              path: /mnt/hdd/na
-          - name: na-backup-script-volume
+              path: /mnt/hdd/ha
+          - name: ha-backup-script-volume
             configMap:
-              name: na-backup-script
+              name: ha-backup-script
               items:
-              - key: na-backup.sh
-                path: na-backup.sh
+              - key: ha-backup.sh
+                path: ha-backup.sh
               defaultMode: 0744
           containers:
-          - name: na-backup
+          - name: ha-backup
             image: alpine:latest
             resources:
               limits:
                 memory: "2048Mi"
                 cpu: "1500m"
             command: 
-              - /na-backup-script/na-backup.sh
+              - /ha-backup-script/ha-backup.sh
             volumeMounts:
-              - name: na-data-volume
-                mountPath: /na
-              - name: na-data-mirror-volume
-                mountPath: /na-mirror
-              - name: na-backup-script-volume
-                mountPath: /na-backup-script
+              - name: ha-data-volume
+                mountPath: /ha
+              - name: ha-data-mirror-volume
+                mountPath: /ha-mirror
+              - name: ha-backup-script-volume
+                mountPath: /ha-backup-script
    

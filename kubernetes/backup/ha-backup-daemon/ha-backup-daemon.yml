@@ -1,0 +1,89 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ha-backup-script-daemon
+  namespace: backup
+data:
+  ha-backup.sh: |-
+    #!/bin/sh
+    apk add rsync lsyncd
+    echo 1524288 > /proc/sys/fs/inotify/max_user_watches
+    lsyncd -nodaemon /ha-backup-script-daemon/lsyncd.conf
+  lsyncd.conf: |-
+    sync {
+        default.rsync,
+        source    = "/ha",
+        target    = "/ha-mirror",
+        delay     = 15, 
+        rsync     = {
+            binary   = "/usr/bin/rsync",
+            archive  = true,
+            compress = true,
+            group = false,
+            owner = false
+        }
+    }
+    
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ha-backup-daemon
+  namespace: backup
+  labels:
+    app: ha-backup-daemon
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ha-backup-daemon
+  template:
+    metadata:
+      labels:
+        app: ha-backup-daemon
+    spec:
+        affinity:
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution :
+              nodeSelectorTerms:
+              - matchExpressions:
+                - key: la1r.storage/111
+                  operator: In
+                  values: [ "true" ]    
+        volumes:
+        - name: ha-data-volume
+          persistentVolumeClaim:
+          nfs: 
+            server: 192.168.5.100
+            path: /mnt/hdd/ha
+        - name: ha-data-mirror-volume
+          nfs: 
+            server: 192.168.5.1
+            path: /mnt/hdd/ha
+        - name: ha-backup-script-daemon-volume
+          configMap:
+            name: ha-backup-script-daemon
+            items:
+            - key: ha-backup.sh
+              path: ha-backup.sh
+            - key: lsyncd.conf
+              path: lsyncd.conf
+            defaultMode: 0744
+        containers:
+        - name: ha-backup
+          image: alpine:latest
+          resources:
+            limits:
+              memory: "2048Mi"
+              cpu: "1500m"
+          command: 
+            - /ha-backup-script-daemon/ha-backup.sh
+          volumeMounts:
+            - name: ha-data-volume
+              mountPath: /ha
+            - name: ha-data-mirror-volume
+              mountPath: /ha-mirror
+            - name: ha-backup-script-daemon-volume
+              mountPath: /ha-backup-script-daemon
+  
