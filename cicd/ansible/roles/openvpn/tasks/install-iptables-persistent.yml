@@ -1,22 +1,22 @@
 ---
-- name: Install Openvpn / Install needed tools additionally for CentOS
+- name: Install Openvpn / iptables-persistent
   become: yes
   package:
     name: "{{ item }}"
     state: present
   with_items: 
-    - epel-release
+    - iptables-persistent
   when: ansible_facts['distribution'] == "CentOSStream"
 
-- name: Install Openvpn / Install Package
+- name: Install Openvpn / iptables-persistent
   become: yes
   package:
     name: "{{ item }}"
     state: present
   with_items:
-    - openvpn
+    - iptables-persistent
 
-- name: Install Openvpn / Place server.conf
+- name: Install Openvpn / Copy iptables config
   become: yes
   template: 
     src: rules.v4.j2

@@ -9,6 +9,9 @@
 - include: create-server.yml
   tags:
     - openvpn_server  
+- include: install-iptables-persistent.yml
+  tags:
+    - openvpn_server  
 - include: setup-client.yml
   tags:
     - openvpn_client
