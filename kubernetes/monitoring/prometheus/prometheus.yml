@@ -99,6 +99,14 @@ data:
       
     - name: node
       rules: 
+      - alert: Node down
+        expr: up{nodetype="cluster-node"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          title: Node {{ $labels.instance }} is down
+          description: Failed to scrape {{ $labels.targetname }} on {{ $labels.instance }} for more than 1 minute. Node seems down.
       - alert: HostOutOfMemory
         expr: node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes * 100 < 10
         for: 5m
