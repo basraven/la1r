@@ -22,10 +22,20 @@ data:
       static_configs:
         - targets: [ '192.168.3.179' ]
           labels:
-              name: 'cam-achtertuin'
+              nodeName: 'cam-achtertuin'
+              jobscope: 'node'
         - targets: [ '192.168.3.168' ]
           labels:
-              name: 'cam-voortuin'
+              nodeName: 'cam-voortuin'
+              jobscope: 'node'
+        - targets: [ '192.168.6.64' ]
+          labels:
+              nodeName: 'oven'
+              jobscope: 'node'
+        - targets: [ '192.168.1.37' ]
+          labels:
+              nodeName: 'deurbel'
+              jobscope: 'node'
       relabel_configs:
         - source_labels: [__address__]
           target_label: __param_target
@@ -370,6 +380,7 @@ data:
         ],
         "labels": {
           "targetname": "linux-wayne",
+          "nodeName": "linux-wayne",
           "jobscope": "node",
           "nodetype": "cluster-node"
         }
@@ -380,6 +391,7 @@ data:
         ],
         "labels": {
           "targetname": "jay-c",
+          "nodeName": "jay-c",
           "jobscope": "node",
           "nodetype": "cluster-node"
         }
@@ -390,6 +402,7 @@ data:
         ],
         "labels": {
           "targetname": "ali-bel",
+          "nodeName": "ali-bel",
           "jobscope": "node",
           "nodetype": "peripheral-node"
         }
@@ -400,6 +413,7 @@ data:
         ],
         "labels": {
           "targetname": "kodi-e",
+          "nodeName": "kodi-e",
           "jobscope": "node",
           "nodetype": "peripheral-node"
         }
@@ -410,6 +424,7 @@ data:
         ],
         "labels": {
           "targetname": "kirby",
+          "nodeName": "kirby",
           "jobscope": "node",
           "nodetype": "peripheral-node"
         }
