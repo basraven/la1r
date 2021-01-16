@@ -15,6 +15,24 @@ data:
       honor_labels: true
       static_configs:
       - targets: ['monitoring-prometheus-push-gateway.monitoring:80']
+    - job_name: 'blackbox'
+      metrics_path: /probe
+      params:
+        module: [icmp_ipv4]
+      static_configs:
+        - targets: [ '192.168.3.179' ]
+          labels:
+              name: 'cam-achtertuin'
+        - targets: [ '192.168.3.168' ]
+          labels:
+              name: 'cam-voortuin'
+      relabel_configs:
+        - source_labels: [__address__]
+          target_label: __param_target
+        - source_labels: [__param_target]
+          target_label: instance
+        - target_label: __address__
+          replacement: monitoring-prometheus-blackbox-exporter:80  # This is your blackbox exporter.
     - job_name: 'targetsjson'
       file_sd_configs:
       - files:
@@ -439,6 +457,9 @@ spec:
         ports:
         - containerPort: 9090
         image: prom/prometheus
+        args:
+          - --config.file=/etc/prometheus/prometheus.yml
+          - --storage.tsdb.retention.time=1000d
         volumeMounts:
         - name: prometheus-volume
           mountPath: /prometheus
@@ -486,19 +507,20 @@ spec:
   selector:
     k8s-app: monitoring-prometheus
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: prometheus-ingress
   namespace: monitoring
-  # annotations:
-  #   kubernetes.io/ingress.class: traefik
 spec:
   rules:
   - host: prometheus.bas
     http:
       paths:
       - path: /
+        pathType: Prefix
         backend:
-          serviceName: monitoring-prometheus
-          servicePort: 80
+          service:
+            name: monitoring-prometheus
+            port:
+              number: 80

@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: elasticsearch-claim
+  name: elasticsearch-data-claim
   namespace: monitoring
 spec:
   storageClassName: nfs-212

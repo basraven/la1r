@@ -49,6 +49,10 @@ spec:
         task: efk
         k8s-app: elasticsearch
     spec:
+      volumes:
+      - name: elasticsearch-data-volume
+        persistentVolumeClaim:
+          claimName: elasticsearch-data-claim
       containers:
       - name: elasticsearch
         resources: {}
@@ -57,6 +61,9 @@ spec:
           containerPort: 9200 
         - name: integration
           containerPort: 9300 
+        volumeMounts:
+        - name: elasticsearch-data-volume
+          mountPath: /usr/share/elasticsearch/data
         env:
         - name: discovery.type
           value: single-node
