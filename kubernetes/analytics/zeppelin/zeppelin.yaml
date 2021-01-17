@@ -1,0 +1,103 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zeppelin-server
+  namespace: analytics
+  labels:
+    app: zeppelin-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: zeppelin-server
+  template:
+    metadata:
+      labels:
+        task: zeppelin-server
+        k8s-app: zeppelin-server
+        app: zeppelin-server
+    spec:
+      containers:
+      - name: zeppelin-server
+        env:
+          - name: ZEPPELIN_ADDR
+            value: "0.0.0.0"
+          - name: ZEPPELIN_PORT
+            value: "8080"
+          - name: SPARK_HOME
+            value: "/opt/spark"
+          - name: SPARK_MASTER
+            value: "k8s://https://192.168.5.100:443"
+          - name: PYSPARK_PYTHON
+            value: python
+          - name: PYSPARK_DRIVER_PYTHON
+            value: python
+          - name: ZEPPELIN_K8S_SPARK_CONTAINER_IMAGE
+            value: "basraven/spark:3.0.1"
+          - name: ZEPPELIN_K8S_CONTAINER_IMAGE
+            value: "basraven/zeppelin:0.9.1"
+          - name: ZEPPELIN_DOCKER_CONTAINER_IMAGE
+            value: "basraven/zeppelin:0.9.1"
+          - name: ZEPPELIN_NOTEBOOK_DIR
+            value: "/notebook"
+          - name: SERVICE_DOMAIN
+            value: zeppelin.bas
+          - name: ZEPPELIN_SERVER_RPC_PORTRANGE
+            value: "12320:12320"
+          - name: zeppelin.k8s.namespace
+            value: "analytics"
+        ports:
+        - name: http
+          containerPort: 8080
+        - name: rpc
+          containerPort: 12320
+        image: basraven/zeppelin:0.9.1
+        resources: {}
+        volumeMounts:
+          - name: zeppelin-notebooks-volume
+            mountPath: /notebook 
+      volumes:
+        - name: zeppelin-notebooks-volume
+          persistentVolumeClaim:
+            claimName: zeppelin-notebooks-claim
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zeppelin-server
+  labels:
+    app: zeppelin-server
+  namespace: analytics
+spec:
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: 8080
+  - name: rpc
+    port: 12320
+    protocol: TCP
+    targetPort: 12320
+  selector:
+    app: zeppelin-server
+  type: ClusterIP
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: zeppeliningress
+  namespace: analytics
+spec:
+  rules:
+  - host: zeppelin.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: zeppelin-server
+            port:
+              number: 80
