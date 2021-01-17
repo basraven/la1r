@@ -1,4 +1,0 @@
-FROM apache/zeppelin:0.9.0
-USER root
-RUN pip install py4j && \
- pip install pyspark
