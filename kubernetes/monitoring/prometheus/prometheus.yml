@@ -15,6 +15,15 @@ data:
       honor_labels: true
       static_configs:
       - targets: ['monitoring-prometheus-push-gateway.monitoring:80']
+    - job_name: 'coredns'
+      metrics_path: /metrics
+      static_configs:
+      - targets:
+        - 'consul-0.consul.dns.svc.cluster.local:9153'
+        - 'consul-1.consul.dns.svc.cluster.local:9153'
+        - 'consul-2.consul.dns.svc.cluster.local:9153'
+        - 'consul-3.consul.dns.svc.cluster.local:9153'
+        - 'consul-4.consul.dns.svc.cluster.local:9153'
     - job_name: 'blackbox'
       metrics_path: /probe
       params:
