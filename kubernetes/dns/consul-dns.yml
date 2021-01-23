@@ -42,6 +42,8 @@ spec:
     metadata:
       labels:
         app: consul
+      annotations:
+        deployment: "1"
     spec:
       topologySpreadConstraints:
       - maxSkew: 1
@@ -167,6 +169,7 @@ spec:
               name: serfwan
             - containerPort: 8600
               name: consuldns
+              protocol: UDP
             - containerPort: 8300
               name: server
           livenessProbe:
@@ -224,6 +227,7 @@ spec:
     - name: consuldns
       port: 8600
       targetPort: 8600
+      protocol: UDP
     - name: metrics
       port: 9153
       targetPort: metrics
@@ -242,11 +246,10 @@ spec:
       protocol: UDP
       targetPort: dns-udp
       port: 53
-    # MIXED TYPES ARE NOT ALLOWED
-    # - name: dns-tcp
-    #   protocol: TCP
-    #   targetPort: dns-tcp
-    #   port: 53
+    - name: consul-dns
+      protocol: UDP
+      targetPort: consuldns
+      port: 5353
   selector:
     app: consul
 

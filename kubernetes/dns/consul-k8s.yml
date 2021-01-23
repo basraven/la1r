@@ -28,7 +28,7 @@ rules:
 #   verbs: ["get", "list","watch"]
 ---
 kind: ClusterRoleBinding
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: consul-k8s-all-reader-services-role-binding
 subjects:

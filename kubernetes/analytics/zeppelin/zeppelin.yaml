@@ -109,6 +109,8 @@ spec:
             value: "12320:12320"
           - name: zeppelin.k8s.namespace
             value: "analytics"
+          # - name: spark.executor.instances
+          #   value: "3"
         ports:
         - name: http-zep
           containerPort: 8080
