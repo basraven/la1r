@@ -92,11 +92,11 @@ spec:
           - name: SPARK_MASTER
             value: "k8s://https://192.168.5.100:443"
           - name: PYSPARK_PYTHON
-            value: python2.7
+            value: "python3.7"
           - name: PYSPARK_DRIVER_PYTHON
-            value: python2.7
+            value: "python3.7"
           - name: ZEPPELIN_K8S_SPARK_CONTAINER_IMAGE
-            value: "basraven/spark-py:3.0.1"
+            value: "basraven/spark-py:latest"
           - name: ZEPPELIN_K8S_CONTAINER_IMAGE
             value: "basraven/zeppelin:0.9.1"
           - name: ZEPPELIN_DOCKER_CONTAINER_IMAGE
