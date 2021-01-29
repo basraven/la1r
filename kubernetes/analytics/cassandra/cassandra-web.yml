@@ -3,7 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: cassandra-web
-  namespace: default
+  namespace: analytics
   labels:
     app: cassandra-web
 spec:
@@ -34,7 +34,7 @@ metadata:
   labels:
     app: cassandra-web
   name: cassandra-web
-  namespace: default
+  namespace: analytics
 spec:
   ports:
   - name: http
@@ -48,7 +48,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: cassandrawebingress
-  namespace: default
+  namespace: analytics
 spec:
   rules:
   - host: cassandra.bas

@@ -5,10 +5,14 @@ metadata:
   labels:
     app: cassandra
   name: cassandra
+  namespace: analytics
 spec:
   clusterIP: None
   ports:
-    - port: 9042
+    - name: jmx
+      port: 7199
+    - name: cql
+      port: 9042
   selector:
     app: cassandra
 ---
@@ -17,7 +21,7 @@ apiVersion: "apps/v1" # for k8s versions before 1.9.0 use apps/v1beta2  and befo
 kind: StatefulSet
 metadata:
   name: cassandra
-  # namespace: default
+  namespace: analytics
   labels:
      app: cassandra
 spec:
@@ -69,14 +73,14 @@ spec:
           - name: HEAP_NEWSIZE
             value: 100M
           - name: CASSANDRA_SEEDS
-            value: "cassandra-0.cassandra.default.svc.cluster.local"
+            value: "cassandra-0.cassandra.analytics.svc.cluster.local"
             # value: cassandra-0.cassandra.default.svc.cluster.local,cassandra-1.cassandra.default.svc.cluster.local
           - name: CASSANDRA_CLUSTER_NAME
-            value: "K8Demo"
+            value: "rave"
           - name: CASSANDRA_DC
-            value: "DC1-K8Demo"
+            value: "DC1-rave"
           - name: CASSANDRA_RACK
-            value: "Rack1-K8Demo"
+            value: "Rack1-rave"
           # - name: CASSANDRA_SEED_PROVIDER
           #   value: io.k8s.cassandra.KubernetesSeedProvider
           - name: POD_IP
@@ -97,13 +101,13 @@ spec:
   volumeClaimTemplates:
   - metadata:
       name: cassandra-data
-      # namespace: default
+      namespace: analytics
     spec:
-      storageClassName: nfs-212
+      storageClassName: nfs-112 
       accessModes: [ "ReadWriteMany" ]
       resources:
         requests:
-          storage: 1Gi
+          storage: 100Gi
 
 
 

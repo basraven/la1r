@@ -111,6 +111,7 @@ spec:
             value: "analytics"
           # - name: spark.executor.instances
           #   value: "3"
+        resources: {}
         ports:
         - name: http-zep
           containerPort: 8080
