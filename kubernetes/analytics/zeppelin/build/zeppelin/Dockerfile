@@ -4,5 +4,7 @@ USER root
 RUN wget https://mirror.lyrahosting.com/apache/spark/spark-$SPARK_VERSION/spark-$SPARK_VERSION-bin-hadoop3.2.tgz && tar -zvxf ./spark-$SPARK_VERSION-bin-hadoop3.2.tgz && mv  ./spark-$SPARK_VERSION-bin-hadoop3.2 /opt/spark  && rm -rf ./spark-$SPARK_VERSION-bin-hadoop3.2.tgz  
 RUN pip install py4j && \
     pip install pyspark && \
+    pip install cassandra-driver && \
+    pip install websockets && \
     ./bin/install-interpreter.sh --name md,shell,angular
 # USER zeppelin

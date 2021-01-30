@@ -72,6 +72,7 @@ spec:
     spec:
       containers:
       - name: zeppelin-server
+        imagePullPolicy: Always
         env:
           - name: POD_UID
             valueFrom:
@@ -107,10 +108,19 @@ spec:
             value: zeppelin.bas
           - name: ZEPPELIN_SERVER_RPC_PORTRANGE
             value: "12320:12320"
+          - name:  ZEPPELIN_NOTEBOOK_CRON_ENABLE
+            value: "true"
           - name: zeppelin.k8s.namespace
             value: "analytics"
-          # - name: spark.executor.instances
-          #   value: "3"
+          - name: SPARK_EXECUTOR_INSTANCES
+            value: "3"
+          
+          # - name: CASSANDRA_HOSTS
+          #   value: "cassandra"
+          # - name: CASSANDRA_CLUSTER
+          #   value: "rave"
+          # - name: CASSANDRA_KEYSPACE
+          #   value: "trading"
         resources: {}
         ports:
         - name: http-zep
