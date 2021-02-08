@@ -1,3 +1,25 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: zeppelin-site-conf
+data:
+  zeppelin-site.xml: |
+    <?xml version="1.0"?>
+    <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+
+    <configuration>
+
+    <property>
+      <name>zeppelin.helium.registry</name>
+      <value>helium,https://s3.amazonaws.com/helium-package/helium.json</value>
+      <description>Helium Registry</description>
+    </property>
+
+    </configuration>
+
+
+
 # ---
 # apiVersion: v1
 # kind: ConfigMap
@@ -114,7 +136,6 @@ spec:
             value: "analytics"
           - name: SPARK_EXECUTOR_INSTANCES
             value: "3"
-          
           # - name: CASSANDRA_HOSTS
           #   value: "cassandra"
           # - name: CASSANDRA_CLUSTER
@@ -130,10 +151,12 @@ spec:
         - name: rpc
           containerPort: 12320
         image: basraven/zeppelin:latest
-        resources: {}
         volumeMounts:
           - name: zeppelin-notebooks-volume
             mountPath: /notebook 
+          - name: zeppelin-site-conf-volume
+            mountPath: /zeppelin/conf/zeppelin-site.xml
+            subPath: zeppelin-site.xml
       # - name: zeppelin-server-gateway
       #   image: nginx:1.14.0
       #   command: ["/bin/sh", "-c"]
@@ -169,6 +192,12 @@ spec:
         - name: zeppelin-notebooks-volume
           persistentVolumeClaim:
             claimName: zeppelin-notebooks-claim
+        - name: zeppelin-site-conf-volume
+          configMap:
+            name: zeppelin-site-conf
+            items:
+            - key: zeppelin-site.xml
+              path: zeppelin-site.xml
         - name: nginx-conf
           configMap:
             name: zeppelin-server-conf
