@@ -40,7 +40,13 @@ spec:
       containers:
       - name: plex
         image: plexinc/pms-docker
-        resources: {}
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "200m"
+          limits:
+            memory: "3Gi"
+            cpu: "2000m"
         ports:
         - name: http
           containerPort: 32400
