@@ -198,9 +198,12 @@ spec:
       containers:
       - name: vpn
         resources: 
+          requests:
+            memory: "100Mi"
+            cpu: "100m"
           limits:
-            memory: "2056Mi"
-            cpu: "2000m"
+            memory: "1024Mi"
+            cpu: "500m"
         image: ubuntu
         command: [ "/goose/set-goose.sh"]
         stdin: true
@@ -258,11 +261,11 @@ spec:
         #       - 'curl ipinfo.io |  jq -r ".timezone" |  grep "Europe/Budapest"'
         resources: 
           requests:
+            memory: "100Mi"
+            cpu: "100m"
+          limits:
             memory: "1024Mi"
             cpu: "1000m"
-          limits:
-            memory: "2056Mi"
-            cpu: "2000m"
         image: linuxserver/qbittorrent
         command: [ "/goose/run-qbittorrent.sh"]
         stdin: true
