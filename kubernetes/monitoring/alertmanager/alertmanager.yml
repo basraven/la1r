@@ -47,6 +47,13 @@ spec:
         ports:
         - containerPort: 9093
         image: prom/alertmanager
+        resources:
+          requests:
+            cpu: 10m
+            memory: 56Mi
+          limits:
+            cpu: 100m
+            memory: 128Mi
         volumeMounts:
         # - name: alertmanager
         #   mountPath: /alertmanager

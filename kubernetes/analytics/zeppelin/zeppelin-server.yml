@@ -142,7 +142,13 @@ spec:
           #   value: "rave"
           # - name: CASSANDRA_KEYSPACE
           #   value: "trading"
-        resources: {}
+        resources:
+          requests:
+           cpu: "100m"
+           memory: 128Mi
+          limits:
+            cpu: "300m"
+            memory: 512Mi
         ports:
         - name: http-zep
           containerPort: 8080

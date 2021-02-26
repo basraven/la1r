@@ -42,6 +42,13 @@ spec:
         ports:
         - containerPort: 80
         image: auspexeu/openvpn-status
+        resources:
+          requests:
+            cpu: 10m
+            memory: 56Mi
+          limits:
+            cpu: 100m
+            memory: 128Mi
         volumeMounts:
         - name: openvpn-status-settings
           mountPath: /usr/src/app/cfg.json
