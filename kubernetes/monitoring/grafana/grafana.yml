@@ -24,7 +24,13 @@ spec:
           # - 8.8.4.4
       containers:
       - name: grafana
-        resources: {}
+        resources:
+          requests:
+            cpu: 50m
+            memory: 56Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
         image: grafana/grafana
         ports:
         - containerPort: 3000

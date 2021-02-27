@@ -19,6 +19,13 @@ spec:
       containers:
       - name: cassandra-web
         image: basraven/cassandra-web
+        resources:
+          requests:
+           cpu: "50m"
+           memory: 56Mi
+          limits:
+            cpu: "200m"
+            memory: 256Mi
         ports:
         - name: http
           containerPort: 3000

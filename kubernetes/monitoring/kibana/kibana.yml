@@ -135,7 +135,13 @@ spec:
     spec:
       containers:
       - name: kibana
-        resources: {}
+        resources:
+          requests:
+            cpu: 100m
+            memory: 512Mi
+          limits:
+            cpu: 300m
+            memory: 1Gi
         ports:
         - containerPort: 5601 
         env:
