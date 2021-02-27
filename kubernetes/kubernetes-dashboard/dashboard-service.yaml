@@ -61,8 +61,9 @@ spec:
     services:
     - name: kubernetes-dashboard
       port: 443
-  tls: {}
-
+  tls:
+    secretName: kubernetes-bas-tls
+# Uses cert-kubernetes-dashboard.yml
 
 
 ---
