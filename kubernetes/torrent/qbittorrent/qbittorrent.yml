@@ -12,7 +12,7 @@ data:
     apt-get install openvpn iputils-ping net-tools curl  jq -y
     sysctl net.ipv4.ip_forward=1
     echo "## VPN Installs complete"
-    /usr/sbin/openvpn /etc/openvpn/cert1.conf   &
+    /usr/sbin/openvpn /etc/openvpn/ovpnfiles/cert4.conf   &
     sleep infinity
 
 
@@ -22,17 +22,17 @@ data:
     apt-get update
     apt-get install iputils-ping net-tools curl jq -y
     sysctl net.ipv4.ip_forward=1
-    SLEEPTIME=100
+    SLEEPTIME=80
     echo "## Sleeping $SLEEPTIME seconds to wait for VPN..."
     sleep $SLEEPTIME
     /init
  
-  # vpn-delete-route.sh: |-
-  #   #!/bin/sh
-  #   echo "## In VPN DELETE ROUTE"
-  #   export VPN_GATEWAY=$(route -n | awk 'NR==3' | awk '{ print $2 }')
-  #   nohup bash -c "sleep 3 && echo 'Deleting $VPN_GATEWAY' && ip route del 0.0.0.0/1 via $VPN_GATEWAY && curl ipinfo.io && echo '## Finished delete route' "&
-  #   nohup bash -c "sleep 2 && ip route add 10.244.0.0/16 via 169.254.1.1 dev eth0" &
+  vpn-delete-route.sh: |-
+    #!/bin/sh
+    echo "## In VPN DELETE ROUTE AFTER IF UP IN .OVPN"
+    export VPN_GATEWAY=$(route -n | awk 'NR==3' | awk '{ print $2 }')
+    nohup bash -c "sleep 3 && echo 'Deleting $VPN_GATEWAY' && ip route del 0.0.0.0/1 via $VPN_GATEWAY && curl ipinfo.io && echo '## Finished delete route' "&
+    nohup bash -c "sleep 2 && ip route add 10.244.0.0/16 via 169.254.1.1 dev eth0" &
   
   qBittorrent.conf: |-
     [AutoRun]
@@ -144,13 +144,6 @@ spec:
       - name: set-goose-ovpn-volume
         secret:
           secretName: goose-credentials
-          items:
-          - key: cert1.conf
-            path: cert1.conf
-          - key: cert2.conf
-            path: cert2.conf
-          - key: cert3.conf
-            path: cert3.conf
           defaultMode: 0744
       - name: update-resolv-conf
         configMap:
@@ -230,14 +223,7 @@ spec:
             mountPath: /goose/vpn-delete-route.sh
             subPath: vpn-delete-route.sh
           - name: set-goose-ovpn-volume
-            mountPath: /etc/openvpn/cert1.conf
-            subPath: cert1.conf
-          - name: set-goose-ovpn-volume
-            mountPath: /etc/openvpn/cert2.conf
-            subPath: cert2.conf
-          - name: set-goose-ovpn-volume
-            mountPath: /etc/openvpn/cert3.conf
-            subPath: cert3.conf
+            mountPath: /etc/openvpn/ovpnfiles
           - name: goose-credentials-volume
             mountPath: /goose/login.conf
             subPath: login.conf
