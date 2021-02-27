@@ -11,10 +11,28 @@ data:
     <configuration>
 
     <property>
+      <name>cassandra.hosts</name>
+      <value>cassandra</value>
+      <description>Hosts of Cassandra</description>
+    </property>
+    
+    <property>
+      <name>cassandra.cluster</name>
+      <value>rave</value>
+      <description>Cluster of Cassandra</description>
+    </property>
+    
+    <property>
+      <name>cassandra.keyspace</name>
+      <value>trading</value>
+      <description>Keyspace of Cassandra</description>
+    </property>
+
+    <property>
       <name>zeppelin.helium.registry</name>
       <value>helium,https://s3.amazonaws.com/helium-package/helium.json</value>
       <description>Helium Registry</description>
-    </property>
+    </property>   
 
     </configuration>
 
@@ -136,12 +154,6 @@ spec:
             value: "analytics"
           - name: SPARK_EXECUTOR_INSTANCES
             value: "3"
-          # - name: CASSANDRA_HOSTS
-          #   value: "cassandra"
-          # - name: CASSANDRA_CLUSTER
-          #   value: "rave"
-          # - name: CASSANDRA_KEYSPACE
-          #   value: "trading"
         resources: {}
         ports:
         - name: http-zep
