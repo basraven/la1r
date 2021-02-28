@@ -266,3 +266,55 @@ spec:
   #           name: zeppelin-server
   #           port:
   #             number: 80
+
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: zeppelin-bas
+  namespace: analytics
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: zeppelin-bas-tls
+  commonName: zeppelin.bas
+  dnsNames:
+  - zeppelin.bas
+  - www.zeppelin.bas
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: zeppelin-non-tls
+  namespace: analytics
+spec:
+  entryPoints:
+    - web
+  routes:
+  - match: Host(`zeppelin.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: zeppelin-server
+      port: 80
+    middlewares:
+    - name: http-redirect-to-https
+      namespace: traefik
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: zeppelin-tls
+  namespace: analytics
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`zeppelin.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: zeppelin-server
+      port: 80
+  tls:
+    secretName: zeppelin-bas-tls
