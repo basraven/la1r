@@ -11,8 +11,8 @@ data:
     apt-get update
     apt-get install openvpn iputils-ping net-tools curl  jq -y
     sysctl net.ipv4.ip_forward=1
-    echo "## Installs complete"
-    /usr/sbin/openvpn /etc/openvpn/cert2.conf   &
+    echo "## VPN Installs complete"
+    /usr/sbin/openvpn /etc/openvpn/ovpnfiles/cert4.conf   &
     sleep infinity
 
 
@@ -22,14 +22,14 @@ data:
     apt-get update
     apt-get install iputils-ping net-tools curl jq -y
     sysctl net.ipv4.ip_forward=1
-    SLEEPTIME=40
-    echo "## Sleeping $SLEEPTIME secs..."
+    SLEEPTIME=80
+    echo "## Sleeping $SLEEPTIME seconds to wait for VPN..."
     sleep $SLEEPTIME
     /init
  
   vpn-delete-route.sh: |-
     #!/bin/sh
-    echo "## In VPN DELETE ROUTE"
+    echo "## In VPN DELETE ROUTE AFTER IF UP IN .OVPN"
     export VPN_GATEWAY=$(route -n | awk 'NR==3' | awk '{ print $2 }')
     nohup bash -c "sleep 3 && echo 'Deleting $VPN_GATEWAY' && ip route del 0.0.0.0/1 via $VPN_GATEWAY && curl ipinfo.io && echo '## Finished delete route' "&
     nohup bash -c "sleep 2 && ip route add 10.244.0.0/16 via 169.254.1.1 dev eth0" &
@@ -93,7 +93,7 @@ data:
     WebUI\HTTPS\Enabled=false
     WebUI\HostHeaderValidation=true
     WebUI\LocalHostAuth=false
-    WebUI\Port=8080
+    WebUI\Port=8088
     WebUI\RootFolder=
     WebUI\ServerDomains=*
     WebUI\UseUPnP=true
@@ -127,11 +127,13 @@ spec:
                 operator: In
                 values:
                 - linux-wayne
-      dnsConfig:
-        # Not sure if this is really needed...
-        nameservers:
-          - 8.8.8.8
-      dnsPolicy: None
+      # dnsConfig:
+      #   # Not sure if this is really needed...
+      #   nameservers:
+      #     - 8.8.8.8
+      # dnsPolicy: None
+      # dnsPolicy: Default
+      # hostNetwork: true
       volumes:
       - name: goose-credentials-volume
         secret:
@@ -143,13 +145,6 @@ spec:
       - name: set-goose-ovpn-volume
         secret:
           secretName: goose-credentials
-          items:
-          - key: cert1.conf
-            path: cert1.conf
-          - key: cert2.conf
-            path: cert2.conf
-          - key: cert3.conf
-            path: cert3.conf
           defaultMode: 0744
       - name: update-resolv-conf
         configMap:
@@ -198,13 +193,16 @@ spec:
       containers:
       - name: vpn
         resources: 
+          requests:
+            memory: "128Mi"
+            cpu: "50m"
           limits:
-            memory: "2056Mi"
-            cpu: "2000m"
+            memory: "512Mi"
+            cpu: "200m"
         image: ubuntu
         command: [ "/goose/set-goose.sh"]
-        stdin: true
-        tty: true
+        # stdin: true
+        # tty: true
         securityContext:
           allowPrivilegeEscalation: true
           privileged: true
@@ -226,18 +224,83 @@ spec:
             mountPath: /goose/vpn-delete-route.sh
             subPath: vpn-delete-route.sh
           - name: set-goose-ovpn-volume
-            mountPath: /etc/openvpn/cert1.conf
-            subPath: cert1.conf
-          - name: set-goose-ovpn-volume
-            mountPath: /etc/openvpn/cert2.conf
-            subPath: cert2.conf
-          - name: set-goose-ovpn-volume
-            mountPath: /etc/openvpn/cert3.conf
-            subPath: cert3.conf
+            mountPath: /etc/openvpn/ovpnfiles
           - name: goose-credentials-volume
             mountPath: /goose/login.conf
             subPath: login.conf
+      # - name: trans
+      #   resources: 
+      #     requests:
+      #       memory: "256Mi"
+      #       cpu: "100m"
+      #     limits:
+      #       memory: "2056Mi"
+      #       cpu: "2000m"
+      #   image: linuxserver/transmission
+      #   # command: [ "/goose/run-qbittorrent.sh"]
+      #   # stdin: true
+      #   # tty: true
+      #   securityContext:
+      #     allowPrivilegeEscalation: true
+      #     privileged: true
+      #     capabilities:
+      #       add:
+      #         - NET_ADMIN
+      #   ports:
+      #   - name: http
+      #     containerPort: 9091
+      #   - name: bittorrent
+      #     containerPort: 30163
+      #   env:
+      #   - name: TZ
+      #     value: Europe/Amsterdam
+      #   - name: PGID
+      #     value: "1000"
+      #   - name: PUID
+      #     value: "1000"
       - name: qbit
+        resources: 
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "2056Mi"
+            cpu: "2000m"
+        image: linuxserver/qbittorrent
+        command: [ "/goose/run-qbittorrent.sh"]
+        # stdin: true
+        # tty: true
+        securityContext:
+          allowPrivilegeEscalation: true
+          privileged: true
+          capabilities:
+            add:
+              - NET_ADMIN
+        ports:
+        - name: http
+          containerPort: 8088
+        - name: bittorrent
+          containerPort: 30163
+        env:
+        - name: TZ
+          value: Europe/Amsterdam
+        - name: PGID
+          value: "1000"
+        - name: PUID
+          value: "1000"
+        - name: WEBUI_PORT
+          value: "8088"
+        volumeMounts:
+          - name: torrent-volume
+            mountPath: /downloads
+          - name: qbittorrent-config-client
+            mountPath: /config/qBittorrent/qBittorrent.conf
+            subPath: qBittorrent.conf
+          - name: qbittorrent-config-qbit
+            mountPath: /goose/run-qbittorrent.sh
+            subPath: run-qbittorrent.sh
+          - name: qbittorrent-state
+            mountPath: /config
         # livenessProbe:
         #   initialDelaySeconds: 20
         #   periodSeconds: 20
@@ -256,49 +319,25 @@ spec:
         #       - /bin/sh
         #       - -c
         #       - 'curl ipinfo.io |  jq -r ".timezone" |  grep "Europe/Budapest"'
-        resources: 
-          requests:
-            memory: "1024Mi"
-            cpu: "1000m"
-          limits:
-            memory: "2056Mi"
-            cpu: "2000m"
-        image: linuxserver/qbittorrent
-        command: [ "/goose/run-qbittorrent.sh"]
-        stdin: true
-        tty: true
-        securityContext:
-          allowPrivilegeEscalation: true
-          privileged: true
-          capabilities:
-            add:
-              - NET_ADMIN
-        ports:
-        - name: http
-          containerPort: 8080
-        - name: bittorrent-port
-          containerPort: 30163
-          protocol: UDP
-        env:
-        - name: TZ
-          value: Europe/Amsterdam
-        - name: PGID
-          value: "1000"
-        - name: PUID
-          value: "1000"
-        - name: WEBUI_PORT
-          value: "8080"
-        volumeMounts:
-          - name: torrent-volume
-            mountPath: /downloads
-          - name: qbittorrent-config-client
-            mountPath: /config/qBittorrent/qBittorrent.conf
-            subPath: qBittorrent.conf
-          - name: qbittorrent-config-qbit
-            mountPath: /goose/run-qbittorrent.sh
-            subPath: run-qbittorrent.sh
-          - name: qbittorrent-state
-            mountPath: /config
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: qbittorrent
+  name: qbittorrent-nodeport
+  namespace: torrent
+spec:
+  ports:
+  - name: bittorrent
+    targetPort: 30163
+    nodePort: 30163
+    port: 30163
+  selector:
+    app: qbittorrent
+  type: NodePort
+
 
 ---
 apiVersion: v1
@@ -311,46 +350,11 @@ metadata:
 spec:
   ports:
   - name: http
-    targetPort: 8080
+    targetPort: 8088
     port: 80
   selector:
     app: qbittorrent
   type: ClusterIP
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: qbittorrent-lb-service
-  namespace: torrent
-spec:
-  ports:
-  - name: http
-    port: 80
-    targetPort: 8080
-  selector:
-    app: qbittorrent
-  type: LoadBalancer
-  externalTrafficPolicy: Local
-  loadBalancerIP: 192.168.6.61
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: qbittorrent-lb-torrent-service
-  namespace: torrent
-spec:
-  ports:
-  - name: bittorrent-port
-    port: 30163
-    targetPort: 30163
-    protocol: UDP
-    nodePort: 30163
-  selector:
-    app: qbittorrent
-  type: NodePort
-  # externalTrafficPolicy: Local
-  # loadBalancerIP: 192.168.6.71
 
 ---
 apiVersion: networking.k8s.io/v1
@@ -370,3 +374,55 @@ spec:
             name: qbittorrent
             port:
               number: 80
+
+
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: torrent-bas
+  namespace: torrent
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: torrent-bas-tls
+  commonName: torrent.bas
+  dnsNames:
+  - torrent.bas
+  - www.torrent.bas
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: torrent-tls
+  namespace: torrent
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`torrent.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: qbittorrent
+      port: 80
+  tls:
+    secretName: torrent-bas-tls
+
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: qbittorrent-lb-service
+#   namespace: torrent
+# spec:
+#   ports:
+#   - name: http
+#     port: 80
+#     targetPort: 8080
+#   selector:
+#     app: qbittorrent
+#   type: LoadBalancer
+#   externalTrafficPolicy: Local
+#   loadBalancerIP: 192.168.6.61

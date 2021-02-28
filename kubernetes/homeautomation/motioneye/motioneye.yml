@@ -26,6 +26,13 @@ spec:
       containers:
       - name: motioneye
         image: ccrisan/motioneye:master-amd64
+        resources:
+          requests:
+            cpu: 400m
+            memory: 512Mi
+          limits:
+            cpu: 600m
+            memory: 1Gi
         ports:
         - name: http
           containerPort: 8765
@@ -76,3 +83,36 @@ spec:
             name: motioneye
             port:
               number: 80
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: motioneye-bas
+  namespace: homeautomation
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: motioneye-bas-tls
+  commonName: cam.bas
+  dnsNames:
+  - cam.bas
+  - www.cam.bas
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: motioneye-tls
+  namespace: homeautomation
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`cam.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: motioneye
+      port: 80
+  tls:
+    secretName: motioneye-bas-tls

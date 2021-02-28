@@ -15,6 +15,15 @@ data:
       honor_labels: true
       static_configs:
       - targets: ['monitoring-prometheus-push-gateway.monitoring:80']
+    - job_name: 'coredns'
+      metrics_path: /metrics
+      static_configs:
+      - targets:
+        - 'consul-0.consul.dns.svc.cluster.local:9153'
+        - 'consul-1.consul.dns.svc.cluster.local:9153'
+        - 'consul-2.consul.dns.svc.cluster.local:9153'
+        - 'consul-3.consul.dns.svc.cluster.local:9153'
+        - 'consul-4.consul.dns.svc.cluster.local:9153'
     - job_name: 'blackbox'
       metrics_path: /probe
       params:
@@ -539,3 +548,37 @@ spec:
             name: monitoring-prometheus
             port:
               number: 80
+
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: prometheus-bas
+  namespace: monitoring
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: prometheus-bas-tls
+  commonName: prometheus.bas
+  dnsNames:
+  - prometheus.bas
+  - www.prometheus.bas
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: prometheus-tls
+  namespace: monitoring
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`prometheus.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: monitoring-prometheus
+      port: 80
+  tls:
+    secretName: prometheus-bas-tls

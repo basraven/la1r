@@ -18,6 +18,13 @@ spec:
     spec:
       containers:
       - name: discord-webhook
+        resources:
+          requests:
+            cpu: 10m
+            memory: 56Mi
+          limits:
+            cpu: 100m
+            memory: 128Mi
         ports:
         - containerPort: 9094
         image: benjojo/alertmanager-discord

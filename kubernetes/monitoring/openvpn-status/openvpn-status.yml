@@ -10,7 +10,7 @@ data:
       "port": 80,
       "bind": "0.0.0.0",
       "servers": [
-        {"id": 0, "name": "Big Raver", "host": "10.8.0.1","man_port": 33555}
+        {"id": 0, "name": "linux-wayne", "host": "10.8.0.1","man_port": 33555}
       ],
       "username": "",
       "password": "",
@@ -42,6 +42,13 @@ spec:
         ports:
         - containerPort: 80
         image: auspexeu/openvpn-status
+        resources:
+          requests:
+            cpu: 10m
+            memory: 56Mi
+          limits:
+            cpu: 100m
+            memory: 128Mi
         volumeMounts:
         - name: openvpn-status-settings
           mountPath: /usr/src/app/cfg.json
@@ -66,19 +73,22 @@ spec:
     port: 80
     targetPort: 80
   selector:
-    app: openvpn-status-service
+    app: openvpn-status
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: openvpn-status-ingress
   namespace: monitoring
 spec:
   rules:
-  - host: openvpn.bas 
+  - host: vpn.bas
     http:
       paths:
       - path: /
+        pathType: Prefix
         backend:
-          serviceName: openvpn-status
-          servicePort: 80
+          service:
+            name: openvpn-status-service
+            port:
+              number: 80

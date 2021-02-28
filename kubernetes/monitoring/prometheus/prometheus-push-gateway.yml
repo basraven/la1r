@@ -19,6 +19,13 @@ spec:
         ports:
         - containerPort: 9091
         image: prom/pushgateway
+        resources:
+          limits:
+            cpu: 250m
+            memory: 180Mi
+          requests:
+            cpu: 102m
+            memory: 180Mi
         args:
           - --web.enable-admin-api
           - --persistence.file=/pushgatewaydata/persistence

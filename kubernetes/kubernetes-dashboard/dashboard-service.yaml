@@ -1,20 +1,51 @@
 ---
-apiVersion: traefik.containo.us/v1alpha1
-kind: IngressRoute
+apiVersion: v1
+kind: Service
 metadata:
-  name: kubernetes-dashboard-non-tls
+  labels:
+    k8s-app: kubernetes-dashboard
+  name: kubernetes-dashboard
   namespace: kubernetes-dashboard
 spec:
-  entryPoints:
-    - web
-  routes:
-  - match: Host(`kubernetes.bas`) && PathPrefix(`/`)
-    kind: Rule
-    services:
-    - name: kubernetes-dashboard
-      port: 443
-    middlewares:
-    - name: http-redirect-to-https
+  ports:
+  - name: https
+    targetPort: 8443
+    port: 443
+  - name: http
+    targetPort: 9090
+    port: 80
+  selector:
+    k8s-app: kubernetes-dashboard
+  type: ClusterIP
+
+
+---
+# Redirect to https
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: http-redirect-to-https
+  namespace: kubernetes-dashboard
+spec:
+  redirectScheme:
+    scheme: https
+# ---
+# apiVersion: traefik.containo.us/v1alpha1
+# kind: IngressRoute
+# metadata:
+#   name: kubernetes-dashboard-non-tls
+#   namespace: kubernetes-dashboard
+# spec:
+#   entryPoints:
+#     - web
+#   routes:
+#   - match: Host(`kubernetes.bas`) && PathPrefix(`/`)
+#     kind: Rule
+#     services:
+#     - name: kubernetes-dashboard
+#       port: 443
+#     middlewares:
+#     - name: http-redirect-to-https
 ---
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
@@ -30,51 +61,27 @@ spec:
     services:
     - name: kubernetes-dashboard
       port: 443
-  tls: {}
----
-# Redirect to https
-apiVersion: traefik.containo.us/v1alpha1
-kind: Middleware
-metadata:
-  name: http-redirect-to-https
-  namespace: kubernetes-dashboard
-spec:
-  redirectScheme:
-    scheme: https
+  tls:
+    secretName: kubernetes-bas-tls
+# Uses cert-kubernetes-dashboard.yml
 
 
 ---
 # (used for consul)
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: kubernetesdashboardingress
+  name: kubernetes-dashboard-ingress
   namespace: kubernetes-dashboard
 spec:
   rules:
   - host: kubernetes.bas
     http:
       paths:
-      - backend:
-          serviceName: kubernetes-dashboard
-          servicePort: 443 
-  tls:
-  - hosts:
-    - kubernetes.bas
-
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: kubernetesdashboardingress-lb-service
-  namespace: kubernetes-dashboard
-spec:
-  ports:
-  - name: https
-    port: 443
-    targetPort: 443
-  selector:
-    k8s-app: kubernetes-dashboard
-  type: LoadBalancer
-  loadBalancerIP: 192.168.6.65
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: kubernetes-dashboard
+            port:
+              number: 80

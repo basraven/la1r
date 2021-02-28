@@ -136,7 +136,7 @@ spec:
     app: email
   type: ClusterIP
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: emailingress
@@ -147,6 +147,9 @@ spec:
     http:
       paths:
       - path: /
+        pathType: Prefix
         backend:
-          serviceName: email
-          servicePort: 80
+          service:
+            name: email
+            port:
+              number: 80

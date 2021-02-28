@@ -154,3 +154,38 @@ spec:
             name: nextcloud-service
             port:
               number: 80
+
+
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: nextcloud-bas
+  namespace: nextcloud
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: nextcloud-bas-tls
+  commonName: nextcloud.bas
+  dnsNames:
+  - cloud.bas
+  - www.cloud.bas
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: nextcloud-tls
+  namespace: nextcloud
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`cloud.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: nextcloud-service
+      port: 80
+  tls:
+    secretName: nextcloud-bas-tls

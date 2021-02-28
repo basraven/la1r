@@ -40,7 +40,13 @@ spec:
       containers:
       - name: plex
         image: plexinc/pms-docker
-        resources: {}
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "100m"
+          limits:
+            memory: "3Gi"
+            cpu: "2000m"
         ports:
         - name: http
           containerPort: 32400
@@ -111,3 +117,36 @@ spec:
     app: plex
   type: LoadBalancer
   loadBalancerIP: 192.168.6.60
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: plex-bas
+  namespace: torrent
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: plex-bas-tls
+  commonName: plex.bas
+  dnsNames:
+  - plex.bas
+  - www.plex.bas
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: plex-tls
+  namespace: torrent
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`plex.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: plex-service
+      port: 80
+  tls:
+    secretName: plex-bas-tls

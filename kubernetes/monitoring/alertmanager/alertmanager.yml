@@ -11,9 +11,9 @@ data:
       resolve_timeout: 5m
     route:
       group_by: ['alertname']
-      group_wait: 10s
+      group_wait: 3s
       group_interval: 10s
-      repeat_interval: 1h
+      repeat_interval: 7d
       receiver: discord_webhook
 
     receivers:
@@ -47,6 +47,13 @@ spec:
         ports:
         - containerPort: 9093
         image: prom/alertmanager
+        resources:
+          requests:
+            cpu: 10m
+            memory: 56Mi
+          limits:
+            cpu: 100m
+            memory: 128Mi
         volumeMounts:
         # - name: alertmanager
         #   mountPath: /alertmanager
@@ -89,22 +96,54 @@ spec:
     k8s-app: monitoring-alertmanager
 
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: monitoring-alertmanager-ingress
+  name: alertmanageringress
   namespace: monitoring
-  # annotations:
-  #   kubernetes.io/ingress.class: traefik
 spec:
   rules:
   - host: alerts.bas
     http:
       paths:
       - path: /
+        pathType: Prefix
         backend:
-          serviceName: monitoring-alertmanager-service
-          servicePort: 80
+          service:
+            name: monitoring-alertmanager-service
+            port:
+              number: 80
+
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: alert-manager-bas
+  namespace: monitoring
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: alert-manager-bas-tls
+  commonName: alerts.bas
+  dnsNames:
+  - alerts.bas
+  - www.alerts.bas
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: alert-manager-tls
+  namespace: monitoring
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`alerts.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: monitoring-alertmanager-service
+      port: 80
   tls:
-  - hosts:
-    - alerts.bas
+    secretName: alert-manager-bas-tls

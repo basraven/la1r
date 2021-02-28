@@ -104,3 +104,37 @@ spec:
     app: sonarr
   type: LoadBalancer
   loadBalancerIP: 192.168.6.63
+
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: sonarr-bas
+  namespace: torrent
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: sonarr-bas-tls
+  commonName: sonarr.bas
+  dnsNames:
+  - sonarr.bas
+  - www.sonarr.bas
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: sonarr-tls
+  namespace: torrent
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`sonarr.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: sonarr
+      port: 80
+  tls:
+    secretName: sonarr-bas-tls

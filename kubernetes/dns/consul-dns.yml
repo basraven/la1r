@@ -7,6 +7,7 @@ metadata:
 data:
   Corefile: |-
     bas.:53 {
+        prometheus localhost:9153
         rewrite stop {
           name regex (.*)\.bas {1}.service.bas
           answer name (.*)\.service\.bas {1}.bas
@@ -16,8 +17,11 @@ data:
         errors
     }      
     .:53 {
-        forward . 192.168.6.99
-        # forward . 8.8.8.8 8.8.4.4 
+        prometheus localhost:9153
+        # pi-hole
+        # forward . 192.168.6.99
+
+        forward . 8.8.8.8 8.8.4.4 
         # log
         errors
     }      
@@ -38,6 +42,8 @@ spec:
     metadata:
       labels:
         app: consul
+      annotations:
+        deployment: "1"
     spec:
       topologySpreadConstraints:
       - maxSkew: 1
@@ -72,6 +78,8 @@ spec:
           - name: dns-udp
             containerPort: 53
             protocol: UDP
+          - name: metrics
+            containerPort: 9153
           # livenessProbe:
           #   httpGet:
           #     path: /health
@@ -161,6 +169,7 @@ spec:
               name: serfwan
             - containerPort: 8600
               name: consuldns
+              protocol: UDP
             - containerPort: 8300
               name: server
           livenessProbe:
@@ -218,6 +227,10 @@ spec:
     - name: consuldns
       port: 8600
       targetPort: 8600
+      protocol: UDP
+    - name: metrics
+      port: 9153
+      targetPort: metrics
 
 ---
 apiVersion: v1
@@ -233,11 +246,10 @@ spec:
       protocol: UDP
       targetPort: dns-udp
       port: 53
-    # MIXED TYPES ARE NOT ALLOWED
-    # - name: dns-tcp
-    #   protocol: TCP
-    #   targetPort: dns-tcp
-    #   port: 53
+    - name: consul-dns
+      protocol: UDP
+      targetPort: consuldns
+      port: 5353
   selector:
     app: consul
 
@@ -258,19 +270,21 @@ spec:
   selector:
     app: consul
 
-
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: consul
+  name: consulingress
   namespace: dns
 spec:
   rules:
-  - host: dns.bas 
+  - host: dns.bas
     http:
       paths:
       - path: /
+        pathType: Prefix
         backend:
-          serviceName: consul
-          servicePort: 80
+          service:
+            name: consul
+            port:
+              number: 80

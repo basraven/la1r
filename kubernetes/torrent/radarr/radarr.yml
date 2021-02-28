@@ -104,3 +104,38 @@ spec:
     app: radarr
   type: LoadBalancer
   loadBalancerIP: 192.168.6.62
+
+
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: radarr-bas
+  namespace: torrent
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: radarr-bas-tls
+  commonName: radarr.bas
+  dnsNames:
+  - radarr.bas
+  - www.radarr.bas
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: radarr-tls
+  namespace: torrent
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`radarr.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: radarr
+      port: 80
+  tls:
+    secretName: radarr-bas-tls
