@@ -170,10 +170,6 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  labels:
-    task: monitoring
-    kubernetes.io/cluster-service: 'true'
-    kubernetes.io/name: kibana
   name: kibana
   namespace: monitoring
 spec:
@@ -217,6 +213,24 @@ spec:
   dnsNames:
   - kibana.bas
   - www.kibana.bas
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: kibana-non-tls
+  namespace: monitoring
+spec:
+  entryPoints:
+    - web
+  routes:
+  - match: Host(`kibana.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: kibana
+      port: 80
+    middlewares:
+    - name: http-redirect-to-https
+      namespace: traefik
 ---
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
