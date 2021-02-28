@@ -92,3 +92,37 @@ spec:
             name: openvpn-status-service
             port:
               number: 80
+
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: vpn-bas
+  namespace: monitoring
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: vpn-bas-tls
+  commonName: vpn.bas
+  dnsNames:
+  - vpn.bas
+  - www.vpn.bas
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: vpn-tls
+  namespace: monitoring
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`vpn.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: openvpn-status-service
+      port: 80
+  tls:
+    secretName: vpn-bas-tls

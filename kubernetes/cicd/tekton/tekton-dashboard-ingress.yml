@@ -60,3 +60,36 @@ spec:
     app: tekton-dashboard
   type: LoadBalancer
   loadBalancerIP: 192.168.6.88
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: tekton-bas
+  namespace: tekton-pipelines
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: tekton-bas-tls
+  commonName: tekton.bas
+  dnsNames:
+  - tekton.bas
+  - www.tekton.bas
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: tekton-tls
+  namespace: tekton-pipelines
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`tekton.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: tekton-dashboard
+      port: 80
+  tls:
+    secretName: tekton-bas-tls
