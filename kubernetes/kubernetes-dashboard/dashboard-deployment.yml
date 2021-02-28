@@ -21,6 +21,7 @@ spec:
         - name: kubernetes-dashboard
           image: kubernetesui/dashboard:v2.2.0
           imagePullPolicy: Always
+          resources: {}
           ports:
             - name: https
               containerPort: 8443

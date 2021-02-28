@@ -136,7 +136,6 @@ spec:
   type: LoadBalancer
   loadBalancerIP: 192.168.6.66
 
-
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
@@ -152,6 +151,24 @@ spec:
   dnsNames:
   - grafana.bas
   - www.grafana.bas
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: grafana-non-tls
+  namespace: monitoring
+spec:
+  entryPoints:
+    - web
+  routes:
+  - match: Host(`grafana.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: monitoring-grafana
+      port: 80
+    middlewares:
+    - name: http-redirect-to-https
+      namespace: traefik
 ---
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
