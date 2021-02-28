@@ -100,8 +100,9 @@ spec:
     targetPort: 3000
   selector:
     k8s-app: grafana
+
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: monitoring-grafana-ingress
@@ -112,12 +113,12 @@ spec:
     http:
       paths:
       - path: /
+        pathType: Prefix
         backend:
-          serviceName: monitoring-grafana
-          servicePort: 80
-  tls:
-  - hosts:
-    - grafana.bas
+          service:
+            name: monitoring-grafana
+            port:
+              number: 80
 
 ---
 apiVersion: v1
@@ -134,3 +135,37 @@ spec:
     k8s-app: grafana
   type: LoadBalancer
   loadBalancerIP: 192.168.6.66
+
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: grafana-bas
+  namespace: monitoring
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: grafana-bas-tls
+  commonName: grafana.bas
+  dnsNames:
+  - grafana.bas
+  - www.grafana.bas
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: grafana-tls
+  namespace: monitoring
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`grafana.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: monitoring-grafana
+      port: 80
+  tls:
+    secretName: grafana-bas-tls

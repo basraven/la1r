@@ -200,3 +200,37 @@ spec:
             name: kibana
             port:
               number: 80
+
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: kibana-bas
+  namespace: monitoring
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: kibana-bas-tls
+  commonName: kibana.bas
+  dnsNames:
+  - kibana.bas
+  - www.kibana.bas
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: kibana-tls
+  namespace: monitoring
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`kibana.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: kibana
+      port: 80
+  tls:
+    secretName: kibana-bas-tls

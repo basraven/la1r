@@ -93,7 +93,7 @@ data:
     WebUI\HTTPS\Enabled=false
     WebUI\HostHeaderValidation=true
     WebUI\LocalHostAuth=false
-    WebUI\Port=8080
+    WebUI\Port=8088
     WebUI\RootFolder=
     WebUI\ServerDomains=*
     WebUI\UseUPnP=true
@@ -132,7 +132,8 @@ spec:
       #   nameservers:
       #     - 8.8.8.8
       # dnsPolicy: None
-      dnsPolicy: Default
+      # dnsPolicy: Default
+      # hostNetwork: true
       volumes:
       - name: goose-credentials-volume
         secret:
@@ -227,6 +228,36 @@ spec:
           - name: goose-credentials-volume
             mountPath: /goose/login.conf
             subPath: login.conf
+      # - name: trans
+      #   resources: 
+      #     requests:
+      #       memory: "256Mi"
+      #       cpu: "100m"
+      #     limits:
+      #       memory: "2056Mi"
+      #       cpu: "2000m"
+      #   image: linuxserver/transmission
+      #   # command: [ "/goose/run-qbittorrent.sh"]
+      #   # stdin: true
+      #   # tty: true
+      #   securityContext:
+      #     allowPrivilegeEscalation: true
+      #     privileged: true
+      #     capabilities:
+      #       add:
+      #         - NET_ADMIN
+      #   ports:
+      #   - name: http
+      #     containerPort: 9091
+      #   - name: bittorrent
+      #     containerPort: 30163
+      #   env:
+      #   - name: TZ
+      #     value: Europe/Amsterdam
+      #   - name: PGID
+      #     value: "1000"
+      #   - name: PUID
+      #     value: "1000"
       - name: qbit
         resources: 
           requests:
@@ -247,7 +278,7 @@ spec:
               - NET_ADMIN
         ports:
         - name: http
-          containerPort: 8080
+          containerPort: 8088
         - name: bittorrent
           containerPort: 30163
         env:
@@ -258,7 +289,7 @@ spec:
         - name: PUID
           value: "1000"
         - name: WEBUI_PORT
-          value: "8080"
+          value: "8088"
         volumeMounts:
           - name: torrent-volume
             mountPath: /downloads
@@ -319,12 +350,11 @@ metadata:
 spec:
   ports:
   - name: http
-    targetPort: 8080
+    targetPort: 8088
     port: 80
   selector:
     app: qbittorrent
   type: ClusterIP
-
 
 ---
 apiVersion: networking.k8s.io/v1
@@ -344,6 +374,41 @@ spec:
             name: qbittorrent
             port:
               number: 80
+
+
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: torrent-bas
+  namespace: torrent
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: torrent-bas-tls
+  commonName: torrent.bas
+  dnsNames:
+  - torrent.bas
+  - www.torrent.bas
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: torrent-tls
+  namespace: torrent
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`torrent.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: qbittorrent
+      port: 80
+  tls:
+    secretName: torrent-bas-tls
 
 # ---
 # apiVersion: v1

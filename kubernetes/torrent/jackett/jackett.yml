@@ -52,20 +52,54 @@ spec:
   selector:
     app: jackett
   type: ClusterIP
+
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: jackettingress
   namespace: torrent
-  annotations:
-    kubernetes.io/ingress.class: traefik
 spec:
   rules:
   - host: jackett.bas
     http:
       paths:
       - path: /
+        pathType: Prefix
         backend:
-          serviceName: jackett
-          servicePort: 80
+          service:
+            name: jackett
+            port:
+              number: 80
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: jackett-bas
+  namespace: torrent
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: jackett-bas-tls
+  commonName: jackett.bas
+  dnsNames:
+  - jackett.bas
+  - www.jackett.bas
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: jackett-tls
+  namespace: torrent
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`jackett.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: jackett
+      port: 80
+  tls:
+    secretName: jackett-bas-tls

@@ -83,3 +83,37 @@ spec:
             name: couchpotato
             port:
               number: 80
+
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: couch-bas
+  namespace: torrent
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: couch-bas-tls
+  commonName: couch.bas
+  dnsNames:
+  - couch.bas
+  - www.couch.bas
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: couch-tls
+  namespace: torrent
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`couch.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: couchpotato
+      port: 80
+  tls:
+    secretName: couch-bas-tls
