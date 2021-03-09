@@ -9,8 +9,8 @@ spec:
   calicoNetwork:
     # Note: The ipPools section cannot be modified post-install.
     nodeAddressAutodetectionV4:
-      # interface: "enp.*"
-      skipInterface: "tun.*"
+      interface: "enp.*"
+      # skipInterface: "tun.*"
     ipPools:
     - blockSize: 26 
       cidr: 10.244.0.0/16
