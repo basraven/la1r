@@ -14,6 +14,10 @@ rules:
 - apiGroups: ["", "endpoints", "extensions", "apps"]
   resources: ["endpoints", "events", "namespaces", "nodes", "pods", "customresourcedefinitions",  "apiservices", "daemonsets", "deployments", "statefulsets", "events", "ingresses", "ingresses", "services"]
   verbs: ["get", "watch", "list"]
+- apiGroups: ["traefik.containo.us"]
+  resources: ["middlewares","ingressroutes","traefikservices","ingressroutetcps","ingressrouteudps","tlsoptions","tlsstores","serverstransports"]
+  verbs: ["get", "list", "watch"]
+
 # - apiGroups: [""]
 #   resources: ["services"]
 #   verbs: ["get","watch","list"]
@@ -31,6 +35,19 @@ kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: consul-k8s-all-reader-services-role-binding
+subjects:
+- kind: ServiceAccount
+  name: consul-k8s
+  namespace: dns
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: all-reader-services
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: consul-k8s-admin-services-role-binding
 subjects:
 - kind: ServiceAccount
   name: consul-k8s
@@ -124,6 +141,6 @@ spec:
               current-context: svcs-acct-context
               " > ~/.kube/config
               
-              while sleep 5; do consulk8s write-ingresses --default-ip 192.168.6.1 --consul-sink-url='192.168.6.91:80' --consul-sink-domain='.bas' --host-as-name --skip-checks ; done
+              while sleep 15; do consulk8s write-ingresses --default-ip 192.168.6.1 --consul-sink-url='192.168.6.91:80' --consul-sink-domain='.bas' --host-as-name --skip-checks ; done
               
               
