@@ -10,7 +10,7 @@ data:
       "port": 80,
       "bind": "0.0.0.0",
       "servers": [
-        {"id": 0, "name": "linux-wayne", "host": "10.8.0.1","man_port": 33555}
+        {"id": 0, "name": "la1r", "host": "192.168.5.1","man_port": 33555}
       ],
       "username": "",
       "password": "",
@@ -74,25 +74,6 @@ spec:
     targetPort: 80
   selector:
     app: openvpn-status
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: openvpn-status-ingress
-  namespace: monitoring
-spec:
-  rules:
-  - host: vpn.bas
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: openvpn-status-service
-            port:
-              number: 80
-
 
 ---
 apiVersion: cert-manager.io/v1
@@ -109,6 +90,24 @@ spec:
   dnsNames:
   - vpn.bas
   - www.vpn.bas
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: vpn-non-tls
+  namespace: monitoring
+spec:
+  entryPoints:
+    - web
+  routes:
+  - match: Host(`vpn.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: openvpn-status-service
+      port: 80
+    middlewares:
+    - name: http-redirect-to-https
+      namespace: traefik
 ---
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
