@@ -53,6 +53,7 @@ spec:
 #   egress: []
 # ---
 
+
 ---
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
@@ -70,3 +71,31 @@ spec:
     services:
     - name: nginx
       port: 80
+    middlewares:
+    - name: online-ratelimit
+      namespace: online
+    - name: http-redirect-to-https
+      namespace: online
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: nginx-tls
+  namespace: online
+  labels:
+    expose: "online"
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`status.la1r.com`)
+    kind: Rule
+    services:
+    - name: nginx
+      port: 80
+    middlewares:
+    - name: online-ratelimit
+      namespace: online
+  tls:
+    certResolver: default
+

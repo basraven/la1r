@@ -17,8 +17,10 @@ rules:
       - watch
   - apiGroups:
       - extensions
+      - networking.k8s.io
     resources:
       - ingresses
+      - ingressclasses
     verbs:
       - get
       - list
@@ -93,6 +95,10 @@ spec:
         name: online-traefik-ingress-lb
     spec:
       serviceAccountName: online-traefik-ingress-controller
+      volumes:
+        - name: online-traefik-config-volume
+          persistentVolumeClaim:
+            claimName: online-traefik-config-claim
       containers:
       - name: online-traefik-ingress-lb
         resources: {}
@@ -118,10 +124,13 @@ spec:
           - --providers.kubernetescrd
           - --providers.kubernetescrd.namespaces=online
           - --providers.kubernetescrd.labelselector=expose=online
-          # - --certificatesResolvers.default.acme.httpChallenge=true
-          # - --certificatesresolvers.default.acme.tlschallenge
-          # - --certificatesresolvers.default.acme.email=basraven@gmail.com
-          # - --certificatesresolvers.default.acme.storage=acme/acme.json
+          - --certificatesResolvers.default.acme.httpChallenge=true
+          - --certificatesresolvers.default.acme.tlschallenge
+          - --certificatesresolvers.default.acme.email=mail@la1r.com
+          - --certificatesresolvers.default.acme.storage=acme/acme.json
+        volumeMounts:
+        - name: online-traefik-config-volume
+          mountPath: /acme
 ---
 apiVersion: v1
 kind: Service
@@ -151,15 +160,29 @@ spec:
 # Source: https://docs.traefik.io/v2.0/middlewares/ratelimit/
 # Here, an average of 100 requests per second is allowed.
 # In addition, a burst of 50 requests is allowed.
-# apiVersion: traefik.containo.us/v1alpha1
-# kind: Middleware
-# metadata:
-#   name: online-ratelimit
-#   namespace: online
-# spec:
-#   rateLimit:
-#       average: 3
-#       burst: 5
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: online-ratelimit
+  namespace: online
+  labels:
+    expose: "online"
+spec:
+  rateLimit:
+      average: 3
+      burst: 5
+---
+# Generic Redirect to https
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: http-redirect-to-https
+  namespace: online
+  labels:
+    expose: "online"
+spec:
+  redirectScheme:
+    scheme: https
 
 ---
 apiVersion: v1
@@ -171,6 +194,8 @@ spec:
   ports:
   - name: http
     port: 80
+  - name: https
+    port: 443
   selector:
     k8s-app: online-traefik-ingress-lb
   type: LoadBalancer

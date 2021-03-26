@@ -43,6 +43,7 @@ spec:
             nfs: 
               server: 192.168.5.100
               path: /mnt/hdd/na
+              readOnly: true
           - name: na-data-mirror-volume
             nfs: 
               server: 192.168.5.1
