@@ -134,22 +134,6 @@ metadata:
   name: online-traefik-ingress-controller
   namespace: online
 ---
-kind: PersistentVolumeClaim
-apiVersion: v1
-metadata:
-  name: online-traefik-config-claim
-  namespace: online
-spec:
-  accessModes:
-  - ReadWriteMany 
-  storageClassName: local-storage
-  selector:
-    matchLabels:
-      contenttype: "online-traefik-config"
-  resources:
-    requests:
-      storage: 1Gi
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -157,12 +141,11 @@ metadata:
   namespace: online
   labels:
     k8s-app: online-traefik-ingress-lb
-    app: online-traefik-ingress-lb
 spec:
   replicas: 1
   selector:
     matchLabels:
-      name: online-traefik-ingress-lb
+      k8s-app: online-traefik-ingress-lb
   template:
     metadata:
       labels:
