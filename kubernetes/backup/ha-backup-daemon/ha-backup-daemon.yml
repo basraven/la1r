@@ -57,6 +57,7 @@ spec:
           nfs: 
             server: 192.168.5.100
             path: /mnt/hdd/ha
+            readOnly: true
         - name: ha-data-mirror-volume
           nfs: 
             server: 192.168.5.1

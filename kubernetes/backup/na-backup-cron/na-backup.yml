@@ -8,7 +8,7 @@ data:
   na-backup.sh: |-
     #!/bin/sh
     apk add rsync
-    rsync --archive --compress --no-perms --no-owner --no-group --delete --force /original/na/ /mirror/
+    rsync --archive --compress --no-perms --no-owner --no-group --delete --force /original/na/ /mirror/na/
 ---
 apiVersion: batch/v1beta1
 kind: CronJob
