@@ -89,7 +89,7 @@ data:
     server=dynamicdns.park-your-domain.com,	\
     login=la1r.com,			\
     password=${DDNS_PASSWORD} \
-    vpn,status,plusone,plusone-vpn
+    vpn,status,plusone,plusone-vpn,shields
     
     
 ---
