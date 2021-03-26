@@ -1,0 +1,72 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  namespace: online
+  labels:
+    app: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        ports:
+        - name: http
+          containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: nginx
+  name: nginx
+  namespace: online
+spec:
+  ports:
+  - name: http
+    targetPort: 80
+    port: 80
+  selector:
+    app: nginx
+  type: ClusterIP
+# ---
+# apiVersion: networking.k8s.io/v1
+# kind: NetworkPolicy
+# metadata:
+#   name: nginx-deny-egress
+#   namespace: online
+# spec:
+#   podSelector:
+#     matchLabels:
+#       app: nginx
+#   policyTypes:
+#   - Egress
+#   egress: []
+# ---
+
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: nginx-non-tls
+  namespace: online
+  labels:
+    expose: "online"
+spec:
+  entryPoints:
+    - web
+  routes:
+  - match: Host(`status.la1r.com`)
+    kind: Rule
+    services:
+    - name: nginx
+      port: 80

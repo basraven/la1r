@@ -1,59 +1,7 @@
-# ---
 # Source: https://docs.traefik.io/user-guides/crd-acme/
-# apiVersion: apiextensions.k8s.io/v1beta1
-# kind: CustomResourceDefinition
-# metadata:
-#   name: ingressroutes.traefik.containo.us
-# spec:
-#   group: traefik.containo.us
-#   version: v1alpha1
-#   names:
-#     kind: IngressRoute
-#     plural: ingressroutes
-#     singular: ingressroute
-#   scope: Namespaced
-# ---
-# apiVersion: apiextensions.k8s.io/v1beta1
-# kind: CustomResourceDefinition
-# metadata:
-#   name: ingressroutetcps.traefik.containo.us
-# spec:
-#   group: traefik.containo.us
-#   version: v1alpha1
-#   names:
-#     kind: IngressRouteTCP
-#     plural: ingressroutetcps
-#     singular: ingressroutetcp
-#   scope: Namespaced
-# ---
-# apiVersion: apiextensions.k8s.io/v1beta1
-# kind: CustomResourceDefinition
-# metadata:
-#   name: middlewares.traefik.containo.us
-# spec:
-#   group: traefik.containo.us
-#   version: v1alpha1
-#   names:
-#     kind: Middleware
-#     plural: middlewares
-#     singular: middleware
-#   scope: Namespaced
-# ---
-# apiVersion: apiextensions.k8s.io/v1beta1
-# kind: CustomResourceDefinition
-# metadata:
-#   name: tlsoptions.traefik.containo.us
-# spec:
-#   group: traefik.containo.us
-#   version: v1alpha1
-#   names:
-#     kind: TLSOption
-#     plural: tlsoptions
-#     singular: tlsoption
-#   scope: Namespaced
 ---
 kind: ClusterRole
-apiVersion: rbac.authorization.k8s.io/v1beta1
+apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: online-traefik-ingress-controller
 rules:
@@ -84,14 +32,6 @@ rules:
   - apiGroups:
       - traefik.containo.us
     resources:
-      - middlewares
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - traefik.containo.us
-    resources:
       - ingressroutes
     verbs:
       - get
@@ -100,32 +40,19 @@ rules:
   - apiGroups:
       - traefik.containo.us
     resources:
-      - ingressroutetcps
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - traefik.containo.us
-    resources:
       - tlsoptions
+      - tlsstores
+      - ingressroutes
+      - ingressrouteudps
+      - ingressroutetcps
+      - middlewares
+      - serverstransports
+      - serverstransports
+      - traefikservices
     verbs:
       - get
       - list
       - watch
----
-kind: ClusterRoleBinding
-apiVersion: rbac.authorization.k8s.io/v1beta1
-metadata:
-  name: online-traefik-ingress-controller
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: online-traefik-ingress-controller
-subjects:
-  - kind: ServiceAccount
-    name: online-traefik-ingress-controller
-    namespace: online
 ---
 # Source: https://medium.com/@patrickeasters/using-traefik-with-tls-on-kubernetes-cb67fb43a948
 apiVersion: v1
@@ -133,6 +60,19 @@ kind: ServiceAccount
 metadata:
   name: online-traefik-ingress-controller
   namespace: online
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: online-traefik-ingress-controller
+subjects:
+  - kind: ServiceAccount
+    name: online-traefik-ingress-controller
+    namespace: online
+roleRef:
+  kind: ClusterRole
+  name: online-traefik-ingress-controller
+  apiGroup: rbac.authorization.k8s.io
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -152,32 +92,16 @@ spec:
         k8s-app: online-traefik-ingress-lb
         name: online-traefik-ingress-lb
     spec:
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-            - matchExpressions:
-              - key: kubernetes.io/hostname
-                operator: In
-                values:
-                - linux-wayne
       serviceAccountName: online-traefik-ingress-controller
-      terminationGracePeriodSeconds: 60
-      volumes:
-        - name: online-traefik-config-volume
-          persistentVolumeClaim:
-            claimName: online-traefik-config-claim
-          # defaultMode: 0600
       containers:
       - name: online-traefik-ingress-lb
-        image: traefik:v2.0
+        resources: {}
+        image: traefik:v2.4
         ports:
         - name: http
           containerPort: 80
-          hostPort: 22280
         - name: https
           containerPort: 443
-          hostPort: 22443
         - name: admin
           containerPort: 8080
         - name: prometheus
@@ -186,24 +110,18 @@ spec:
           - --api.insecure
           - --accesslog
           - --metrics=true
-          # - --metrics.influxdb=true
-          # - --metrics.influxdb.address="monitoring-influxdb.monitoring:80"
-          # - --metrics.influxdb.database="onlinetraefik"
           - --metrics.prometheus=true
           - --metrics.prometheus.entryPoint=metrics
           - --entrypoints.metrics.Address=:8082
           - --entrypoints.web.Address=:80
           - --entrypoints.websecure.Address=:443
           - --providers.kubernetescrd
-          - --providers.kubernetescrd.namespaces=online,plusone
+          - --providers.kubernetescrd.namespaces=online
           - --providers.kubernetescrd.labelselector=expose=online
-          - --certificatesResolvers.default.acme.httpChallenge=true
-          - --certificatesresolvers.default.acme.tlschallenge
-          - --certificatesresolvers.default.acme.email=basraven@gmail.com
-          - --certificatesresolvers.default.acme.storage=acme/acme.json
-        volumeMounts:
-          - name: online-traefik-config-volume
-            mountPath: /acme
+          # - --certificatesResolvers.default.acme.httpChallenge=true
+          # - --certificatesresolvers.default.acme.tlschallenge
+          # - --certificatesresolvers.default.acme.email=basraven@gmail.com
+          # - --certificatesresolvers.default.acme.storage=acme/acme.json
 ---
 apiVersion: v1
 kind: Service
@@ -213,62 +131,98 @@ metadata:
   name: online-traefik-ingress-lb
   namespace: online
 spec:
-  ports:
-  - name: admin
-    targetPort: 8080
-    port: 8080
+  type: ClusterIP
   selector:
     k8s-app: online-traefik-ingress-lb
-  type: ClusterIP
----
-apiVersion: extensions/v1beta1
-kind: Ingress
-metadata:
-  name: traefik-web-ui-online
-  namespace: online
-  annotations:
-    kubernetes.io/ingress.class: traefik
-  labels:
-    expose: "local"
-spec:
-  rules:
-  - host: traefik-online.bas
-    http:
-      paths:
-      - path: /
-        backend:
-          serviceName: online-traefik-ingress-lb
-          servicePort: 8080
+  ports:
+  - protocol: TCP
+    port: 80
+    name: web
+  - protocol: TCP
+    port: 443
+    name: websecure
+  - protocol: TCP
+    port: 8080
+    name: admin
+  - port: 8082
+    name: prometheus
 
 ---
 # Source: https://docs.traefik.io/v2.0/middlewares/ratelimit/
 # Here, an average of 100 requests per second is allowed.
 # In addition, a burst of 50 requests is allowed.
-apiVersion: traefik.containo.us/v1alpha1
-kind: Middleware
-metadata:
-  name: online-ratelimit
-  namespace: online
-spec:
-  rateLimit:
-      average: 3
-      burst: 5
----
-# Redirect to https
-apiVersion: traefik.containo.us/v1alpha1
-kind: Middleware
-metadata:
-  name: http-redirect-to-https
-  namespace: online
-spec:
-  redirectScheme:
-    scheme: https
-# Replace path with regex
 # apiVersion: traefik.containo.us/v1alpha1
 # kind: Middleware
 # metadata:
-#   name: test-replacepathregex
+#   name: online-ratelimit
+#   namespace: online
 # spec:
-#   replacePathRegex:
-#     regex: ^/foo/(.*)
-#     replacement: /bar/$1
+#   rateLimit:
+#       average: 3
+#       burst: 5
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: online-lb-service
+  namespace: online
+spec:
+  ports:
+  - name: http
+    port: 80
+  selector:
+    k8s-app: online-traefik-ingress-lb
+  type: LoadBalancer
+  loadBalancerIP: 192.168.6.128
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: online-bas
+  namespace: online
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: online-bas-tls
+  commonName: online.bas
+  dnsNames:
+  - online.bas
+  - www.online.bas
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: online-non-tls
+  namespace: online
+spec:
+  entryPoints:
+    - web
+  routes:
+  - match: Host(`online.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: online-traefik-ingress-lb
+      port: 8080
+    middlewares:
+    - name: http-redirect-to-https
+      namespace: traefik
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: online-tls
+  namespace: online
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`online.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: online-traefik-ingress-lb
+      port: 8080
+  tls:
+    secretName: online-bas-tls
