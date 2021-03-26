@@ -7,11 +7,12 @@ metadata:
 data:
   run.sh: |-
     #!/bin/sh
-    while sleep 150; do
-      du --block-size=1 --summarize "/host/mnt/hdd/na" | sed -ne 's/\\/\\\\/;s/"/\\"/g;s/^\([0-9]\+\)\t\(.*\)$/node_directory_size_bytes{directory="\2"} \1/p' > "/output/directory_size_$NODE_NAME.prom"
-      du --block-size=1 --summarize "/host/mnt/hdd/ha" | sed -ne 's/\\/\\\\/;s/"/\\"/g;s/^\([0-9]\+\)\t\(.*\)$/node_directory_size_bytes{directory="\2"} \1/p' >> "/output/directory_size_$NODE_NAME.prom"
-      du --block-size=1 --summarize "/host/mnt/ssd/na" | sed -ne 's/\\/\\\\/;s/"/\\"/g;s/^\([0-9]\+\)\t\(.*\)$/node_directory_size_bytes{directory="\2"} \1/p' >> "/output/directory_size_$NODE_NAME.prom"
-      du --block-size=1 --summarize "/host/mnt/ssd/ha" | sed -ne 's/\\/\\\\/;s/"/\\"/g;s/^\([0-9]\+\)\t\(.*\)$/node_directory_size_bytes{directory="\2"} \1/p' >> "/output/directory_size_$NODE_NAME.prom"
+    while sleep 50; do
+      rm "/output/directory_size_$NODE_NAME.prom"
+      /scripts/directory-size.sh  "/mnt/hdd/na" "/output/directory_size_$NODE_NAME.prom"
+      /scripts/directory-size.sh  "/mnt/hdd/ha" "/output/directory_size_$NODE_NAME.prom"
+      /scripts/directory-size.sh  "/mnt/ssd/na" "/output/directory_size_$NODE_NAME.prom"
+      /scripts/directory-size.sh  "/mnt/ssd/ha" "/output/directory_size_$NODE_NAME.prom"
     done
   directory-size.sh: |-
     #!/bin/sh
@@ -27,7 +28,7 @@ data:
     # Author: Antoine Beaupré <anarcat@debian.org>
     # echo "# HELP node_directory_size_bytes Disk space used by some directories"
     # echo "# TYPE node_directory_size_bytes gauge"
-    du --block-size=1 --summarize "$1" | sed -ne 's/\\/\\\\/;s/"/\\"/g;s/^\([0-9]\+\)\t\(.*\)$/node_directory_size_bytes{directory="\2"} \1/p' > "$2"
+    du --block-size=1 --summarize "$1" | sed -ne 's/\\/\\\\/;s/"/\\"/g;s/^\([0-9]\+\)\t\(.*\)$/node_directory_size_bytes{directory="\2"} \1/p' >> "$2"
 
 ---
 apiVersion: apps/v1
@@ -84,11 +85,11 @@ spec:
           - name: local-metrics-dir
             mountPath: /output/
           - name: hdd
-            mountPath: /host/mnt/hdd
+            mountPath: /mnt/hdd
             mountPropagation: HostToContainer
             readOnly: true   
           - name: ssd
-            mountPath: /host/mnt/ssd
+            mountPath: /mnt/ssd
             mountPropagation: HostToContainer
             readOnly: true   
    

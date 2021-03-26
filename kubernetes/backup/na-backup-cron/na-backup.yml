@@ -8,7 +8,7 @@ data:
   na-backup.sh: |-
     #!/bin/sh
     apk add rsync
-    rsync -a -z --no-perms --no-owner --no-group --delete --force --update --progress /na/* /na-mirror
+    rsync --archive --compress --no-perms --no-owner --no-group --delete --force /original/na/ /mirror/
 ---
 apiVersion: batch/v1beta1
 kind: CronJob
@@ -68,9 +68,9 @@ spec:
               - /na-backup-script/na-backup.sh
             volumeMounts:
               - name: na-data-volume
-                mountPath: /na
+                mountPath: /original/na
               - name: na-data-mirror-volume
-                mountPath: /na-mirror
+                mountPath: /mirror/na
               - name: na-backup-script-volume
                 mountPath: /na-backup-script
    

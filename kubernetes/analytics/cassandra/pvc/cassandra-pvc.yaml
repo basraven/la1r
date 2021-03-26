@@ -5,7 +5,7 @@ metadata:
   name: cassandra-claim
   namespace: analytics
 spec:
-  storageClassName: nfs-112
+  storageClassName: nfs-212
   accessModes:
     - ReadWriteMany
   resources:
