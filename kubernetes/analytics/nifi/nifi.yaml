@@ -1,0 +1,144 @@
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nifi
+  namespace: analytics
+  labels:
+    app: nifi
+spec:
+  selector:
+    matchLabels:
+      app: nifi
+  template:
+    metadata:
+      labels:
+        app: nifi
+    spec:
+      containers:
+      - name: nifi
+        ports:
+        - containerPort: 8080
+        - containerPort: 8082 
+        image: apache/nifi:latest
+        resources:
+          # limits:
+          #   memory: "2048Mi"
+          #   cpu: "2000m"
+        # env:
+        # - name: nifi_NOTEBOOK_DIR
+        #   value: "/notebook"
+        env:
+          - name: NIFI_WEB_HTTP_PORT
+            value: "8080"
+          - name: NIFI_WEB_HTTP_HOST
+            value: "0.0.0.0"
+          # - name: NIFI_CLUSTER_IS_NODE
+          #   value: "true"
+          # - name: NIFI_CLUSTER_NODE_PROTOCOL_PORT
+          #   value: "8082"
+          # - name: NIFI_ZK_CONNECT_STRING
+          #   value: "zookeeper:2181"
+          # - name: NIFI_ELECTION_MAX_WAIT
+          #   value: "1 min"
+        volumeMounts:
+          # - name: nifi-conf
+          #   mountPath: /opt/nifi/nifi-current/conf
+          - name: nifi-state
+            mountPath: /opt/nifi/nifi-current/state 
+          - name: nifi-database-repository
+            mountPath: /opt/nifi/nifi-current/database_repository
+          - name: nifi-flowfile-repository
+            mountPath: /opt/nifi/nifi-current/flowfile_repository
+          - name: nifi-content-repository
+            mountPath: /opt/nifi/nifi-current/content_repository
+          - name: nifi-provenance-repository
+            mountPath: /opt/nifi/nifi-current/provenance_repository
+      volumes:
+        - name: nifi-conf
+          persistentVolumeClaim:
+            claimName: nifi-conf-claim
+        - name: nifi-state
+          persistentVolumeClaim:
+            claimName: nifi-state-claim
+        - name: nifi-database-repository
+          persistentVolumeClaim:
+            claimName: nifi-database-repository-claim
+        - name: nifi-flowfile-repository
+          persistentVolumeClaim:
+            claimName: nifi-flowfile-repository-claim
+        - name: nifi-content-repository
+          persistentVolumeClaim:
+            claimName: nifi-content-repository-claim
+        - name: nifi-provenance-repository
+          persistentVolumeClaim:
+            claimName: nifi-provenance-repository-claim
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nifi
+  namespace: analytics
+spec:
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8080
+  - name: protocol
+    port: 8082
+    targetPort: 8082
+  selector:
+    app: nifi
+
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: nifi-bas
+  namespace: analytics
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: nifi-bas-tls
+  commonName: nifi.bas
+  dnsNames:
+  - nifi.bas
+  - www.nifi.bas
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: nifi-non-tls
+  namespace: analytics
+spec:
+  entryPoints:
+    - web
+  routes:
+  - match: Host(`nifi.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: nifi
+      port: 80
+    middlewares:
+    - name: http-redirect-to-https
+      namespace: traefik
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: nifi-tls
+  namespace: analytics
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`nifi.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: nifi
+      port: 80
+  tls:
+    secretName: nifi-bas-tls

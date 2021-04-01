@@ -1,0 +1,78 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nifi-conf-claim
+  namespace: analytics
+spec:
+  storageClassName: nfs-212
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nifi-state-claim
+  namespace: analytics
+spec:
+  storageClassName: nfs-212
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nifi-database-repository-claim
+  namespace: analytics
+spec:
+  storageClassName: nfs-212
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nifi-flowfile-repository-claim
+  namespace: analytics
+spec:
+  storageClassName: nfs-212
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nifi-content-repository-claim
+  namespace: analytics
+spec:
+  storageClassName: nfs-212
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nifi-provenance-repository-claim
+  namespace: analytics
+spec:
+  storageClassName: nfs-212
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 20Gi

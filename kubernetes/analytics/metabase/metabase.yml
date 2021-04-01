@@ -1,0 +1,92 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: metabase
+  namespace: analytics
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: metabase
+  template:
+    metadata:
+      labels:
+        app: metabase
+    spec:
+      containers:
+      - name: metabase
+        resources:
+        image: metabase/metabase
+        ports:
+        - containerPort: 3000
+        volumeMounts:
+        - mountPath: /metabase-data
+          name: metabase-volume
+      volumes:
+      - name: metabase-volume
+        persistentVolumeClaim:
+          claimName: metabase-data-claim
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: metabase
+  namespace: analytics
+spec:
+  ports:
+  - port: 80
+    targetPort: 3000
+  selector:
+    app: metabase
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: metabase-bas
+  namespace: analytics
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: metabase-bas-tls
+  commonName: metabase.bas
+  dnsNames:
+  - metabase.bas
+  - www.metabase.bas
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: metabase-non-tls
+  namespace: analytics
+spec:
+  entryPoints:
+    - web
+  routes:
+  - match: Host(`metabase.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: metabase
+      port: 80
+    middlewares:
+    - name: http-redirect-to-https
+      namespace: traefik
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: metabase-tls
+  namespace: analytics
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`metabase.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: metabase
+      port: 80
+  tls:
+    secretName: metabase-bas-tls

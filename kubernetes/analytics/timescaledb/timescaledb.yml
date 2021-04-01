@@ -1,0 +1,52 @@
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: timescaledb
+  namespace: analytics
+  labels:
+    app: timescaledb
+spec:
+  selector:
+    matchLabels:
+      app: timescaledb
+  template:
+    metadata:
+      labels:
+        app: timescaledb
+    spec:
+      containers:
+      - name: timescaledb
+        ports:
+        - containerPort: 5432 
+        image: timescale/timescaledb:latest-pg13
+        resources:
+        env:
+          - name: POSTGRES_USER
+            value: "postgres"
+          - name: POSTGRES_PASSWORD
+            value: "postgres"
+          - name: POSTGRES_DB
+            value: "postgres"
+        volumeMounts:
+          - name: timescaledb-data
+            mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: timescaledb-data
+          persistentVolumeClaim:
+            claimName: timescaledb-data-claim
+        
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: timescaledb
+  namespace: analytics
+spec:
+  ports:
+  - name: http
+    port: 5432
+    targetPort: 5432
+  selector:
+    app: timescaledb
