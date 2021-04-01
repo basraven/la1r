@@ -2,12 +2,11 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: cassandra-claim
-  namespace: analytics
+  name: online-traefik-config-claim
+  namespace: online
 spec:
-  storageClassName: nfs-212
   accessModes:
     - ReadWriteMany
   resources:
     requests:
-      storage: 100Gi
+      storage: 100Mi

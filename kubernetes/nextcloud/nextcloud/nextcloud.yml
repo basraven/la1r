@@ -176,6 +176,24 @@ spec:
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
+  name: nextcloud-non-tls
+  namespace: nextcloud
+spec:
+  entryPoints:
+    - web
+  routes:
+  - match: Host(`cloud.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: nextcloud-service
+      port: 80
+    middlewares:
+    - name: http-redirect-to-https
+      namespace: traefik
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
   name: nextcloud-tls
   namespace: nextcloud
 spec:

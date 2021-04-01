@@ -14,6 +14,10 @@ rules:
 - apiGroups: ["", "endpoints", "extensions", "apps"]
   resources: ["endpoints", "events", "namespaces", "nodes", "pods", "customresourcedefinitions",  "apiservices", "daemonsets", "deployments", "statefulsets", "events", "ingresses", "ingresses", "services"]
   verbs: ["get", "watch", "list"]
+- apiGroups: ["traefik.containo.us"]
+  resources: ["middlewares","ingressroutes","traefikservices","ingressroutetcps","ingressrouteudps","tlsoptions","tlsstores","serverstransports"]
+  verbs: ["get", "list", "watch"]
+
 # - apiGroups: [""]
 #   resources: ["services"]
 #   verbs: ["get","watch","list"]
@@ -31,6 +35,19 @@ kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: consul-k8s-all-reader-services-role-binding
+subjects:
+- kind: ServiceAccount
+  name: consul-k8s
+  namespace: dns
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: all-reader-services
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: consul-k8s-admin-services-role-binding
 subjects:
 - kind: ServiceAccount
   name: consul-k8s
@@ -98,7 +115,7 @@ spec:
             - |
               GIT_SSH_COMMAND='ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' \
               git clone -q https://github.com/basraven/consulk8s.git ;
-              cd consulk8s ; git checkout feature/consul-sink ; cd ..
+              cd consulk8s ; git checkout master ; cd ..
               pip3 install ./consulk8s ;
               export K8S_TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
               export K8S_CA_AUTH="$(cat /var/run/secrets/kubernetes.io/serviceaccount/ca.crt | base64 -w 0 )"

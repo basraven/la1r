@@ -98,6 +98,7 @@ metadata:
   namespace: analytics
   labels:
     app: zeppelin-server
+    k8s-app: zeppelin
 spec:
   replicas: 1
   selector:
@@ -107,7 +108,7 @@ spec:
     metadata:
       labels:
         task: zeppelin-server
-        k8s-app: zeppelin-server
+        k8s-app: zeppelin
         app: zeppelin-server
     spec:
       containers:
@@ -152,8 +153,6 @@ spec:
             value: "true"
           - name: zeppelin.k8s.namespace
             value: "analytics"
-          - name: SPARK_EXECUTOR_INSTANCES
-            value: "3"
         resources: {}
         ports:
         - name: http-zep
@@ -166,8 +165,10 @@ spec:
         volumeMounts:
           - name: zeppelin-notebooks-volume
             mountPath: /notebook 
+          - name: zeppelin-config-volume
+            mountPath: /opt/zeppelin/conf
           - name: zeppelin-site-conf-volume
-            mountPath: /zeppelin/conf/zeppelin-site.xml
+            mountPath: /opt/zeppelin/conf/zeppelin-site.xml
             subPath: zeppelin-site.xml
       # - name: zeppelin-server-gateway
       #   image: nginx:1.14.0
@@ -204,6 +205,9 @@ spec:
         - name: zeppelin-notebooks-volume
           persistentVolumeClaim:
             claimName: zeppelin-notebooks-claim
+        - name: zeppelin-config-volume
+          persistentVolumeClaim:
+            claimName: zeppelin-config-claim
         - name: zeppelin-site-conf-volume
           configMap:
             name: zeppelin-site-conf
@@ -235,7 +239,7 @@ spec:
     protocol: TCP
     targetPort: 12320
   selector:
-    app: zeppelin-server
+    k8s-app: zeppelin
   type: ClusterIP
 
 ---
@@ -266,3 +270,55 @@ spec:
   #           name: zeppelin-server
   #           port:
   #             number: 80
+
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: zeppelin-bas
+  namespace: analytics
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: zeppelin-bas-tls
+  commonName: zeppelin.bas
+  dnsNames:
+  - zeppelin.bas
+  - www.zeppelin.bas
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: zeppelin-non-tls
+  namespace: analytics
+spec:
+  entryPoints:
+    - web
+  routes:
+  - match: Host(`zeppelin.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: zeppelin-server
+      port: 80
+    middlewares:
+    - name: http-redirect-to-https
+      namespace: traefik
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: zeppelin-tls
+  namespace: analytics
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`zeppelin.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: zeppelin-server
+      port: 80
+  tls:
+    secretName: zeppelin-bas-tls

@@ -1,0 +1,90 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shields
+  namespace: online
+  labels:
+    app: shields
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shields
+  template:
+    metadata:
+      labels:
+        app: shields
+    spec:
+      dnsPolicy: "None"
+      dnsConfig:
+        nameservers:
+          - 192.168.6.90
+      containers:
+      - name: shields
+        image: shieldsio/shields:next
+        ports:
+        - name: http
+          containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: shields
+  name: shields
+  namespace: online
+spec:
+  ports:
+  - name: http
+    targetPort: 80
+    port: 80
+  selector:
+    app: shields
+  type: ClusterIP
+
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: shields-non-tls
+  namespace: online
+  labels:
+    expose: "online"
+spec:
+  entryPoints:
+    - web
+  routes:
+  - match: Host(`shields.la1r.com`)
+    kind: Rule
+    services:
+    - name: shields
+      port: 80
+    middlewares:
+    - name: online-ratelimit
+      namespace: online
+    - name: http-redirect-to-https
+      namespace: online
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: shields-tls
+  namespace: online
+  labels:
+    expose: "online"
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`shields.la1r.com`)
+    kind: Rule
+    services:
+    - name: shields
+      port: 80
+    middlewares:
+    - name: online-ratelimit
+      namespace: online
+  tls:
+    certResolver: default
+
