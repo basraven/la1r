@@ -169,8 +169,8 @@ metadata:
     expose: "online"
 spec:
   rateLimit:
-      average: 3
-      burst: 5
+      average: 50
+      burst: 50
 ---
 # Generic Redirect to https
 apiVersion: traefik.containo.us/v1alpha1
