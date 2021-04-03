@@ -80,7 +80,7 @@ spec:
           - "--web=80"
           - "--smtp=25"
           - "--outgoing-host=email-sender"
-          - "--outgoing-user=admin@bas"
+          - "--outgoing-user=admin@la1r.com"
           - "--auto-relay"
           - "--auto-relay-rules=/var/email/config.json"
         # args:
@@ -135,21 +135,54 @@ spec:
   selector:
     app: email
   type: ClusterIP
+
 ---
-apiVersion: networking.k8s.io/v1
-kind: Ingress
+apiVersion: cert-manager.io/v1
+kind: Certificate
 metadata:
-  name: emailingress
+  name: nextcloud-email-bas
   namespace: nextcloud
 spec:
-  rules:
-  - host: nextcloud-email.bas
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: email
-            port:
-              number: 80
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: nextcloud-email-bas-tls
+  commonName: nextcloud-email.bas
+  dnsNames:
+  - nextcloud-email.bas
+  - www.nextcloud-email.bas
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: nextcloud-email-non-tls
+  namespace: nextcloud
+spec:
+  entryPoints:
+    - web
+  routes:
+  - match: Host(`nextcloud-email.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: email
+      port: 80
+    middlewares:
+    - name: http-redirect-to-https
+      namespace: traefik
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: nextcloud-email-tls
+  namespace: nextcloud
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`nextcloud-email.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: email
+      port: 80
+  tls:
+    secretName: nextcloud-email-bas-tls

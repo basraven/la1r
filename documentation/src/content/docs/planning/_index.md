@@ -11,26 +11,21 @@ For this reason I created this planning page in which I track and prioritize wha
 Feel free to add comments on this through Github!
 
 ## In progress
-* Event bus with strimzi
+* Apache airflow to integrate with streaming pipelines for event-driven home: https://airflow.apache.org/docs/stable/kubernetes.html
 
 ## Planned
-* Backup reimplementation
-* Apache airflow to integrate with streaming pipelines for event-driven home: https://airflow.apache.org/docs/stable/kubernetes.html
-* Online reimplementation
 * Home automation reimplementation
 
 ## Longstay parking
-* SNMP of DHCP server to consul/nodes for live node status info (added with a health check / ping performed by consul)
 * New doorbell security firmware
-* Video security storage process   
 * Fail2ban new filters for ALL services
 * Traefik auth proxy middleware with Authelia
 * "View in repo" button for all pages of the la1r documentation. While reading documentation, for example about Ansible, the visitor should be able to view which scripts are currently discussed by clicking a button to the git repository.
 * find-lf - wifi tracking as input events on the Event Bus based on AI model
 * Cronacle cron manager https://github.com/jhuckaby/Cronicle
 * Deploy a Kafka bus as structured event bus instead of mqtt
-* Spark 2.x Cluster in k8s
-* Streaming analytics pipeline with Spark 2.x and Kafka
+* Event bus with strimzi
+* Streaming analytics pipeline with Spark 3.x and Kafka
 * An event data dashboard for kafka
 * Streaming Facial recognition from images and streaming video
 * Formal managed bare-metal security camera setup
@@ -38,6 +33,11 @@ Feel free to add comments on this through Github!
 * Refactor Mosquito to [vernemq](https://vernemq.com/) 
 
 ## Completed
+* Online reimplementation
+* Video security storage process   
+* SNMP of DHCP server to consul/nodes for live node status info (added with a health check / ping performed by consul)
+* Spark 3.x Cluster in k8s
+* Backup reimplementation
 * node_exporter in DaemonSet: https://github.com/prometheus-operator/kube-prometheus/blob/master/manifests/node-exporter-daemonset.yaml
 * Kibana log analysis
 * Monitoring with kube-state-metrics in grafana
