@@ -407,6 +407,17 @@ data:
       },
       {
         "targets": [
+          "10.8.0.4:9100"
+        ],
+        "labels": {
+          "targetname": "rapsi2",
+          "nodeName": "rapsi2",
+          "jobscope": "node",
+          "nodetype": "cluster-node"
+        }
+      },
+      {
+        "targets": [
           "192.168.9.71:9100"
         ],
         "labels": {
