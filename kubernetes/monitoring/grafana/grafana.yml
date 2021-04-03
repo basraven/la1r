@@ -2,7 +2,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: monitoring-grafana
+  name: grafana
   namespace: monitoring
 spec:
   replicas: 1
@@ -75,7 +75,7 @@ spec:
           value: "false"
         - name: GF_SERVER_ROOT_URL
           # If you're only using the API Server proxy, set this value instead:
-          # value: /api/v1/namespaces/monitoring/services/monitoring-grafana/proxy
+          # value: /api/v1/namespaces/monitoring/services/grafana/proxy
           value: /
         # - name: plugins
         #   value: "vonage-status-panel"
@@ -92,7 +92,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: monitoring-grafana
+  name: grafana
   namespace: monitoring
 spec:
   ports:
@@ -105,7 +105,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: monitoring-grafana-lb-service
+  name: grafana-lb-service
   namespace: monitoring
 spec:
   ports:
@@ -145,7 +145,7 @@ spec:
   - match: Host(`grafana.bas`) && PathPrefix(`/`)
     kind: Rule
     services:
-    - name: monitoring-grafana
+    - name: grafana
       port: 80
     middlewares:
     - name: http-redirect-to-https
@@ -163,7 +163,7 @@ spec:
   - match: Host(`grafana.bas`) && PathPrefix(`/`)
     kind: Rule
     services:
-    - name: monitoring-grafana
+    - name: grafana
       port: 80
   tls:
     secretName: grafana-bas-tls

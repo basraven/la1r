@@ -126,6 +126,24 @@ spec:
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
+  name: radarr-non-tls
+  namespace: torrent
+spec:
+  entryPoints:
+    - web
+  routes:
+  - match: Host(`radarr.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: radarr
+      port: 80
+    middlewares:
+    - name: http-redirect-to-https
+      namespace: traefik
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
   name: radarr-tls
   namespace: torrent
 spec:

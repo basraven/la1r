@@ -396,6 +396,24 @@ spec:
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
+  name: torrent-non-tls
+  namespace: torrent
+spec:
+  entryPoints:
+    - web
+  routes:
+  - match: Host(`torrent.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: torrent
+      port: 80
+    middlewares:
+    - name: http-redirect-to-https
+      namespace: traefik
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
   name: torrent-tls
   namespace: torrent
 spec:

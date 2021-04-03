@@ -125,6 +125,24 @@ spec:
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
+  name: sonarr-non-tls
+  namespace: torrent
+spec:
+  entryPoints:
+    - web
+  routes:
+  - match: Host(`sonarr.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: sonarr
+      port: 80
+    middlewares:
+    - name: http-redirect-to-https
+      namespace: traefik
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
   name: sonarr-tls
   namespace: torrent
 spec:

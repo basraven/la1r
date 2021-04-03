@@ -297,6 +297,24 @@
     force user = {{ target_user_name }}
     force group = {{ target_user_name }}
     
+ [windowsbackup]
+    comment = windowsbackup
+    path = /mnt/hdd/windowsbackup
+    read only = no
+    browsable = yes
+    writable = yes
+    force user = {{ target_user_name }}
+    force group = {{ target_user_name }}
+
+ [staging]
+    comment = staging
+    path = /mnt/hdd/staging
+    read only = no
+    browsable = yes
+    writable = yes
+    force user = {{ target_user_name }}
+    force group = {{ target_user_name }}
+
 
 ; [openhab]
 ;    comment = OpenHab
@@ -315,22 +333,3 @@
 ;    writable = yes
 ;    force user = {{ target_user_name }}
 ;    force group = {{ target_user_name }}
-
-
- [windowsbackup]
-    comment = windowsbackup
-    path = /mnt/hdd/windowsbackup
-    read only = no
-    browsable = yes
-    writable = yes
-    force user = {{ target_user_name }}
-    force group = {{ target_user_name }}
-
- [staging]
-    comment = staging
-    path = /mnt/hdd/staging
-    read only = no
-    browsable = yes
-    writable = yes
-    force user = {{ target_user_name }}
-    force group = {{ target_user_name }}

@@ -16,17 +16,17 @@ data:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: monitoring-prometheus-blackbox-exporter
+  name: prometheus-blackbox-exporter
   namespace: monitoring
 spec:
   replicas: 1
   selector:
     matchLabels:
-      k8s-app: monitoring-prometheus-blackbox-exporter
+      k8s-app: prometheus-blackbox-exporter
   template:
     metadata:
       labels:
-        k8s-app: monitoring-prometheus-blackbox-exporter
+        k8s-app: prometheus-blackbox-exporter
     spec:
       volumes:
         - name: blackbox-exporter-config-volume
@@ -53,14 +53,14 @@ kind: Service
 metadata:
   labels:
     task: monitoring
-  name: monitoring-prometheus-blackbox-exporter
+  name: prometheus-blackbox-exporter
   namespace: monitoring
 spec:
   ports:
   - port: 80
     targetPort: 9115
   selector:
-    k8s-app: monitoring-prometheus-blackbox-exporter
+    k8s-app: prometheus-blackbox-exporter
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -76,6 +76,6 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: monitoring-prometheus-blackbox-exporter
+            name: prometheus-blackbox-exporter
             port:
               number: 80

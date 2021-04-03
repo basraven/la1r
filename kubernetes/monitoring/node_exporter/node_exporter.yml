@@ -8,7 +8,9 @@ data:
   run.sh: |-
     #!/bin/sh
     while sleep 50; do
-      rm "/output/directory_size_$NODE_NAME.prom"
+      if [ -f "/output/directory_size_$NODE_NAME.prom" ] ; then
+          rm "/output/directory_size_$NODE_NAME.prom"
+      fi
       /scripts/directory-size.sh  "/mnt/hdd/na" "/output/directory_size_$NODE_NAME.prom"
       /scripts/directory-size.sh  "/mnt/hdd/ha" "/output/directory_size_$NODE_NAME.prom"
       /scripts/directory-size.sh  "/mnt/ssd/na" "/output/directory_size_$NODE_NAME.prom"
