@@ -19,7 +19,7 @@ data:
     receivers:
       - name: discord_webhook
         webhook_configs:
-        - url: "http://monitoring-discord-webhook:9094"
+        - url: "http://discord-webhook:9094"
           send_resolved: true
       # - name: http_webhook
       #   webhook_configs:

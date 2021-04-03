@@ -14,7 +14,7 @@ data:
     - job_name: 'pushgateway'
       honor_labels: true
       static_configs:
-      - targets: ['monitoring-prometheus-push-gateway.monitoring:80']
+      - targets: ['prometheus-push-gateway.monitoring:80']
     - job_name: 'coredns'
       metrics_path: /metrics
       static_configs:
@@ -51,7 +51,7 @@ data:
         - source_labels: [__param_target]
           target_label: instance
         - target_label: __address__
-          replacement: monitoring-prometheus-blackbox-exporter:80  # This is your blackbox exporter.
+          replacement: prometheus-blackbox-exporter:80  # This is your blackbox exporter.
     - job_name: 'targetsjson'
       file_sd_configs:
       - files:
@@ -463,21 +463,30 @@ data:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: monitoring-prometheus
+  name: prometheus
   namespace: monitoring
 spec:
   replicas: 1
   selector:
     matchLabels:
-      k8s-app: monitoring-prometheus
+      k8s-app: prometheus
   template:
     metadata:
       labels:
         task: monitoring
-        k8s-app: monitoring-prometheus
+        k8s-app: prometheus
     spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution :
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: externalvpn
+                operator: In
+                values: [ "true" ]
       containers:
       - name: prometheus
+        resources:
         ports:
         - containerPort: 9090
         image: prom/prometheus
@@ -522,34 +531,14 @@ kind: Service
 metadata:
   labels:
     task: monitoring
-  name: monitoring-prometheus
+  name: prometheus
   namespace: monitoring
 spec:
   ports:
   - port: 80
     targetPort: 9090
   selector:
-    k8s-app: monitoring-prometheus
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: prometheus-ingress
-  namespace: monitoring
-spec:
-  rules:
-  - host: prometheus.bas
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: monitoring-prometheus
-            port:
-              number: 80
-
-
+    k8s-app: prometheus
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
@@ -569,6 +558,24 @@ spec:
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
+  name: prometheus-non-tls
+  namespace: monitoring
+spec:
+  entryPoints:
+    - web
+  routes:
+  - match: Host(`prometheus.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: prometheus
+      port: 80
+    middlewares:
+    - name: http-redirect-to-https
+      namespace: traefik
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
   name: prometheus-tls
   namespace: monitoring
 spec:
@@ -578,7 +585,7 @@ spec:
   - match: Host(`prometheus.bas`) && PathPrefix(`/`)
     kind: Rule
     services:
-    - name: monitoring-prometheus
+    - name: prometheus
       port: 80
   tls:
     secretName: prometheus-bas-tls
