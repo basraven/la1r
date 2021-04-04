@@ -74,13 +74,6 @@ data:
     #     - exporter-openvpn:80
     #     labels:
     #       jobscope: 'application'
-    # - job_name: traefik-online
-    #   scrape_interval: 3s
-    #   static_configs:
-    #   - targets:
-    #     - online-traefik-ingress-service.online:8082
-    #     labels:
-    #       jobscope: 'application'
 
 
 ---
@@ -173,6 +166,15 @@ data:
         ],
         "labels": {
           "targetname": "traefik",
+          "jobscope": "application"
+        }
+      },
+      {
+        "targets": [
+          "online-traefik-ingress-lb.online:8082"
+        ],
+        "labels": {
+          "targetname": "traefik-online",
           "jobscope": "application"
         }
       },

@@ -1,103 +1,103 @@
-# ---
-# kind: DaemonSet
-# apiVersion: apps/v1
-# metadata:
-#   name: traefik-ingress-controller
-#   namespace: traefik
-#   labels:
-#     app: traefik-ingress-controller
-# spec:
-#   selector:
-#     matchLabels:
-#       name: traefik-ingress-controller
-#   template:
-#     metadata:
-#       labels:
-#         app: traefik-ingress-controller
-#         name: traefik-ingress-controller
-#     spec:
-#       serviceAccountName: traefik-ingress-controller
-#       containers:
-#       - name: traefik-ingress-controller
-#         image: traefik:v2.4
-#         ports:
-#         - name: http
-#           containerPort: 80
-#         - name: https
-#           containerPort: 443
-#         - name: admin
-#           containerPort: 8080
-#         - name: prometheus
-#           containerPort: 8082
-#         args:
-#           - --api.insecure
-#           - --accesslog
-#           - --metrics=true
-#           - --serverstransport.insecureskipverify
-#           - --metrics.prometheus=true
-#           - --metrics.prometheus.entryPoint=metrics
-#           - --entrypoints.metrics.Address=:8082
-#           - --entrypoints.web.Address=:80
-#           - --entrypoints.websecure.Address=:443
-#           - --providers.kubernetesingress
-#           - --providers.kubernetescrd
-#           - --providers.kubernetescrd.labelselector=expose!=online
-# ---
-# kind: Service
-# apiVersion: v1
-# metadata:
-#   name: traefik-ingress-service
-#   namespace: traefik
-# spec:
-#   type: ClusterIP
-#   selector:
-#     app: traefik-ingress-controller
-#   ports:
-#     - protocol: TCP
-#       port: 80
-#       name: web
-#     - protocol: TCP
-#       port: 443
-#       name: websecure
-#     - protocol: TCP
-#       port: 8080
-#       name: admin
-#     - port: 8082
-#       name: prometheus
-# ---
-# apiVersion: v1
-# kind: Service
-# metadata:
-#   name: traefik-loadbalancer-service
-#   namespace: traefik
-# spec:
-#   loadBalancerIP: 192.168.6.1
-#   type: LoadBalancer
-#   ports:
-#     - name: web
-#       protocol: TCP
-#       port: 80
-#       targetPort: 80
-#     - name: websecure
-#       protocol: TCP
-#       port: 443
-#       targetPort: 443
-#     - name: admin
-#       protocol: TCP
-#       port: 8080
-#       targetPort: 8080
-#   selector:
-#     app: traefik-ingress-controller
-# ---
-# Generic Redirect to https
-# apiVersion: traefik.containo.us/v1alpha1
-# kind: Middleware
-# metadata:
-#   name: http-redirect-to-https
-#   namespace: traefik
-# spec:
-#   redirectScheme:
-#     scheme: https  
+---
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: traefik-ingress-controller
+  namespace: traefik
+  labels:
+    app: traefik-ingress-controller
+spec:
+  selector:
+    matchLabels:
+      name: traefik-ingress-controller
+  template:
+    metadata:
+      labels:
+        app: traefik-ingress-controller
+        name: traefik-ingress-controller
+    spec:
+      serviceAccountName: traefik-ingress-controller
+      containers:
+      - name: traefik-ingress-controller
+        image: traefik:v2.4
+        ports:
+        - name: http
+          containerPort: 80
+        - name: https
+          containerPort: 443
+        - name: admin
+          containerPort: 8080
+        - name: prometheus
+          containerPort: 8082
+        args:
+          - --api.insecure
+          - --accesslog
+          - --metrics=true
+          - --serverstransport.insecureskipverify
+          - --metrics.prometheus=true
+          - --metrics.prometheus.entryPoint=metrics
+          - --entrypoints.metrics.Address=:8082
+          - --entrypoints.web.Address=:80
+          - --entrypoints.websecure.Address=:443
+          - --providers.kubernetesingress
+          - --providers.kubernetescrd
+          - --providers.kubernetescrd.labelselector=expose!=online
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: traefik-ingress-service
+  namespace: traefik
+spec:
+  type: ClusterIP
+  selector:
+    app: traefik-ingress-controller
+  ports:
+    - protocol: TCP
+      port: 80
+      name: web
+    - protocol: TCP
+      port: 443
+      name: websecure
+    - protocol: TCP
+      port: 8080
+      name: admin
+    - port: 8082
+      name: prometheus
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: traefik-loadbalancer-service
+  namespace: traefik
+spec:
+  loadBalancerIP: 192.168.6.1
+  type: LoadBalancer
+  ports:
+    - name: web
+      protocol: TCP
+      port: 80
+      targetPort: 80
+    - name: websecure
+      protocol: TCP
+      port: 443
+      targetPort: 443
+    - name: admin
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+  selector:
+    app: traefik-ingress-controller
+---
+Generic Redirect to https
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: http-redirect-to-https
+  namespace: traefik
+spec:
+  redirectScheme:
+    scheme: https  
 
 ---
 apiVersion: cert-manager.io/v1
