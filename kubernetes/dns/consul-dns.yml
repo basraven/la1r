@@ -80,6 +80,7 @@ spec:
             protocol: UDP
           - name: metrics
             containerPort: 9153
+            protocol: TCP
           # livenessProbe:
           #   httpGet:
           #     path: /health
@@ -228,10 +229,23 @@ spec:
       port: 8600
       targetPort: 8600
       protocol: UDP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: consul-coredns-metrics
+  namespace: dns
+  labels:
+    name: consul-coredns
+spec:
+  selector:
+    app: consul
+  type: ClusterIP
+  ports:
     - name: metrics
       port: 9153
-      targetPort: metrics
-
+      targetPort: 9153
+      protocol: TCP
 ---
 apiVersion: v1
 kind: Service

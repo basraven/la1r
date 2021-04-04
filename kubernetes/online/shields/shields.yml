@@ -55,7 +55,7 @@ spec:
   entryPoints:
     - web
   routes:
-  - match: Host(`shields.la1r.com`)
+  - match: Host(`shields.la1r.com`) && PathPrefix(`/`)
     kind: Rule
     services:
     - name: shields
@@ -77,7 +77,7 @@ spec:
   entryPoints:
     - websecure
   routes:
-  - match: Host(`shields.la1r.com`)
+  - match: Host(`shields.la1r.com`) && PathPrefix(`/`)
     kind: Rule
     services:
     - name: shields
