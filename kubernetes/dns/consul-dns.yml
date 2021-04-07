@@ -80,6 +80,7 @@ spec:
             protocol: UDP
           - name: metrics
             containerPort: 9153
+            protocol: TCP
           # livenessProbe:
           #   httpGet:
           #     path: /health
@@ -228,10 +229,23 @@ spec:
       port: 8600
       targetPort: 8600
       protocol: UDP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: consul-coredns-metrics
+  namespace: dns
+  labels:
+    name: consul-coredns
+spec:
+  selector:
+    app: consul
+  type: ClusterIP
+  ports:
     - name: metrics
       port: 9153
-      targetPort: metrics
-
+      targetPort: 9153
+      protocol: TCP
 ---
 apiVersion: v1
 kind: Service
@@ -270,21 +284,54 @@ spec:
   selector:
     app: consul
 
+
 ---
-apiVersion: networking.k8s.io/v1
-kind: Ingress
+apiVersion: cert-manager.io/v1
+kind: Certificate
 metadata:
-  name: consulingress
-  namespace: dns
+  name: consul-dns-bas
+  namespace: monitoring
 spec:
-  rules:
-  - host: dns.bas
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: consul
-            port:
-              number: 80
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: dns-bas-tls
+  commonName: dns.bas
+  dnsNames:
+  - dns.bas
+  - www.dns.bas
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: consul-dns-non-tls
+  namespace: monitoring
+spec:
+  entryPoints:
+    - web
+  routes:
+  - match: Host(`dns.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: consul
+      port: 80
+    middlewares:
+    - name: http-redirect-to-https
+      namespace: traefik
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: consul-dns-tls
+  namespace: monitoring
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`dns.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: consul
+      port: 80
+  tls:
+    secretName: dns-bas-tls

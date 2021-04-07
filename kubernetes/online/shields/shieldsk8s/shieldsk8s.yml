@@ -148,7 +148,7 @@ spec:
   entryPoints:
     - web
   routes:
-  - match: Host(`shieldsk8s.la1r.com`)
+  - match: Host(`shieldsk8s.la1r.com`) && PathPrefix(`/`)
     kind: Rule
     services:
     - name: shieldsk8s
@@ -170,7 +170,7 @@ spec:
   entryPoints:
     - websecure
   routes:
-  - match: Host(`shieldsk8s.la1r.com`)
+  - match: Host(`shieldsk8s.la1r.com`) && PathPrefix(`/`)
     kind: Rule
     services:
     - name: shieldsk8s

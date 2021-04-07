@@ -15,15 +15,11 @@ data:
       honor_labels: true
       static_configs:
       - targets: ['prometheus-push-gateway.monitoring:80']
-    - job_name: 'coredns'
-      metrics_path: /metrics
-      static_configs:
-      - targets:
-        - 'consul-0.consul.dns.svc.cluster.local:9153'
-        - 'consul-1.consul.dns.svc.cluster.local:9153'
-        - 'consul-2.consul.dns.svc.cluster.local:9153'
-        - 'consul-3.consul.dns.svc.cluster.local:9153'
-        - 'consul-4.consul.dns.svc.cluster.local:9153'
+    # TODO: Fix somehow
+    # - job_name: 'consulcoredns'
+    #   metrics_path: /metrics
+    #   static_configs:
+    #   - targets: ['consul-coredns-metrics.dns.svc.cluster.local:9153']
     - job_name: 'blackbox'
       metrics_path: /probe
       params:
@@ -63,7 +59,7 @@ data:
       - scheme: http
         static_configs:
         - targets:
-          - "monitoring-alertmanager-service:9093"
+          - "alertmanager-service:9093"
 
     # - job_name: qbittorent
     #   scrape_interval: 5s
@@ -78,13 +74,131 @@ data:
     #     - exporter-openvpn:80
     #     labels:
     #       jobscope: 'application'
-    # - job_name: traefik-online
-    #   scrape_interval: 3s
-    #   static_configs:
-    #   - targets:
-    #     - online-traefik-ingress-service.online:8082
-    #     labels:
-    #       jobscope: 'application'
+
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-targets
+  namespace: monitoring
+data:
+  targets.json: |-
+    [
+      {
+        "targets": [
+          "localhost:9090"
+        ],
+        "labels": {
+          "targetname": "prometheus-local",
+          "jobscope": "application"
+        }
+      },
+      {
+        "targets": [
+          "192.168.5.1:9100"
+        ],
+        "labels": {
+          "targetname": "linux-wayne",
+          "nodeName": "linux-wayne",
+          "jobscope": "node",
+          "nodetype": "cluster-node"
+        }
+      },
+      {
+        "targets": [
+          "192.168.5.3:9100"
+        ],
+        "labels": {
+          "targetname": "jay-c",
+          "nodeName": "jay-c",
+          "jobscope": "node",
+          "nodetype": "cluster-node"
+        }
+      },
+      {
+        "targets": [
+          "10.8.0.4:9100"
+        ],
+        "labels": {
+          "targetname": "rapsi2",
+          "nodeName": "rapsi2",
+          "jobscope": "node",
+          "nodetype": "cluster-node"
+        }
+      },
+      {
+        "targets": [
+          "192.168.9.71:9100"
+        ],
+        "labels": {
+          "targetname": "ali-bel",
+          "nodeName": "ali-bel",
+          "jobscope": "node",
+          "nodetype": "peripheral-node"
+        }
+      },
+      {
+        "targets": [
+          "192.168.15.243:9100"
+        ],
+        "labels": {
+          "targetname": "kodi-e",
+          "nodeName": "kodi-e",
+          "jobscope": "node",
+          "nodetype": "peripheral-node"
+        }
+      },
+      {
+        "targets": [
+          "192.168.0.64:80"
+        ],
+        "labels": {
+          "targetname": "kirby",
+          "nodeName": "kirby",
+          "jobscope": "node",
+          "nodetype": "peripheral-node"
+        }
+      },
+      {
+        "targets": [
+          "traefik-ingress-service.traefik:8082"
+        ],
+        "labels": {
+          "targetname": "traefik",
+          "jobscope": "application"
+        }
+      },
+      {
+        "targets": [
+          "online-traefik-ingress-lb.online:8082"
+        ],
+        "labels": {
+          "targetname": "traefik-online",
+          "jobscope": "application"
+        }
+      },
+      {
+        "targets": [
+          "consul-exporter:9107"
+        ],
+        "labels": {
+          "targetname": "consul-exporter",
+          "jobscope": "application"
+        }
+      },
+      {
+        "targets": [
+          "kube-state-metrics.kube-system:8080"
+        ],
+        "labels": {
+          "targetname": "kube-state-metrics",
+          "jobscope": "application"
+        }
+      }
+    ]
+
+
 
 ---
 apiVersion: v1
@@ -95,16 +209,16 @@ metadata:
 data:
   generalrules.yml: |-
     groups:
-    - name: deadmanswitch
-      rules:
-      - alert: DeadMansSwitch
-        annotations:
-          description: This is a DeadMansSwitch meant to ensure that the entire Alerting
-            pipeline is functional.
-          summary: Alerting DeadMansSwitch
-        expr: vector(1)
-        labels:
-          severity: none
+    # - name: deadmanswitch
+    #   rules:
+    #   - alert: DeadMansSwitch
+    #     annotations:
+    #       description: This is a DeadMansSwitch meant to ensure that the entire Alerting
+    #         pipeline is functional.
+    #       summary: Alerting DeadMansSwitch
+    #     expr: vector(1)
+    #     labels:
+    #       severity: none
     - name: prometheus
       rules:
       - alert: PrometheusConfigurationReloadFailure
@@ -304,7 +418,7 @@ data:
         expr: (kube_statefulset_status_replicas_ready / kube_statefulset_status_replicas_current) != 1
         for: 5m
         labels:
-          severity: critical
+          severity: warning
         annotations:
           summary: "Kubernetes StatefulSet down (instance {{ $labels.instance }})"
           description: "A StatefulSet went down\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
@@ -313,7 +427,7 @@ data:
         expr: min_over_time(sum by (namespace, pod) (kube_pod_status_phase{phase=~"Pending|Unknown|Failed"})[1h:]) > 0
         for: 5m
         labels:
-          severity: critical
+          severity: warning
         annotations:
           summary: "Kubernetes Pod not healthy (instance {{ $labels.instance }})"
           description: "Pod has been in a non-ready state for longer than an hour.\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
@@ -358,118 +472,47 @@ data:
         expr: kube_daemonset_status_number_misscheduled > 0
         for: 5m
         labels:
-          severity: critical
+          severity: warning
         annotations:
           summary: "Kubernetes DaemonSet misscheduled (instance {{ $labels.instance }})"
           description: "Some DaemonSet Pods are running where they are not supposed to run\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
-
-
-
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: prometheus-targets
-  namespace: monitoring
-data:
-  targets.json: |-
-    [
-      {
-        "targets": [
-          "localhost:9090"
-        ],
-        "labels": {
-          "targetname": "prometheus-local",
-          "jobscope": "application"
-        }
-      },
-      {
-        "targets": [
-          "192.168.5.1:9100"
-        ],
-        "labels": {
-          "targetname": "linux-wayne",
-          "nodeName": "linux-wayne",
-          "jobscope": "node",
-          "nodetype": "cluster-node"
-        }
-      },
-      {
-        "targets": [
-          "192.168.5.3:9100"
-        ],
-        "labels": {
-          "targetname": "jay-c",
-          "nodeName": "jay-c",
-          "jobscope": "node",
-          "nodetype": "cluster-node"
-        }
-      },
-      {
-        "targets": [
-          "10.8.0.4:9100"
-        ],
-        "labels": {
-          "targetname": "rapsi2",
-          "nodeName": "rapsi2",
-          "jobscope": "node",
-          "nodetype": "cluster-node"
-        }
-      },
-      {
-        "targets": [
-          "192.168.9.71:9100"
-        ],
-        "labels": {
-          "targetname": "ali-bel",
-          "nodeName": "ali-bel",
-          "jobscope": "node",
-          "nodetype": "peripheral-node"
-        }
-      },
-      {
-        "targets": [
-          "192.168.15.243:9100"
-        ],
-        "labels": {
-          "targetname": "kodi-e",
-          "nodeName": "kodi-e",
-          "jobscope": "node",
-          "nodetype": "peripheral-node"
-        }
-      },
-      {
-        "targets": [
-          "192.168.0.64:80"
-        ],
-        "labels": {
-          "targetname": "kirby",
-          "nodeName": "kirby",
-          "jobscope": "node",
-          "nodetype": "peripheral-node"
-        }
-      },
-      {
-        "targets": [
-          "traefik-ingress-service.traefik:8082"
-        ],
-        "labels": {
-          "targetname": "traefik",
-          "jobscope": "application"
-        }
-      },
-      {
-        "targets": [
-          "kube-state-metrics.kube-system:8080"
-        ],
-        "labels": {
-          "targetname": "kube-state-metrics",
-          "jobscope": "application"
-        }
-      }
-    ]
-
-
+    - name: consul-exporter
+      rules:
+      - alert: Consul agent is not healthy
+        expr: consul_health_node_status{status="critical"} == 1
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          title: Consul agent is down
+          description: Consul agent is not healthy on {{ $labels.node }}.
+      - alert: Consul cluster is degraded
+        expr: min(consul_raft_peers) < 3
+        for: 1m
+        labels:
+          severity: page
+        annotations:
+          title: Consul cluster is degraded
+          description: Consul cluster has {{ $value }} servers alive. This may lead to cluster break.
+      - alert: Consul service count too low
+        expr: consul_catalog_services < 2
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          title: Consul agent is down
+          description: Consul agent is not healthy on {{ $labels.node }}.
+    - name: camera
+      rules:
+      - alert: Camera is triggered
+        expr: camera_trigger == 1
+        for: 3s
+        labels:
+          severity: info
+        annotations:
+          title: Camera Triggered
+          description: The Camera at {{ $labels.instance }} is triggered
+      
 ---
 apiVersion: apps/v1
 kind: Deployment

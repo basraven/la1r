@@ -11,12 +11,18 @@ data:
       resolve_timeout: 5m
     route:
       group_by: ['alertname']
-      group_wait: 3s
+      group_wait: 5s
       group_interval: 10s
       repeat_interval: 7d
-      receiver: discord_webhook
+      receiver: blackhole # Default receiver: none
+      routes:
+      # capture All WARN to the 'warning' with P3
+      - match:
+          severity: critical
+        receiver: discord_webhook
 
     receivers:
+      - name: blackhole
       - name: discord_webhook
         webhook_configs:
         - url: "http://discord-webhook:9094"
@@ -29,18 +35,18 @@ data:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: monitoring-alertmanager
+  name: alertmanager
   namespace: monitoring
 spec:
   replicas: 1
   selector:
     matchLabels:
-      k8s-app: monitoring-alertmanager
+      k8s-app: alertmanager
   template:
     metadata:
       labels:
         task: monitoring
-        k8s-app: monitoring-alertmanager
+        k8s-app: alertmanager
     spec:
       containers:
       - name: alertmanager
@@ -82,7 +88,7 @@ kind: Service
 metadata:
   labels:
     task: monitoring
-  name: monitoring-alertmanager-service
+  name: alertmanager-service
   namespace: monitoring
 spec:
   ports:
@@ -93,39 +99,19 @@ spec:
     port: 80
     targetPort: 9093
   selector:
-    k8s-app: monitoring-alertmanager
-
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: alertmanageringress
-  namespace: monitoring
-spec:
-  rules:
-  - host: alerts.bas
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: monitoring-alertmanager-service
-            port:
-              number: 80
-
+    k8s-app: alertmanager
 
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: alert-manager-bas
+  name: alertmanager-bas
   namespace: monitoring
 spec:
   issuerRef:
     name: la1r
     kind: ClusterIssuer
-  secretName: alert-manager-bas-tls
+  secretName: alertmanager-bas-tls
   commonName: alerts.bas
   dnsNames:
   - alerts.bas
@@ -134,7 +120,25 @@ spec:
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
-  name: alert-manager-tls
+  name: alertmanager-non-tls
+  namespace: monitoring
+spec:
+  entryPoints:
+    - web
+  routes:
+  - match: Host(`alerts.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: alertmanager-service
+      port: 80
+    middlewares:
+    - name: http-redirect-to-https
+      namespace: traefik
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: alertmanager-tls
   namespace: monitoring
 spec:
   entryPoints:
@@ -143,7 +147,7 @@ spec:
   - match: Host(`alerts.bas`) && PathPrefix(`/`)
     kind: Rule
     services:
-    - name: monitoring-alertmanager-service
+    - name: alertmanager-service
       port: 80
   tls:
-    secretName: alert-manager-bas-tls
+    secretName: alertmanager-bas-tls

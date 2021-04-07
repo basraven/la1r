@@ -51,20 +51,52 @@ spec:
   selector:
     k8s-app: prometheus-push-gateway
 ---
-apiVersion: networking.k8s.io/v1
-kind: Ingress
+apiVersion: cert-manager.io/v1
+kind: Certificate
 metadata:
-  name: prometheus-push-gateway-ingress
+  name: prometheus-push-gateway-bas
   namespace: monitoring
 spec:
-  rules:
-  - host: prometheus-push.bas
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: prometheus-push-gateway
-            port:
-              number: 80
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: prometheus-push-gateway-bas-tls
+  commonName: prometheus-push.bas
+  dnsNames:
+  - prometheus-push.bas
+  - www.prometheus-push.bas
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: prometheus-push-gateway-non-tls
+  namespace: monitoring
+spec:
+  entryPoints:
+    - web
+  routes:
+  - match: Host(`prometheus-push.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: prometheus-push-gateway
+      port: 80
+    middlewares:
+    - name: http-redirect-to-https
+      namespace: traefik
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: prometheus-push-gateway-tls
+  namespace: monitoring
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`prometheus-push.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: prometheus-push-gateway
+      port: 80
+  tls:
+    secretName: prometheus-push-gateway-bas-tls

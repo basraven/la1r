@@ -62,20 +62,52 @@ spec:
   selector:
     k8s-app: prometheus-blackbox-exporter
 ---
-apiVersion: networking.k8s.io/v1
-kind: Ingress
+apiVersion: cert-manager.io/v1
+kind: Certificate
 metadata:
-  name: prometheus-blackbox-exporter-ingress
+  name: prometheus-blackbox-exporter-bas
   namespace: monitoring
 spec:
-  rules:
-  - host: blackbox.bas
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: prometheus-blackbox-exporter
-            port:
-              number: 80
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: blackbox-bas-tls
+  commonName: blackbox.bas
+  dnsNames:
+  - blackbox.bas
+  - www.blackbox.bas
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: prometheus-blackbox-exporter-non-tls
+  namespace: monitoring
+spec:
+  entryPoints:
+    - web
+  routes:
+  - match: Host(`blackbox.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: prometheus-blackbox-exporter
+      port: 80
+    middlewares:
+    - name: http-redirect-to-https
+      namespace: traefik
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: prometheus-blackbox-exporter-tls
+  namespace: monitoring
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`blackbox.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: prometheus-blackbox-exporter
+      port: 80
+  tls:
+    secretName: blackbox-bas-tls

@@ -45,6 +45,7 @@ The following table summarizes all network cidrs and addresses
 | 192.168   | 6.0/25   | [6.71](http://192.168.6.71)    | qBittorent listen                                          | 1                 |
 | 192.168   | 6.0/25   | [6.62](http://192.168.6.62)    | Radarr                                                     | 1                 |
 | 192.168   | 6.0/25   | [6.63](http://192.168.6.63)    | Sonarr                                                     | 1                 |
+| 192.168   | 6.0/25   | [6.64](http://192.168.6.64)    | Bazarr                                                     | 1                 |
 | 192.168   | 6.0/25   | [6.65](http://192.168.6.65)    | Kubernetes Dashboard                                       | 1                 |
 | 192.168   | 6.0/25   | [6.66](http://192.168.6.66)    | Grafana                                                    | 1                 |
 | 192.168   | 6.0/25   | [6.77](http://192.168.6.77)    | Log server                                                 | 1                 |
