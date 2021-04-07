@@ -2,34 +2,34 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: sonarr
+  name: bazarr
   namespace: torrent
   labels:
-    app: sonarr
+    app: bazarr
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: sonarr
+      app: bazarr
   template:
     metadata:
       labels:
-        app: sonarr
+        app: bazarr
     spec:
       volumes:
-        - name: sonarr-config-volume
+        - name: bazarr-config-volume
           persistentVolumeClaim:
-            claimName: sonarr-config-claim
-        - name: sonarr-torrent-volume
+            claimName: bazarr-config-claim
+        - name: bazarr-torrent-volume
           persistentVolumeClaim:
             claimName: torrent-data-claim
       containers:
-      - name: sonarr
+      - name: bazarr
         resources:
-        image: linuxserver/sonarr
+        image: linuxserver/bazarr
         ports:
         - name: http
-          containerPort: 8989
+          containerPort: 6767
         env:
         - name: TZ
           value: Europe/Amsterdam
@@ -38,13 +38,13 @@ spec:
         - name: PUID
           value: "1000"
         volumeMounts:
-          - name: sonarr-torrent-volume
+          - name: bazarr-torrent-volume
             mountPath: /downloads
-          - name: sonarr-config-volume
+          - name: bazarr-config-volume
             mountPath: /config
-        #   - name: sonarr-config-volume
-        #     mountPath: /config/sonarr/sonarr.conf
-        #     subPath: sonarr.conf
+        #   - name: bazarr-config-volume
+        #     mountPath: /config/bazarr/bazarr.conf
+        #     subPath: bazarr.conf
         #   - name: set-goose-config-volume
         #     mountPath: /goose/set-goose.sh
         #     subPath: set-goose.sh
@@ -59,34 +59,34 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: sonarr
-  name: sonarr
+    app: bazarr
+  name: bazarr
   namespace: torrent
 spec:
   ports:
   - name: http
-    targetPort: 8989
+    targetPort: 6767
     port: 80
   selector:
-    app: sonarr
+    app: bazarr
   type: ClusterIP
 
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: sonarringress
+  name: bazarringress
   namespace: torrent
 spec:
   rules:
-  - host: sonarr.bas
+  - host: bazarr.bas
     http:
       paths:
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: sonarr
+            name: bazarr
             port:
               number: 80
 
@@ -94,48 +94,49 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: sonarr-lb-service
+  name: bazarr-lb-service
   namespace: torrent
 spec:
   ports:
   - name: http
     port: 80
-    targetPort: 8989
+    targetPort: 6767
   selector:
-    app: sonarr
+    app: bazarr
   type: LoadBalancer
-  loadBalancerIP: 192.168.6.63
+  loadBalancerIP: 192.168.6.64
+
 
 
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: sonarr-bas
+  name: bazarr-bas
   namespace: torrent
 spec:
   issuerRef:
     name: la1r
     kind: ClusterIssuer
-  secretName: sonarr-bas-tls
-  commonName: sonarr.bas
+  secretName: bazarr-bas-tls
+  commonName: bazarr.bas
   dnsNames:
-  - sonarr.bas
-  - www.sonarr.bas
+  - bazarr.bas
+  - www.bazarr.bas
 ---
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
-  name: sonarr-non-tls
+  name: bazarr-non-tls
   namespace: torrent
 spec:
   entryPoints:
     - web
   routes:
-  - match: Host(`sonarr.bas`) && PathPrefix(`/`)
+  - match: Host(`bazarr.bas`) && PathPrefix(`/`)
     kind: Rule
     services:
-    - name: sonarr
+    - name: bazarr
       port: 80
     middlewares:
     - name: http-redirect-to-https
@@ -144,16 +145,16 @@ spec:
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
-  name: sonarr-tls
+  name: bazarr-tls
   namespace: torrent
 spec:
   entryPoints:
     - websecure
   routes:
-  - match: Host(`sonarr.bas`) && PathPrefix(`/`)
+  - match: Host(`bazarr.bas`) && PathPrefix(`/`)
     kind: Rule
     services:
-    - name: sonarr
+    - name: bazarr
       port: 80
   tls:
-    secretName: sonarr-bas-tls
+    secretName: bazarr-bas-tls

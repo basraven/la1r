@@ -11,12 +11,18 @@ data:
       resolve_timeout: 5m
     route:
       group_by: ['alertname']
-      group_wait: 3s
+      group_wait: 5s
       group_interval: 10s
       repeat_interval: 7d
-      receiver: discord_webhook
+      receiver: blackhole # Default receiver: none
+      routes:
+      # capture All WARN to the 'warning' with P3
+      - match:
+          severity: critical
+        receiver: discord_webhook
 
     receivers:
+      - name: blackhole
       - name: discord_webhook
         webhook_configs:
         - url: "http://discord-webhook:9094"

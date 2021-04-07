@@ -418,7 +418,7 @@ data:
         expr: (kube_statefulset_status_replicas_ready / kube_statefulset_status_replicas_current) != 1
         for: 5m
         labels:
-          severity: critical
+          severity: warning
         annotations:
           summary: "Kubernetes StatefulSet down (instance {{ $labels.instance }})"
           description: "A StatefulSet went down\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
@@ -427,7 +427,7 @@ data:
         expr: min_over_time(sum by (namespace, pod) (kube_pod_status_phase{phase=~"Pending|Unknown|Failed"})[1h:]) > 0
         for: 5m
         labels:
-          severity: critical
+          severity: warning
         annotations:
           summary: "Kubernetes Pod not healthy (instance {{ $labels.instance }})"
           description: "Pod has been in a non-ready state for longer than an hour.\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
@@ -472,7 +472,7 @@ data:
         expr: kube_daemonset_status_number_misscheduled > 0
         for: 5m
         labels:
-          severity: critical
+          severity: warning
         annotations:
           summary: "Kubernetes DaemonSet misscheduled (instance {{ $labels.instance }})"
           description: "Some DaemonSet Pods are running where they are not supposed to run\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
@@ -482,7 +482,7 @@ data:
         expr: consul_health_node_status{status="critical"} == 1
         for: 1m
         labels:
-          severity: warning
+          severity: critical
         annotations:
           title: Consul agent is down
           description: Consul agent is not healthy on {{ $labels.node }}.
@@ -502,6 +502,16 @@ data:
         annotations:
           title: Consul agent is down
           description: Consul agent is not healthy on {{ $labels.node }}.
+    - name: camera
+      rules:
+      - alert: Camera is triggered
+        expr: camera_trigger == 1
+        for: 3s
+        labels:
+          severity: info
+        annotations:
+          title: Camera Triggered
+          description: The Camera at {{ $labels.instance }} is triggered
       
 ---
 apiVersion: apps/v1

@@ -25,6 +25,7 @@ spec:
             claimName: torrent-data-claim
       containers:
       - name: radarr
+        resources:
         image: linuxserver/radarr
         ports:
         - name: http
