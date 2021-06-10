@@ -1,0 +1,138 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: timescaledb
+  namespace: timescaledb
+  labels:
+    app: timescaledb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: timescaledb
+  template:
+    metadata:
+      labels:
+        app: timescaledb
+    spec:
+      volumes:
+        - name: timescaledb-config-volume
+          persistentVolumeClaim:
+            claimName: timescaledb-config-claim
+      containers:
+      - name: timescaledb
+        image: linuxserver/timescaledb
+        ports:
+        - name: http
+          containerPort: 7878
+        env:
+        - name: TZ
+          value: Europe/Amsterdam
+        - name: PGID
+          value: "1000"
+        - name: PUID
+          value: "1000"
+        volumeMounts:
+          - name: timescaledb-torrent-volume
+            mountPath: /downloads
+          - name: timescaledb-config-volume
+            mountPath: /config
+        #   - name: timescaledb-config-volume
+        #     mountPath: /config/timescaledb/timescaledb.conf
+        #     subPath: timescaledb.conf
+        #   - name: set-goose-config-volume
+        #     mountPath: /goose/set-goose.sh
+        #     subPath: set-goose.sh
+        #   - name: set-goose-ovpn-volume
+        #     mountPath: /etc/openvpn/ro-10.conf
+        #     subPath: ro-10.conf
+        #   - name: goose-credentials-volume
+        #     mountPath: /goose/login.conf
+        #     subPath: login.conf
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: timescaledb
+  name: timescaledb
+  namespace: timescaledb
+spec:
+  ports:
+  - name: http
+    targetPort: 7878
+    port: 80
+  selector:
+    app: timescaledb
+  type: ClusterIP
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: timescaledbingress
+  namespace: timescaledb
+spec:
+  rules:
+  - host: timescaledb.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: timescaledb
+            port:
+              number: 80
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: timescaledb-lb-service
+  namespace: timescaledb
+spec:
+  ports:
+  - name: http
+    port: 80
+    targetPort: 7878
+  selector:
+    app: timescaledb
+  type: LoadBalancer
+  loadBalancerIP: 192.168.6.62
+
+
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: timescaledb-bas
+  namespace: timescaledb
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: timescaledb-bas-tls
+  commonName: timescaledb.bas
+  dnsNames:
+  - timescaledb.bas
+  - www.timescaledb.bas
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: timescaledb-tls
+  namespace: timescaledb
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`timescaledb.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: timescaledb
+      port: 80
+  tls:
+    secretName: timescaledb-bas-tls
