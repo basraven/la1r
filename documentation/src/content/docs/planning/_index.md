@@ -11,24 +11,26 @@ For this reason I created this planning page in which I track and prioritize wha
 Feel free to add comments on this through Github!
 
 ## In progress
-* Apache airflow to integrate with streaming pipelines for event-driven home: https://airflow.apache.org/docs/stable/kubernetes.html
+* Node failure alert in case Kubernetes is also not available (keepalived), the VIP can also be used for this
 
 ## Planned
+* Fix logging implementation with Elastic Search
+* Network gateway (through Traefik?) for shields.io implementation
+* Hardware Node DNS names
 * Home automation reimplementation
+* find-lf - wifi tracking as input events on the Event Bus based on AI model
+* Last events pipeline, store and dashboard implementation
+* Update [Network Architecture](https://la1r.com/docs/technical-architecture/infrastructure-architecture/network-architecture/)
 
 ## Longstay parking
+* Apache airflow to integrate with streaming pipelines for event-driven home: https://airflow.apache.org/docs/stable/kubernetes.html
 * New doorbell security firmware
 * Fail2ban new filters for ALL services
 * Traefik auth proxy middleware with Authelia
 * "View in repo" button for all pages of the la1r documentation. While reading documentation, for example about Ansible, the visitor should be able to view which scripts are currently discussed by clicking a button to the git repository.
-* find-lf - wifi tracking as input events on the Event Bus based on AI model
 * Cronacle cron manager https://github.com/jhuckaby/Cronicle
-* Deploy a Kafka bus as structured event bus instead of mqtt
-* Event bus with strimzi
-* Streaming analytics pipeline with Spark 3.x and Kafka
 * An event data dashboard for kafka
 * Streaming Facial recognition from images and streaming video
-* Formal managed bare-metal security camera setup
 * Object recognition (garbage bin outside of our house) combined with garbage collection iCal (https://inzamelkalender.gad.nl/ical/0402200001574396)
 * Refactor Mosquito to [vernemq](https://vernemq.com/) 
 
