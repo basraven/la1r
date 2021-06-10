@@ -13,10 +13,15 @@ Feel free to add comments on this through Github!
 ## In progress
 * Node failure alert in case Kubernetes is also not available (keepalived), the VIP can also be used for this
 
-## Planned
+## Bugs
+* Fix end-to-end backups
+    * Requires: Hardware Node DNS names
 * Fix logging implementation with Elastic Search
 * Network gateway (through Traefik?) for shields.io implementation
-* Hardware Node DNS names
+* Fix Kirby implementation
+
+
+## Planned
 * Home automation reimplementation
 * find-lf - wifi tracking as input events on the Event Bus based on AI model
 * Last events pipeline, store and dashboard implementation
