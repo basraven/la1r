@@ -12,6 +12,7 @@ data:
           rm "/output/directory_size_$NODE_NAME.prom"
       fi
       /scripts/directory-size.sh  "/mnt/hdd/na" "/output/directory_size_$NODE_NAME.prom"
+      /scripts/directory-size.sh  "/mnt/hdd/na/torrent" "/output/directory_size_$NODE_NAME.prom"
       /scripts/directory-size.sh  "/mnt/hdd/ha" "/output/directory_size_$NODE_NAME.prom"
       /scripts/directory-size.sh  "/mnt/ssd/na" "/output/directory_size_$NODE_NAME.prom"
       /scripts/directory-size.sh  "/mnt/ssd/ha" "/output/directory_size_$NODE_NAME.prom"

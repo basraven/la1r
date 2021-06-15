@@ -8,7 +8,7 @@ data:
   na-backup.sh: |-
     #!/bin/sh
     apk add rsync
-    rsync --archive --compress --no-perms --no-owner --no-group --delete --force /original/na/ /mirror/na/
+    rsync --archive --compress --no-perms --progress --no-owner --no-group --delete --force --exclude '/original/na/torrent/*'  /original/na/ /mirror/na/
 ---
 apiVersion: batch/v1beta1
 kind: CronJob
@@ -20,8 +20,8 @@ metadata:
 spec:
   schedule: "5 4 * * *"
   concurrencyPolicy: Replace
-  successfulJobsHistoryLimit: 2
-  failedJobsHistoryLimit: 2
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
   jobTemplate:
     spec:
       template:

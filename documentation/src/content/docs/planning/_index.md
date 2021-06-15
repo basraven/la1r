@@ -14,11 +14,10 @@ Feel free to add comments on this through Github!
 * Node failure alert in case Kubernetes is also not available (keepalived), the VIP can also be used for this
 
 ## Bugs
-* Fix end-to-end backups
-    * Requires: Hardware Node DNS names
 * Fix logging implementation with Elastic Search
 * Network gateway (through Traefik?) for shields.io implementation
 * Fix Kirby implementation
+* Hardware Node DNS names
 
 
 ## Planned
