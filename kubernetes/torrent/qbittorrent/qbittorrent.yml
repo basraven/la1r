@@ -405,7 +405,7 @@ spec:
   - match: Host(`torrent.bas`) && PathPrefix(`/`)
     kind: Rule
     services:
-    - name: torrent
+    - name: qbittorrent
       port: 80
     middlewares:
     - name: http-redirect-to-https

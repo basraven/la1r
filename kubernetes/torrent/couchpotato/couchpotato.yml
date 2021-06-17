@@ -65,24 +65,24 @@ spec:
     app: couchpotato
   type: ClusterIP
 
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: couchpotatoingress
-  namespace: torrent
-spec:
-  rules:
-  - host: couch.bas
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: couchpotato
-            port:
-              number: 80
+# ---
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: couchpotatoingress
+#   namespace: torrent
+# spec:
+#   rules:
+#   - host: couch.bas
+#     http:
+#       paths:
+#       - path: /
+#         pathType: Prefix
+#         backend:
+#           service:
+#             name: couchpotato
+#             port:
+#               number: 80
 
 
 ---
@@ -100,6 +100,24 @@ spec:
   dnsNames:
   - couch.bas
   - www.couch.bas
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: couch-non-tls
+  namespace: torrent
+spec:
+  entryPoints:
+    - web
+  routes:
+  - match: Host(`couch.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: couchpotato
+      port: 80
+    middlewares:
+    - name: http-redirect-to-https
+      namespace: traefik
 ---
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
