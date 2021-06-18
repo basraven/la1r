@@ -18,6 +18,7 @@ Feel free to add comments on this through Github!
 * Network gateway (through Traefik?) for shields.io implementation
 * Fix Kirby implementation
 * Hardware Node DNS names
+* Update storage provisioner to https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner
 
 
 ## Planned
