@@ -1,0 +1,77 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: na-remote-backup-script
+  namespace: backup
+data:
+  na-remote-backup.sh: |-
+    #!/bin/sh
+    apk add rsync
+    rsync --archive --compress --no-perms --progress --no-owner --no-group --delete --force --exclude '/original/na/torrent/*'  /original/na/ /mirror/na/
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: na-remote-backup
+  namespace: backup
+  labels:
+    app: na-remote-backup
+spec:
+  schedule: "5 4 * * *"
+  concurrencyPolicy: Replace
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: na-remote-backup
+        spec:
+          affinity:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution :
+                nodeSelectorTerms:
+                - matchExpressions:
+                  - key: externalvpn
+                    operator: In
+                    values: [ "true" ]
+          restartPolicy: Never    
+          volumes:
+          - name: na-data-volume
+            nfs: 
+              server: 192.168.5.100
+              path: /mnt/hdd/na
+              readOnly: true
+          - name: na-data-mirror-volume
+            nfs: 
+              server: 10.8.0.4
+              path: /mnt/hdd/na
+          - name: na-remote-backup-script-volume
+            configMap:
+              name: na-remote-backup-script
+              items:
+              - key: na-remote-backup.sh
+                path: na-remote-backup.sh
+              defaultMode: 0744
+          containers:
+          - name: na-remote-backup
+            image: alpine:latest
+            resources:
+              requests:
+                memory: "512Mi"
+                cpu: "50m"
+              limits:
+                memory: "1028Mi"
+                cpu: "500m"
+            command: 
+              - /na-remote-backup-script/na-remote-backup.sh
+            volumeMounts:
+              - name: na-data-volume
+                mountPath: /original/na
+              - name: na-data-mirror-volume
+                mountPath: /mirror/na
+              - name: na-remote-backup-script-volume
+                mountPath: /na-remote-backup-script
+   

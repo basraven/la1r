@@ -18,7 +18,7 @@ metadata:
   labels:
     app: ha-remote-backup
 spec:
-  schedule: "5 2 * * *"
+  schedule: "5 3 * * *"
   concurrencyPolicy: Replace
   successfulJobsHistoryLimit: 1
   failedJobsHistoryLimit: 1
@@ -42,7 +42,7 @@ spec:
           - name: ha-data-volume
             persistentVolumeClaim:
             nfs: 
-              server: 192.168.5.1
+              server: 192.168.5.100
               path: /mnt/hdd/ha
               readOnly: true
           - name: ha-data-mirror-volume
@@ -60,12 +60,12 @@ spec:
           - name: ha-remote-backup
             image: alpine:latest
             resources:
-              limits:
-                cpu: 500m
-                memory: 1028Mi
               requests:
-                cpu: 50m
-                memory: 128Mi
+                memory: "512Mi"
+                cpu: "50m"
+              limits:
+                memory: "1028Mi"
+                cpu: "500m"
             command: 
               - /ha-remote-backup-script/ha-remote-backup.sh
             volumeMounts:
