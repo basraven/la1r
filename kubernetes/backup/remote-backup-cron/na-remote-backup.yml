@@ -8,7 +8,7 @@ data:
   na-remote-backup.sh: |-
     #!/bin/sh
     apk add rsync
-    rsync --archive --compress --no-perms --progress --no-owner --no-group --delete --force --exclude '/original/na/torrent/*'  /original/na/ /mirror/na/
+    rsync --archive --compress --no-perms --progress --no-owner --no-group --delete --force --exclude=torrent  /original/na/ /mirror/na/
 ---
 apiVersion: batch/v1beta1
 kind: CronJob
