@@ -3,11 +3,14 @@
   roles:
   - define-os
   - hostname
+
   # - users
   # - security
   # - reboot
-  - nfs
+  # - nfs
   # - samba
-  - containerd
-  - haproxy
-  - kubernetes
+  # - containerd
+  # - haproxy
+  # - kubernetes
+
+  - backup

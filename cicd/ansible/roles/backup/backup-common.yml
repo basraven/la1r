@@ -1,0 +1,9 @@
+---
+- name: Backup Common / Install borgbackup
+  become: yes
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items: 
+    - borgbackup
+    

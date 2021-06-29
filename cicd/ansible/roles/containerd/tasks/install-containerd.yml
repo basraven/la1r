@@ -60,4 +60,17 @@
     state: started
     enabled: yes
 
+- name: Install containerd / Enable kubelet cgroups
+  become: yes
+  lineinfile:
+    dest: /etc/ssh/sshd_config
+    regexp: '^cgroupDriver'
+    line: "cgroupDriver: systemd"
+    state: present
+    backup: yes
 
+
+# TODO: Automate: 
+# nano /etc/containerd/config.toml
+# [plugins."io.containerd.grpc.v1.cri".containerd.runti$
+#             SystemdCgroup = true

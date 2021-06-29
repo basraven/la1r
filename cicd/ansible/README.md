@@ -8,7 +8,7 @@ The file structure of these playbooks is based on [Ansible's best practices](htt
 ## How to use
 To run the master playbook, run the following:
 ```bash
-ansible-playbook -i raspberry site.yml
+ansible-playbook -i raspberry hosts.yml
 ```
 
 
