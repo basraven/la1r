@@ -490,7 +490,7 @@ data:
         expr: min(consul_raft_peers) < 3
         for: 1m
         labels:
-          severity: page
+          severity: critical
         annotations:
           title: Consul cluster is degraded
           description: Consul cluster has {{ $value }} servers alive. This may lead to cluster break.

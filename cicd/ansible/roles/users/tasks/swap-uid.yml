@@ -29,13 +29,13 @@
 - name: Swap UID / reset ssh connection to allow user changes to affect 'current login user'
   meta: reset_connection
   
-- name: Swap UID / Kill all {{target_user_name}} processes
-  become: yes
-  shell: "killall -u {{target_user_name}}"
-  args:
-    executable: /bin/bash
-  async: 45
-  poll: 0
+# - name: Swap UID / Kill all {{target_user_name}} processes
+#   become: yes
+#   shell: "killall -u {{target_user_name}}"
+#   args:
+#     executable: /bin/bash
+#   async: 45
+#   poll: 0
 
 - name: Swap UID / Change user id of {{target_user_name}}
   become: yes

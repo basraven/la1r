@@ -15,10 +15,3 @@
     state: present
   with_items:
     - openvpn
-
-- name: Install Openvpn / Place server.conf
-  become: yes
-  template: 
-    src: rules.v4.j2
-    dest: /etc/iptables/rules.v4
-    mode: "0755"

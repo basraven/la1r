@@ -1,0 +1,21 @@
+---
+- name: Setup Remote Backup / Init repo
+  become: yes
+  shell: |
+    # might be required if your tools are outdated
+    pip install -U pip setuptools wheel
+    # install Borg + Python dependencies into virtualenv
+    pip install borgbackup
+  
+  
+    head -c 32 /dev/urandom | base64 -w 0 > ~/.borg-passphrase
+    chmod 400 ~/.borg-passphrase
+    
+    export BORG_PASSCOMMAND="cat $HOME/.borg-passphrase"
+    export BORG_NEW_PASSPHRASE="cat $HOME/.borg-passphrase"
+    export BORG_PASSPHRASE=${BORG_PASSCOMMAND}
+
+    borg init --encryption=repokey  ./na-borg
+    borg create ./na-borg::Daily ./na
+  args:
+    executable: /bin/bash

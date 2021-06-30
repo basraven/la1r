@@ -22,10 +22,10 @@
         flat: True
         force: yes
 
-    - name: Fetch new kubeconfig to /credentials/kubernetes/
+    - name: Fetch new kubeconfig to ../../credentials/kubernetes/
       fetch:
         src: /home/{{ target_user }}/.kube/config
-        dest: /credentials/kubernetes/
+        dest: ../../credentials/kubernetes/
         flat: True
         force: yes
 

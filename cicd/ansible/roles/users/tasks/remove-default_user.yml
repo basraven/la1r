@@ -4,12 +4,13 @@
   shell: "killall -u {{ default_user }}"
   args:
     executable: /bin/bash
+  ignore_errors: yes
 - name: Remove Default User / Delete
   become: yes
   user:
     name: "{{ default_user }}"
     state: absent
-  when: default_user_delete
+  when: default_user_dont_delete is undefined
   notify:
   - "restart ssh"
   

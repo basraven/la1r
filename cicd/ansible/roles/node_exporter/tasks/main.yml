@@ -1,0 +1,3 @@
+---
+- include: set-node_exporter.yml
+  tags: node_exporter

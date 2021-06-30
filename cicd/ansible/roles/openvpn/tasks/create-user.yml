@@ -48,9 +48,9 @@
     chdir: "{{ openvpn_client_configs_dir }}"
     executable: /bin/bash
 
-- name: Create User / Copying {{ openvpn_user }}.ovpn to /credentials/ovpn/{{ openvpn_user }}.ovpn
+- name: Create User / Copying {{ openvpn_user }}.ovpn to ../../credentials/ovpn/{{ openvpn_user }}.ovpn
   become: yes
   fetch:
     src: "{{ openvpn_client_configs_dir }}/ovpn/{{ openvpn_user }}.ovpn"
-    dest: /credentials/ovpn/{{ openvpn_user }}.ovpn
+    dest: ../../credentials/ovpn/{{ openvpn_user }}.ovpn
     flat: True

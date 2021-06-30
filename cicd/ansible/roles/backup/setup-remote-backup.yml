@@ -1,7 +1,0 @@
----
-- name: Setup Remote Backup / Init repo
-  become: yes
-  shell: |
-    borg init
-  args:
-    executable: /bin/bash

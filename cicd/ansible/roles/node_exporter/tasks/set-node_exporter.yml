@@ -1,0 +1,18 @@
+---
+- name: Backup Common / Install borgbackup
+  become: yes
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items: 
+    - borgbackup
+    # - python3-pip
+    
+
+# - cron:
+#     name: "node_exporter"
+#     minute: "*/5"
+#     hour: "*"
+#     day: "*"
+#     month: "*"
+#     job: "/etc/node_exporter/run.sh"

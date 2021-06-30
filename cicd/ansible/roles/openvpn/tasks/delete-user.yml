@@ -28,4 +28,4 @@
 
 - name: Delete User / Revoke Access based on certificate
   become: yes
-  local_action: file path=/credentials/ovpn/{{ openvpn_user }}.ovpn state=absent
+  local_action: file path=../../credentials/ovpn/{{ openvpn_user }}.ovpn state=absent
