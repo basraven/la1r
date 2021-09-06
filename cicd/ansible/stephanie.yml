@@ -5,6 +5,7 @@
   - hostname
   - users
   - ssh
+  - kubernetes
   
 
   # - prometheus_node_exporter

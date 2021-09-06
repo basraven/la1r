@@ -3,5 +3,8 @@
   when: ansible_lsb.id == "CentOS"
 - include: install-ubuntu.yml
   when: ansible_lsb.id == "Ubuntu"
+- include: install-raspbian.yml
+  when: ansible_lsb.id == "Raspbian"
 - include: install-common.yml
+  when: ansible_lsb.id != "Raspbian"
   

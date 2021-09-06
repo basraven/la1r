@@ -8,6 +8,8 @@
 - include: install-storage-prereq.yml
   tags:
     - storage_kubernetes
+  when: ansible_lsb.id != "Raspbian"
+    
 # - include: init-kubernetes.yml
 #   tags:
 #     - init_kubernetes
