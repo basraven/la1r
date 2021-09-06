@@ -3,3 +3,10 @@
   become: yes
   hostname:
     name: "{{ inventory_hostname }}"
+- name: "Set Hostname / Set /etc/hosts"
+  become: yes
+  lineinfile:
+    path: /etc/hosts
+    regexp: '^127\.0\.1\.1'
+    line: "127.0.1.1 {{ inventory_hostname }}"
+    

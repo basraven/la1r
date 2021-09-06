@@ -1,16 +1,10 @@
 ---
-- include: update.yml
-  tags: 
-    - update
 - include: fail2ban.yml
   tags: 
-    - security
+    - fail2ban
 - include: ufw.yml
   tags: 
-    - security
-- include: ssh.yml
-  tags: 
-    - security
+    - ufw
   # when: baremetal is defined and baremetal
 # - include: kerberos-server.yml
 #   tags: 

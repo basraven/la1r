@@ -2,14 +2,13 @@
 - hosts: remote 
   roles:
   - define-os
-  - role: openvpn
-    # Tags do not work..
-    tags:
-      - openvpn_client 
-
-  # - hostname
-  # - users
-  # - toolbox
+  - hostname
+  - users
+  - openvpn-client
+  - update
+  - ssh  
+  # - reboot
   # - prometheus_node_exporter
+  # - toolbox
   # - reboot
   

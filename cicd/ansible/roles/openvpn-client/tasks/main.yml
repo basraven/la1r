@@ -1,0 +1,7 @@
+---
+- include: install-openvpn.yml
+  tags:
+    - openvpn_client  
+- include: setup-client.yml
+  tags:
+    - openvpn_client

@@ -33,18 +33,18 @@
 #     requests:
 #       storage: 20Gi
 
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: elasticsearch-config
-  namespace: monitoring
-data:
-  # You can also do without this config file..
-  # "************************************************************************************* Found index level settings on node level configuration.  Since elasticsearch 5.x index level settings can NOT be set on the nodes  configuration like the elasticsearch.yaml, in system properties or command line  arguments.In order to upgrade all indices the settings must be updated via the  /${index}/_settings API. Unless all settings are dynamic all indices must be closed  in order to apply the upgradeIndices created in the future should use index templates  to set default values.   Please ensure all required values are updated on all indices by executing:   curl -XPUT 'http://localhost:9200/_all/_settings?preserve_existing=true' -d '{    "index.number_of_replicas " :  "0 " }' ************************************************************************************* " }
-  elasticsearch.yml: |-
-    cluster.name: "rave"
-    network.host: 0.0.0.0
+# ---
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   name: elasticsearch-config
+#   namespace: monitoring
+# data:
+#   # You can also do without this config file..
+#   # "************************************************************************************* Found index level settings on node level configuration.  Since elasticsearch 5.x index level settings can NOT be set on the nodes  configuration like the elasticsearch.yaml, in system properties or command line  arguments.In order to upgrade all indices the settings must be updated via the  /${index}/_settings API. Unless all settings are dynamic all indices must be closed  in order to apply the upgradeIndices created in the future should use index templates  to set default values.   Please ensure all required values are updated on all indices by executing:   curl -XPUT 'http://localhost:9200/_all/_settings?preserve_existing=true' -d '{    "index.number_of_replicas " :  "0 " }' ************************************************************************************* " }
+#   elasticsearch.yml: |-
+#     cluster.name: "rave"
+#     network.host: 0.0.0.0
 
 ---
 apiVersion: apps/v1
@@ -64,13 +64,13 @@ spec:
         k8s-app: elasticsearch
     spec:
       volumes:
-      - name: elasticsearch-config
-        configMap:
-          name: elasticsearch-config
-          items:
-          - key: elasticsearch.yml
-            path: elasticsearch.yml
-          defaultMode: 0744
+      # - name: elasticsearch-config
+        # configMap:
+        #   name: elasticsearch-config
+        #   items:
+        #   - key: elasticsearch.yml
+        #     path: elasticsearch.yml
+        #   defaultMode: 0744
       - name: elasticsearch-data-volume
         persistentVolumeClaim:
           claimName: elasticsearch-data-claim
@@ -79,7 +79,7 @@ spec:
         resources:
           requests:
             memory: "256Mi"
-            cpu: "50m"
+            cpu: "150m"
           limits:
             memory: "1536Mi"
             cpu: "500m"
@@ -91,9 +91,9 @@ spec:
         volumeMounts:
         - name: elasticsearch-data-volume
           mountPath: /usr/share/elasticsearch/data
-        - name: elasticsearch-config
-          mountPath: /usr/share/elasticsearch/config/elasticsearch.yml
-          subPath: elasticsearch.yml
+        # - name: elasticsearch-config
+        #   mountPath: /usr/share/elasticsearch/config/elasticsearch.yml
+        #   subPath: elasticsearch.yml
         env:
         - name: discovery.type
           value: single-node

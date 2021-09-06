@@ -1,0 +1,11 @@
+---
+- hosts: stephanie 
+  roles:
+  - define-os
+  - hostname
+  - users
+  - ssh
+  
+
+  # - prometheus_node_exporter
+  # - reboot

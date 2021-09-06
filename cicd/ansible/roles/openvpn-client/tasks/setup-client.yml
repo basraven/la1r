@@ -3,6 +3,7 @@
   copy:
     src: "{{credentials_dir}}/ovpn/{{  inventory_hostname }}.ovpn"
     dest: /etc/openvpn/{{  inventory_hostname }}.conf
+  become: yes
 
 - name: Setup Client / Enable autostart
   become: yes
@@ -17,7 +18,7 @@
   become: yes
   service:
     name: openvpn
-    state: started
+    state: restarted
 
 - name: Setup Client / Place Openvpn heartbeat cronjob script
   become: yes

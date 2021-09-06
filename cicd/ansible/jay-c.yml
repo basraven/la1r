@@ -3,8 +3,11 @@
   roles:
   - define-os
   - hostname
+  - avahi
 
   # - users
+  # - ssh
+  # - update
   # - security
   # - reboot
   # - nfs
@@ -13,4 +16,4 @@
   # - haproxy
   # - kubernetes
 
-  - backup
+  # - backup

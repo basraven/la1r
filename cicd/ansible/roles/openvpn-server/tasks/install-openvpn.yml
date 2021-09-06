@@ -1,0 +1,17 @@
+---
+- name: Install Openvpn / Install needed tools additionally for CentOS
+  become: yes
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items: 
+    - epel-release
+  when: ansible_facts['distribution'] == "CentOS"
+
+- name: Install Openvpn / Install Package
+  become: yes
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - openvpn

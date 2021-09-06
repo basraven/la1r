@@ -1,7 +1,7 @@
 ---
 - include: check-target_user.yml
-  notify:
-    - "ssh restart"
+  # notify:
+  #   - "ssh restart"
   tags: 
     - users
 - include: transform-user.yml

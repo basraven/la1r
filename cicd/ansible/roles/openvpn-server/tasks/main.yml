@@ -1,7 +1,6 @@
 ---
 - include: install-openvpn.yml
   tags:
-    - openvpn_client  
     - openvpn_server  
 - include: prepare-folders.yml
   tags:
@@ -12,9 +11,6 @@
 - include: install-iptables-persistent.yml
   tags:
     - openvpn_server  
-- include: setup-client.yml
-  tags:
-    - openvpn_client
 - include: create-user.yml
   tags: 
     - create_ovpn_user

@@ -7,7 +7,7 @@
 
   args:
     executable: /bin/bash
-  when: ansible_facts['distribution'] == "CentOSStream"
+  when: ansible_facts['distribution'] == "CentOS"
 
 - name: Update / Update apt
   become: yes

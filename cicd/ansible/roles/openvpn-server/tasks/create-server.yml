@@ -21,7 +21,7 @@
     src: /usr/share/easy-rsa/3/
     dest: "{{ openvpn_ca_dir }}"
     remote_src: yes
-  when: ansible_facts['distribution'] == "CentOSStream"
+  when: ansible_facts['distribution'] == "CentOS"
 
 - name: Create Server Certificates / Create {{ openvpn_ca_dir }} vars
   become: true

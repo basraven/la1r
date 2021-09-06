@@ -1,0 +1,40 @@
+---
+- name: UFW / Install UFW
+  become: yes
+  package:
+    name: ufw
+    state: present
+
+- name: UFW / UFW passthrough for tun0 interface
+  become: yes
+  ufw:
+    rule: allow
+    direction: out
+    interface: tun0
+
+- name: UFW / Allow in UFW passthrough for tun0 interface
+  become: yes
+  ufw:
+    rule: allow
+    direction: in
+    interface: tun0
+
+- name: UFW / Allow UFW passthrough for port {{ openvpn_port }}
+  become: yes
+  ufw:
+    rule: allow
+    port: "{{ openvpn_port }}"
+
+
+# OLD content:
+# - name: Allow out UFW passthrough for tun0 interface
+#   ufw:
+#     rule: allow
+#     direction: out
+#     interface: tun0
+
+# - name: Allow in UFW passthrough for tun0 interface
+#   ufw:
+#     rule: allow
+#     direction: in
+#     interface: tun0

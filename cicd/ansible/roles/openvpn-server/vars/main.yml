@@ -20,7 +20,5 @@ openvpn_proto: udp
 
 openvpn_server_url: "vpn.la1r.com"
 
-openvpn_heartbeat_ip: ""
-
 openvpn_user: ""
 openvpn_password: ""

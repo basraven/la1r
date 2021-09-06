@@ -6,7 +6,7 @@
     state: present
   with_items: 
     - iptables-persistent
-  when: ansible_facts['distribution'] == "CentOSStream"
+  when: ansible_facts['distribution'] == "CentOS"
 
 - name: Install Openvpn / iptables-persistent
   become: yes

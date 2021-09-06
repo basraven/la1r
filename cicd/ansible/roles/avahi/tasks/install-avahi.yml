@@ -1,0 +1,25 @@
+---
+- name: Install Avahi CentOS Streams/ Install Packages
+  become: yes
+  package:
+    name: avahi
+    state: present
+  when: ansible_facts['distribution'] == "CentOS"
+
+- name: Install Avahi / Install Packages
+  become: yes
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - avahi-daemon
+    - avahi-discover
+    - avahi-utils
+    - libnss-mdns
+    - mdns-scan
+  when: ansible_facts['distribution'] != "CentOS"
+
+- name: Install Avahi / Enabled
+  service:
+    name: avahi-daemon
+    enabled: yes

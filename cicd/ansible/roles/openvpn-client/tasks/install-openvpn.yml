@@ -6,7 +6,7 @@
     state: present
   with_items: 
     - epel-release
-  when: ansible_facts['distribution'] == "CentOSStream"
+  when: ansible_facts['distribution'] == "CentOS"
 
 - name: Install Openvpn / Install Package
   become: yes
