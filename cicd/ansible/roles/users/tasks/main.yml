@@ -4,7 +4,33 @@
   #   - "ssh restart"
   tags: 
     - users
-- include: transform-user.yml
+
+- include: enable-sudo.yml
+  tags: 
+    - users
+  # when: target_user_exists != true
+
+- include: add-target_user.yml
+  tags: 
+    - users
+  # when: target_user_exists != true
+
+- include: add_ssh_settings.yml
+  tags: 
+    - users
+  # when: target_user_exists != true
+
+
+
+- include: swap-uid.yml
+  tags: 
+    - users
+  when: target_user_exists != true
+- include: change-root-password.yml
+  tags: 
+    - users
+  when: target_user_exists != true
+- include: remove-default_user.yml
   tags: 
     - users
   when: target_user_exists != true

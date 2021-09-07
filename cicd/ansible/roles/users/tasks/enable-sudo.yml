@@ -21,3 +21,9 @@
     group: root
     mode: 0755
     recurse: yes
+
+- name: Enable Sudo /  Add {{ target_user_name }} user to the sudoers
+  become: yes
+  copy:
+      dest: "/etc/sudoers.d/{{ target_user_name }}"
+      content: "{{ target_user_name }}  ALL=(ALL)  NOPASSWD: ALL"

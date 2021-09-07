@@ -2,9 +2,9 @@
 - include: install-kubernetes.yml
   tags:
     - kubernetes_server
-- include: networking.yml
-  tags:
-    - kubernetes_server
+# - include: networking.yml
+#   tags:
+#     - kubernetes_server
 - include: install-storage-prereq.yml
   tags:
     - storage_kubernetes

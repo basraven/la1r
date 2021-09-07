@@ -6,7 +6,7 @@
     state: present
   when: ansible_facts['distribution'] == "CentOS"
 
-- name: Install Avahi / Install Packages
+- name: Install Avahi / Raspbian Install Packages
   become: yes
   package:
     name: "{{ item }}"
@@ -17,7 +17,17 @@
     - avahi-utils
     - libnss-mdns
     - mdns-scan
-  when: ansible_facts['distribution'] != "CentOS"
+  when: ansible_facts['distribution'] == "Raspbian"
+
+- name: Install Avahi / Ubuntu Install Packages
+  become: yes
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - avahi-daemon
+    - avahi-utils
+  when: ansible_facts['distribution'] == "Ubuntu"
 
 - name: Install Avahi / Enabled
   service:

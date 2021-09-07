@@ -24,16 +24,16 @@
     state: present
     backup: yes
 
-- name: restart ssh
-  become: yes
-  service:
-    name: "{{item.service}}"
-    state: restarted
-    enabled: yes
-  with_items:
-  - { service: 'ssh', when: "{{ ansible_facts['distribution'] != 'CentOS' }} "}
-  - { service: 'sshd',       when: "{{ ansible_facts['distribution'] == 'CentOS' }} "}
-  when: "{{ item.when }}"
-  async: 30
-  poll: 5
+# - name: ssh / restart ssh
+#   become: yes
+#   service:
+#     name: "{{item.service}}"
+#     state: restarted
+#     enabled: yes
+#   with_items:
+#   - { service: 'ssh', when: "{{ ansible_facts['distribution'] != 'CentOS' }} "}
+#   - { service: 'sshd',       when: "{{ ansible_facts['distribution'] == 'CentOS' }} "}
+#   when: "{{ item.when }}"
+#   async: 30
+#   poll: 5
 
