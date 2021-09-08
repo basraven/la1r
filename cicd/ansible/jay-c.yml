@@ -2,18 +2,19 @@
 - hosts: jay-c
   roles:
   - define-os
-  - users
-  - ssh
-  - hostname
-  - avahi
+  # - users
+  # - ssh
+  # - hostname
+  # - avahi
 
-  - update
-  - security
-  # - reboot
-  - nfs
-  - samba
-  - containerd
-  - haproxy
+  # - update
+  # - security
+  # # - reboot
+  # - nfs
+  # - samba
+  # - containerd
+  # - haproxy
   - kubernetes
+  - kubernetes-init
 
   # - backup

@@ -17,4 +17,18 @@
     - kubelet
     - kubeadm
     - kubernetes-cni
+
+- name: Install on Common / Bridge NF Call ip4
+  become: yes
+  ansible.builtin.lineinfile:
+    path: /etc/sysctl.conf
+    regexp: '^net.bridge.bridge-nf-call-iptables ='
+    line: net.bridge.bridge-nf-call-iptables = 1
+
+- name: Install on Common / Bridge NF Call ip6
+  become: yes
+  ansible.builtin.lineinfile:
+    path: /etc/sysctl.conf
+    regexp: '^net.bridge.bridge-nf-call-ip6tables ='
+    line: net.bridge.bridge-nf-call-ip6tables = 1
     
