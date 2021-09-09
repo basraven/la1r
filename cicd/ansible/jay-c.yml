@@ -14,7 +14,7 @@
   # - samba
   # - containerd
   # - haproxy
-  - kubernetes
+  # - kubernetes
   - kubernetes-init
 
   # - backup

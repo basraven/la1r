@@ -32,3 +32,10 @@
     regexp: '^net.bridge.bridge-nf-call-ip6tables ='
     line: net.bridge.bridge-nf-call-ip6tables = 1
     
+    
+- name: Install on Common / tempfix for ipv4
+  become: yes
+  shell: |
+    echo '1' > /proc/sys/net/bridge/bridge-nf-call-iptables
+  args:
+    executable: /bin/bash
