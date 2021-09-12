@@ -24,6 +24,11 @@ rules:
   - apiGroups: [""]
     resources: ["events"]
     verbs: ["create", "update", "patch"]
+  
+  # Extra from https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner/blob/master/deploy/rbac.yaml
+  - apiGroups: [""]
+    resources: ["nodes"]
+    verbs: ["get", "list", "watch"]
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1

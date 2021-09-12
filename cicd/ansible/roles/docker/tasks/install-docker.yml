@@ -1,0 +1,32 @@
+---
+
+# Raspbian
+
+- name: Install Docker / required packages for Raspbian
+  become: yes
+  package: name={{item}} state=present
+  with_items:
+    - apt-transport-https
+    - ca-certificates
+    - software-properties-common
+  when: ansible_lsb.id == "Raspbian"
+
+  
+  # FIXME: Remove basraven for {{ target_user_name }}
+- name: Install Docker / Get Docker for Raspbian
+  become: yes
+  shell: |
+    curl -fsSL get.docker.com -o get-docker.sh && sh get-docker.sh
+    sudo usermod -aG docker basraven
+    # sudo curl https://download.docker.com/linux/raspbian/gpg
+
+    # echo "deb https://download.docker.com/linux/raspbian/ stretch stable" > /etc/apt/sources.list.d/docker.list
+    # sudo apt-get update
+    # sudo apt-get upgrade
+    systemctl start docker.service
+    docker info
+
+  args:
+    executable: /bin/bash
+  when: ansible_lsb.id == "Raspbian"
+

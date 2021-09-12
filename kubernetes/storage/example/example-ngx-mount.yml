@@ -5,7 +5,7 @@ metadata:
   name: nfs-ngnix-example-pvc
   namespace: default
 spec:
-  storageClassName: nfs-213 # SAME NAME AS THE STORAGECLASS
+  storageClassName: nfs-ssd-ha # SAME NAME AS THE STORAGECLASS
   accessModes:
     - ReadWriteMany #  must be the same as PersistentVolume
   resources:

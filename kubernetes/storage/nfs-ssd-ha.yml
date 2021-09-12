@@ -1,0 +1,62 @@
+
+---
+# Source: https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner/blob/master/deploy/class.yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: nfs-ssd-ha # IMPORTANT pvc needs to mention this name
+provisioner: nfs-ssd-ha # name can be anything
+reclaimPolicy: Retain
+parameters:
+  archiveOnDelete: "true"  
+---
+# Source: https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner/blob/master/deploy/deployment.yaml
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: nfs-ssd-ha
+  namespace: storage
+  labels:
+    device: ssd
+    availability: ha
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nfs-ssd-ha
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: nfs-ssd-ha
+        device: ssd
+        availability: ha
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution :
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: la1r.storage/ssd-ha
+                operator: In
+                values: [ "true" ]
+      serviceAccountName: nfs-pod-provisioner-sa # name of service account created in rbac.yaml
+      containers:
+        - name: nfs-ssd-ha
+          image: k8s.gcr.io/sig-storage/nfs-subdir-external-provisioner:v4.0.2
+          volumeMounts:
+            - name: nfs-provisioner-v
+              mountPath: /persistentvolumes
+          env:
+            - name: PROVISIONER_NAME # do not change
+              value: nfs-ssd-ha # SAME AS PROVISONER NAME VALUE IN STORAGECLASS
+            - name: NFS_SERVER # do not change
+              value: 192.168.5.3 # Ip of the NFS SERVER
+            - name: NFS_PATH # do not change
+              value: /mnt/ssd/ha # path to nfs directory setup
+      volumes:
+       - name: nfs-provisioner-v # same as volume mounts name
+         nfs:
+           server: 192.168.5.3
+           path: /mnt/ssd/ha
