@@ -1,486 +1,485 @@
-# ---
-# apiVersion: v1
-# kind: ConfigMap
-# metadata:
-#   name: consul-coredns
-#   namespace: dns
-# data:
-#   Corefile: |-
-#     bas.:53 {
-#         prometheus localhost:9153
-#         rewrite stop {
-#           name regex (.*)\.bas {1}.service.bas
-#           answer name (.*)\.service\.bas {1}.bas
-#         }
-#         forward . 127.0.0.1:8600
-#         # log
-#         errors
-#     }      
-#     .:53 {
-#         prometheus localhost:9153
-#         # pi-hole
-#         # forward . 192.168.6.99
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: consul-coredns
+  namespace: dns
+data:
+  Corefile: |-
+    bas.:53 {
+        prometheus localhost:9153
+        rewrite stop {
+          name regex (.*)\.bas {1}.service.bas
+          answer name (.*)\.service\.bas {1}.bas
+        }
+        forward . 127.0.0.1:8600
+        # log
+        errors
+    }      
+    .:53 {
+        prometheus localhost:9153
+        # pi-hole
+        # forward . 192.168.6.99
 
-#         forward . 8.8.8.8 8.8.4.4 
-#         # log
-#         errors
-#     }      
-# ---
-# apiVersion: apps/v1
-# kind: StatefulSet
-# metadata:
-#   name: consul
-#   namespace: dns
-# spec:
-#   serviceName: consul
-#   podManagementPolicy: "Parallel"
-#   selector:
-#     matchLabels:
-#       app: consul
-#   replicas: 5
-#   template:
-#     metadata:
-#       labels:
-#         app: consul
-#       annotations:
-#         deployment: "1"
-#     spec:
-#       topologySpreadConstraints:
-#       - maxSkew: 1
-#         topologyKey: kubernetes.io/hostname
-#         whenUnsatisfiable: ScheduleAnyway
-#         labelSelector:
-#           matchLabels:
-#             app: consul
+        forward . 8.8.8.8 8.8.4.4 
+        # log
+        errors
+    }      
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: consul
+  namespace: dns
+spec:
+  serviceName: consul
+  podManagementPolicy: "Parallel"
+  selector:
+    matchLabels:
+      app: consul
+  replicas: 5
+  template:
+    metadata:
+      labels:
+        app: consul
+      annotations:
+        deployment: "1"
+    spec:
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector:
+          matchLabels:
+            app: consul
           
-#       securityContext:
-#         fsGroup: 1000
-#         runAsGroup: 1000
-#         runAsNonRoot: true
-#         runAsUser: 100
-#       volumes:
-#       - name: consul-coredns-volume
-#         configMap:
-#           name: consul-coredns
-#           items:
-#           - key: Corefile
-#             path: Corefile
-#           defaultMode: 0600
-#       - name: data
-#         emptyDir: {}
-#       containers:
-#         - name: coredns
-#           volumeMounts:
-#           - name: consul-coredns-volume
-#             mountPath: /etc/coredns/Corefile
-#             subPath: Corefile
-#           image: coredns/coredns
-#           args: [ "-conf", "/etc/coredns/Corefile" ]
-#           ports:
-#           - name: dns-tcp
-#             containerPort: 53
-#             protocol: TCP
-#           - name: dns-udp
-#             containerPort: 53
-#             protocol: UDP
-#           - name: metrics
-#             containerPort: 9153
-#             protocol: TCP
-#           # livenessProbe:
-#           #   httpGet:
-#           #     path: /health
-#           #     port: 8080
-#           #     scheme: HTTP
-#           #   initialDelaySeconds: 60
-#           #   timeoutSeconds: 5
-#           #   successThreshold: 1
-#           #   failureThreshold: 5
-#           # readinessProbe:
-#           #   httpGet:
-#           #     path: /ready
-#           #     port: 8181
-#           #     scheme: HTTP
-#           #   initialDelaySeconds: 10
-#           #   timeoutSeconds: 5
-#           #   successThreshold: 1
-#           #   failureThreshold: 5
-#           # env:
-#           # - name: POD_IP
-#           #   valueFrom:
-#           #     fieldRef:
-#           #       fieldPath: status.podIP
-#           # command: 
-#           # - "sh"
-#           # args: 
-#           # - "-c"
-#           # - |
-#           #     apk --no-cache add coredns
-#           #     # echo "nameserver 127.0.0.1:8600" > /etc/resolv.conf
-#           #     coredns -k
-#           # ports:
-#           #   - containerPort: 53
-#           #     name: dns
-#         - name: consul
-#           image: "consul"
-#           env:
-#             - name: POD_IP
-#               valueFrom:
-#                 fieldRef:
-#                   fieldPath: status.podIP
-#             - name: NAMESPACE
-#               valueFrom:
-#                 fieldRef:
-#                   fieldPath: metadata.namespace
-#             - name: POD_NAME
-#               valueFrom:
-#                 fieldRef:
-#                   fieldPath: metadata.name
-#           args:
-#             - "consul"
-#             - "agent"
-#             - "-advertise=${POD_IP}"
-#             - "-bootstrap-expect=4"
-#             - "-client=0.0.0.0"
-#             - "-bind=0.0.0.0"
-#             - "-datacenter=rave"
-#             - "-domain=bas"
-#             - "-alt-domain=service.bas"
-#             - "-alt-domain=svc.cluster.local"
-#             - "-ui"
-#             - "-disable-host-node-id"
-#             - "-retry-join=consul-0.consul.${NAMESPACE}.svc.cluster.local"
-#             - "-retry-join=consul-1.consul.${NAMESPACE}.svc.cluster.local"
-#             - "-retry-join=consul-2.consul.${NAMESPACE}.svc.cluster.local"
-#             - "-retry-join=consul-3.consul.${NAMESPACE}.svc.cluster.local"
-#             - "-retry-join=consul-4.consul.${NAMESPACE}.svc.cluster.local"
-#             - "-serf-lan-port=8301"
-#             - "-data-dir=/consul/data"
-#             - "-server"
-#             # - "-retry-join=consul.${NAMESPACE}.svc.cluster.local"
-#             # - "-recursor=8.8.8.8"
-#           volumeMounts:
-#             - name: data
-#               mountPath: /consul/data
-#           lifecycle:
-#             preStop:
-#               exec:
-#                 command:
-#                 - /bin/sh
-#                 - -c
-#                 - consul leave
-#           ports:
-#             - containerPort: 8500
-#               name: ui-port
-#             - containerPort: 8301
-#               name: serflan
-#             - containerPort: 8302
-#               name: serfwan
-#             - containerPort: 8600
-#               name: consuldns
-#               protocol: UDP
-#             - containerPort: 8300
-#               name: server
-#           livenessProbe:
-#             httpGet:
-#               path: /v1/health/node/current
-#               port: 8500
-#               scheme: HTTP
-#             initialDelaySeconds: 60
-#             timeoutSeconds: 5
-#             successThreshold: 1
-#             failureThreshold: 3
-#           readinessProbe:
-#             # NOTE(mitchellh): when our HTTP status endpoints support the
-#             # proper status codes, we should switch to that. This is temporary.
-#             exec:
-#               command:
-#                 - "/bin/sh"
-#                 - "-ec"
-#                 - |
-#                   curl http://127.0.0.1:8500/v1/status/leader \
-#                   2>/dev/null | grep -E '".+"'
-#             failureThreshold: 2
-#             initialDelaySeconds: 5
-#             periodSeconds: 3
-#             successThreshold: 1
-#             timeoutSeconds: 5
-#           resources:
-#             requests:
-#               cpu: "100m"
-#               memory: "100Mi"
-#             limits:
-#               cpu: "100m"
-#               memory: "100Mi"
-
+      securityContext:
+        fsGroup: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 100
+      volumes:
+      - name: consul-coredns-volume
+        configMap:
+          name: consul-coredns
+          items:
+          - key: Corefile
+            path: Corefile
+          defaultMode: 0600
+      - name: data
+        emptyDir: {}
+      containers:
+        - name: coredns
+          volumeMounts:
+          - name: consul-coredns-volume
+            mountPath: /etc/coredns/Corefile
+            subPath: Corefile
+          image: coredns/coredns
+          args: [ "-conf", "/etc/coredns/Corefile" ]
+          ports:
+          - name: dns-tcp
+            containerPort: 53
+            protocol: TCP
+          - name: dns-udp
+            containerPort: 53
+            protocol: UDP
+          - name: metrics
+            containerPort: 9153
+            protocol: TCP
+          # livenessProbe:
+          #   httpGet:
+          #     path: /health
+          #     port: 8080
+          #     scheme: HTTP
+          #   initialDelaySeconds: 60
+          #   timeoutSeconds: 5
+          #   successThreshold: 1
+          #   failureThreshold: 5
+          # readinessProbe:
+          #   httpGet:
+          #     path: /ready
+          #     port: 8181
+          #     scheme: HTTP
+          #   initialDelaySeconds: 10
+          #   timeoutSeconds: 5
+          #   successThreshold: 1
+          #   failureThreshold: 5
+          # env:
+          # - name: POD_IP
+          #   valueFrom:
+          #     fieldRef:
+          #       fieldPath: status.podIP
+          # command: 
+          # - "sh"
+          # args: 
+          # - "-c"
+          # - |
+          #     apk --no-cache add coredns
+          #     # echo "nameserver 127.0.0.1:8600" > /etc/resolv.conf
+          #     coredns -k
+          # ports:
+          #   - containerPort: 53
+          #     name: dns
+        - name: consul
+          image: "consul"
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          args:
+            - "consul"
+            - "agent"
+            - "-advertise=${POD_IP}"
+            - "-bootstrap-expect=4"
+            - "-client=0.0.0.0"
+            - "-bind=0.0.0.0"
+            - "-datacenter=rave"
+            - "-domain=bas"
+            - "-alt-domain=service.bas"
+            - "-alt-domain=svc.cluster.local"
+            - "-ui"
+            - "-disable-host-node-id"
+            - "-retry-join=consul-0.consul.${NAMESPACE}.svc.cluster.local"
+            - "-retry-join=consul-1.consul.${NAMESPACE}.svc.cluster.local"
+            - "-retry-join=consul-2.consul.${NAMESPACE}.svc.cluster.local"
+            - "-retry-join=consul-3.consul.${NAMESPACE}.svc.cluster.local"
+            - "-retry-join=consul-4.consul.${NAMESPACE}.svc.cluster.local"
+            - "-serf-lan-port=8301"
+            - "-data-dir=/consul/data"
+            - "-server"
+            # - "-retry-join=consul.${NAMESPACE}.svc.cluster.local"
+            # - "-recursor=8.8.8.8"
+          volumeMounts:
+            - name: data
+              mountPath: /consul/data
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                - /bin/sh
+                - -c
+                - consul leave
+          ports:
+            - containerPort: 8500
+              name: ui-port
+            - containerPort: 8301
+              name: serflan
+            - containerPort: 8302
+              name: serfwan
+            - containerPort: 8600
+              name: consuldns
+              protocol: UDP
+            - containerPort: 8300
+              name: server
+          livenessProbe:
+            httpGet:
+              path: /v1/health/node/current
+              port: 8500
+              scheme: HTTP
+            initialDelaySeconds: 60
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+          readinessProbe:
+            # NOTE(mitchellh): when our HTTP status endpoints support the
+            # proper status codes, we should switch to that. This is temporary.
+            exec:
+              command:
+                - "/bin/sh"
+                - "-ec"
+                - |
+                  curl http://127.0.0.1:8500/v1/status/leader \
+                  2>/dev/null | grep -E '".+"'
+            failureThreshold: 2
+            initialDelaySeconds: 5
+            periodSeconds: 3
+            successThreshold: 1
+            timeoutSeconds: 5
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "100Mi"
+            limits:
+              cpu: "100m"
+              memory: "100Mi"
 
 
 
 ---
 # Source: consul/templates/client-daemonset.yaml
 # DaemonSet to run the Consul clients on every node.
-# apiVersion: apps/v1
-# kind: DaemonSet
-# metadata:
-#   name: consul-client
-#   namespace: dns
-#   labels:
-#     app: consul-client
-# spec:
-#   selector:
-#     matchLabels:
-#       app: consul-client
-#   template:
-#     metadata:
-#       labels:
-#         app: consul-client
-#     spec:
-#       terminationGracePeriodSeconds: 10
-#       securityContext:
-#         fsGroup: 1000
-#         runAsGroup: 1000
-#         runAsNonRoot: true
-#         runAsUser: 100
-#       volumes:
-#         - name: data
-#           emptyDir: {}
-#       #   - name: config
-#       #     configMap:
-#       #       name: consul-1624292106-consul-client-config
-#       containers:
-#         - name: consul
-#           image: "consul"
-#           env:
-#             - name: NAMESPACE
-#               valueFrom:
-#                 fieldRef:
-#                   fieldPath: metadata.namespace
-#             - name: NODE
-#               valueFrom:
-#                 fieldRef:
-#                   fieldPath: spec.nodeName
-#             - name: HOST_IP
-#               valueFrom:
-#                 fieldRef:
-#                   fieldPath: status.hostIP
-#             - name: POD_IP
-#               valueFrom:
-#                 fieldRef:
-#                   fieldPath: status.podIP
-#             - name: POD_NAME
-#               valueFrom:
-#                 fieldRef:
-#                   fieldPath: metadata.name
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: consul-client
+  namespace: dns
+  labels:
+    app: consul-client
+spec:
+  selector:
+    matchLabels:
+      app: consul-client
+  template:
+    metadata:
+      labels:
+        app: consul-client
+    spec:
+      terminationGracePeriodSeconds: 10
+      securityContext:
+        fsGroup: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 100
+      volumes:
+        - name: data
+          emptyDir: {}
+      #   - name: config
+      #     configMap:
+      #       name: consul-1624292106-consul-client-config
+      containers:
+        - name: consul
+          image: "consul"
+          env:
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: NODE
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: HOST_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
             
-#           command:
-#             - "consul"
-#             - "agent"
-#             - "-advertise=$(HOST_IP)"
-#             - "-node=$(NODE)"
-#             - "-client=0.0.0.0"
-#             - "-bind=0.0.0.0"
-#             - "-node-meta=node-name:$(NODE)"
-#             - "-node-meta=host-ip:$(HOST_IP)"
-#             - "-node-meta=pod-name:$(POD_NAME)"
-#             - "-datacenter=rave"
-#             - "-alt-domain=service.bas"
-#             - "-alt-domain=svc.cluster.local"
-#             - "-retry-join=consul-0.consul.$(NAMESPACE).svc.cluster.local"
-#             - "-retry-join=consul-1.consul.$(NAMESPACE).svc.cluster.local"
-#             - "-retry-join=consul-2.consul.$(NAMESPACE).svc.cluster.local"
-#             - "-retry-join=consul-3.consul.$(NAMESPACE).svc.cluster.local"
-#             - "-retry-join=consul-4.consul.$(NAMESPACE).svc.cluster.local"
-#             - "-data-dir=/consul/data"
-#             - "-domain=bas"
-#           volumeMounts:
-#             - name: data
-#               mountPath: /consul/data
-#           #   - name: config
-#           #     mountPath: /consul/config
-#           ports:
-#             - containerPort: 8500
-#               hostPort: 8500
-#               name: http
-#             - containerPort: 8502
-#               hostPort: 8502
-#               name: grpc
-#             - containerPort: 8301
-#               protocol: "TCP"
-#               name: serflan-tcp
-#             - containerPort: 8301
-#               protocol: "UDP"
-#               name: serflan-udp
-#             - containerPort: 8600
-#               name: dns-tcp
-#               protocol: "TCP"
-#             - containerPort: 8600
-#               name: dns-udp
-#               protocol: "UDP"
-#           readinessProbe:
-#             # NOTE(mitchellh): when our HTTP status endpoints support the
-#             # proper status codes, we should switch to that. This is temporary.
-#             exec:
-#               command:
-#                 - "/bin/sh"
-#                 - "-ec"
-#                 - |
-#                   curl http://127.0.0.1:8500/v1/status/leader \
-#                   2>/dev/null | grep -E '".+"'
-#           resources:
-#             limits:
-#               cpu: 100m
-#               memory: 100Mi
-#             requests:
-#               cpu: 100m
-#               memory: 100Mi
+          command:
+            - "consul"
+            - "agent"
+            - "-advertise=$(HOST_IP)"
+            - "-node=$(NODE)"
+            - "-client=0.0.0.0"
+            - "-bind=0.0.0.0"
+            - "-node-meta=node-name:$(NODE)"
+            - "-node-meta=host-ip:$(HOST_IP)"
+            - "-node-meta=pod-name:$(POD_NAME)"
+            - "-datacenter=rave"
+            - "-alt-domain=service.bas"
+            - "-alt-domain=svc.cluster.local"
+            - "-retry-join=consul-0.consul.$(NAMESPACE).svc.cluster.local"
+            - "-retry-join=consul-1.consul.$(NAMESPACE).svc.cluster.local"
+            - "-retry-join=consul-2.consul.$(NAMESPACE).svc.cluster.local"
+            - "-retry-join=consul-3.consul.$(NAMESPACE).svc.cluster.local"
+            - "-retry-join=consul-4.consul.$(NAMESPACE).svc.cluster.local"
+            - "-data-dir=/consul/data"
+            - "-domain=bas"
+          volumeMounts:
+            - name: data
+              mountPath: /consul/data
+          #   - name: config
+          #     mountPath: /consul/config
+          ports:
+            - containerPort: 8500
+              hostPort: 8500
+              name: http
+            - containerPort: 8502
+              hostPort: 8502
+              name: grpc
+            - containerPort: 8301
+              protocol: "TCP"
+              name: serflan-tcp
+            - containerPort: 8301
+              protocol: "UDP"
+              name: serflan-udp
+            - containerPort: 8600
+              name: dns-tcp
+              protocol: "TCP"
+            - containerPort: 8600
+              name: dns-udp
+              protocol: "UDP"
+          readinessProbe:
+            # NOTE(mitchellh): when our HTTP status endpoints support the
+            # proper status codes, we should switch to that. This is temporary.
+            exec:
+              command:
+                - "/bin/sh"
+                - "-ec"
+                - |
+                  curl http://127.0.0.1:8500/v1/status/leader \
+                  2>/dev/null | grep -E '".+"'
+          resources:
+            limits:
+              cpu: 100m
+              memory: 100Mi
+            requests:
+              cpu: 100m
+              memory: 100Mi
 
 
-# ---
-# apiVersion: v1
-# kind: Service
-# metadata:
-#   name: consul
-#   namespace: dns
-#   labels:
-#     name: consul
-#     app: consul
-# spec:
-#   selector:
-#     app: consul
-#   clusterIP: None
-#   ports:
-#     - name: http
-#       port: 80
-#       targetPort: 8500
-#     - name: serflan-tcp
-#       protocol: "TCP"
-#       port: 8301
-#       targetPort: 8301
-#     - name: serflan-udp
-#       protocol: "UDP"
-#       port: 8301
-#       targetPort: 8301
-#     - name: serfwan-tcp
-#       protocol: "TCP"
-#       port: 8302
-#       targetPort: 8302
-#     - name: serfwan-udp
-#       protocol: "UDP"
-#       port: 8302
-#       targetPort: 8302
-#     - name: server
-#       port: 8300
-#       targetPort: 8300
-#     - name: consuldns
-#       port: 8600
-#       targetPort: 8600
-#       protocol: UDP
-# ---
-# apiVersion: v1
-# kind: Service
-# metadata:
-#   name: consul-coredns-metrics
-#   namespace: dns
-#   labels:
-#     name: consul-coredns
-# spec:
-#   selector:
-#     app: consul
-#   type: ClusterIP
-#   ports:
-#     - name: metrics
-#       port: 9153
-#       targetPort: 9153
-#       protocol: TCP
-# ---
-# apiVersion: v1
-# kind: Service
-# metadata:
-#   name: consul-loadbalancer-service
-#   namespace: dns
-# spec:
-#   loadBalancerIP: 192.168.6.90
-#   type: LoadBalancer
-#   ports:
-#     - name: dns-udp
-#       protocol: UDP
-#       targetPort: dns-udp
-#       port: 53
-#     - name: consul-dns
-#       protocol: UDP
-#       targetPort: consuldns
-#       port: 5353
-#   selector:
-#     app: consul
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: consul
+  namespace: dns
+  labels:
+    name: consul
+    app: consul
+spec:
+  selector:
+    app: consul
+  clusterIP: None
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8500
+    - name: serflan-tcp
+      protocol: "TCP"
+      port: 8301
+      targetPort: 8301
+    - name: serflan-udp
+      protocol: "UDP"
+      port: 8301
+      targetPort: 8301
+    - name: serfwan-tcp
+      protocol: "TCP"
+      port: 8302
+      targetPort: 8302
+    - name: serfwan-udp
+      protocol: "UDP"
+      port: 8302
+      targetPort: 8302
+    - name: server
+      port: 8300
+      targetPort: 8300
+    - name: consuldns
+      port: 8600
+      targetPort: 8600
+      protocol: UDP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: consul-coredns-metrics
+  namespace: dns
+  labels:
+    name: consul-coredns
+spec:
+  selector:
+    app: consul
+  type: ClusterIP
+  ports:
+    - name: metrics
+      port: 9153
+      targetPort: 9153
+      protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: consul-loadbalancer-service
+  namespace: dns
+spec:
+  loadBalancerIP: 192.168.6.90
+  type: LoadBalancer
+  ports:
+    - name: dns-udp
+      protocol: UDP
+      targetPort: dns-udp
+      port: 53
+    - name: consul-dns
+      protocol: UDP
+      targetPort: consuldns
+      port: 5353
+  selector:
+    app: consul
 
-# ---
-# apiVersion: v1
-# kind: Service
-# metadata:
-#   name: consul-ui-loadbalancer-service
-#   namespace: dns
-# spec:
-#   loadBalancerIP: 192.168.6.91
-#   type: LoadBalancer
-#   ports:
-#     - name: http
-#       protocol: TCP
-#       targetPort: 8500
-#       port: 80
-#   selector:
-#     app: consul
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: consul-ui-loadbalancer-service
+  namespace: dns
+spec:
+  loadBalancerIP: 192.168.6.91
+  type: LoadBalancer
+  ports:
+    - name: http
+      protocol: TCP
+      targetPort: 8500
+      port: 80
+  selector:
+    app: consul
 
 
-# ---
-# apiVersion: cert-manager.io/v1
-# kind: Certificate
-# metadata:
-#   name: consul-dns-bas
-#   namespace: monitoring
-# spec:
-#   issuerRef:
-#     name: la1r
-#     kind: ClusterIssuer
-#   secretName: dns-bas-tls
-#   commonName: dns.bas
-#   dnsNames:
-#   - dns.bas
-#   - www.dns.bas
-# ---
-# apiVersion: traefik.containo.us/v1alpha1
-# kind: IngressRoute
-# metadata:
-#   name: consul-dns-non-tls
-#   namespace: monitoring
-# spec:
-#   entryPoints:
-#     - web
-#   routes:
-#   - match: Host(`dns.bas`) && PathPrefix(`/`)
-#     kind: Rule
-#     services:
-#     - name: consul
-#       protocol: TCP
-#       port: 80
-#       targetPort: 8500
-#     middlewares:
-#     - name: http-redirect-to-https
-#       namespace: traefik
-# ---
-# apiVersion: traefik.containo.us/v1alpha1
-# kind: IngressRoute
-# metadata:
-#   name: consul-dns-tls
-#   namespace: monitoring
-# spec:
-#   entryPoints:
-#     - websecure
-#   routes:
-#   - match: Host(`dns.bas`) && PathPrefix(`/`)
-#     kind: Rule
-#     services:
-#     - name: consul
-#       protocol: TCP
-#       port: 80
-#       targetPort: 8500
-#   tls:
-#     secretName: dns-bas-tls
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: consul-dns-bas
+  namespace: monitoring
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: dns-bas-tls
+  commonName: dns.bas
+  dnsNames:
+  - dns.bas
+  - www.dns.bas
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: consul-dns-non-tls
+  namespace: monitoring
+spec:
+  entryPoints:
+    - web
+  routes:
+  - match: Host(`dns.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: consul
+      protocol: TCP
+      port: 80
+      targetPort: 8500
+    middlewares:
+    - name: http-redirect-to-https
+      namespace: traefik
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: consul-dns-tls
+  namespace: monitoring
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`dns.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: consul
+      protocol: TCP
+      port: 80
+      targetPort: 8500
+  tls:
+    secretName: dns-bas-tls
