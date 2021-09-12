@@ -8,11 +8,9 @@
 # - name: Init Kubernetes / Init Kubernetes
 #   become: yes
 #   shell: |
-#     kubeadm init --pod-network-cidr="{{kubernetes_pod_cidr}}" \
+#     kubeadm init \
 #     --config /etc/kubernetes/kubeadm-config.yml \
-#      --upload-certs \
-#     --ignore-preflight-errors=all \
-#     --apiserver-advertise-address="{{ ansible_default_ipv4.address }}"
+#     --upload-certs
 #   args:
 #     executable: /bin/bash
 #   async: 600

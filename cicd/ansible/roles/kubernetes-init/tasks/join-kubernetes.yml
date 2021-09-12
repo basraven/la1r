@@ -11,9 +11,33 @@
     mode: "0775"
 
 - name: Join Kubernetes / Join K8s
-  command: kubeadm join {{kubernetes_master}}:6443 --token {{k8s_join_token}} --discovery-token-unsafe-skip-ca-verification --ignore-preflight-errors=all
-  ignore_errors: yes
+  command: kubeadm join {{kubernetes_master}}:6443 --token {{k8s_join_token}} --discovery-token-unsafe-skip-ca-verification --ignore-preflight-errors=all  ignore_errors: yes
   async: 600
   poll: 5
 
-  
+
+# Source: https://stackoverflow.com/questions/51126164/how-do-i-find-the-join-command-for-kubeadm-on-the-master
+
+# To print a join command for worker/slave node,
+# kubeadm token create --print-join-command
+
+# But if you need to join a new control plane node, that won't work as you need to recreate a new key for the control plane join command. This can be done with three simple steps.
+
+# 01.) re upload certs in the already working master node
+# sudo kubeadm init phase upload-certs --upload-certs
+# it will generate a new certificate key.
+
+# 02.) print join command in the already working master node
+# kubeadm token create --print-join-command
+
+# 03.) Add the --control-plane --certificate-key and execute.
+#  <join command from step 02> --control-plane --certificate-key <key from step 01>
+
+
+# RASPBIAN
+# update nano /etc/docker/daemon.json to:
+# {
+#   "exec-opts": ["native.cgroupdriver=systemd"]
+# }
+# systemctl enable systemd-resolved.service
+# systemctl start systemd-resolved.service

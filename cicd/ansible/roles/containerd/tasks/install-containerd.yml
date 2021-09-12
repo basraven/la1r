@@ -1,7 +1,7 @@
 ---
 
 # CentOS
-- name: Install containerd repository
+- name: Install containerd repository for CentOS
   become: yes
   shell: |
     yum install yum-utils
@@ -29,6 +29,123 @@
     enabled: no
     force: yes
   when: ansible_facts['distribution'] == "CentOS"
+
+# Raspbian
+# Based on https://getbetterdevops.io/replace-docker-on-your-raspberry-pi-with-containerd/
+
+# - name: Install required packages for Raspbian
+#   become: yes
+#   package: name={{item}} state=present
+#   with_items:
+    # - autoconf 
+    # - golang-go 
+#     - automake
+#     - libtool
+#     - git
+#     - curl
+#     - unzip
+#     - gcc
+#     - make
+#     - btrfs-progs
+#     - libbtrfs-dev
+#   when: ansible_lsb.id == "Raspbian"
+
+# - name: Install golang for Raspbian
+#   become: yes
+#   shell: |
+#     wget https://golang.org/dl/go1.15.8.linux-armv6l.tar.gz
+#     tar -C /usr/local -xzf go1.15.8.linux-armv6l.tar.gz
+#     echo 'PATH="$PATH:/usr/local/go/bin"' | tee -a $HOME/.profile
+#     echo "export GOPATH=$(go env GOPATH)" | tee -a $HOME/.profile
+#     source $HOME/.profile
+#     go version
+#     rm -rf go1.15.8.linux-armv6l.*
+#   args:
+#     executable: /bin/bash
+#   when: ansible_lsb.id == "Raspbian"
+
+# - name: Install more required packages for Raspbian
+#   become: yes
+#   package: name={{item}} state=present
+#   with_items:
+#     - libseccomp2 
+#     - libseccomp-dev
+#   when: ansible_lsb.id == "Raspbian"
+
+# - name: Install protobuf for Raspbian
+#   become: yes
+#   shell: |
+#     wget https://github.com/protocolbuffers/protobuf/archive/v3.14.0.tar.gz -O protobuf_v3.14.0.tar.gz
+#     tar xzf protobuf_v3.14.0.tar.gz
+#     cd protobuf-3.14.0/
+#     ./autogen.sh
+#     ./configure
+#     make -j`nproc`
+#     make install
+#     rm -rf protobuf_v3.14.0*
+#   args:
+#     executable: /bin/bash
+#   when: ansible_lsb.id == "Raspbian"
+
+# - name: Install containerd for Raspbian
+#   become: yes
+#   shell: |
+#     go get -v github.com/containerd/containerd
+#     cd $GOPATH/src/github.com/containerd/container
+#     make -j`nproc`
+#     env PATH="$PATH" make install
+#     containerd --version
+#   args:
+#     executable: /bin/bash
+#   when: ansible_lsb.id == "Raspbian"
+
+# - name: Install containerd systemd for Raspbian
+#   become: yes
+#   shell: |
+#     cd $GOPATH/src/github.com/containerd/containerd
+#     cp containerd.service /etc/systemd/system/
+#     systemctl daemon-reload
+#     systemctl enable containerd.service
+#     systemctl start containerd.service
+#   args:
+#     executable: /bin/bash
+#   when: ansible_lsb.id == "Raspbian"
+
+# - name: Install containerd / Run full container install for Raspbian
+#   become: yes
+#   shell: |
+#     sudo apt update
+#     sudo apt full-upgrade
+#     sudo rpi-update
+#     sudo apt install autoconf automake libtool curl unzip gcc make
+    # sudo wget https://golang.org/dl/go1.15.8.linux-armv6l.tar.gz
+    # sudo tar -C /usr/local -xzf go1.15.8.linux-armv6l.tar.gz
+    # echo 'PATH="$PATH:/usr/local/go/bin"' | tee -a $HOME/.bashrc
+    # echo "export GOPATH=$(go env $GOPATH)" | tee -a $HOME/.bashrc
+    # source $HOME/.bashrc
+    # go version
+    # sudo apt install libseccomp2 libseccomp-dev
+    # go get -v github.com/opencontainers/runc
+    # cd $GOPATH/src/github.com/opencontainers/runc
+    # make -j`nproc`
+    # sudo env PATH="$PATH" make install
+    # sudo apt install btrfs-progs libbtrfs-dev
+    # wget https://github.com/protocolbuffers/protobuf/archive/v3.14.0.tar.gz -O protobuf_v3.14.0.tar.gz
+    # tar xzf protobuf_v3.14.0.tar.gz
+    # cd protobuf-3.14.0/
+    # sudo ./autogen.sh
+    # sudo ./configure
+    # make -j`nproc`
+    # sudo make -l2 -j`nproc` check
+    # sudo make install
+    # go get -v github.com/containerd/containerd
+    # cd $GOPATH/src/github.com/containerd/containerd
+    # make -j`nproc`
+    # sudo env PATH="$PATH" make install
+    # containerd --version
+#   args:
+#     executable: /bin/bash
+#   when: ansible_lsb.id == "Raspbian"
 
 # Common
 
@@ -60,14 +177,39 @@
     state: started
     enabled: yes
 
-- name: Install containerd / Enable kubelet cgroups
+
+
+
+- name: Install containerd / Enable modules
   become: yes
   lineinfile:
-    dest: /etc/ssh/sshd_config
-    regexp: '^cgroupDriver'
-    line: "cgroupDriver: systemd"
+    dest: /etc/modules-load.d/containerd.conf
+    regexp: '^{{item}}'
+    line: "{{item}}"
     state: present
-    backup: yes
+    create: yes
+  with_items:
+  - "overlay"
+  - "br_netfilter"
+
+- name: Install containerd / Enable modules at runtime
+  become: yes
+  shell: |
+    modprobe overlay
+    modprobe br_netfilter
+    sudo sysctl --system
+  args:
+    executable: /bin/bash
+
+
+# - name: Install containerd / Enable kubelet cgroups
+#   become: yes
+#   lineinfile:
+#     dest: /etc/ssh/sshd_config
+#     regexp: '^cgroupDriver'
+#     line: "cgroupDriver: systemd"
+#     state: present
+#     backup: yes
 
 
 # TODO: Automate: 

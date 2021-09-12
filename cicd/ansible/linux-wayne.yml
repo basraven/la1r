@@ -2,8 +2,8 @@
 - hosts: linux-wayne
   roles:
   - define-os
-  - hostname
-  - avahi
+  # - hostname
+  # - avahi
 
   # - users
   # - update
@@ -14,7 +14,8 @@
   # - samba
   # - containerd
   # - haproxy
-  # - kubernetes
+  - kubernetes
+  - kubernetes-init
   
   # - backup
 

@@ -1,24 +1,24 @@
 ---
-# - name: Remove swap 1/3
-#   command: swapoff -a
-#   ignore_errors: yes
-# - name: Remove swap 2/3
-#   command: systemctl disable dphys-swapfile
-#   ignore_errors: yes
-# - name: Remove swap 3/3
-#   command: apt-get remove dphys-swapfile -y
-#   ignore_errors: yes
+- name: Install on Raspbian / Remove swap 1/6
+  command: swapoff -a
+  ignore_errors: yes
+- name: Install on Raspbian / Remove swap 2/6
+  command: systemctl disable dphys-swapfile
+  ignore_errors: yes
+- name: Install on Raspbian / Remove swap 3/6
+  command: apt-get remove dphys-swapfile -y
+  ignore_errors: yes
 
 
-- name: Install on Raspbian / Remove swap 1/3
+- name: Install on Raspbian / Remove swap 4/6
   command: dphys-swapfile swapoff
   ignore_errors: yes
   become: yes
-- name: Install on Raspbian / Remove swap 2/3
+- name: Install on Raspbian / Remove swap 5/6
   command: dphys-swapfile uninstall
   ignore_errors: yes
   become: yes
-- name: Install on Raspbian / Remove swap 3/3
+- name: Install on Raspbian / Remove swap 6/6
   command: update-rc.d dphys-swapfile remove
   ignore_errors: yes
   become: yes

@@ -17,7 +17,7 @@
     - avahi-utils
     - libnss-mdns
     - mdns-scan
-  when: ansible_facts['distribution'] == "Raspbian"
+  when: ansible_lsb.id == "Raspbian"
 
 - name: Install Avahi / Ubuntu Install Packages
   become: yes

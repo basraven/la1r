@@ -5,25 +5,30 @@ clusterName: {{ kubernetes_cluster_name }}
 {# apiServerCertSANs:
 - "kubernetes.la1r.com" #}
 controlPlaneEndpoint: "{{ ha_proxy_vir_ip }}:443"
+{#
 kubelet:
   extraArgs:
     node-status-update-frequency: 4s
+#}
 apiServer:
   extraArgs:
     feature-gates: "RemoveSelfLink=false"
+networking:
+    podSubnet: {{ kubernetes_pod_cidr }}
+    serviceSubnet: {{ kubernetes_service_cidr }}
 controllerManager:
   extraArgs:
-    node-monitor-period: 2s
-    node-monitor-grace-period: 13s
-    pod-eviction-timeout: 13s
+    node-monitor-period: 5s
+    node-monitor-grace-period: 20s
+    pod-eviction-timeout: 20s
     resource-quota-sync-period: 1m
+  {# 
 etcd:
   local: 
     endpoints:
     - 192.168.5.1
     - 192.168.5.2
     - 192.168.5.3
-  {# 
     extraArgs:
       initial-cluster: "{{ inventory_hostname }}=https://{{ ansible_host }}:2380,{{ inventory_hostname }}-buoy=https://{{ ansible_host }}:31389"
   
@@ -36,8 +41,4 @@ etcd:
     peerCertSANs:
       - {{ ansible_host }} #}
      
-networking:
-    podSubnet: {{ kubernetes_pod_cidr }}
-    serviceSubnet: {{ kubernetes_service_cidr }}
     {# FIXME: This doesn't work, see  https://stackoverflow.com/questions/60176343/how-to-make-the-pod-cidr-range-larger-in-kubernetes-cluster-deployed-with-kubead #}
-

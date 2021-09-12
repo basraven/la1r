@@ -1,14 +1,26 @@
 ---
-- include: install-kubernetes.yml
-  tags:
-    - kubernetes_server
-# - include: networking.yml
+
+# - include: install-centos.yml
 #   tags:
 #     - kubernetes_server
-- include: install-storage-prereq.yml
+#   when: ansible_lsb.id == "CentOS"
+# - include: install-ubuntu.yml
+#   tags:
+#     - kubernetes_server
+#   when: ansible_lsb.id == "Ubuntu"
+# - include: install-raspbian.yml
+#   tags:
+#     - kubernetes_server
+#   when: ansible_lsb.id == "Raspbian"
+- include: install-common.yml
   tags:
-    - storage_kubernetes
-  when: ansible_lsb.id != "Raspbian"
+    - kubernetes_server
+  
+
+# - include: install-storage-prereq.yml
+#   tags:
+#     - storage_kubernetes
+#   when: ansible_lsb.id != "Raspbian"
     
 # - include: init-kubernetes.yml
 #   tags:

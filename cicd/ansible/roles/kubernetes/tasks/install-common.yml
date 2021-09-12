@@ -18,24 +18,23 @@
     - kubeadm
     - kubernetes-cni
 
-- name: Install on Common / Bridge NF Call ip4
+- name: Install on Common / Sysctl config updates
   become: yes
   ansible.builtin.lineinfile:
     path: /etc/sysctl.conf
-    regexp: '^net.bridge.bridge-nf-call-iptables ='
-    line: net.bridge.bridge-nf-call-iptables = 1
-
-- name: Install on Common / Bridge NF Call ip6
-  become: yes
-  ansible.builtin.lineinfile:
-    path: /etc/sysctl.conf
-    regexp: '^net.bridge.bridge-nf-call-ip6tables ='
-    line: net.bridge.bridge-nf-call-ip6tables = 1
-    
+    regexp: '^{{item}} ='
+    line: "{{item}} = 1"
+  with_items:
+    - net.bridge.bridge-nf-call-iptables
+    - net.bridge.bridge-nf-call-ip6tables
+    - net.ipv4.ip_forward
     
 - name: Install on Common / tempfix for ipv4
   become: yes
   shell: |
-    echo '1' > /proc/sys/net/bridge/bridge-nf-call-iptables
+    echo '1' > {{item}}
   args:
     executable: /bin/bash
+  with_items:
+    - /proc/sys/net/bridge/bridge-nf-call-iptables
+    - /proc/sys/net/ipv4/ip_forward

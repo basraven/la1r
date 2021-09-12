@@ -12,9 +12,9 @@
   # # - reboot
   # - nfs
   # - samba
-  # - containerd
   # - haproxy
-  # - kubernetes
+  - containerd
+  - kubernetes
   - kubernetes-init
 
   # - backup

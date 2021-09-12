@@ -1,12 +1,12 @@
 ---
 - hosts: stephanie 
   roles:
-  # - define-os
+  - define-os
   # - hostname
   # - users
   # - ssh
-  # - kubernetes
+  - docker
+  - kubernetes
   
-  - kubernetes-init
   # - prometheus_node_exporter
   # - reboot
