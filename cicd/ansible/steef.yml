@@ -1,0 +1,12 @@
+---
+- hosts: steef 
+  roles:
+  - define-os
+  - hostname
+  - users
+  - ssh
+  # - docker
+  # - kubernetes
+  
+  # - prometheus_node_exporter
+  # - reboot

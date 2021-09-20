@@ -8,17 +8,17 @@
 - include: enable-sudo.yml
   tags: 
     - users
-  # when: target_user_exists != true
+  when: target_user_exists != true
 
 - include: add-target_user.yml
   tags: 
     - users
-  # when: target_user_exists != true
+  when: target_user_exists != true
 
 - include: add_ssh_settings.yml
   tags: 
     - users
-  # when: target_user_exists != true
+  when: target_user_exists != true
 
 
 

@@ -5,7 +5,7 @@
   # - hostname
   # - users
   # - ssh
-  - docker
+  # - containerd
   - kubernetes
   
   # - prometheus_node_exporter

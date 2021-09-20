@@ -8,10 +8,10 @@
 #   tags:
 #     - kubernetes_server
 #   when: ansible_lsb.id == "Ubuntu"
-# - include: install-raspbian.yml
-#   tags:
-#     - kubernetes_server
-#   when: ansible_lsb.id == "Raspbian"
+- include: install-raspbian.yml
+  tags:
+    - kubernetes_server
+  when: ansible_lsb.id == "Raspbian" or  ( ansible_lsb.id == "Ubuntu" and ansible_architecture =="aarch64")
 - include: install-common.yml
   tags:
     - kubernetes_server

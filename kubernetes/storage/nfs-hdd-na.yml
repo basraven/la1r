@@ -1,0 +1,63 @@
+
+---
+# Source: https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner/blob/master/deploy/class.yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: nfs-hdd-na # IMPORTANT pvc needs to mention this name
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: nfs-hdd-na # name can be anything
+parameters:
+  onDelete: delete
+---
+# Source: https://github.com/kubernetes-sigs/nfs-subdir-external-provisioner/blob/master/deploy/deployment.yaml
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: nfs-hdd-na
+  namespace: storage
+  labels:
+    device: hdd
+    availability: na
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nfs-hdd-na
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: nfs-hdd-na
+        device: hdd
+        availability: na
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution :
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: la1r.storage/hdd-na
+                operator: In
+                values: [ "true" ]
+      serviceAccountName: nfs-pod-provisioner-sa # name of service account created in rbac.yaml
+      containers:
+        - name: nfs-hdd-na
+          image: k8s.gcr.io/sig-storage/nfs-subdir-external-provisioner:v4.0.2
+          volumeMounts:
+            - name: nfs-provisioner-v
+              mountPath: /persistentvolumes
+          env:
+            - name: PROVISIONER_NAME # do not change
+              value: nfs-hdd-na # SAME AS PROVISONER NAME VALUE IN STORAGECLASS
+            - name: NFS_SERVER # do not change
+              value: 192.168.5.3 # Ip of the NFS SERVER
+            - name: NFS_PATH # do not change
+              value: /mnt/hdd/na # path to nfs directory setup
+      volumes:
+       - name: nfs-provisioner-v # same as volume mounts name
+         nfs:
+           server: 192.168.5.3
+           path: /mnt/hdd/na

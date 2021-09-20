@@ -5,19 +5,23 @@
 - name: Install on Raspbian / Remove swap 2/6
   command: systemctl disable dphys-swapfile
   ignore_errors: yes
+  when: ansible_architecture !="aarch64"
 - name: Install on Raspbian / Remove swap 3/6
   command: apt-get remove dphys-swapfile -y
   ignore_errors: yes
+  when: ansible_architecture !="aarch64"
 
 
 - name: Install on Raspbian / Remove swap 4/6
   command: dphys-swapfile swapoff
   ignore_errors: yes
   become: yes
+  when: ansible_architecture !="aarch64"
 - name: Install on Raspbian / Remove swap 5/6
   command: dphys-swapfile uninstall
   ignore_errors: yes
   become: yes
+  when: ansible_architecture !="aarch64"
 - name: Install on Raspbian / Remove swap 6/6
   command: update-rc.d dphys-swapfile remove
   ignore_errors: yes
@@ -50,6 +54,7 @@
     dest: /root/cmdline-backup-{{ansible_date_time.date}}-{{ansible_date_time.time}}.txt
     remote_src: yes
   become: yes
+  when: ansible_lsb.id == "Raspbian" and ansible_architecture !="aarch64"
 - name: Install on Raspbian / Ugly fix for /boot/cmdline.txt
   lineinfile:
       path: /boot/cmdline.txt
@@ -57,6 +62,24 @@
       regexp: '^(.*rootwait)\s+$'
       line: '\1 cgroup_enable=cpuset cgroup_enable=memory cgroup_memory=1'
   become: yes
+  when: ansible_lsb.id == "Raspbian" and ansible_architecture !="aarch64"
+
+- name: Install on Ubuntu on Raspberry / copy /boot/firmware/cmdline.txt
+  copy:
+    src: /boot/firmware/cmdline.txt
+    dest: /root/cmdline-backup-{{ansible_date_time.date}}-{{ansible_date_time.time}}.txt
+    remote_src: yes
+  become: yes
+  when: ansible_lsb.id == "Ubuntu" and ansible_architecture =="aarch64"
+#FIXME: Doesnt work...
+- name: Install on Ubuntu on Raspberry / Ugly fix for /boot/firmware/cmdline.txt
+  lineinfile:
+      path: /boot/firmware/cmdline.txt
+      backrefs: yes
+      regexp: '^(.*rootwait)\s+$'
+      line: '\1 cgroup_enable=cpuset cgroup_enable=memory cgroup_memory=1'
+  become: yes
+  when: ansible_lsb.id == "Ubuntu" and ansible_architecture =="aarch64"
 
 
 - name: Install on Raspbian / Reboot the host to reload the changed config
