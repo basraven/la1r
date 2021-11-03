@@ -1,0 +1,12 @@
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: kafka-data-claim
+  namespace: event
+spec:
+  accessModes:
+  - ReadWriteMany 
+  resources:
+    requests:
+      storage: 30Gi

@@ -1,0 +1,144 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka
+  namespace: event
+  labels:
+    app: kafka
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka
+  template:
+    metadata:
+      labels:
+        app: kafka
+    spec:
+      # volumes:
+        # - name: kafka-data-volume
+        #   persistentVolumeClaim:
+        #     claimName: kafka-data-claim
+      #   - name: kafka-config-volume
+      #     configMap:
+      #       name: kafka-config
+      #       items:
+      #       - key: mosquitto.conf
+      #         path: mosquitto.conf
+      #       # defaultMode: 0600
+      containers:
+      - name: kafka
+        image: bitnami/kafka
+        ports:
+        - name: kafka
+          containerPort: 9092
+        - name: jmx
+          containerPort: 9099
+        env:
+        - name: ALLOW_PLAINTEXT_LISTENER
+          value: "yes"
+        - name: KAFKA_LISTENERS
+          value: "PLAINTEXT://0.0.0.0:9092"
+        - name: KAFKA_ADVERTISED_LISTENERS
+          value: "PLAINTEXT://kafka.event.svc.cluster.local:9092"
+        - name: KAFKA_CFG_ZOOKEEPER_CONNECT
+          value: "zookeeper.event:2181"
+        - name: JMX_PORT
+          value: "9099"
+          
+        # - name: KAFKA_INTER_BROKER_USER
+        #   value: "admin"
+        # - name: KAFKA_INTER_BROKER_PASSWORD
+        #   value: "bitnami"
+        # - name: KAFKA_BROKER_USER
+        #   value: "user"
+        # - name: KAFKA_BROKER_PASSWORD
+        #   value: "bitnami"
+        # - name: KAFKA_ZOOKEEPER_USER
+        #   value: "nodefault"
+        # - name: KAFKA_ZOOKEEPER_PASSWORD
+        #   value: "nodefault"
+        # - name: KAFKA_HEAP_OPTS
+        #   value: "-Xmx1024m -Xms1024m"
+        # volumeMounts:
+        #   - name: kafka-data-volume
+        #     mountPath: /bitnami/kafka
+          # - name: kafka-config-volume
+          #   mountPath: /mosquitto/config/
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: kafka
+  name: kafka
+  namespace: event
+spec:
+  loadBalancerIP: 192.168.6.177
+  type: LoadBalancer
+  ports:
+  - name: kafka
+    # targetPort: 9092
+    protocol: TCP
+    port: 9092
+  - name: jmx
+    # targetPort: 9092
+    protocol: TCP
+    port: 9099
+  selector:
+    app: kafka
+
+
+
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: eventingress
+  namespace: event
+spec:
+  rules:
+  - host: event.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: kafka
+            port:
+              number: 9092
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: event-bas
+  namespace: event
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: event-bas-tls
+  commonName: event.bas
+  dnsNames:
+  - event.bas
+  - www.event.bas
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: event-tls
+  namespace: event
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`event.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: event
+      port: 80
+  tls:
+    secretName: event-bas-tls

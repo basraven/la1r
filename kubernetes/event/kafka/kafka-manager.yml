@@ -1,0 +1,112 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-manager
+  namespace: event
+  labels:
+    app: kafka-manager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-manager
+  template:
+    metadata:
+      labels:
+        app: kafka-manager
+    spec:
+      containers:
+      - name: kafka-manager
+        image: kafkamanager/kafka-manager
+        # resources:
+        #   limits:
+        #     memory: "256Mi"
+        #     cpu: "100m"
+        ports:
+        - name: kafka-manager
+          containerPort: 9000
+        env:
+        - name: ZK_HOSTS
+          value: "zookeeper.event:2181"
+        - name: KAFKA_MANAGER_AUTH_ENABLED
+          value: "false"
+        - name: APPLICATION_SECRET
+          value: bitnami
+        # - name: kafka-manager_ZOOKEEPER_USER
+        #   value: "nodefault"
+        # - name: kafka-manager_ZOOKEEPER_PASSWORD
+        #   value: "nodefault"
+        # - name: kafka-manager_HEAP_OPTS
+        #   value: "-Xmx1024m -Xms1024m"
+        # volumeMounts:
+        #   - name: kafka-manager-data-volume
+        #     mountPath: /bitnami/kafka-manager
+          # - name: kafka-manager-config-volume
+          #   mountPath: /mosquitto/config/
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: kafka-manager
+  name: kafka-manager
+  namespace: event
+spec:
+  ports:
+  - name: kafka-manager
+    targetPort: 9000
+    port: 80
+  selector:
+    app: kafka-manager
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kafka-manageringress
+  namespace: event
+spec:
+  rules:
+  - host: kafka-manager.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: kafka-manager
+            port:
+              number: 80
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: kafka-manager-bas
+  namespace: event
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: kafka-manager-bas-tls
+  commonName: kafka-manager.bas
+  dnsNames:
+  - kafka-manager.bas
+  - www.kafka-manager.bas
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: kafka-manager-tls
+  namespace: event
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`kafka-manager.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: kafka-manager
+      port: 80
+  tls:
+    secretName: kafka-manager-bas-tls

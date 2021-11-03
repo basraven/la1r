@@ -1,0 +1,78 @@
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zookeeper
+  namespace: event
+  labels:
+    k8s-app: zookeeper
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: zookeeper
+  template:
+    metadata:
+      labels:
+        name: zookeeper
+        k8s-app: zookeeper
+    spec:
+      containers:
+      - name: zookeeper
+        ports:
+        - containerPort: 2181
+        - containerPort: 2888
+        - containerPort: 3888
+        - containerPort: 8080 
+        env:
+        - name: ALLOW_ANONYMOUS_LOGIN
+          value: "yes"
+        image: bitnami/zookeeper
+        volumeMounts:
+          - name: zookeeper
+            mountPath: /bitnami/zookeeper
+        # volumeMounts:
+        #   - name: zookeeper
+        #     mountPath: /datalog
+      volumes:
+        - name: zookeeper
+          persistentVolumeClaim:
+            claimName: zookeeper-claim
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: zookeeper
+  namespace: event
+spec:
+  selector:
+    k8s-app: zookeeper
+  ports:
+  - name: client-port
+    port: 2181
+    targetPort: 2181
+  - name: follower-port
+    port: 2888
+    targetPort: 2888
+  - name: election-port
+    port: 3888
+    targetPort: 3888
+  - name: admin-server
+    port: 80
+    targetPort: 8080
+# ---
+# apiVersion: extensions/v1beta1
+# kind: Ingress
+# metadata:
+#   name: zookeeper-ingress
+#   namespace: event
+# spec:
+#   rules:
+#   - host: zookeeper.bas
+#     http:
+#       paths:
+#       - path: /
+#         backend:
+#           serviceName: zookeeper
+#           servicePort: 80
