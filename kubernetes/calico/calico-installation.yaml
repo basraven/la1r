@@ -1,3 +1,6 @@
+# ON PI4 RUN THIS FIRST:
+# update-alternatives --set iptables /usr/sbin/iptables-legacy
+
 # Source: https://docs.projectcalico.org/manifests/custom-resources.yaml
 apiVersion: operator.tigera.io/v1
 kind: Installation
@@ -9,8 +12,8 @@ spec:
   calicoNetwork:
     # Note: The ipPools section cannot be modified post-install.
     nodeAddressAutodetectionV4:
-      interface: "enp.*" # enp or eth
-      # skipInterface: "tun.*"
+      # interface: "e.*" # enp or eth
+      skipInterface: "tun.*"
     ipPools:
     - blockSize: 26 
       cidr: 10.244.0.0/16
@@ -20,16 +23,15 @@ spec:
       natOutgoing: Enabled
       nodeSelector: all()
   # Configures typhaRemoval on ARM
-  # Doesn't work..
-  typhaAffinity: 
-    nodeAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        nodeSelectorTerms:
-        - matchExpressions:
-          - key: kubernetes.io/arch
-            operator: In
-            values:
-            - amd64
+  # typhaAffinity: 
+  #   nodeAffinity:
+  #     requiredDuringSchedulingIgnoredDuringExecution:
+  #       nodeSelectorTerms:
+  #       - matchExpressions:
+  #         - key: kubernetes.io/arch
+  #           operator: In
+  #           values:
+  #           - amd64
           # - key: kubernetes.io/arch
           #   operator: NotIn
           #   values:

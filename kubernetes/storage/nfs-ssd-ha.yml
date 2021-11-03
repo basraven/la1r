@@ -41,6 +41,13 @@ spec:
               - key: la1r.storage/ssd-ha
                 operator: In
                 values: [ "true" ]
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            preference:
+              matchExpressions:
+              - key: la1r.storage/preferred-primary
+                operator: In
+                values: [ "true" ]
       serviceAccountName: nfs-pod-provisioner-sa # name of service account created in rbac.yaml
       containers:
         - name: nfs-ssd-ha
@@ -52,11 +59,11 @@ spec:
             - name: PROVISIONER_NAME # do not change
               value: nfs-ssd-ha # SAME AS PROVISONER NAME VALUE IN STORAGECLASS
             - name: NFS_SERVER # do not change
-              value: 192.168.5.3 # Ip of the NFS SERVER
+              value: 192.168.5.100 # Ip of the NFS SERVER
             - name: NFS_PATH # do not change
               value: /mnt/ssd/ha # path to nfs directory setup
       volumes:
        - name: nfs-provisioner-v # same as volume mounts name
          nfs:
-           server: 192.168.5.3
+           server: 192.168.5.100
            path: /mnt/ssd/ha

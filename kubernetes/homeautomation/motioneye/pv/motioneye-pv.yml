@@ -2,13 +2,13 @@
 kind: PersistentVolume
 apiVersion: v1
 metadata:
-  name: cameara-data-pv
+  name: camera-data-pv
   labels:
-    contenttype: "cameara-data"
+    contenttype: "camera-data"
 spec:
   capacity:
     storage: 200Gi
-  storageClassName: cameara-data
+  storageClassName: camera-data
   persistentVolumeReclaimPolicy: Retain
   accessModes:
   - ReadWriteMany

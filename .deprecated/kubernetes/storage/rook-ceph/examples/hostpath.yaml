@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-nas
+  labels:
+    app: nginx
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.7.9
+        command: ["sh", "-c"]
+        args: ["sleep 10000"]
+        securityContext:
+          privileged: true
+          capabilities:
+            add: ["SYS_ADMIN"]
+          allowPrivilegeEscalation: true
+        volumeMounts:
+          - name: dynamic-volume
+            mountPropagation: "Bidirectional"
+            mountPath: "/ceph"
+          - name: dynamic-volume2
+            mountPropagation: "Bidirectional"
+            mountPath: "/ceph2"
+          - name: dynamic-volume3
+            mountPropagation: "Bidirectional"
+            mountPath: "/ceph3"
+          - name: dynamic-volume4
+            mountPropagation: "Bidirectional"
+            mountPath: "/ceph4"
+      volumes:
+        - name: dynamic-volume
+          hostPath:
+            path: /tmp/ceph
+            type: DirectoryOrCreate
+        - name: dynamic-volume2
+          hostPath:
+            path: /tmp/ceph2
+            type: DirectoryOrCreate
+        - name: dynamic-volume3
+          hostPath:
+            path: /tmp/ceph3
+            type: DirectoryOrCreate
+        - name: dynamic-volume4
+          hostPath:
+            path: /tmp/ceph4
+            type: DirectoryOrCreate

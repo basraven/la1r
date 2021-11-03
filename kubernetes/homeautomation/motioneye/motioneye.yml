@@ -48,6 +48,23 @@ spec:
             mountPath: /etc/motioneye 
           - name: motioneye-data-volume
             mountPath: /var/lib/motioneye
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   labels:
+#     app: motioneye
+#   name: motioneye
+#   namespace: homeautomation
+# spec:
+#   ports:
+#   - name: http
+#     targetPort: 8765
+#     port: 80
+#   selector:
+#     app: motioneye
+#   type: ClusterIP
+
 ---
 apiVersion: v1
 kind: Service
@@ -63,56 +80,57 @@ spec:
     port: 80
   selector:
     app: motioneye
-  type: ClusterIP
+  loadBalancerIP: 192.168.6.75
+  type: LoadBalancer
 
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: motioneyeingress
-  namespace: homeautomation
-spec:
-  rules:
-  - host: cam.bas
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: motioneye
-            port:
-              number: 80
+# ---
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: motioneyeingress
+#   namespace: homeautomation
+# spec:
+#   rules:
+#   - host: cam.bas
+#     http:
+#       paths:
+#       - path: /
+#         pathType: Prefix
+#         backend:
+#           service:
+#             name: motioneye
+#             port:
+#               number: 80
 
----
-apiVersion: cert-manager.io/v1
-kind: Certificate
-metadata:
-  name: motioneye-bas
-  namespace: homeautomation
-spec:
-  issuerRef:
-    name: la1r
-    kind: ClusterIssuer
-  secretName: motioneye-bas-tls
-  commonName: cam.bas
-  dnsNames:
-  - cam.bas
-  - www.cam.bas
----
-apiVersion: traefik.containo.us/v1alpha1
-kind: IngressRoute
-metadata:
-  name: motioneye-tls
-  namespace: homeautomation
-spec:
-  entryPoints:
-    - websecure
-  routes:
-  - match: Host(`cam.bas`) && PathPrefix(`/`)
-    kind: Rule
-    services:
-    - name: motioneye
-      port: 80
-  tls:
-    secretName: motioneye-bas-tls
+# ---
+# apiVersion: cert-manager.io/v1
+# kind: Certificate
+# metadata:
+#   name: motioneye-bas
+#   namespace: homeautomation
+# spec:
+#   issuerRef:
+#     name: la1r
+#     kind: ClusterIssuer
+#   secretName: motioneye-bas-tls
+#   commonName: cam.bas
+#   dnsNames:
+#   - cam.bas
+#   - www.cam.bas
+# ---
+# apiVersion: traefik.containo.us/v1alpha1
+# kind: IngressRoute
+# metadata:
+#   name: motioneye-tls
+#   namespace: homeautomation
+# spec:
+#   entryPoints:
+#     - websecure
+#   routes:
+#   - match: Host(`cam.bas`) && PathPrefix(`/`)
+#     kind: Rule
+#     services:
+#     - name: motioneye
+#       port: 80
+#   tls:
+#     secretName: motioneye-bas-tls

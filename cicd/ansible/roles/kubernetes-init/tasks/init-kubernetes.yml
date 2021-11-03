@@ -8,9 +8,7 @@
 # - name: Init Kubernetes / Init Kubernetes
 #   become: yes
 #   shell: |
-#     kubeadm init \
-#     --config /etc/kubernetes/kubeadm-config.yml \
-#     --upload-certs
+#     kubeadm init --config /etc/kubernetes/kubeadm-config.yml --upload-certs
 #   args:
 #     executable: /bin/bash
 #   async: 600

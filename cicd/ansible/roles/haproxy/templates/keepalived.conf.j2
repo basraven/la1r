@@ -43,3 +43,30 @@ vrrp_instance VI_{{ inventory_hostname }} {
         check_haproxy
     }
 }
+
+vrrp_instance VI_SEC_{{ inventory_hostname }} {
+    
+    state {{ ha_proxy_node_state_sec }} {# MASTER or BACKUP #}
+    
+    interface {{ ha_proxy_node_interface }} 
+    virtual_router_id 53
+    priority {{ ha_proxy_node_prio_sec }} {# Master should be higher than BACKUP #}
+    
+    unicast_src_ip {{ ansible_host }}
+    unicast_peer {
+        {{ keepalived_peers }}
+    }
+    
+    authentication {
+        auth_type PASS
+        auth_pass {{ ha_proxy_pw }}
+    } 
+    virtual_ipaddress {
+        {{ ha_proxy_vir_ip_sec }}
+    }
+
+    
+    track_script {
+        check_haproxy
+    }
+}

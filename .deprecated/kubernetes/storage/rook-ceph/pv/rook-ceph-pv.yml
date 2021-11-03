@@ -1,0 +1,189 @@
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: rook-ceph-hdd-linux-wayne-pv
+spec:
+  capacity:
+    storage: 100Gi
+  volumeMode: Filesystem
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-storage
+  local:
+    path: /tmp/ceph
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - linux-wayne
+          - la1r-control-plane
+# ---
+# apiVersion: v1
+# kind: PersistentVolume
+# metadata:
+#   name: rook-ceph-hdd-jay-c-pv
+# spec:
+#   capacity:
+#     storage: 100Gi
+#   volumeMode: Filesystem
+#   accessModes:
+#   - ReadWriteOnce
+#   persistentVolumeReclaimPolicy: Retain
+#   storageClassName: local-storage
+#   local:
+#     path: /mnt/hdd/ceph
+#   nodeAffinity:
+#     required:
+#       nodeSelectorTerms:
+#       - matchExpressions:
+#         - key: kubernetes.io/hostname
+#           operator: In
+#           values:
+#           - jay-c
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: rook-ceph-hdd-linux-wayne-pv2
+spec:
+  capacity:
+    storage: 100Gi
+  volumeMode: Filesystem
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-storage
+  local:
+    path: /tmp/ceph2
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - linux-wayne
+          - la1r-control-plane
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: rook-ceph-hdd-linux-wayne-pv3
+spec:
+  capacity:
+    storage: 100Gi
+  volumeMode: Filesystem
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-storage
+  local:
+    path: /tmp/ceph3
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - linux-wayne
+          - la1r-control-plane
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: rook-ceph-hdd-linux-wayne-pv4
+spec:
+  capacity:
+    storage: 100Gi
+  volumeMode: Filesystem
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: local-storage
+  local:
+    path: /tmp/ceph4
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - linux-wayne
+          - la1r-control-plane
+# ---
+# apiVersion: v1
+# kind: PersistentVolume
+# metadata:
+#   name: rook-ceph-hdd-jay-c-pv2
+# spec:
+#   capacity:
+#     storage: 100Gi
+#   volumeMode: Filesystem
+#   accessModes:
+#   - ReadWriteOnce
+#   persistentVolumeReclaimPolicy: Retain
+#   storageClassName: local-storage
+#   local:
+#     path: /mnt/hdd/ceph2
+#   nodeAffinity:
+#     required:
+#       nodeSelectorTerms:
+#       - matchExpressions:
+#         - key: kubernetes.io/hostname
+#           operator: In
+#           values:
+#           - jay-c
+# ---
+# apiVersion: v1
+# kind: PersistentVolume
+# metadata:
+#   name: rook-ceph-hdd-linux-wayne-pv3
+# spec:
+#   capacity:
+#     storage: 100Gi
+#   volumeMode: Filesystem
+#   accessModes:
+#   - ReadWriteOnce
+#   persistentVolumeReclaimPolicy: Retain
+#   storageClassName: local-storage
+#   local:
+#     path: /mnt/hdd/ceph3
+#   nodeAffinity:
+#     required:
+#       nodeSelectorTerms:
+#       - matchExpressions:
+#         - key: kubernetes.io/hostname
+#           operator: In
+#           values:
+#           - linux-wayne
+# ---
+# apiVersion: v1
+# kind: PersistentVolume
+# metadata:
+#   name: rook-ceph-hdd-jay-c-pv3
+# spec:
+#   capacity:
+#     storage: 100Gi
+#   volumeMode: Filesystem
+#   accessModes:
+#   - ReadWriteOnce
+#   persistentVolumeReclaimPolicy: Retain
+#   storageClassName: local-storage
+#   local:
+#     path: /mnt/hdd/ceph3
+#   nodeAffinity:
+#     required:
+#       nodeSelectorTerms:
+#       - matchExpressions:
+#         - key: kubernetes.io/hostname
+#           operator: In
+#           values:
+#           - jay-c

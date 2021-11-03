@@ -5,8 +5,9 @@
   # - hostname
   # - users
   # - ssh
+  - avahi
   # - containerd
-  - kubernetes
+  # - kubernetes
   
   # - prometheus_node_exporter
   # - reboot

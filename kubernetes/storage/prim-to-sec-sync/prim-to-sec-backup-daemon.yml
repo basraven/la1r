@@ -1,0 +1,226 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: primsecd-scripts
+  namespace: storage
+data:
+  postscript.sh: |-
+    #!/bin/sh
+    oldfile=/source/data/current_nodename.bas
+    newfile=/target/data/current_nodename.bas
+    if cmp -s "$oldfile" "$newfile" ; then
+      echo "Node names equal, pausing..."
+      sleep 10
+      exit 0
+    else
+      echo "Node names not equal, not pausing"
+      /usr/bin/rsync "$@"
+      result=$?
+      exit $result
+      # (
+      #   if [ $result -eq 0 ]; then
+      #     echo "my commands";
+      #   fi
+      # )
+      # ) >/dev/null 2>/dev/null </dev/null
+    fi
+
+
+  primsec.sh: |-
+    #!/bin/sh
+    apk update
+    apk add rsync lsyncd
+    # echo 1524288 > /proc/sys/fs/inotify/max_user_watches
+    lsyncd -nodaemon /primsecd/lsyncd.conf
+  
+  # binary   = "/primsecd/postscript.sh",
+  lsyncd.conf: |-
+    sync {
+        default.rsync,
+        source    = "/source",
+        target    = "/target",
+        delay     = 10, 
+        delete    = true,
+        exclude={ "current_nodename.bas", "last_sync.bas" },
+        rsync     = {
+            binary   = "/usr/bin/rsync",
+            archive  = true,
+            compress = true,
+            group = false,
+            owner = false
+        }
+    }
+  
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: na-primsecd
+  namespace: storage
+  labels:
+    app: na-primsecd
+    storage: na
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: na-primsecd
+  template:
+    metadata:
+      labels:
+        app: na-primsecd
+    spec:
+        affinity:
+          nodeAffinity:
+            preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 1
+              preference:
+                matchExpressions:
+                - key: la1r.storage/preferred-primary
+                  operator: In
+                  values: [ "true" ]
+        volumes:
+        - name: source-data-volume
+          nfs: 
+            server: 192.168.5.100
+            path: /mnt/hdd/na
+            readOnly: true
+        - name: target-data-volume
+          nfs: 
+            server: 192.168.5.102
+            path: /mnt/hdd/na
+        - name: postscript
+          configMap:
+            name: primsecd-scripts
+            items:
+            - key: postscript.sh
+              path: postscript.sh
+            defaultMode: 0774
+        - name: primsec
+          configMap:
+            name: primsecd-scripts
+            items:
+            - key: primsec.sh
+              path: primsec.sh
+            defaultMode: 0744
+        - name: lsyncd-script
+          configMap:
+            name: primsecd-scripts
+            items:
+            - key: lsyncd.conf
+              path: lsyncd.conf
+            defaultMode: 0744
+        #FIXME: shouldn't be needed!
+        dnsConfig:
+          nameservers:
+            - 8.8.8.8
+        containers:
+        - name: primsecd
+          image: alpine:latest
+          resources:
+          #   limits:
+          #     memory: "2048Mi"
+          #     cpu: "1500m"
+          command: 
+            - /daemon-init/primsec.sh
+          volumeMounts:
+            - name: target-data-volume
+              mountPath: /target/data
+            - name: source-data-volume
+              mountPath: /source/data
+            - name: primsec
+              mountPath: /daemon-init
+            - name: lsyncd-script
+              mountPath: /primsecd/lsyncd.conf
+              subPath: lsyncd.conf
+            - name: postscript
+              mountPath: /primsecd/postscript.sh
+              subPath: postscript.sh
+  
+# ---
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: ha-primsecd
+#   namespace: storage
+#   labels:
+#     app: ha-primsecd
+#     storage: ha
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: ha-primsecd
+#   template:
+#     metadata:
+#       labels:
+#         app: ha-primsecd
+#     spec:
+#         affinity:
+#           nodeAffinity:
+#             preferredDuringSchedulingIgnoredDuringExecution:
+#             - weight: 1
+#               preference:
+#                 matchExpressions:
+#                 - key: la1r.storage/preferred-primary
+#                   operator: In
+#                   values: [ "true" ]
+#         volumes:
+#         - name: source-data-volume
+#           nfs: 
+#             server: 192.168.5.100
+#             path: /mnt/hdd/ha
+#             readOnly: true
+#         - name: target-data-volume
+#           nfs: 
+#             server: 192.168.5.102
+#             path: /mnt/hdd/ha
+#         - name: postscript
+#           configMap:
+#             name: primsecd-scripts
+#             items:
+#             - key: postscript.sh
+#               path: postscript.sh
+#             defaultMode: 0774
+#         - name: primsec
+#           configMap:
+#             name: primsecd-scripts
+#             items:
+#             - key: primsec.sh
+#               path: primsec.sh
+#             defaultMode: 0744
+#         - name: lsyncd-script
+#           configMap:
+#             name: primsecd-scripts
+#             items:
+#             - key: lsyncd.conf
+#               path: lsyncd.conf
+#             defaultMode: 0744
+#         #FIXME: shouldn't be needed!
+#         dnsConfig:
+#           nameservers:
+#             - 8.8.8.8
+#         containers:
+#         - name: primsecd
+#           image: alpine:latest
+#           resources:
+#           #   limits:
+#           #     memory: "2048Mi"
+#           #     cpu: "1500m"
+#           command: 
+#             - /daemon-init/primsec.sh
+#           volumeMounts:
+#             - name: target-data-volume
+#               mountPath: /target
+#             - name: source-data-volume
+#               mountPath: /source
+#             - name: primsec
+#               mountPath: /daemon-init
+#             - name: lsyncd-script
+#               mountPath: /primsecd/lsyncd.conf
+#               subPath: lsyncd.conf
+#             - name: postscript
+#               mountPath: /primsecd/postscript.sh
+#               subPath: postscript.sh
+  

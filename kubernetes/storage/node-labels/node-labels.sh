@@ -1,8 +1,18 @@
 #!/bin/bash
+kubectl label nodes jay-c la1r.storage/preferred-primary=true
+
 kubectl label nodes jay-c la1r.storage/ssd-ha=true
 kubectl label nodes jay-c la1r.storage/ssd-na=true
 kubectl label nodes jay-c la1r.storage/hdd-ha=true
 kubectl label nodes jay-c la1r.storage/hdd-na=true
+
+kubectl label nodes linux-wayne la1r.storage/ssd-ha=true
+kubectl label nodes linux-wayne la1r.storage/ssd-na=true
+kubectl label nodes linux-wayne la1r.storage/hdd-ha=true
+kubectl label nodes linux-wayne la1r.storage/hdd-na=true
+
+
+
 
 
 # ---

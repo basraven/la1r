@@ -68,6 +68,26 @@ backend masters
     server linux-wayne 192.168.5.1:6443 check port 6443 
     {# server k8s-master03 192.168.11.15:6443 check #}
 
+frontend haproxy_kube_sec
+    bind {{ ha_proxy_vir_ip_sec }}:443
+    bind {{ ansible_host }}:443
+    bind 127.0.0.1:80
+    mode tcp
+    option tcplog
+    {# timeout client  10800s #}
+    default_backend masterssec
+
+backend masterssec
+    mode tcp
+    option tcplog
+    {# balance leastconn #}
+    balance roundrobin
+    {# timeout server  10800s #}
+    default-server inter 3s downinter 2s rise 2 fall 2 slowstart 20s maxconn 250 maxqueue 256 weight 100
+    server linux-wayne 192.168.5.1:6443 check port 6443 
+    server jay-c 192.168.5.3:6443 check port 6443
+    {# server k8s-master03 192.168.11.15:6443 check #}
+
 
 
 
