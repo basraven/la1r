@@ -16,6 +16,15 @@ spec:
       labels:
         app: motioneye
     spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: la1r.workload/essential
+                operator: In
+                values:
+                - "true"
       volumes:
         - name: motioneye-data-volume
           persistentVolumeClaim:
