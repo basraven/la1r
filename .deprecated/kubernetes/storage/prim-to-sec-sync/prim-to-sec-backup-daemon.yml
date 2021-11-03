@@ -7,34 +7,50 @@ metadata:
 data:
   postscript.sh: |-
     #!/bin/sh
-    oldfile=/source/data/current_nodename.bas
-    newfile=/target/data/current_nodename.bas
-    if cmp -s "$oldfile" "$newfile" ; then
-      echo "Node names equal, pausing..."
-      sleep 10
-      exit 0
-    else
-      echo "Node names not equal, not pausing"
-      /usr/bin/rsync "$@"
-      result=$?
-      exit $result
-      # (
-      #   if [ $result -eq 0 ]; then
-      #     echo "my commands";
-      #   fi
-      # )
-      # ) >/dev/null 2>/dev/null </dev/null
+    SOURCENAME=/source/data/current_nodename.bas
+    TARGETNAME=/target/data/current_nodename.bas
+    STATECHANGEDSOURCE=/source/data/statechanged.bas
+    STATECHANGEDTARGET=/target/data/statechanged.bas
+
+    if [ -f "$STATECHANGEDSOURCE" ] || [ -f "$STATECHANGEDTARGET" ] ; then
+        echo "$STATECHANGEDSOURCE or $STATECHANGEDTARGET exists."
+        sleep 10
+        exit 0
+    else 
+        echo "$STATECHANGEDSOURCE does not exist."
+        if cmp -s "$SOURCENAME" "$TARGETNAME" ; then
+          echo "Node names equal, pausing..."
+          touch $STATECHANGEDSOURCE
+          sleep 10
+          exit 0
+        else
+          echo "Node names not equal, not pausing"
+          /usr/bin/rsync "$@"
+          result=$?
+          exit $result
+          # (
+          #   if [ $result -eq 0 ]; then
+          #     echo "my commands";
+          #   fi
+          # )
+          # ) >/dev/null 2>/dev/null </dev/null
+        fi
     fi
 
 
   primsec.sh: |-
     #!/bin/sh
     apk update
-    apk add rsync lsyncd
+    apk add rsync lsyncd nfs-utils rpcbind
+    mkdir /source /target
+    sleep 1000000
+    # mount -t nfs 192.168.5.100:/mnt/hdd/na /source
+    # mount -t nfs 192.168.5.102:/mnt/hdd/na /target
     # echo 1524288 > /proc/sys/fs/inotify/max_user_watches
-    lsyncd -nodaemon /primsecd/lsyncd.conf
+    # lsyncd -nodaemon /primsecd/lsyncd.conf
   
   # binary   = "/primsecd/postscript.sh",
+  # binary   = "/usr/bin/rsync",
   lsyncd.conf: |-
     sync {
         default.rsync,
@@ -42,9 +58,9 @@ data:
         target    = "/target",
         delay     = 10, 
         delete    = true,
-        exclude={ "current_nodename.bas", "last_sync.bas" },
+        exclude={ "statechanged.bas", "current_nodename.bas", "last_sync.bas" },
         rsync     = {
-            binary   = "/usr/bin/rsync",
+            binary   = "/primsecd/postscript.sh",
             archive  = true,
             compress = true,
             group = false,
@@ -81,15 +97,14 @@ spec:
                   operator: In
                   values: [ "true" ]
         volumes:
-        - name: source-data-volume
-          nfs: 
-            server: 192.168.5.100
-            path: /mnt/hdd/na
-            readOnly: true
-        - name: target-data-volume
-          nfs: 
-            server: 192.168.5.102
-            path: /mnt/hdd/na
+        # - name: source-data-volume
+        #   nfs: 
+        #     server: 192.168.5.100
+        #     path: /mnt/hdd/na
+        # - name: target-data-volume
+        #   nfs: 
+        #     server: 192.168.5.102
+        #     path: /mnt/hdd/na
         - name: postscript
           configMap:
             name: primsecd-scripts
@@ -124,11 +139,27 @@ spec:
           #     cpu: "1500m"
           command: 
             - /daemon-init/primsec.sh
+          # livenessProbe:
+          #   initialDelaySeconds: 5
+          #   periodSeconds: 5
+          #   timeoutSeconds: 1
+          #   successThreshold: 1
+          #   failureThreshold: 1
+          #   exec:
+          #     command:
+          #     - ls 
+          #     - source
+
+
+              # - sh
+              # - -c
+              # - "ls /source $? -eq 0 && ls /target $? -eq 0 || exit 1"
+          
           volumeMounts:
-            - name: target-data-volume
-              mountPath: /target/data
-            - name: source-data-volume
-              mountPath: /source/data
+            # - name: target-data-volume
+            #   mountPath: /target/data
+            # - name: source-data-volume
+            #   mountPath: /source/data
             - name: primsec
               mountPath: /daemon-init
             - name: lsyncd-script

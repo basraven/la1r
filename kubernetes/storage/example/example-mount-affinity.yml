@@ -1,0 +1,54 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: example-mount-affinity
+  namespace: storage
+spec:
+  storageClassName: hdd-na # SAME NAME AS THE STORAGECLASS
+  accessModes:
+    - ReadWriteOnce #  must be the same as PersistentVolume
+  resources:
+    requests:
+      storage: 50Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: example-mount-affinity
+  name: example-mount-affinity
+  namespace: storage
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: example-mount-affinity
+  template:
+    metadata:
+      labels:
+        app: example-mount-affinity
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: la1r.workload/essential
+                operator: In
+                values:
+                - "true"
+      volumes:
+      - name: test #
+        persistentVolumeClaim:
+          claimName: example-mount-affinity  # same name of pvc that was created
+      containers:
+      - image: nginx
+        name: nginx
+        command:
+          - "/bin/sh"
+          - "-c"
+          - "while true; do echo `date` >> /mydata2/some.log; sleep 2s; done"
+        volumeMounts:
+        - name: test # name of volume should match claimName volume
+          mountPath: /mydata2 # mount inside of contianer

@@ -1,7 +1,8 @@
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 nodes:
-- role: control-plane
+- 
+  role: control-plane
   extraPortMappings:
   - containerPort: 31300
     hostPort: 31300
@@ -19,3 +20,4 @@ nodes:
     hostPort: 31306
   - containerPort: 31307
     hostPort: 31307
+- role: control-plane

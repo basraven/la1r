@@ -2,12 +2,12 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: nfs-ngnix-example-pvc
+  name: example-mount
   namespace: storage
 spec:
-  storageClassName: nfs-hdd-na # SAME NAME AS THE STORAGECLASS
+  storageClassName: hdd-na # SAME NAME AS THE STORAGECLASS
   accessModes:
-    - ReadWriteMany #  must be the same as PersistentVolume
+    - ReadWriteOnce #  must be the same as PersistentVolume
   resources:
     requests:
       storage: 50Mi
@@ -16,23 +16,23 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app: nginx
-  name: nfs-nginx
+    app: example-mount
+  name: example-mount
   namespace: storage
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: nginx
+      app: example-mount
   template:
     metadata:
       labels:
-        app: nginx
+        app: example-mount
     spec:
       volumes:
-      - name: nfs-test #
+      - name: test #
         persistentVolumeClaim:
-          claimName: nfs-ngnix-example-pvc  # same name of pvc that was created
+          claimName: example-mount  # same name of pvc that was created
       containers:
       - image: nginx
         name: nginx
@@ -41,5 +41,5 @@ spec:
           - "-c"
           - "while true; do echo `date` >> /mydata2/some.log; sleep 2s; done"
         volumeMounts:
-        - name: nfs-test # name of volume should match claimName volume
+        - name: test # name of volume should match claimName volume
           mountPath: /mydata2 # mount inside of contianer
