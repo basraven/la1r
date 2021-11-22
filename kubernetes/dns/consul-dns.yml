@@ -468,57 +468,57 @@ spec:
     app: consul
 
 
-# ---
-# apiVersion: cert-manager.io/v1
-# kind: Certificate
-# metadata:
-#   name: consul-dns-bas
-#   namespace: monitoring
-# spec:
-#   issuerRef:
-#     name: la1r
-#     kind: ClusterIssuer
-#   secretName: dns-bas-tls
-#   commonName: dns.bas
-#   dnsNames:
-#   - dns.bas
-#   - www.dns.bas
-# ---
-# apiVersion: traefik.containo.us/v1alpha1
-# kind: IngressRoute
-# metadata:
-#   name: consul-dns-non-tls
-#   namespace: monitoring
-# spec:
-#   entryPoints:
-#     - web
-#   routes:
-#   - match: Host(`dns.bas`) && PathPrefix(`/`)
-#     kind: Rule
-#     services:
-#     - name: consul
-#       protocol: TCP
-#       port: 80
-#       targetPort: 8500
-#     middlewares:
-#     - name: http-redirect-to-https
-#       namespace: traefik
-# ---
-# apiVersion: traefik.containo.us/v1alpha1
-# kind: IngressRoute
-# metadata:
-#   name: consul-dns-tls
-#   namespace: monitoring
-# spec:
-#   entryPoints:
-#     - websecure
-#   routes:
-#   - match: Host(`dns.bas`) && PathPrefix(`/`)
-#     kind: Rule
-#     services:
-#     - name: consul
-#       protocol: TCP
-#       port: 80
-#       targetPort: 8500
-#   tls:
-#     secretName: dns-bas-tls
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: consul-dns-bas
+  namespace: monitoring
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: dns-bas-tls
+  commonName: dns.bas
+  dnsNames:
+  - dns.bas
+  - www.dns.bas
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: consul-dns-non-tls
+  namespace: monitoring
+spec:
+  entryPoints:
+    - web
+  routes:
+  - match: Host(`dns.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: consul
+      protocol: TCP
+      port: 80
+      targetPort: 8500
+    middlewares:
+    - name: http-redirect-to-https
+      namespace: traefik
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: consul-dns-tls
+  namespace: monitoring
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`dns.bas`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: consul
+      protocol: TCP
+      port: 80
+      targetPort: 8500
+  tls:
+    secretName: dns-bas-tls

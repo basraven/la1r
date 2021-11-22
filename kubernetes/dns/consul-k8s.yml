@@ -107,7 +107,7 @@ spec:
       restartPolicy: Always
       containers:
         - name: consul-k8s-ingress
-          image: "python"
+          image: "python:3.8"
           command:
             - sh
           args:
@@ -115,10 +115,10 @@ spec:
             - |
               GIT_SSH_COMMAND='ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no' \
               git clone -q https://github.com/basraven/consulk8s.git ;
-              cd consulk8s ; git checkout master ; cd ..
-              pip3 install ./consulk8s ;
-              export K8S_TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
-              export K8S_CA_AUTH="$(cat /var/run/secrets/kubernetes.io/serviceaccount/ca.crt | base64 -w 0 )"
+              cd consulk8s ; git checkout master ; cd .. ;
+              pip3 install ./consulk8s/ ;
+              export K8S_TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token) ;
+              export K8S_CA_AUTH="$(cat /var/run/secrets/kubernetes.io/serviceaccount/ca.crt | base64 -w 0 )" ;
               mkdir -p ~/.kube
 
               echo "apiVersion: v1
@@ -141,6 +141,6 @@ spec:
               current-context: svcs-acct-context
               " > ~/.kube/config
               
-              while sleep 15; do consulk8s write-ingresses --default-ip 192.168.6.1 --consul-sink-url='192.168.6.91:80' --consul-sink-domain='.bas' --host-as-name --skip-checks ; done
+              while sleep 5; do consulk8s write-ingresses --default-ip=192.168.6.1 --consul-sink-url=192.168.6.91:80 --consul-sink-domain=.bas --host-as-name --skip-checks ; done
               
               

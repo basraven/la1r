@@ -16,6 +16,8 @@ spec:
       labels:
         app: motioneye
     spec:
+      
+      # Essential
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -25,6 +27,8 @@ spec:
                 operator: In
                 values:
                 - "true"
+      priorityClassName: essential
+
       volumes:
         - name: motioneye-data-volume
           persistentVolumeClaim:

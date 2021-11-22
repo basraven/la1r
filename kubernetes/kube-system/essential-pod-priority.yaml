@@ -1,0 +1,20 @@
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: essential
+value: 1000000
+globalDefault: false
+description: "Essential pod"
+
+# Used in combination as:
+# Essential
+      # affinity:
+      #   nodeAffinity:
+      #     requiredDuringSchedulingIgnoredDuringExecution:
+      #       nodeSelectorTerms:
+      #       - matchExpressions:
+      #         - key: la1r.workload/essential
+      #           operator: In
+      #           values:
+      #           - "true"
+      # priorityClassName: essential
