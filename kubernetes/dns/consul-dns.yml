@@ -195,15 +195,15 @@ spec:
               protocol: UDP
             - containerPort: 8300
               name: server
-          livenessProbe:
-            httpGet:
-              path: /v1/health/node/current
-              port: 8500
-              scheme: HTTP
-            initialDelaySeconds: 60
-            timeoutSeconds: 5
-            successThreshold: 1
-            failureThreshold: 3
+          # livenessProbe:
+          #   httpGet:
+          #     path: /v1/health/node/current
+          #     port: 8500
+          #     scheme: HTTP
+          #   initialDelaySeconds: 60
+          #   timeoutSeconds: 5
+          #   successThreshold: 1
+          #   failureThreshold: 3
           # readinessProbe:
           #   # NOTE(mitchellh): when our HTTP status endpoints support the
           #   # proper status codes, we should switch to that. This is temporary.
