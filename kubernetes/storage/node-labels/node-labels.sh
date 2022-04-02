@@ -1,5 +1,6 @@
 #!/bin/bash
 kubectl label nodes linux-wayne la1r.workload/essential=true
+kubectl label nodes jay-c la1r.workload/nonessential=true
 
 kubectl label nodes jay-c la1r.storage/ssd-ha=true
 kubectl label nodes jay-c la1r.storage/ssd-na=true

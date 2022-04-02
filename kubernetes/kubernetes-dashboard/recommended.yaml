@@ -185,6 +185,18 @@ spec:
       labels:
         k8s-app: kubernetes-dashboard
     spec:
+      # Essential
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: la1r.workload/essential
+                operator: In
+                values:
+                - "true"
+      priorityClassName: essential
+
       containers:
         - name: kubernetes-dashboard
           image: kubernetesui/dashboard:v2.3.1
