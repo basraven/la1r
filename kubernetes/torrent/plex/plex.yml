@@ -16,24 +16,26 @@ spec:
       labels:
         app: plex
     spec:
+      # NonEssential
       affinity:
         nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution :
+          requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
             - matchExpressions:
-              - key: la1r.storage/111
+              - key: la1r.workload/nonessential
                 operator: In
-                values: [ "true" ]
+                values:
+                - "true"
       volumes:
-        - name: plex-torrent-volume
-          persistentVolumeClaim:
-            claimName: torrent-data-claim
-        - name: plex-data-volume
-          persistentVolumeClaim:
-            claimName: plex-data-claim
-        - name: plex-transcode-volume
-          persistentVolumeClaim:
-            claimName: plex-transcode-claim
+      #   - name: plex-torrent-volume
+      #     persistentVolumeClaim:
+      #       claimName: plex-torrent-data-claim
+      #   - name: plex-data-volume
+      #     persistentVolumeClaim:
+      #       claimName: plex-data-claim
+      #   - name: plex-transcode-volume
+      #     persistentVolumeClaim:
+      #       claimName: plex-transcode-claim
         - name: plex-config-volume
           persistentVolumeClaim:
             claimName: plex-config-claim
@@ -50,7 +52,7 @@ spec:
         ports:
         - name: http
           containerPort: 32400
-          hostPort: 32400
+          # hostPort: 32400 # blocks scheduling
         env:
         - name: TZ
           value: "Europe//Amsterdam"
@@ -62,12 +64,12 @@ spec:
         # https://plex.tv/claim
           value: "claim-JVc8QLPdVFn4MeVaxW8S"
         volumeMounts:
-          - name: plex-torrent-volume
-            mountPath: /torrent
-          - name: plex-data-volume
-            mountPath: /data
-          - name: plex-transcode-volume
-            mountPath: /transcode
+          # - name: plex-torrent-volume
+          #   mountPath: /torrent
+          # - name: plex-data-volume
+          #   mountPath: /data
+          # - name: plex-transcode-volume
+          #   mountPath: /transcode
           - name: plex-config-volume
             mountPath: /config
 ---

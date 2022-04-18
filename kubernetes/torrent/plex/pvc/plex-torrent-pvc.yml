@@ -1,0 +1,17 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: plex-torrent-data-claim
+  namespace: torrent
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: plex-torrent-data
+  selector:
+    matchLabels:
+      contenttype: "plex-torrent-data"
+  resources:
+    requests:
+      storage: 2000Gi
+      

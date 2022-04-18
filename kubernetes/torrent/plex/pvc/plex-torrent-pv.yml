@@ -2,13 +2,13 @@
 kind: PersistentVolume
 apiVersion: v1
 metadata:
-  name: torrent-data-pv
+  name: plex-torrent-data-pv
   labels:
-    contenttype: "torrent-data"
+    contenttype: "plex-torrent-data"
 spec:
   capacity:
     storage: 2000Gi
-  storageClassName: torrent-data
+  storageClassName: plex-torrent-data
   persistentVolumeReclaimPolicy: Retain
   accessModes:
   - ReadWriteOnce
