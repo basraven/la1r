@@ -6,7 +6,7 @@ metadata:
   namespace: torrent
 spec:
   accessModes:
-    - ReadWriteMany
+    - ReadWriteOnce
   storageClassName: plex-torrent-data
   selector:
     matchLabels:

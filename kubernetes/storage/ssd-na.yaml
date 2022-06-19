@@ -3,6 +3,8 @@ apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
   name: ssd-na
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
   labels:
     device: ssd
     availability: na
@@ -42,7 +44,7 @@ spec:
               mountPath: /etc/config/
           env:
             - name: PROVISIONER_NAME
-              value: "ssd-ha"
+              value: "ssd-na"
             - name: POD_NAMESPACE
               valueFrom:
                 fieldRef:

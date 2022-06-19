@@ -5,25 +5,25 @@ metadata:
   name: plex-data-claim
   namespace: torrent
 spec:
-  storageClassName: ssh-na
+  storageClassName: ssd-na
   accessModes:
-    - ReadWriteMany
+    - ReadWriteOnce
   resources:
     requests:
       storage: 20Gi
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: plex-transcode-claim
-  namespace: torrent
-spec:
-  storageClassName: ssd-na
-  accessModes:
-    - ReadWriteMany
-  resources:
-    requests:
-      storage: 50Gi
+# ---
+# apiVersion: v1
+# kind: PersistentVolumeClaim
+# metadata:
+#   name: plex-transcode-claim
+#   namespace: torrent
+# spec:
+#   storageClassName: ssd-ha
+#   accessModes:
+#     - ReadWriteOnce
+#   resources:
+#     requests:
+#       storage: 50Gi
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -33,7 +33,7 @@ metadata:
 spec:
   storageClassName: ssd-ha
   accessModes:
-    - ReadWriteMany
+    - ReadWriteOnce
   resources:
     requests:
       storage: 5Gi

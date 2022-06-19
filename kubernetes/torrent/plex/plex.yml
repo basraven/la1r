@@ -8,6 +8,8 @@ metadata:
     app: plex
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: plex
@@ -26,29 +28,16 @@ spec:
                 operator: In
                 values:
                 - "true"
-      volumes:
-      #   - name: plex-torrent-volume
-      #     persistentVolumeClaim:
-      #       claimName: plex-torrent-data-claim
-      #   - name: plex-data-volume
-      #     persistentVolumeClaim:
-      #       claimName: plex-data-claim
-      #   - name: plex-transcode-volume
-      #     persistentVolumeClaim:
-      #       claimName: plex-transcode-claim
-        - name: plex-config-volume
-          persistentVolumeClaim:
-            claimName: plex-config-claim
       containers:
       - name: plex
         image: plexinc/pms-docker
-        resources:
-          requests:
-            memory: "1024Mi"
-            cpu: "300m"
-          limits:
-            memory: "3Gi"
-            cpu: "2000m"
+        # resources:
+        #   requests:
+        #     memory: "1024Mi"
+        #     cpu: "300m"
+        #   limits:
+        #     memory: "3Gi"
+        #     cpu: "2000m"
         ports:
         - name: http
           containerPort: 32400
@@ -60,18 +49,33 @@ spec:
           value: "1000"
         - name: GROUP_ID
           value: "1000"
+        - name: ADVERTISE_IP
+          value: "http://192.168.6.60:32400/"
         - name: PLEX_CLAIM
         # https://plex.tv/claim
-          value: "claim-JVc8QLPdVFn4MeVaxW8S"
+          value: "claim-zMJDphhcNRxgp5JF8mas"
         volumeMounts:
-          # - name: plex-torrent-volume
-          #   mountPath: /torrent
-          # - name: plex-data-volume
-          #   mountPath: /data
-          # - name: plex-transcode-volume
-          #   mountPath: /transcode
+          - name: plex-torrent-volume
+            mountPath: /torrent
+          - name: plex-data-volume
+            mountPath: /data
           - name: plex-config-volume
             mountPath: /config
+          # - name: plex-transcode-volume
+          #   mountPath: /transcode
+      volumes:
+        - name: plex-torrent-volume
+          persistentVolumeClaim:
+            claimName: plex-torrent-data-claim
+        - name: plex-data-volume
+          persistentVolumeClaim:
+            claimName: plex-data-claim
+        - name: plex-config-volume
+          persistentVolumeClaim:
+            claimName: plex-config-claim
+        # - name: plex-transcode-volume
+        #   persistentVolumeClaim:
+        #     claimName: plex-transcode-claim
 ---
 apiVersion: v1
 kind: Service
@@ -112,6 +116,9 @@ metadata:
   namespace: torrent
 spec:
   ports:
+  - name: plex
+    port: 32400
+    targetPort: 32400
   - name: http
     port: 80
     targetPort: 32400
