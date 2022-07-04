@@ -16,7 +16,16 @@ spec:
       labels:
         app: redis
     spec:
+      # NonEssential
       affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: la1r.workload/nonessential
+                operator: In
+                values:
+                - "true"
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             - labelSelector:

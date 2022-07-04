@@ -31,7 +31,7 @@ spec:
       containers:
       - name: plex
         image: plexinc/pms-docker
-        # resources:
+        resources:
         #   requests:
         #     memory: "1024Mi"
         #     cpu: "300m"

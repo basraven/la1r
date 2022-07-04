@@ -6,8 +6,8 @@ metadata:
   namespace: nextcloud
 spec:
   accessModes:
-  - ReadWriteMany 
-  storageClassName: nfs-211
+  - ReadWriteOnce
+  storageClassName: ssd-na
   resources:
     requests:
       storage: 20Gi

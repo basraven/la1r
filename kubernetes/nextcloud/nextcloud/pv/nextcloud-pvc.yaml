@@ -6,7 +6,7 @@ metadata:
   namespace: nextcloud
 spec:
   accessModes:
-  - ReadWriteMany 
+  - ReadWriteOnce 
   storageClassName: nextcloud-web
   selector:
     matchLabels:
@@ -22,7 +22,7 @@ metadata:
   namespace: nextcloud
 spec:
   accessModes:
-  - ReadWriteMany  
+  - ReadWriteOnce  
   storageClassName: nextcloud-data
   selector:
     matchLabels:

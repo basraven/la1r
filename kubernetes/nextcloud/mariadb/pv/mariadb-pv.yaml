@@ -11,7 +11,6 @@ spec:
   storageClassName: nextcloud-mariadb
   persistentVolumeReclaimPolicy: Retain
   accessModes:
-  - ReadWriteMany
-  nfs:
-    server: 192.168.5.100 # ip addres of nfs server
+  - ReadWriteOnce
+  hostPath:
     path: "/mnt/hdd/ha/nextcloud/database" # path to directory

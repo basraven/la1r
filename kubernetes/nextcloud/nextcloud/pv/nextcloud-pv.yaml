@@ -11,9 +11,8 @@ spec:
   storageClassName: nextcloud-web
   persistentVolumeReclaimPolicy: Retain
   accessModes:
-  - ReadWriteMany
-  nfs:
-    server: 192.168.5.100 # ip addres of nfs server
+  - ReadWriteOnce
+  hostPath:
     path: "/mnt/ssd/ha/nextcloud/config" # path to directory
 ---
 kind: PersistentVolume
@@ -28,7 +27,6 @@ spec:
   storageClassName: nextcloud-data
   persistentVolumeReclaimPolicy: Retain
   accessModes:
-  - ReadWriteMany
-  nfs:
-    server: 192.168.5.100 # ip addres of nfs server
+  - ReadWriteOnce
+  hostPath:
     path: "/mnt/hdd/ha/nextcloud/data" # path to directory

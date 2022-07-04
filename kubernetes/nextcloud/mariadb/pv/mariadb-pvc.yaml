@@ -6,7 +6,7 @@ metadata:
   namespace: nextcloud
 spec:
   accessModes:
-  - ReadWriteMany
+  - ReadWriteOnce
   storageClassName: nextcloud-mariadb
   selector:
     matchLabels:

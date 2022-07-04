@@ -48,6 +48,8 @@ metadata:
     app: mariadb
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: mariadb
@@ -72,6 +74,11 @@ spec:
         args: ["--transaction-isolation=READ-COMMITTED", "--binlog-format=ROW", "--log-bin=mysqld-bin"]
         ports:
         - containerPort: 3306
+        resources:
+          # requests:
+          #   memory: "1024Mi"
+          # limits:
+          #   memory: "2048Mi"
         env:
         - name: MYSQL_ROOT_PASSWORD
           valueFrom:
