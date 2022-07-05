@@ -98,6 +98,10 @@ spec:
         - containerPort: 80
         resources:
         env:
+        - name: OVERWRITECLIURL
+          value: "https://nextcloud.bas"
+        - name: OVERWRITEPROTOCOL
+          value: "https"
         - name: NEXTCLOUD_TABLE_PREFIX
           value: ""
         - name: NEXTCLOUD_DATA_DIR
