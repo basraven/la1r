@@ -18,6 +18,13 @@
     - kubeadm
     - kubernetes-cni
 
+- name: Install on Common / hold installs
+  become: yes
+  shell: |
+    apt-mark hold kubelet kubeadm kubectl
+  args:
+    executable: /bin/bash
+
 - name: Install on Common / Sysctl config updates
   become: yes
   ansible.builtin.lineinfile:

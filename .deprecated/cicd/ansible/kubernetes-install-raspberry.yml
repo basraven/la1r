@@ -47,7 +47,7 @@
         replace:
             path: /boot/cmdline.txt
             regexp: '(\s+)rootwait(\s+.*)?$'
-            replace: '\1rootwait cgroup_enable=cpuset cgroup_enable=memory cgroup_memory=1 \2'
+            replace: '\1rootwait cgroup_enable=cpuset cgroup_enable=memory cgroup_memory=1 swapaccount=1 \2'
 
       
       - name: Reboot the host to reload the changed config
