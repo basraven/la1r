@@ -1,7 +1,8 @@
-apiVersion: kubeadm.k8s.io/v1beta2
+apiVersion: kubeadm.k8s.io/v1beta3
 kind: ClusterConfiguration
 kubernetesVersion: stable
 clusterName: {{ kubernetes_cluster_name }}
+certificatesDir: /etc/kubernetes/pki
 {# apiServerCertSANs:
 - "kubernetes.la1r.com" #}
 controlPlaneEndpoint: "{{ ha_proxy_vir_ip }}:443"
@@ -11,17 +12,26 @@ kubelet:
     node-status-update-frequency: 4s
 #}
 apiServer:
-  extraArgs:
-    feature-gates: "RemoveSelfLink=false"
+  {# extraArgs:
+  #   feature-gates: "RemoveSelfLink=false"
+  #}
+  timeoutForControlPlane: 4m0s
 networking:
+    dnsDomain: cluster.local
     podSubnet: {{ kubernetes_pod_cidr }}
     serviceSubnet: {{ kubernetes_service_cidr }}
+
+scheduler: {}
 controllerManager:
   extraArgs:
     node-monitor-period: 5s
     node-monitor-grace-period: 20s
     pod-eviction-timeout: 20s
     resource-quota-sync-period: 1m
+etcd:
+  local:
+    dataDir: /var/lib/etcd
+
   {# 
 etcd:
   local: 

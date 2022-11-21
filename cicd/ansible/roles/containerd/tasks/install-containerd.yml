@@ -202,17 +202,21 @@
     executable: /bin/bash
 
 
-# - name: Install containerd / Enable kubelet cgroups
-#   become: yes
-#   lineinfile:
-#     dest: /etc/ssh/sshd_config
-#     regexp: '^cgroupDriver'
-#     line: "cgroupDriver: systemd"
-#     state: present
-#     backup: yes
+- name: Install containerd / install cni plugin
+  become: yes
+  shell: |
+    wget https://github.com/containernetworking/plugins/releases/download/v1.1.1/cni-plugins-linux-amd64-v1.1.1.tgz
+    mkdir -p /opt/cni/bin
+    tar Cxzvf /opt/cni/bin cni-plugins-linux-amd64-v1.1.1.tgz
+    systemctl restart containerd
+  args:
+    executable: /bin/bash
 
-
-# TODO: Automate: 
-# nano /etc/containerd/config.toml
-# [plugins."io.containerd.grpc.v1.cri".containerd.runti$
-#             SystemdCgroup = true
+- name: Install containerd / install config and enable cgroups
+  become: yes
+  shell: |
+    mkdir -p /etc/containerd/
+    containerd config default | tee /etc/containerd/config.toml
+    sed -i 's/SystemdCgroup \= false/SystemdCgroup \= true/g' /etc/containerd/config.toml
+  args:
+    executable: /bin/bash
