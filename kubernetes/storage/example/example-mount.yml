@@ -3,9 +3,9 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: example-mount
-  namespace: storage
+  namespace: local-path-storage
 spec:
-  storageClassName: hdd-na # SAME NAME AS THE STORAGECLASS
+  storageClassName: hdd-ha # SAME NAME AS THE STORAGECLASS
   accessModes:
     - ReadWriteOnce #  must be the same as PersistentVolume
   resources:
@@ -18,7 +18,7 @@ metadata:
   labels:
     app: example-mount
   name: example-mount
-  namespace: storage
+  namespace: local-path-storage
 spec:
   replicas: 1
   selector:

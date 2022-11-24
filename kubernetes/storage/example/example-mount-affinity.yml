@@ -3,7 +3,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: example-mount-affinity
-  namespace: storage
+  namespace: local-path-storage
 spec:
   storageClassName: hdd-na # SAME NAME AS THE STORAGECLASS
   accessModes:
@@ -18,7 +18,7 @@ metadata:
   labels:
     app: example-mount-affinity
   name: example-mount-affinity
-  namespace: storage
+  namespace: local-path-storage
 spec:
   replicas: 1
   selector:
