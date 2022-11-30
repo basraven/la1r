@@ -40,7 +40,9 @@ spec:
           - --entrypoints.metrics.Address=:8082
           - --entrypoints.web.Address=:80
           - --entrypoints.websecure.Address=:443
+          - --entrypoints.websecure.http.tls
           - --providers.kubernetesingress
+          - --providers.kubernetesingress.ingressendpoint.ip=192.168.6.2
           - --providers.kubernetescrd
           - --providers.kubernetescrd.labelselector=expose!=online
 ---

@@ -1,0 +1,65 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: etcd-single-node
+  namespace: dns
+  labels:
+    app: etcd-single-node
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: etcd-single-node
+  template:
+    metadata:
+      labels:
+        app: etcd-single-node
+    spec:
+      # volumes:
+      #     - name: etcd-pki
+      #       hostPath:
+      #         path: /etc/kubernetes/pki/etcd
+      #         type: Directory
+      containers:
+      - name: etcd-single-node
+        resources:
+        ports:
+        - name: etcd
+          containerPort: 2379
+        image: quay.io/coreos/etcd:latest
+        # volumeMounts:
+        #   - name: etcd-pki
+        #     mountPath: "/etc/kubernetes/pki/etcd2"
+        # command:
+        #   - "/usr/local/bin/etcd"
+        #   - "--initial-advertise-peer-urls"
+        #   - "http://${POD_IP}:2380"
+        #   - "--listen-peer-urls"
+        #   - "http://0.0.0.0:2380"
+        env:
+          - name: ETCD_LISTEN_CLIENT_URLS
+            value: "http://0.0.0.0:2379"
+          - name: ETCD_ADVERTISE_CLIENT_URLS
+            value: "http://0.0.0.0:2379"
+        #   - name: POD_IP
+        #     valueFrom:
+        #       fieldRef:
+        #         fieldPath: status.podIP
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: etcd-single-node
+  namespace: dns
+spec:
+  type: ClusterIP
+  selector:
+    app: etcd-single-node
+  ports:
+    - port: 2379
+      name: etcd
+    

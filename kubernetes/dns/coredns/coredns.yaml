@@ -1,0 +1,220 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coredns-config
+  namespace: dns
+data:
+  Corefile: |-
+    bas.:53 {
+        etcd {
+            path /skydns
+            endpoint http://etcd-single-node:2379
+        }
+        
+        # prometheus localhost:9153
+        # rewrite stop {
+        #   name regex (.*)\.bas {1}.service.bas
+        #   answer name (.*)\.service\.bas {1}.bas
+        # }
+        # forward . 127.0.0.1:8600
+        log
+        errors
+    }      
+    . {
+        forward . 8.8.8.8:53 8.8.4.4:53
+        cache
+    }    
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: coredns
+  namespace: dns
+spec:
+  selector:
+    matchLabels:
+      app: coredns
+  strategy:
+    type: Recreate
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: coredns
+    spec:
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: ScheduleAnyway
+        labelSelector:
+          matchLabels:
+            app: coredns
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 2
+            preference:
+              matchExpressions:
+              - key: la1r.workload/essential
+                operator: In
+                values:
+                - "true"
+      priorityClassName: essential
+      volumes:
+      - name: coredns-config-volume
+        configMap:
+          name: coredns-config
+          items:
+          - key: Corefile
+            path: Corefile
+          defaultMode: 0600
+      - name: data
+        emptyDir: {}
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Equal
+        effect: NoSchedule
+      containers:
+        - name: coredns
+          resources:
+          volumeMounts:
+          - name: coredns-config-volume
+            mountPath: /etc/coredns/Corefile
+            subPath: Corefile
+          image: coredns/coredns
+          args: [ "-conf", "/etc/coredns/Corefile" ]
+          ports:
+          - name: dns-tcp
+            containerPort: 53
+            protocol: TCP
+          - name: dns-udp
+            containerPort: 53
+            protocol: UDP
+          - name: metrics
+            containerPort: 9153
+            protocol: TCP
+          # livenessProbe:
+          #   httpGet:
+          #     path: /health
+          #     port: 8080
+          #     scheme: HTTP
+          #   initialDelaySeconds: 60
+          #   timeoutSeconds: 5
+          #   successThreshold: 1
+          #   failureThreshold: 5
+          # readinessProbe:
+          #   httpGet:
+          #     path: /ready
+          #     port: 8181
+          #     scheme: HTTP
+          #   initialDelaySeconds: 10
+          #   timeoutSeconds: 5
+          #   successThreshold: 1
+          #   failureThreshold: 5
+          # env:
+          # - name: POD_IP
+          #   valueFrom:
+          #     fieldRef:
+          #       fieldPath: status.podIP
+          # command: 
+          # - "sh"
+          # args: 
+          # - "-c"
+          # - |
+          #     apk --no-cache add coredns
+          #     # echo "nameserver 127.0.0.1:8600" > /etc/resolv.conf
+          #     coredns -k
+          # ports:
+          #   - containerPort: 53
+          #     name: dns
+
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: coredns-metrics
+  namespace: dns
+  labels:
+    name: coredns
+spec:
+  selector:
+    app: coredns
+  type: ClusterIP
+  ports:
+    - name: metrics
+      port: 9153
+      targetPort: 9153
+      protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: coredns-loadbalancer-service
+  namespace: dns
+spec:
+  loadBalancerIP: 192.168.6.90
+  type: LoadBalancer
+  ports:
+    - name: dns-udp
+      protocol: UDP
+      targetPort: dns-udp
+      port: 53
+  selector:
+    app: coredns
+
+# ---
+# apiVersion: cert-manager.io/v1
+# kind: Certificate
+# metadata:
+#   name: coredns-dns-bas
+#   namespace: monitoring
+# spec:
+#   issuerRef:
+#     name: la1r
+#     kind: ClusterIssuer
+#   secretName: dns-bas-tls
+#   commonName: dns.bas
+#   dnsNames:
+#   - dns.bas
+#   - www.dns.bas
+# ---
+# apiVersion: traefik.containo.us/v1alpha1
+# kind: IngressRoute
+# metadata:
+#   name: coredns-dns-non-tls
+#   namespace: monitoring
+# spec:
+#   entryPoints:
+#     - web
+#   routes:
+#   - match: Host(`dns.bas`) && PathPrefix(`/`)
+#     kind: Rule
+#     services:
+#     - name: coredns
+#       protocol: TCP
+#       port: 80
+#       targetPort: 8500
+#     middlewares:
+#     - name: http-redirect-to-https
+#       namespace: traefik
+# ---
+# apiVersion: traefik.containo.us/v1alpha1
+# kind: IngressRoute
+# metadata:
+#   name: coredns-dns-tls
+#   namespace: monitoring
+# spec:
+#   entryPoints:
+#     - websecure
+#   routes:
+#   - match: Host(`dns.bas`) && PathPrefix(`/`)
+#     kind: Rule
+#     services:
+#     - name: coredns
+#       protocol: TCP
+#       port: 80
+#       targetPort: 8500
+#   tls:
+#     secretName: dns-bas-tls

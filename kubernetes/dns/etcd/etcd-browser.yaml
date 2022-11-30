@@ -1,0 +1,48 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: etcd-browser
+  namespace: dns
+  labels:
+    app: etcd-browser
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: etcd-browser
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: etcd-browser
+    spec:
+      containers:
+      - name: etcd-browser
+        resources:
+        ports:
+        - name: http
+          containerPort: 80
+        image: rustyx/etcdv3-browser
+        env:
+          - name: HTTP_PORT
+            value: "80"
+          - name: EDITABLE
+            value: "1"
+          - name: ETCD
+            value: "etcd-single-node:2379"
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: etcd-browser
+  namespace: dns
+spec:
+  type: ClusterIP
+  selector:
+    app: etcd-browser
+  ports:
+    - port: 80
+      name: http
+    

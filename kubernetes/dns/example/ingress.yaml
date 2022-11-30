@@ -1,0 +1,42 @@
+---
+# apiVersion: cert-manager.io/v1
+# kind: Certificate
+# metadata:
+#   name: etcd-bas
+#   namespace: dns
+# spec:
+#   issuerRef:
+#     name: la1r
+#     kind: ClusterIssuer
+#   secretName: etcd-bas-tls
+#   commonName: etcd.bas
+#   dnsNames:
+#   - etcd.bas
+#   - www.etcd.bas
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: etcd
+  namespace: dns
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    # traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+    # external-dns.alpha.kubernetes.io/target: "192.168.6.1" # not needed with traefik setting
+spec:
+  # tls:
+  # - secretName: etcd-bas-tls
+  rules:
+  - host: etcd.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: etcd-browser
+            port:
+              number: 80
+
