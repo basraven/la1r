@@ -101,25 +101,25 @@ spec:
   selector:
     k8s-app: alertmanager
 
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: alertmanager-loadbalancer-service
-  namespace: monitoring
-spec:
-  loadBalancerIP: 192.168.6.66
-  type: LoadBalancer
-  ports:
-    - name: http
-      protocol: TCP
-      port: 80
-      targetPort: 9093
-    - name: alsohttp
-      port: 9093
-      targetPort: 9093
-  selector:
-    k8s-app: alertmanager
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: alertmanager-loadbalancer-service
+#   namespace: monitoring
+# spec:
+#   loadBalancerIP: 192.168.6.66
+#   type: LoadBalancer
+#   ports:
+#     - name: http
+#       protocol: TCP
+#       port: 80
+#       targetPort: 9093
+#     - name: alsohttp
+#       port: 9093
+#       targetPort: 9093
+#   selector:
+#     k8s-app: alertmanager
 
 ---
 apiVersion: cert-manager.io/v1
@@ -136,38 +136,53 @@ spec:
   dnsNames:
   - alerts.bas
   - www.alerts.bas
+
 ---
-apiVersion: traefik.containo.us/v1alpha1
-kind: IngressRoute
+apiVersion: networking.k8s.io/v1
+kind: Ingress
 metadata:
-  name: alertmanager-non-tls
+  name: alertmanager-https
   namespace: monitoring
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
 spec:
-  entryPoints:
-    - web
-  routes:
-  - match: Host(`alerts.bas`) && PathPrefix(`/`)
-    kind: Rule
-    services:
-    - name: alertmanager-service
-      port: 80
-    middlewares:
-    - name: http-redirect-to-https
-      namespace: traefik
----
-apiVersion: traefik.containo.us/v1alpha1
-kind: IngressRoute
-metadata:
-  name: alertmanager-tls
-  namespace: monitoring
-spec:
-  entryPoints:
-    - websecure
-  routes:
-  - match: Host(`alerts.bas`) && PathPrefix(`/`)
-    kind: Rule
-    services:
-    - name: alertmanager-service
-      port: 80
   tls:
-    secretName: alertmanager-bas-tls
+  - secretName: alertmanager-bas-tls
+  rules:
+  - host: alerts.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: alertmanager-service
+            port:
+              number: 80
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: alertmanager-http
+  namespace: monitoring
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    traefik.ingress.kubernetes.io/router.tls: "false"
+    traefik.ingress.kubernetes.io/router.entrypoints: "web"
+    traefik.ingress.kubernetes.io/router.middlewares: "traefik-http-redirect-to-https@kubernetescrd"
+spec:
+  rules:
+  - host: alerts.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: alertmanager-service
+            port:
+              number: 80
+

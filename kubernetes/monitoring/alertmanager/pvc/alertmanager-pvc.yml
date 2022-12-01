@@ -5,9 +5,9 @@ metadata:
   name: alertmanager-claim
   namespace: monitoring
 spec:
-  storageClassName: nfs-212
+  storageClassName: hdd-ha
   accessModes:
-    - ReadWriteMany
+    - ReadWriteOnce
   resources:
     requests:
       storage: 2Gi
