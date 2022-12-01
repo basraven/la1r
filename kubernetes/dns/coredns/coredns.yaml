@@ -9,7 +9,8 @@ data:
     bas.:53 {
         etcd {
             path /skydns
-            endpoint http://etcd-single-node:2379
+            endpoint https://192.168.5.3:2379
+            tls /etc/kubernetes/pki/etcd/server.crt /etc/kubernetes/pki/etcd/server.key /etc/kubernetes/pki/etcd/ca.crt
         }
         
         # prometheus localhost:9153
@@ -62,6 +63,10 @@ spec:
                 - "true"
       priorityClassName: essential
       volumes:
+      - name: etcd-pki
+        hostPath:
+          path: /etc/kubernetes/pki/etcd
+          type: Directory
       - name: coredns-config-volume
         configMap:
           name: coredns-config
@@ -79,10 +84,14 @@ spec:
         - name: coredns
           resources:
           volumeMounts:
+          - name: etcd-pki
+            mountPath: "/etc/kubernetes/pki/etcd"
+            readOnly: true
           - name: coredns-config-volume
             mountPath: /etc/coredns/Corefile
             subPath: Corefile
-          image: coredns/coredns
+          # image: coredns/coredns
+          image: registry.k8s.io/coredns/coredns:v1.9.3
           args: [ "-conf", "/etc/coredns/Corefile" ]
           ports:
           - name: dns-tcp

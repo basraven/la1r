@@ -18,6 +18,11 @@ spec:
       labels:
         app: etcd-browser
     spec:
+      # volumes:
+      #     - name: etcd-pki
+      #       hostPath:
+      #         path: /etc/kubernetes/pki/etcd
+      #         type: Directory
       containers:
       - name: etcd-browser
         resources:
@@ -25,6 +30,10 @@ spec:
         - name: http
           containerPort: 80
         image: rustyx/etcdv3-browser
+        # volumeMounts:
+        #   - name: etcd-pki
+        #     mountPath: "/etc/kubernetes/pki/etcd"
+        #     readOnly: true
         env:
           - name: HTTP_PORT
             value: "80"

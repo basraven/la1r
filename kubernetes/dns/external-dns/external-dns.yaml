@@ -51,8 +51,8 @@ metadata:
   name: external-dns
   namespace: dns
 spec:
-  #strategy:
-  #  type: Recreate
+  strategy:
+   type: Recreate
   selector:
     matchLabels:
       app: external-dns
@@ -63,29 +63,41 @@ spec:
     spec:
       serviceAccountName: external-dns
       
-      # volumes:
-      #     - name: kubeconfseb
-      #       secret:
-      #         secretName: kubeconfseb
+      volumes:
+      - name: etcd-pki
+        secret:
+          secretName: hostetcd
+          defaultMode: 0744
       containers:
       - name: external-dns
         resources:
         image: k8s.gcr.io/external-dns/external-dns:v0.13.1
         # command: ["sleep", "10000000"]
+        command: ["/bin/sh"]
         args:
-        - --source=ingress
-        - --source=service
-        # - --source=crd
-        - --always-publish-not-ready-addresses
-        - --provider=coredns
-        # - --server=192.168.5.100:443
-        # - --kubeconfig=/bas/config
-        - --log-level=debug # debug only
+        - -c
+        - >
+          ETCD_URLS=https://$(HOST_IP):2379
+          /bin/external-dns
+          --source=ingress
+          --source=service
+          --always-publish-not-ready-addresses
+          --provider=coredns
+          --log-level=debug
         # - --dry-run # debug only
         env:
-        - name: ETCD_URLS
-          value: "http://10.97.63.168:2379"
-        # volumeMounts:
-        #   - mountPath: "/bas"
-        #     name: kubeconfseb
-        #     readOnly: true
+        - name: HOST_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        # - name: ETCD_URLS
+        #   value: "https://192.168.5.3:2379"
+        - name: ETCD_CA_FILE
+          value: "/etc/kubernetes/pki/etcd/ca.crt"
+        - name: ETCD_CERT_FILE
+          value: "/etc/kubernetes/pki/etcd/server.crt"
+        - name: ETCD_KEY_FILE
+          value: "/etc/kubernetes/pki/etcd/server.key"
+        volumeMounts:
+          - name: etcd-pki
+            mountPath: "/etc/kubernetes/pki/etcd"

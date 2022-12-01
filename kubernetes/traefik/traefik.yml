@@ -117,38 +117,52 @@ spec:
   dnsNames:
   - traefik.bas
   - www.traefik.bas
+
 ---
-apiVersion: traefik.containo.us/v1alpha1
-kind: IngressRoute
+apiVersion: networking.k8s.io/v1
+kind: Ingress
 metadata:
-  name: traefik-non-tls
+  name: traefik-https
   namespace: traefik
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
 spec:
-  entryPoints:
-    - web
-  routes:
-  - match: Host(`traefik.bas`) && PathPrefix(`/`)
-    kind: Rule
-    services:
-    - name: traefik-ingress-service
-      port: 8080
-    middlewares:
-    - name: http-redirect-to-https
-      namespace: traefik
----
-apiVersion: traefik.containo.us/v1alpha1
-kind: IngressRoute
-metadata:
-  name: traefik-tls
-  namespace: traefik
-spec:
-  entryPoints:
-    - websecure
-  routes:
-  - match: Host(`traefik.bas`) && PathPrefix(`/`)
-    kind: Rule
-    services:
-    - name: traefik-ingress-service
-      port: 8080
   tls:
-    secretName: traefik-bas-tls
+  - secretName: traefik-bas-tls
+  rules:
+  - host: traefik.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: traefik-ingress-service
+            port:
+              number: 8080
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: traefik-http
+  namespace: traefik
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    traefik.ingress.kubernetes.io/router.tls: "false"
+    traefik.ingress.kubernetes.io/router.entrypoints: "web"
+    traefik.ingress.kubernetes.io/router.middlewares: "traefik-http-redirect-to-https@kubernetescrd"
+spec:
+  rules:
+  - host: traefik.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: traefik-ingress-service
+            port:
+              number: 8080
