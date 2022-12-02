@@ -15,6 +15,16 @@ spec:
         task: monitoring
         k8s-app: grafana
     spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 2
+            preference:
+              matchExpressions:
+              - key: la1r.workload/essential
+                operator: In
+                values:
+                - "true"
       containers:
       - name: grafana
         resources:

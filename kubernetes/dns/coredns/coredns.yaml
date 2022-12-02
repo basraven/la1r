@@ -38,7 +38,7 @@ spec:
       app: coredns
   strategy:
     type: Recreate
-  replicas: 2
+  replicas: 3
   template:
     metadata:
       labels:
@@ -80,6 +80,12 @@ spec:
       - key: node-role.kubernetes.io/master
         operator: Equal
         effect: NoSchedule
+      - effect: NoSchedule
+        key: node.kubernetes.io/unschedulable
+        operator: Exists
+      - effect: NoSchedule
+        operator: Exists
+    
       containers:
         - name: coredns
           resources:

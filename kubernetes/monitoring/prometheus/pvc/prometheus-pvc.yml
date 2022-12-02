@@ -6,8 +6,8 @@ metadata:
   namespace: monitoring
 spec:
   accessModes:
-    - ReadWriteMany
-  storageClassName: nfs-112
+    - ReadWriteOnce
+  storageClassName: hdd-na
   resources:
     requests:
-      storage: 20Gi
+      storage: 10Gi

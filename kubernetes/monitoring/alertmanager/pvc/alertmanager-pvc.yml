@@ -5,9 +5,9 @@ metadata:
   name: alertmanager-claim
   namespace: monitoring
 spec:
-  storageClassName: hdd-ha
+  storageClassName: hdd-na
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 2Gi
+      storage: 1Gi

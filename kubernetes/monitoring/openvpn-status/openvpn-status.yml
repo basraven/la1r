@@ -37,6 +37,16 @@ spec:
         app: openvpn-status
         k8s-app: openvpn-status
     spec:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 2
+            preference:
+              matchExpressions:
+              - key: la1r.workload/essential
+                operator: In
+                values:
+                - "true"
       containers:
       - name: openvpn-status
         ports:
@@ -90,38 +100,53 @@ spec:
   dnsNames:
   - vpn.bas
   - www.vpn.bas
+
 ---
-apiVersion: traefik.containo.us/v1alpha1
-kind: IngressRoute
+apiVersion: networking.k8s.io/v1
+kind: Ingress
 metadata:
-  name: vpn-non-tls
+  name: vpn-https
   namespace: monitoring
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
 spec:
-  entryPoints:
-    - web
-  routes:
-  - match: Host(`vpn.bas`) && PathPrefix(`/`)
-    kind: Rule
-    services:
-    - name: openvpn-status-service
-      port: 80
-    middlewares:
-    - name: http-redirect-to-https
-      namespace: traefik
----
-apiVersion: traefik.containo.us/v1alpha1
-kind: IngressRoute
-metadata:
-  name: vpn-tls
-  namespace: monitoring
-spec:
-  entryPoints:
-    - websecure
-  routes:
-  - match: Host(`vpn.bas`) && PathPrefix(`/`)
-    kind: Rule
-    services:
-    - name: openvpn-status-service
-      port: 80
   tls:
-    secretName: vpn-bas-tls
+  - secretName: vpn-bas-tls
+  rules:
+  - host: vpn.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: openvpn-status-service
+            port:
+              number: 80
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: vpn-http
+  namespace: monitoring
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    traefik.ingress.kubernetes.io/router.tls: "false"
+    traefik.ingress.kubernetes.io/router.entrypoints: "web"
+    traefik.ingress.kubernetes.io/router.middlewares: "traefik-http-redirect-to-https@kubernetescrd"
+spec:
+  rules:
+  - host: vpn.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: openvpn-status-service
+            port:
+              number: 80
+

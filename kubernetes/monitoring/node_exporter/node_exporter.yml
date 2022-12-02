@@ -158,9 +158,9 @@ spec:
           mountPropagation: HostToContainer
           name: root
           readOnly: true      
-        - mountPath: /var/run/dbus/system_bus_socket
-          name: system-dbus-socket #systemd # FIXME: not working
-          readOnly: true
+        # - mountPath: /var/run/dbus/system_bus_socket
+        #   name: system-dbus-socket #systemd # FIXME: not working
+        #   readOnly: true
         - name: local-metrics-dir
           mountPath: /output
         ports:
@@ -177,9 +177,9 @@ spec:
       - hostPath:
           path: /
         name: root
-      - hostPath: 
-          path: /var/run/dbus/system_bus_socket
-        name: system-dbus-socket #systemd # FIXME: not working
+      # - hostPath: 
+      #     path: /var/run/dbus/system_bus_socket
+      #   name: system-dbus-socket #systemd # FIXME: not working
       - name: local-metrics-dir
         hostPath:
           # Ensure the file directory is created.

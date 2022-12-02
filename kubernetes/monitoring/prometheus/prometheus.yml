@@ -15,39 +15,34 @@ data:
       honor_labels: true
       static_configs:
       - targets: ['prometheus-push-gateway.monitoring:80']
-    # TODO: Fix somehow
-    # - job_name: 'consulcoredns'
-    #   metrics_path: /metrics
+    # - job_name: 'blackbox'
+    #   metrics_path: /probe
+    #   params:
+    #     module: [icmp_ipv4]
     #   static_configs:
-    #   - targets: ['consul-coredns-metrics.dns.svc.cluster.local:9153']
-    - job_name: 'blackbox'
-      metrics_path: /probe
-      params:
-        module: [icmp_ipv4]
-      static_configs:
-        - targets: [ '192.168.3.179' ]
-          labels:
-              nodeName: 'cam-achtertuin'
-              jobscope: 'node'
-        - targets: [ '192.168.3.168' ]
-          labels:
-              nodeName: 'cam-voortuin'
-              jobscope: 'node'
-        - targets: [ '192.168.6.64' ]
-          labels:
-              nodeName: 'oven'
-              jobscope: 'node'
-        - targets: [ '192.168.1.37' ]
-          labels:
-              nodeName: 'deurbel'
-              jobscope: 'node'
-      relabel_configs:
-        - source_labels: [__address__]
-          target_label: __param_target
-        - source_labels: [__param_target]
-          target_label: instance
-        - target_label: __address__
-          replacement: prometheus-blackbox-exporter:80  # This is your blackbox exporter.
+    #     - targets: [ '192.168.3.179' ]
+    #       labels:
+    #           nodeName: 'cam-achtertuin'
+    #           jobscope: 'node'
+    #     - targets: [ '192.168.3.168' ]
+    #       labels:
+    #           nodeName: 'cam-voortuin'
+    #           jobscope: 'node'
+    #     - targets: [ '192.168.6.64' ]
+    #       labels:
+    #           nodeName: 'oven'
+    #           jobscope: 'node'
+    #     - targets: [ '192.168.1.37' ]
+    #       labels:
+    #           nodeName: 'deurbel'
+    #           jobscope: 'node'
+    #   relabel_configs:
+    #     - source_labels: [__address__]
+    #       target_label: __param_target
+    #     - source_labels: [__param_target]
+    #       target_label: instance
+    #     - target_label: __address__
+    #       replacement: prometheus-blackbox-exporter:80  # This is your blackbox exporter.
     - job_name: 'targetsjson'
       file_sd_configs:
       - files:
@@ -107,6 +102,17 @@ data:
       },
       {
         "targets": [
+          "192.168.5.2:9100"
+        ],
+        "labels": {
+          "targetname": "stephanie",
+          "nodeName": "stephanie",
+          "jobscope": "node",
+          "nodetype": "cluster-node"
+        }
+      },
+      {
+        "targets": [
           "192.168.5.3:9100"
         ],
         "labels": {
@@ -114,50 +120,6 @@ data:
           "nodeName": "jay-c",
           "jobscope": "node",
           "nodetype": "cluster-node"
-        }
-      },
-      {
-        "targets": [
-          "10.8.0.4:9100"
-        ],
-        "labels": {
-          "targetname": "rapsi2",
-          "nodeName": "rapsi2",
-          "jobscope": "node",
-          "nodetype": "cluster-node"
-        }
-      },
-      {
-        "targets": [
-          "192.168.9.71:9100"
-        ],
-        "labels": {
-          "targetname": "ali-bel",
-          "nodeName": "ali-bel",
-          "jobscope": "node",
-          "nodetype": "peripheral-node"
-        }
-      },
-      {
-        "targets": [
-          "192.168.15.243:9100"
-        ],
-        "labels": {
-          "targetname": "kodi-e",
-          "nodeName": "kodi-e",
-          "jobscope": "node",
-          "nodetype": "peripheral-node"
-        }
-      },
-      {
-        "targets": [
-          "192.168.0.64:80"
-        ],
-        "labels": {
-          "targetname": "kirby",
-          "nodeName": "kirby",
-          "jobscope": "node",
-          "nodetype": "peripheral-node"
         }
       },
       {
@@ -175,15 +137,6 @@ data:
         ],
         "labels": {
           "targetname": "traefik-online",
-          "jobscope": "application"
-        }
-      },
-      {
-        "targets": [
-          "consul-exporter:9107"
-        ],
-        "labels": {
-          "targetname": "consul-exporter",
           "jobscope": "application"
         }
       },
@@ -476,42 +429,16 @@ data:
         annotations:
           summary: "Kubernetes DaemonSet misscheduled (instance {{ $labels.instance }})"
           description: "Some DaemonSet Pods are running where they are not supposed to run\n  VALUE = {{ $value }}\n  LABELS: {{ $labels }}"
-    - name: consul-exporter
-      rules:
-      - alert: Consul agent is not healthy
-        expr: consul_health_node_status{status="critical"} == 1
-        for: 1m
-        labels:
-          severity: critical
-        annotations:
-          title: Consul agent is down
-          description: Consul agent is not healthy on {{ $labels.node }}.
-      - alert: Consul cluster is degraded
-        expr: min(consul_raft_peers) < 3
-        for: 1m
-        labels:
-          severity: critical
-        annotations:
-          title: Consul cluster is degraded
-          description: Consul cluster has {{ $value }} servers alive. This may lead to cluster break.
-      - alert: Consul service count too low
-        expr: consul_catalog_services < 2
-        for: 1m
-        labels:
-          severity: warning
-        annotations:
-          title: Consul agent is down
-          description: Consul agent is not healthy on {{ $labels.node }}.
-    - name: camera
-      rules:
-      - alert: Camera is triggered
-        expr: camera_trigger == 1
-        for: 3s
-        labels:
-          severity: info
-        annotations:
-          title: Camera Triggered
-          description: The Camera at {{ $labels.instance }} is triggered
+    # - name: camera
+    #   rules:
+    #   - alert: Camera is triggered
+    #     expr: camera_trigger == 1
+    #     for: 3s
+    #     labels:
+    #       severity: info
+    #     annotations:
+    #       title: Camera Triggered
+    #       description: The Camera at {{ $labels.instance }} is triggered
       
 ---
 apiVersion: apps/v1
@@ -524,6 +451,8 @@ spec:
   selector:
     matchLabels:
       k8s-app: prometheus
+  strategy:
+    type: Recreate
   template:
     metadata:
       labels:
@@ -531,13 +460,22 @@ spec:
         k8s-app: prometheus
     spec:
       affinity:
+        # nodeAffinity:
+        #   requiredDuringSchedulingIgnoredDuringExecution :
+        #     nodeSelectorTerms:
+        #     - matchExpressions:
+        #       - key: externalvpn
+        #         operator: In
+        #         values: [ "true" ]
         nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution :
-            nodeSelectorTerms:
-            - matchExpressions:
-              - key: externalvpn
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 2
+            preference:
+              matchExpressions:
+              - key: la1r.workload/essential
                 operator: In
-                values: [ "true" ]
+                values:
+                - "true"
       containers:
       - name: prometheus
         resources:
@@ -608,38 +546,53 @@ spec:
   dnsNames:
   - prometheus.bas
   - www.prometheus.bas
+
 ---
-apiVersion: traefik.containo.us/v1alpha1
-kind: IngressRoute
+apiVersion: networking.k8s.io/v1
+kind: Ingress
 metadata:
-  name: prometheus-non-tls
+  name: prometheus-https
   namespace: monitoring
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
 spec:
-  entryPoints:
-    - web
-  routes:
-  - match: Host(`prometheus.bas`) && PathPrefix(`/`)
-    kind: Rule
-    services:
-    - name: prometheus
-      port: 80
-    middlewares:
-    - name: http-redirect-to-https
-      namespace: traefik
----
-apiVersion: traefik.containo.us/v1alpha1
-kind: IngressRoute
-metadata:
-  name: prometheus-tls
-  namespace: monitoring
-spec:
-  entryPoints:
-    - websecure
-  routes:
-  - match: Host(`prometheus.bas`) && PathPrefix(`/`)
-    kind: Rule
-    services:
-    - name: prometheus
-      port: 80
   tls:
-    secretName: prometheus-bas-tls
+  - secretName: prometheus-bas-tls
+  rules:
+  - host: prometheus.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: prometheus
+            port:
+              number: 80
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: prometheus-http
+  namespace: monitoring
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    traefik.ingress.kubernetes.io/router.tls: "false"
+    traefik.ingress.kubernetes.io/router.entrypoints: "web"
+    traefik.ingress.kubernetes.io/router.middlewares: "traefik-http-redirect-to-https@kubernetescrd"
+spec:
+  rules:
+  - host: prometheus.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: prometheus
+            port:
+              number: 80
+
