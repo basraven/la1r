@@ -14,7 +14,7 @@ data:
     - job_name: 'pushgateway'
       honor_labels: true
       static_configs:
-      - targets: ['prometheus-push-gateway.monitoring:80']
+      - targets: ['prometheus-push-gateway.monitoring:8080']
     # - job_name: 'blackbox'
     #   metrics_path: /probe
     #   params:
@@ -142,7 +142,7 @@ data:
       },
       {
         "targets": [
-          "kube-state-metrics.kube-system:8080"
+          "kube-state-metrics:8080"
         ],
         "labels": {
           "targetname": "kube-state-metrics",

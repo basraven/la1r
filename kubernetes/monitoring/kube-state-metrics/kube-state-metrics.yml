@@ -9,7 +9,7 @@ metadata:
     app.kubernetes.io/name: kube-state-metrics
     app.kubernetes.io/version: 2.7.0
   name: kube-state-metrics
-  namespace: kube-system
+  namespace: monitoring
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -155,7 +155,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: kube-state-metrics
-  namespace: kube-system
+  namespace: monitoring
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -165,7 +165,7 @@ metadata:
     app.kubernetes.io/name: kube-state-metrics
     app.kubernetes.io/version: 2.7.0
   name: kube-state-metrics
-  namespace: kube-system
+  namespace: monitoring
 spec:
   replicas: 1
   selector:
@@ -228,9 +228,9 @@ metadata:
     app.kubernetes.io/name: kube-state-metrics
     app.kubernetes.io/version: 2.7.0
   name: kube-state-metrics
-  namespace: kube-system
+  namespace: monitoring
 spec:
-  clusterIP: None
+  type: ClusterIP
   ports:
   - name: http-metrics
     port: 8080
