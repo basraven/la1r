@@ -1,7 +1,7 @@
 ---
 - hosts: jay-c
   roles:
-  - define-os
+  - define-os # Should always run!
   # - users
   # - ssh
   # - hostname
