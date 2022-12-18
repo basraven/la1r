@@ -13,4 +13,4 @@ spec:
   accessModes:
   - ReadWriteOnce
   hostPath:
-    path: "/mnt/hdd/ha/nextcloud/database" # path to directory
+    path: "/mnt/ssd/ha/nextcloud/database" # path to directory

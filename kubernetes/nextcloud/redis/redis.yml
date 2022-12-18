@@ -26,21 +26,13 @@ spec:
                 operator: In
                 values:
                 - "true"
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            - labelSelector:
-                matchExpressions:
-                  - key: app
-                    operator: In
-                    values:
-                      - redis
-              topologyKey: kubernetes.io/hostname
       volumes:
       - name: redis
         persistentVolumeClaim:
           claimName: redis-claim
       containers:
       - name: redis
+        resources:
         image: redis:alpine
         ports:
         - containerPort: 6379        

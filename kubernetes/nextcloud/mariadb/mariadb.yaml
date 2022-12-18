@@ -38,6 +38,7 @@ data:
     innodb_large_prefix=on
     innodb_file_format=barracuda
     innodb_file_per_table=1
+    innodb-read-only-compressed=OFF
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -58,6 +59,16 @@ spec:
       labels:
         app: mariadb
     spec:
+      # NonEssential
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: la1r.workload/nonessential
+                operator: In
+                values:
+                - "true"
       volumes:
       - name: mycnf-volume
         configMap:
@@ -70,7 +81,7 @@ spec:
           claimName: nextcloud-mariadb-claim
       containers:
       - name: mariadb
-        image: mariadb
+        image: mariadb:10.6
         args: ["--transaction-isolation=READ-COMMITTED", "--binlog-format=ROW", "--log-bin=mysqld-bin"]
         ports:
         - containerPort: 3306
@@ -85,6 +96,8 @@ spec:
             secretKeyRef:
               name: mariadbsecret
               key: MYSQL_ROOT_PASSWORD
+        - name: MYSQL_ROOT_HOST
+          value: mariadb
         - name: MYSQL_DATABASE
           value: nextcloud
         - name: MYSQL_USER
@@ -117,4 +130,3 @@ spec:
     port: 3306
   selector:
     app: mariadb
-  type: ClusterIP

@@ -12,17 +12,17 @@ data:
     echo "[Raven] Tuning the container..."
     echo "alias www-data='su -l www-data -s /bin/bash'" >> ~/.bashrc
     #echo ''alias scanall='su -l www-data -s /bin/bash -c "PHP_MEMORY_LIMIT=512M /var/www/html/occ files:scan --all"' '' >> ~/.bashrc
-    apt-get update
-    apt-get install cron -y
-    echo "" >> /etc/crontab
-    echo "*/15  *  *  *  * www-data php -f /var/www/html/cron.php" >> /etc/crontab
-    echo "*/10  *  *  *  * www-data /var/www/html/occ preview:pre-generate" >> /etc/crontab
+    #apt-get update
+    # apt-get install cron -y
+    # echo "" >> /etc/crontab
+    # echo "*/15  *  *  *  * www-data php -f /var/www/html/cron.php" >> /etc/crontab
+    # echo "*/10  *  *  *  * www-data /var/www/html/occ preview:pre-generate" >> /etc/crontab
 
     # TODO: Run this:
     # /var/www/html/occ files:scan --all
     # /var/www/html/occ preview:generate-all
     # /var/www/html/occ twofactorauth:enforce --on
-    service cron start
+    # service cron start
     a2enmod http2
     a2enmod ssl
     echo "Protocols h2 h2c http/1.1" >> /etc/apache2/apache2.conf
@@ -80,9 +80,10 @@ spec:
         configMap:
           name: nextcloud-config
           items:
-          - key: apcu.config.php
-            path: apcu.config.php
+          - key: apcu.config
+            path: apcu.config
           defaultMode: 0744
+      
       - name: nextcloud-web
         persistentVolumeClaim:
           claimName: nextcloud-web-claim
@@ -91,23 +92,25 @@ spec:
           claimName: nextcloud-data-claim
       containers:
       - name: nextcloud
-        image: nextcloud:stable-apache
-        command:
-          - "/set-nextcloud/set-nextcloud.sh"
+        image: nextcloud:24.0.2-apache
+        # command:
+        #   - "/set-nextcloud/set-nextcloud.sh"
         ports:
         - containerPort: 80
         resources:
         env:
+        - name: REDIS_HOST
+          value: "10.101.74.19"
         - name: OVERWRITECLIURL
           value: "https://nextcloud.bas"
         - name: OVERWRITEPROTOCOL
           value: "https"
-        - name: NEXTCLOUD_TABLE_PREFIX
-          value: ""
+        # - name: NEXTCLOUD_TABLE_PREFIX
+        #   value: ""
         - name: NEXTCLOUD_DATA_DIR
           value: "/var/www/html/data"
         - name: MYSQL_HOST
-          value: "mariadb"
+          value: "10.96.137.26"
         - name: MYSQL_DATABASE
           value: "nextcloud"
         - name: MYSQL_USER
@@ -120,23 +123,36 @@ spec:
             secretKeyRef:
               name: mariadbsecret
               key: MYSQL_PASSWORD
-        volumeMounts:
-          - name: nextcloud-web
-            mountPath: "/var/www/html"
-          - name: nextcloud-data
-            mountPath: "/var/www/html/data"
-          - name: set-nextcloud-volume
-            mountPath: /set-nextcloud
+        - name: NEXTCLOUD_ADMIN_USER
+          value: ""
+          # valueFrom:
+          #   secretKeyRef:
+          #     name: mariadbsecret
+          #     key: MYSQL_USER
+        - name: NEXTCLOUD_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mariadbsecret
+              key: MYSQL_PASSWORD
+        - name: NEXTCLOUD_TRUSTED_DOMAINS 
+          value: "cloud.bas" 
+        # volumeMounts:
+          # - name: nextcloud-web
+          #   mountPath: "/var/www/html"
+          # - name: nextcloud-data
+          #   mountPath: "/var/www/html/data"
+          # - name: set-nextcloud-volume
+          #   mountPath: /set-nextcloud
           # - name: apcu-config-volume
           #   mountPath: /var/www/html/config
-          #   subPath: apcu.config.php
+          #   subPath: apcu.config
 ---
 apiVersion: v1
 kind: Service
 metadata:
   labels:
     app: nextcloud
-  name: nextcloud-service
+  name: nextcloud
   namespace: nextcloud
 spec:
   ports:
@@ -145,27 +161,6 @@ spec:
   selector:
     app: nextcloud
   type: ClusterIP
-# ---
-# apiVersion: networking.k8s.io/v1
-# kind: Ingress
-# metadata:
-#   name: nextcloudingress
-#   namespace: nextcloud
-# spec:
-#   rules:
-#   - host: cloud.bas
-#     http:
-#       paths:
-#       - path: /
-#         pathType: Prefix
-#         backend:
-#           service:
-#             name: nextcloud-service
-#             port:
-#               number: 80
-
-
-
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
@@ -182,37 +177,51 @@ spec:
   - cloud.bas
   - www.cloud.bas
 ---
-apiVersion: traefik.containo.us/v1alpha1
-kind: IngressRoute
+apiVersion: networking.k8s.io/v1
+kind: Ingress
 metadata:
-  name: nextcloud-non-tls
+  name: nextcloud-https
   namespace: nextcloud
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
 spec:
-  entryPoints:
-    - web
-  routes:
-  - match: Host(`cloud.bas`) && PathPrefix(`/`)
-    kind: Rule
-    services:
-    - name: nextcloud-service
-      port: 80
-    middlewares:
-    - name: http-redirect-to-https
-      namespace: traefik
----
-apiVersion: traefik.containo.us/v1alpha1
-kind: IngressRoute
-metadata:
-  name: nextcloud-tls
-  namespace: nextcloud
-spec:
-  entryPoints:
-    - websecure
-  routes:
-  - match: Host(`cloud.bas`) && PathPrefix(`/`)
-    kind: Rule
-    services:
-    - name: nextcloud-service
-      port: 80
   tls:
-    secretName: nextcloud-bas-tls
+  - secretName: nextcloud-bas-tls
+  rules:
+  - host: cloud.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: nextcloud
+            port:
+              number: 80
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nextcloud-http
+  namespace: nextcloud
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    traefik.ingress.kubernetes.io/router.tls: "false"
+    traefik.ingress.kubernetes.io/router.entrypoints: "web"
+    traefik.ingress.kubernetes.io/router.middlewares: "traefik-http-redirect-to-https@kubernetescrd"
+spec:
+  rules:
+  - host: cloud.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: nextcloud
+            port:
+              number: 80
+

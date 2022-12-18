@@ -13,7 +13,7 @@ data:
             tls /etc/kubernetes/pki/etcd/server.crt /etc/kubernetes/pki/etcd/server.key /etc/kubernetes/pki/etcd/ca.crt
         }
         
-        # prometheus localhost:9153
+        prometheus :9153
         # rewrite stop {
         #   name regex (.*)\.bas {1}.service.bas
         #   answer name (.*)\.service\.bas {1}.bas
@@ -21,6 +21,10 @@ data:
         # forward . 127.0.0.1:8600
         log
         errors
+        health {
+           lameduck 5s
+        }
+        ready
     }      
     . {
         forward . 8.8.8.8:53 8.8.4.4:53
@@ -104,24 +108,24 @@ spec:
           - name: metrics
             containerPort: 9153
             protocol: TCP
-          # livenessProbe:
-          #   httpGet:
-          #     path: /health
-          #     port: 8080
-          #     scheme: HTTP
-          #   initialDelaySeconds: 60
-          #   timeoutSeconds: 5
-          #   successThreshold: 1
-          #   failureThreshold: 5
-          # readinessProbe:
-          #   httpGet:
-          #     path: /ready
-          #     port: 8181
-          #     scheme: HTTP
-          #   initialDelaySeconds: 10
-          #   timeoutSeconds: 5
-          #   successThreshold: 1
-          #   failureThreshold: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8181
+              scheme: HTTP
+            initialDelaySeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 5
           # env:
           # - name: POD_IP
           #   valueFrom:
@@ -173,58 +177,3 @@ spec:
       port: 53
   selector:
     app: coredns
-
-# ---
-# apiVersion: cert-manager.io/v1
-# kind: Certificate
-# metadata:
-#   name: coredns-dns-bas
-#   namespace: monitoring
-# spec:
-#   issuerRef:
-#     name: la1r
-#     kind: ClusterIssuer
-#   secretName: dns-bas-tls
-#   commonName: dns.bas
-#   dnsNames:
-#   - dns.bas
-#   - www.dns.bas
-# ---
-# apiVersion: traefik.containo.us/v1alpha1
-# kind: IngressRoute
-# metadata:
-#   name: coredns-dns-non-tls
-#   namespace: monitoring
-# spec:
-#   entryPoints:
-#     - web
-#   routes:
-#   - match: Host(`dns.bas`) && PathPrefix(`/`)
-#     kind: Rule
-#     services:
-#     - name: coredns
-#       protocol: TCP
-#       port: 80
-#       targetPort: 8500
-#     middlewares:
-#     - name: http-redirect-to-https
-#       namespace: traefik
-# ---
-# apiVersion: traefik.containo.us/v1alpha1
-# kind: IngressRoute
-# metadata:
-#   name: coredns-dns-tls
-#   namespace: monitoring
-# spec:
-#   entryPoints:
-#     - websecure
-#   routes:
-#   - match: Host(`dns.bas`) && PathPrefix(`/`)
-#     kind: Rule
-#     services:
-#     - name: coredns
-#       protocol: TCP
-#       port: 80
-#       targetPort: 8500
-#   tls:
-#     secretName: dns-bas-tls

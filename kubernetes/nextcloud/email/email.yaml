@@ -29,6 +29,7 @@ spec:
     spec:    
       containers:
       - name: email-sender
+        resources:
         image: namshi/smtp
         ports:
         - name: smtp
@@ -42,19 +43,19 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: email
+  name: nextcloud-email
   namespace: nextcloud
   labels:
-    app: email
+    app: nextcloud-email
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: email
+      app: nextcloud-email
   template:
     metadata:
       labels:
-        app: email
+        app: nextcloud-email
     spec:    
       volumes:
       # - name: email-volume
@@ -121,8 +122,8 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: email
-  name: email
+    app: nextcloud-email
+  name: nextcloud-email
   namespace: nextcloud
 spec:
   ports:
@@ -133,7 +134,7 @@ spec:
     targetPort: 80
     port: 80
   selector:
-    app: email
+    app: nextcloud-email
   type: ClusterIP
 
 ---
@@ -152,37 +153,50 @@ spec:
   - nextcloud-email.bas
   - www.nextcloud-email.bas
 ---
-apiVersion: traefik.containo.us/v1alpha1
-kind: IngressRoute
+apiVersion: networking.k8s.io/v1
+kind: Ingress
 metadata:
-  name: nextcloud-email-non-tls
+  name: nextcloud-email-https
   namespace: nextcloud
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
 spec:
-  entryPoints:
-    - web
-  routes:
-  - match: Host(`nextcloud-email.bas`) && PathPrefix(`/`)
-    kind: Rule
-    services:
-    - name: email
-      port: 80
-    middlewares:
-    - name: http-redirect-to-https
-      namespace: traefik
----
-apiVersion: traefik.containo.us/v1alpha1
-kind: IngressRoute
-metadata:
-  name: nextcloud-email-tls
-  namespace: nextcloud
-spec:
-  entryPoints:
-    - websecure
-  routes:
-  - match: Host(`nextcloud-email.bas`) && PathPrefix(`/`)
-    kind: Rule
-    services:
-    - name: email
-      port: 80
   tls:
-    secretName: nextcloud-email-bas-tls
+  - secretName: nextcloud-email-bas-tls
+  rules:
+  - host: nextcloud-email.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: nextcloud-email
+            port:
+              number: 80
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nextcloud-email-http
+  namespace: nextcloud
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    traefik.ingress.kubernetes.io/router.tls: "false"
+    traefik.ingress.kubernetes.io/router.entrypoints: "web"
+    traefik.ingress.kubernetes.io/router.middlewares: "traefik-http-redirect-to-https@kubernetescrd"
+spec:
+  rules:
+  - host: nextcloud-email.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: nextcloud-email
+            port:
+              number: 80
