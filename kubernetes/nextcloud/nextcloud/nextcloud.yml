@@ -100,7 +100,7 @@ spec:
         resources:
         env:
         - name: REDIS_HOST
-          value: "10.101.74.19"
+          value: "redis.nextcloud.svc.cluster.local"
         - name: OVERWRITECLIURL
           value: "https://nextcloud.bas"
         - name: OVERWRITEPROTOCOL
@@ -110,7 +110,7 @@ spec:
         - name: NEXTCLOUD_DATA_DIR
           value: "/var/www/html/data"
         - name: MYSQL_HOST
-          value: "10.96.137.26"
+          value: "mariadb.nextcloud.svc.cluster.local"
         - name: MYSQL_DATABASE
           value: "nextcloud"
         - name: MYSQL_USER
@@ -124,7 +124,7 @@ spec:
               name: mariadbsecret
               key: MYSQL_PASSWORD
         - name: NEXTCLOUD_ADMIN_USER
-          value: ""
+          value: "basraven"
           # valueFrom:
           #   secretKeyRef:
           #     name: mariadbsecret
@@ -136,11 +136,11 @@ spec:
               key: MYSQL_PASSWORD
         - name: NEXTCLOUD_TRUSTED_DOMAINS 
           value: "cloud.bas" 
-        # volumeMounts:
-          # - name: nextcloud-web
-          #   mountPath: "/var/www/html"
-          # - name: nextcloud-data
-          #   mountPath: "/var/www/html/data"
+        volumeMounts:
+          - name: nextcloud-web
+            mountPath: "/var/www/html"
+          - name: nextcloud-data
+            mountPath: "/var/www/html/data"
           # - name: set-nextcloud-volume
           #   mountPath: /set-nextcloud
           # - name: apcu-config-volume
