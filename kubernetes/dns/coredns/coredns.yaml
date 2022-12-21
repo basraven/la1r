@@ -42,7 +42,7 @@ spec:
       app: coredns
   strategy:
     type: Recreate
-  replicas: 3
+  replicas: 2
   template:
     metadata:
       labels:

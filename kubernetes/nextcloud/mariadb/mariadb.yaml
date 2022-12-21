@@ -86,10 +86,10 @@ spec:
         ports:
         - containerPort: 3306
         resources:
-          # requests:
-          #   memory: "1024Mi"
-          # limits:
-          #   memory: "2048Mi"
+          requests:
+            memory: "128Mi"
+          limits:
+            memory: "1024Mi"
         env:
         - name: MYSQL_ROOT_PASSWORD
           valueFrom:
