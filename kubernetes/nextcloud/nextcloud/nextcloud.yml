@@ -98,6 +98,12 @@ spec:
         ports:
         - containerPort: 80
         resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1024Mi"
+            cpu: "1000m"
         env:
         - name: REDIS_HOST
           value: "redis.nextcloud.svc.cluster.local"

@@ -2,13 +2,10 @@
 - hosts: stephanie 
   roles:
   - define-os # Should always run!
-  # - hostname
-  # - users
-  # - ssh
-  # - avahi
+  - hostname
+  - users
+  - ssh
+  - avahi
   - haproxy
-  # - containerd
-  # - kubernetes
-  
-  # - prometheus_node_exporter
-  # - reboot
+  - containerd
+  - kubernetes

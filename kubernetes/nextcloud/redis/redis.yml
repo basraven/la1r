@@ -33,7 +33,7 @@ spec:
       containers:
       - name: redis
         resources:
-        image: redis:alpine
+        image: redis:7-alpine
         ports:
         - containerPort: 6379        
         volumeMounts:

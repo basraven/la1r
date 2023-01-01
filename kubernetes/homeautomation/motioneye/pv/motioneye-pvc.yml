@@ -26,4 +26,4 @@ spec:
       contenttype: "camera-data"
   resources:
     requests:
-      storage: 200Gi
+      storage: 50Gi
