@@ -1,0 +1,7 @@
+# ---
+# - name: Forcestart daemon / deploy forcestart.sh
+#   become: yes
+#   template:
+#     src: forcestart.sh.j2
+#     dest: /etc/forcestart/forcestart.sh
+#     mode: "0755"

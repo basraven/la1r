@@ -1,0 +1,6 @@
+# This doesn't work you, just copy-past the template contets to the crontab for now
+
+---
+- include: install-forcestart-daemon.yml
+  tags:
+    # - forcestartdaemon
