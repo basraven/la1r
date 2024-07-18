@@ -3,7 +3,7 @@
 baseURL: https://la1r.com/
 title: La1r
 theme: book
-disableKinds: ["taxonomy", "taxonomyTerm"]
+# disableKinds: ["taxonomy", "taxonomyTerm"]
 publishDir: ../../docs
 
 # Book configuration
