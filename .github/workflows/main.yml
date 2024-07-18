@@ -61,10 +61,15 @@ jobs:
             --gc \
             --minify \
             --baseURL "${{ steps.pages.outputs.base_url }}/"          
+      - name: lsenv
+        run: |
+          ls -altr
+          cd documentation/src
+          ls -altr
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: /documentation/src/docs
+          path: documentation/src/docs
 
   # Deployment job
   deploy:
