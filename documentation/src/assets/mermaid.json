@@ -1,0 +1,9 @@
+{
+  "flowchart": {
+    "useMaxWidth":true
+  },
+  "theme": "base",
+  "themeVariables": {
+    "lineColor": "#ff7f50"
+  }
+}

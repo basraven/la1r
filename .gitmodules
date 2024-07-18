@@ -1,3 +1,6 @@
-[submodule "documentation/src/themes/book"]
-	path = documentation/src/themes/book
+[submodule "documentation/la1r/themes/hugo-book"]
+	path = documentation/la1r/themes/hugo-book
+	url = https://github.com/alex-shpak/hugo-book
+[submodule "documentation/src/themes/hugo-book"]
+	path = documentation/src/themes/hugo-book
 	url = https://github.com/alex-shpak/hugo-book
