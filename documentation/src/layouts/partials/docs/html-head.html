@@ -17,8 +17,6 @@
 <script defer src="{{ $searchJS.RelPermalink }}" integrity="{{ $searchJS.Data.Integrity }}"></script>
 {{ end }}
 
-<!-- {{- template "_internal/google_analytics_async.html" . -}} -->
-
 <!-- RSS -->
 {{ with .OutputFormats.Get "rss" -}}
   {{ printf `<link rel="%s" type="%s" href="%s" title="%s" />` .Rel .MediaType.Type .Permalink $.Site.Title | safeHTML }}
