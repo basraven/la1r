@@ -6,47 +6,25 @@ weight: 3
 ---
 
 ## Technical Architecture
-The technical architecture of La1r is my personal take on how to properly implement the capability architecture as described on this site. This does not mean that all implementations are matching the infrastructure context, on the contrary. Implementations in La1r are aimed on enterprise scale setups, which often make them an overkill for the hardware it is running. 
-The reason for this is that the technical architecture tries to comply to several application architecture principles which are focussed on maximizing my personal learning experiences and are often near enterprise scale. 
 
-### Main area's of the technical architecture
-The technical architecture can be divided into area's:
+```mermaid
+graph TD;
+    Internet --> Router;
+    Router --> LoadBalancer;
+    
+    subgraph LAN[LAN]
+        LoadBalancer --> S1;
+        LoadBalancer --> S3;
+        S1 -->|NFS + rsync| S4;
+        S3 -->|NFS + rsync| S4;
+        S1 -->|API Call| S2;
+        S3 -->|API Call| S2;
+        
+        LoadBalancer["Virtual Load Balancer (MetalLB) <br>IP: 192.168.5.100"];
+        S1["linux-wayne <br>primary     <br>always-on   <br>IP: 192.168.5.1 <br>OS: Ubuntu 23.04    <br>Ryzen 5600x   <br> 16GB RAM, 500GB SSD"];
+        S3["jay-c       <br>secondary   <br>on-demand   <br>IP: 192.168.5.3 <br>OS: Ubuntu 23.04    <br>Intel Core i5 <br> 32GB RAM, 500GB NMVE"];
+        S2["stephanie   <br>IOT-orch    <br>on-demand   <br>IP: 192.168.5.3 <br>OS: Ubuntu 23.04    <br>Raspberry Pi 4 Model B Rev 1.4 <br> 8GB RAM, 256GB SSD"];
+        S4["remote-cube <br>backup      <br>on-demand   <br>IP: 10.8.0.?    <br>OS: Ubuntu 23.04    <br>Raspberry Pi 3 Model B <br> 4GB RAM, 500GB NMVE"];
+    end;
 
-{{< columns >}}
-### Application Architecture
-The overview and catalog of all the technical and functional applications running on the platform.
-
-[Read more](application-architecture/)
-
-<--->
-
-### Data Architecture
-All data processing, migration and storage principles, including AI and Automation.
-
-[Read more](data-architecture/)
-
-{{< /columns >}}
-
-{{< columns >}}
-
-### Infrastructure Architecture
-Infrastructure Architecture Design, discussing both Ansible, for initial setup and bare-metal services and Kubernetes, for running all other services.
-
-[Read more](infrastructure-architecture/)
-
-<--->
-
-### Security Architecture
-Setup of several security concepts which are an integral part of the technical architecture.
-
-[Read more](security-architecture/)
-
-{{< /columns >}}
-
-### Technical Architecture principles
-The la1r architecture follows several technical principles which components in its architecture should follow.
-Since this will not capture conceptual principles, a section on conceptual principles is describe [in the capability architecture page](../capability-architecture/)
-
-1. Only the paranoid survive, apply and practice backup scenarios. - Backup scenarios should not only be implemented as tick in the box for our list of non functional requirements (NFRS), but should also be practiced where possible.
-2. Aim for near horizontal scaling - all services should be able to scale with cluster size. The infrastructure architecture of my current implementation is rather rigid, but the applications on it should be aimed on flexible and horizontally scalable underlying infrastructure.
-3. Behind the VPN (OpenVpn) by default - since this is still a learning and experimental environment, I don't want to think about security first, every step of the way. This is why the master La1r server hosts a VPN virtual network. All services and internal dns are using that entrypoint by default. This does not mean that nothing is exposed to the outside world, but only the services explicitly exposed through the online-traefik instance are
+```

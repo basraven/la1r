@@ -5,12 +5,9 @@ bookToc: false
 weight: 4
 ---
 ## Application Architecture
-There is a large variety of applications currently part of la1r. \
-This page gives an overview of all these applications and also acts as a formal catalog.
-For that reason, this page will probably change a lot.
-All applications with date added 14-06-2020 are applications which were added when this page was written and add date was unknown.
+Overview of applications deployed, to be added again
 
-
+<!-- 
 ### Kubernetes Exposed Services
 | Application Name              | Status                                                                                                                      | Purpose                                                           | Namespace (if existing)   | Url                           |
 | ---                           | ---                                                                                                                         | ---                                                               | ---                       | ---                           |
@@ -81,4 +78,4 @@ All applications with date added 14-06-2020 are applications which were added wh
 | Prometheus Node Exporter      | ![](https://img.shields.io/badge/Status-Active-brightgreen)                   |  Exports all metrics data from each server to Prometheus          | Ansible                           | [Prometheus Node Exporter](/playbooks/roles/prometheus_node_exporter/)        | N/A                                   |
 | Samba                         | ![](https://img.shields.io/badge/Status-Active-brightgreen)                   |  File storage server for local LAN use only, to access data       | Ansible                           | [Samba](/playbooks/roles/samba/)                                              | N/A                                   |
 | NFS                           | ![](https://img.shields.io/badge/Status-Active-brightgreen)                   |  File storage server on external backup storage servers           | Ansible - Pi                      | [NFS](/playbooks/roles/nfs/)                                                  | N/A                                   |
-
+ -->
