@@ -1,0 +1,14 @@
+---
+- name: Switch server / place switch-server.py
+  become: yes
+  template:
+    src: switch-server.py.j2
+    dest: /home/basraven/switch-server.py
+    mode: "0775"
+- name: Switch server / add crontab
+  become: yes
+  ansible.builtin.cron:
+    name: "Switch server at reboot"
+    special_time: reboot
+    user: root
+    job: "/usr/bin/python3 /home/basraven/switch-server.py"

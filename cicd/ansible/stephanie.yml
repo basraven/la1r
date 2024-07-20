@@ -2,10 +2,11 @@
 - hosts: stephanie 
   roles:
   - define-os # Should always run!
-  - hostname
-  - users
-  - ssh
-  - avahi
-  - haproxy
-  - containerd
-  - kubernetes
+  # - hostname
+  # - users
+  # - ssh
+  # - avahi
+  # - haproxy
+  # - containerd
+  # - kubernetes
+  - switch-server

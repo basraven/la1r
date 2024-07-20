@@ -1,0 +1,132 @@
+#!/usr/bin/env python3
+import http.server
+import socketserver
+import lgpio
+import argparse
+import time
+import sys
+import subprocess
+
+# Dictionary to store the switch GPIO pins and corresponding IP addresses to ping
+SWITCH_CONFIG = {
+    1: {'pin': 17, 'ip': '192.168.5.1'},  # Example GPIO pin for switch 1 and its IP address
+    3: {'pin': 22, 'ip': '192.168.5.3'}   # Example GPIO pin for switch 3 and its IP address
+}
+
+# Open the GPIO chip and set the switch pins as output
+h = lgpio.gpiochip_open(0)
+for config in SWITCH_CONFIG.values():
+    lgpio.gpio_claim_output(h, config['pin'])
+
+class MyRequestHandler(http.server.SimpleHTTPRequestHandler):
+    def do_GET(self):
+        if self.path.startswith('/switch/'):
+            parts = self.path.split('/')
+            try:
+                switch_number = int(parts[2])
+                action = parts[3]
+                if switch_number in SWITCH_CONFIG:
+                    pin = SWITCH_CONFIG[switch_number]['pin']
+                    if action == 'on':
+                        lgpio.gpio_write(h, pin, 1)
+                        time.sleep(1)
+                        lgpio.gpio_write(h, pin, 0)
+                        self.send_response(200)
+                        self.send_header('Content-type', 'application/json')
+                        self.end_headers()
+                        self.wfile.write(b'{"status": "Switch %d is ON"}' % switch_number)
+                    elif action == 'off':
+                        lgpio.gpio_write(h, pin, 1)
+                        time.sleep(5)
+                        lgpio.gpio_write(h, pin, 0)
+                        self.send_response(200)
+                        self.send_header('Content-type', 'application/json')
+                        self.end_headers()
+                        self.wfile.write(b'{"status": "Switch %d is OFF"}' % switch_number)
+                    else:
+                        self.send_error(400, 'Bad Request: Unknown action')
+                else:
+                    self.send_error(404, 'Not Found: Switch number not found')
+            except (IndexError, ValueError):
+                self.send_error(400, 'Bad Request: Invalid switch number or action')
+        else:
+            self.send_error(404, 'Not Found')
+
+def ping_ip(ip):
+    try:
+        result = subprocess.run(['ping', '-c', '1', ip], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if result.returncode == 0:
+            return True
+        else:
+            return False
+    except Exception as e:
+        print(f"Error pinging IP {ip}: {e}")
+        return False
+
+def main():
+    parser = argparse.ArgumentParser(
+        description='Control multiple GPIO switches via REST API or command line.',
+        epilog='Examples:\n'
+               '  python3 server.py 1 on                  # Turn on switch 1\n'
+               '  python3 server.py 2 off                 # Turn off switch 2\n'
+               '  python3 server.py 3 status              # Check the status of the external service for switch 3\n'
+               '  python3 server.py                       # Start the REST API server with default port 49250\n'
+               '  python3 server.py -p 8080               # Start the REST API server on port 8080\n'
+               '  REST API Documentation:\n'
+               '  GET /switch/<switch_number>/on          # Turns on the switch specified by <switch_number>\n'
+               '  GET /switch/<switch_number>/off         # Turns off the switch specified by <switch_number>\n'
+               '  GET /switch/<switch_number>/status      # Checks the status of the external service for the switch\n'
+               '  Command line options:\n'
+               '    -p PORT, --port PORT  Specify the port number for the HTTP server (default: 49250)\n',
+        formatter_class=argparse.RawTextHelpFormatter
+    )
+    parser.add_argument('switch_number', type=int, nargs='?', help='The switch number to control')
+    parser.add_argument('action', type=str, nargs='?', choices=['on', 'off', 'status'], help='Action to perform on the switch (on, off, status)')
+    parser.add_argument('-p', '--port', type=int, default=49250, help='Port number for the HTTP server (default: 49250)')
+
+    args = parser.parse_args()
+
+
+    if args.switch_number and args.action:
+        if args.switch_number in SWITCH_CONFIG:
+            pin = SWITCH_CONFIG[args.switch_number]['pin']
+            ip = SWITCH_CONFIG[args.switch_number]['ip']
+            if args.action == 'on':
+                lgpio.gpio_write(h, pin, 1)
+                time.sleep(1)
+                lgpio.gpio_write(h, pin, 0)
+                print(f"Switch {args.switch_number} is ON")
+            elif args.action == 'off':
+                lgpio.gpio_write(h, pin, 1)
+                time.sleep(5)
+                lgpio.gpio_write(h, pin, 0)
+                print(f"Switch {args.switch_number} is OFF")
+            elif args.action == 'status':
+                if ping_ip(ip):
+                    print(f"Switch {args.switch_number} status: External service at {ip} is reachable")
+                else:
+                    print(f"Switch {args.switch_number} status: External service at {ip} is NOT reachable")
+            lgpio.gpiochip_close(h)
+            sys.exit(0)
+        else:
+            print(f"Error: Switch number {args.switch_number} not found")
+            lgpio.gpiochip_close(h)
+            sys.exit(1)
+
+    # Start the HTTP server if no command line arguments are provided
+    PORT = args.port
+    httpd = socketserver.TCPServer(("", PORT), MyRequestHandler)
+    
+    try:
+        print(f"Serving on port {PORT}")
+        httpd.serve_forever()
+    except KeyboardInterrupt:
+        print("Server stopped")
+        httpd.server_close()
+        for config in SWITCH_CONFIG.values():
+            lgpio.gpio_write(h, config['pin'], 0)
+        lgpio.gpiochip_close(h)
+        print("GPIO cleaned up")
+
+if __name__ == '__main__':
+    main()
