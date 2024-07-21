@@ -12,6 +12,14 @@ from datetime import datetime, timedelta
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+
+# PMW Ruck fan control
+PWM_PIN = 18  # GPIO18 (Pin 12)
+# Frequency in Hertz
+FREQUENCY = 5000  # 25 kHz is a common PWM frequency for fans
+# Duty cycle (0.0 to 100.0)
+duty_cycle = 0.0  # 50% duty cycle as an example
+
 # Dictionary to store the switch GPIO pins and corresponding IP addresses to ping
 SWITCH_CONFIG = {
     1: {'pin': 17, 'ip': '192.168.5.1'},  # Example GPIO pin for switch 1 and its IP address
@@ -23,6 +31,11 @@ last_switch_on_time = {switch: None for switch in SWITCH_CONFIG.keys()}
 
 # Cooldown period in seconds (2 minutes)
 COOLDOWN_PERIOD = 2 * 60
+
+# PWM Set fan speed
+def set_fan_speed(duty_cycle):
+    lgpio.tx_pwm(h, PWM_PIN, FREQUENCY, duty_cycle)
+
 
 def ping_ip(ip):
     """Ping an IP address and return whether it's reachable."""
@@ -96,6 +109,25 @@ class MyRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.wfile.write(response_message.encode())
             except ValueError:
                 self.send_error(400, 'Bad Request: Invalid switch number or action')
+        elif self.path.startswith('/fan/'):
+            parts = self.path.strip('/').split('/')
+            if len(parts) != 2:
+                self.send_error(400, 'Bad Request: Invalid request format')
+                return
+            try:
+                fan_speed = int(parts[1])
+                if not 0 <= fan_speed <= 100:
+                    self.send_error(400, 'Bad Request: Invalid fan speed')
+                    return
+                set_fan_speed(fan_speed)
+                response_message = 'fan speed set to %i' % fan_speed
+                # logging.info(response_message)
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(response_message.encode())
+            except ValueError:
+                self.send_error(400, 'Bad Request: Invalid switch number or action')
         else:
             self.send_error(404, 'Not Found')
 
@@ -112,6 +144,7 @@ def main():
                '  GET /switch/<switch_number>/on          # Turns on the switch specified by <switch_number>\n'
                '  GET /switch/<switch_number>/off         # Turns off the switch specified by <switch_number>\n'
                '  GET /switch/<switch_number>/status      # Checks the status of the external service for the switch\n'
+               '  GET /fan/<fan_speed>/                   # Set fan speed between 0 and 100\n'
                '  Command line options:\n'
                '    -p PORT, --port PORT  Specify the port number for the HTTP server (default: 49250)\n',
         formatter_class=argparse.RawTextHelpFormatter
@@ -124,11 +157,16 @@ def main():
     global h
     h = lgpio.gpiochip_open(0)
 
+    # Setup PWM control
+    lgpio.gpio_claim_output(h, PWM_PIN)
+    lgpio.tx_pwm(h, PWM_PIN, FREQUENCY, duty_cycle)
+
     # Ensure GPIO chip is closed properly on exit
     try:
         if args.switch_number and args.action:
             result_message = handle_switch_action(args.switch_number, args.action)
             print(result_message)
+            lgpio.tx_pwm(h, PWM_PIN, FREQUENCY, 0)  # Stop PWM
             lgpio.gpiochip_close(h)
             sys.exit(0)
 
@@ -143,6 +181,7 @@ def main():
         # Cleanup GPIO states and close GPIO chip
         for config in SWITCH_CONFIG.values():
             lgpio.gpio_write(h, config['pin'], 0)
+        lgpio.tx_pwm(h, PWM_PIN, FREQUENCY, 0)  # Stop PWM
         lgpio.gpiochip_close(h)
         logging.info("GPIO cleaned up")
 
