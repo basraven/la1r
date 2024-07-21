@@ -6,6 +6,11 @@ import argparse
 import time
 import sys
 import subprocess
+import logging
+from datetime import datetime, timedelta
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Dictionary to store the switch GPIO pins and corresponding IP addresses to ping
 SWITCH_CONFIG = {
@@ -13,55 +18,86 @@ SWITCH_CONFIG = {
     3: {'pin': 22, 'ip': '192.168.5.3'}   # Example GPIO pin for switch 3 and its IP address
 }
 
-# Open the GPIO chip and set the switch pins as output
-h = lgpio.gpiochip_open(0)
-for config in SWITCH_CONFIG.values():
-    lgpio.gpio_claim_output(h, config['pin'])
+# Dictionary to store the last switch-on timestamps
+last_switch_on_time = {switch: None for switch in SWITCH_CONFIG.keys()}
+
+# Cooldown period in seconds (2 minutes)
+COOLDOWN_PERIOD = 2 * 60
+
+def ping_ip(ip):
+    """Ping an IP address and return whether it's reachable."""
+    try:
+        result = subprocess.run(['ping', '-c', '1', ip], stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=3)
+        return result.returncode == 0
+    except subprocess.TimeoutExpired:
+        logging.error(f"Timeout expired when pinging IP {ip}")
+        return False
+    except Exception as e:
+        logging.error(f"Error pinging IP {ip}: {e}")
+        return False
+
+def handle_switch_action(switch_number, action):
+    """Handle the action for a given switch number."""
+    if switch_number not in SWITCH_CONFIG:
+        logging.error(f"Switch number {switch_number} not found")
+        return "Switch number not found"
+
+    config = SWITCH_CONFIG[switch_number]
+    pin = config['pin']
+    ip = config['ip']
+    last_on_time = last_switch_on_time.get(switch_number)
+
+    if action == 'on':
+        if last_on_time and (datetime.now() - last_on_time).total_seconds() < COOLDOWN_PERIOD:
+            cooldown_remaining = COOLDOWN_PERIOD - (datetime.now() - last_on_time).total_seconds()
+            return f"Cooldown period active. Please wait {cooldown_remaining:.0f} seconds before switching on again."
+
+        if not ping_ip(ip):
+            lgpio.gpio_write(h, pin, 1)
+            time.sleep(1)
+            lgpio.gpio_write(h, pin, 0)
+            last_switch_on_time[switch_number] = datetime.now()
+            return f"Server {switch_number} is switched ON"
+        else:
+            last_switch_on_time[switch_number] = datetime.now()
+            return f"Server {switch_number} is already ON"
+
+    elif action == 'off':
+        if ping_ip(ip):
+            lgpio.gpio_write(h, pin, 1)
+            time.sleep(5)
+            lgpio.gpio_write(h, pin, 0)
+            return f"Server {switch_number} is switched OFF"
+        else:
+            return f"Server {switch_number} is already OFF"
+
+    elif action == 'status':
+        return f"Server {switch_number} at {ip} is {'reachable' if ping_ip(ip) else 'unreachable'}"
+
+    else:
+        return "Unknown action"
 
 class MyRequestHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         if self.path.startswith('/switch/'):
-            parts = self.path.split('/')
+            parts = self.path.strip('/').split('/')
+            if len(parts) != 3:
+                self.send_error(400, 'Bad Request: Invalid request format')
+                return
+
             try:
-                switch_number = int(parts[2])
-                action = parts[3]
-                if switch_number in SWITCH_CONFIG:
-                    pin = SWITCH_CONFIG[switch_number]['pin']
-                    if action == 'on':
-                        lgpio.gpio_write(h, pin, 1)
-                        time.sleep(1)
-                        lgpio.gpio_write(h, pin, 0)
-                        self.send_response(200)
-                        self.send_header('Content-type', 'application/json')
-                        self.end_headers()
-                        self.wfile.write(b'{"status": "Switch %d is ON"}' % switch_number)
-                    elif action == 'off':
-                        lgpio.gpio_write(h, pin, 1)
-                        time.sleep(5)
-                        lgpio.gpio_write(h, pin, 0)
-                        self.send_response(200)
-                        self.send_header('Content-type', 'application/json')
-                        self.end_headers()
-                        self.wfile.write(b'{"status": "Switch %d is OFF"}' % switch_number)
-                    else:
-                        self.send_error(400, 'Bad Request: Unknown action')
-                else:
-                    self.send_error(404, 'Not Found: Switch number not found')
-            except (IndexError, ValueError):
+                switch_number = int(parts[1])
+                action = parts[2]
+                response_message = handle_switch_action(switch_number, action)
+
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(response_message.encode())
+            except ValueError:
                 self.send_error(400, 'Bad Request: Invalid switch number or action')
         else:
             self.send_error(404, 'Not Found')
-
-def ping_ip(ip):
-    try:
-        result = subprocess.run(['ping', '-c', '1', ip], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        if result.returncode == 0:
-            return True
-        else:
-            return False
-    except Exception as e:
-        print(f"Error pinging IP {ip}: {e}")
-        return False
 
 def main():
     parser = argparse.ArgumentParser(
@@ -85,48 +121,30 @@ def main():
     parser.add_argument('-p', '--port', type=int, default=49250, help='Port number for the HTTP server (default: 49250)')
 
     args = parser.parse_args()
+    global h
+    h = lgpio.gpiochip_open(0)
 
-
-    if args.switch_number and args.action:
-        if args.switch_number in SWITCH_CONFIG:
-            pin = SWITCH_CONFIG[args.switch_number]['pin']
-            ip = SWITCH_CONFIG[args.switch_number]['ip']
-            if args.action == 'on':
-                lgpio.gpio_write(h, pin, 1)
-                time.sleep(1)
-                lgpio.gpio_write(h, pin, 0)
-                print(f"Switch {args.switch_number} is ON")
-            elif args.action == 'off':
-                lgpio.gpio_write(h, pin, 1)
-                time.sleep(5)
-                lgpio.gpio_write(h, pin, 0)
-                print(f"Switch {args.switch_number} is OFF")
-            elif args.action == 'status':
-                if ping_ip(ip):
-                    print(f"Switch {args.switch_number} status: External service at {ip} is reachable")
-                else:
-                    print(f"Switch {args.switch_number} status: External service at {ip} is NOT reachable")
+    # Ensure GPIO chip is closed properly on exit
+    try:
+        if args.switch_number and args.action:
+            result_message = handle_switch_action(args.switch_number, args.action)
+            print(result_message)
             lgpio.gpiochip_close(h)
             sys.exit(0)
-        else:
-            print(f"Error: Switch number {args.switch_number} not found")
-            lgpio.gpiochip_close(h)
-            sys.exit(1)
 
-    # Start the HTTP server if no command line arguments are provided
-    PORT = args.port
-    httpd = socketserver.TCPServer(("", PORT), MyRequestHandler)
-    
-    try:
-        print(f"Serving on port {PORT}")
-        httpd.serve_forever()
+        # Start the HTTP server if no command line arguments are provided
+        PORT = args.port
+        with socketserver.TCPServer(("", PORT), MyRequestHandler) as httpd:
+            logging.info(f"Serving on port {PORT}")
+            httpd.serve_forever()
     except KeyboardInterrupt:
-        print("Server stopped")
-        httpd.server_close()
+        logging.info("Server stopped")
+    finally:
+        # Cleanup GPIO states and close GPIO chip
         for config in SWITCH_CONFIG.values():
             lgpio.gpio_write(h, config['pin'], 0)
         lgpio.gpiochip_close(h)
-        print("GPIO cleaned up")
+        logging.info("GPIO cleaned up")
 
 if __name__ == '__main__':
     main()

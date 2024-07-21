@@ -10,3 +10,4 @@
   # - containerd
   # - kubernetes
   - switch-server
+  - reboot

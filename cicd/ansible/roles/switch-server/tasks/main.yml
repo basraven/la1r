@@ -11,4 +11,4 @@
     name: "Switch server at reboot"
     special_time: reboot
     user: root
-    job: "/usr/bin/python3 /home/basraven/switch-server.py"
+    job: "/usr/bin/python3 /home/basraven/switch-server.py >> /var/log/switch-server.log 2>&1"
