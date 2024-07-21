@@ -60,12 +60,13 @@ jobs:
           hugo \
             --gc \
             --minify \
+            --environment production \
             --theme hugo-book \
             --baseURL "${{ steps.pages.outputs.base_url }}/"          
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: documentation/src/docs
+          path: documentation/src/public
 
   # Deployment job
   deploy:
