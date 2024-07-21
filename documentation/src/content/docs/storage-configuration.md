@@ -4,15 +4,10 @@ bookCollapseSection : false
 weight: 5
 ---
 ## Storage Architecture
-Storage architecture can be a complicated topic when working with (Bare Metal) Kubernetes clusters.
-There are a lot of War stories of organizations unable to restore their storage solution, e.g. in a complex RAID setup on in a distributed storage solutions such as Ceph, GlusterFS or StorageOS.
-
-It took a significant amount of time to weigh the pros and cons of these solutions, but eventually I went for the "safest" solution, at least a solution which could not produce unrestoreable storage solutions as mentioned before:
-
-* Dynamically provisioned NFS storage in Kubernetes
+Maintaining state in Kubernetes can be complex. I'm using a local path provisioner after having tried many other options which did not match my low risk apatite for storage. The code [can be found here](https://github.com/basraven/la1r/tree/rick/todeploy-kubernetes/storage) [or here](https://github.com/basraven/la1r/tree/rick/kubernetes/storage) (post fluxcd migration).
 
 ### Storage Tiers
-A few predefined folder structures are used in this setup, each folder to simulate To simulate the behavior of more complex storage solutions:
+Each server has SSD and HDD storage. I created a predefined folder structures, each folder would answer to different storage requirements:
 
 | **B**ackup | **V**olatility | **S**peed |
 | ---        | ---            | ---       |

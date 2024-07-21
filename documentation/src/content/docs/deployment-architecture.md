@@ -5,22 +5,20 @@ weight: 2
 ---
 
 ## Deployment Architecture
-Two components are used to setup this architecture:
+Deployment is done in two steps:
+1. [Ansible](https://www.ansible.com/), for hardware configuration of servers
+2. [FluxCD](https://fluxcd.io/), for Kubernetes-based deployments. 
 
-1. Ansible, for bare metal server initialization and bare metal services.
-2. Kubernetes, for running processes which can be containerized
+Aim is to keep the Ansible footprint as small as possible and to have any complexity in Kubernetes with FluxCD as code.
 
-The aim is to put as many of the services in Kubernetes, keeping the Ansible footprint as small as possible.
-Unfortunately there always needs to be an initial setup script, which is handled by the small footprint of Ansible.
-All other services need to run in Kubernetes, to improve portability and manageability.
 
-### Ansible - Prepare the infrastructure and bare-metal services
-Since there's always a need for installing packages on the nodes directly and I don't want to just use a bunch of shell scripts all configuration and applications outside of k8s is deployed with Ansible which are directed by makefiles. Makefiles because I don't want to remember all commands that I need to spin up ansible by heart, Ansible because I want to semi-formalize the steps I take.
-The goal here is to document every step, it does not matter how small, into an Ansible Playbook script.
-These Ansible scripts can be found on <https://github.com/basraven/la1r/ansible>
+# Ansible
+Full scripts [located in GH](https://github.com/basraven/la1r/tree/rick/cicd/ansible), I tried to use tags to deploy common tasks and use specific host configurations with host specific yamls and sh files to execute them.
 
-#### Ansible Technical Tags
-The following tags are used in Ansible:
+This is not the intended way to use Ansible, but it works for me to maintain a semi-idempotent way to deploy my servers.
+
+## Ansible Task Tags
+The following tags are used in Ansible scripts (might be outdated):
 * helper                - Helper scripts for the run itself, e.g. to determine OS
 * hostname              - Set hostname of server
 * reboot                - Reboots the machine
@@ -52,25 +50,8 @@ The following tags are used in Ansible:
   * Requires ```---extra-vars "kubernetes_master=8.8.8.8"```
   * Requires ```/credentials/kubernetes/join-token.yaml"```
 
-### CI with Jenkins
-A key component of the architecture is that in essence, everything should be able to run **without Jenkins**, just with Ansible and Kubernetes.
-Jenkins is used, just to streamline the process.
 
-#### Jenkins Pipelines
-Jenkins contains the following pipelines:
+# FluxCD
+GitOps is used to maintain all kubernetes deployments in [/kubernetes](https://github.com/basraven/la1r/tree/rick/kubernetes). This includes the configuration of FluxCD itself, which is located in [/kubernetes/flux-system](https://github.com/basraven/la1r/tree/rick/kubernetes/flux-system) and should be deployed manually, for example with [deploy.sh](https://github.com/basraven/la1r/blob/rick/kubernetes/flux-system/deploy.sh).
 
-* Deploy Ansible Assets
-* Deploy Kubernetes Assets
-
----
-
-### Makefiles as operators
-The initial approach was to use makefiles as operators. But this was not scalable, these files became a mess.
-This is why Jenkins with Configuration As Code was later introduced.
-
-#### Contents of former makefiles
-Since I want to formalize everything into scripts, there needs to be a way to formalize how to call the different playbook with the appropriate arguments.
-This is why the Git repository contains 2 Makefiles. There has been chosen for Makefiles because the way these files are called is extremely predictable ```make <your command>```:
-
-* [Makefile for Ansible](/) - This makefile contains all the Ansible Playbook calls which are made to construct la1r on bare metal
-* [Makefile for Kubernetes](/) - This makefile contains all the used Kubernetes calls to setup the Kubernetes nodes. This also contains node setup scripts such as applying taints.
+> Everything in the [/todeploy-kubernetes](https://github.com/basraven/la1r/tree/rick/todeploy-kubernetes) folder still needs to be adopted to this new way of deploying with FluxCD
