@@ -1,7 +1,7 @@
 ---
 - name: Join Kubernetes / Include k8s join token
   include_vars:
-    file: "{{credentials_dir}}/kubernetes/join-token.yaml"
+    file: "{{credentials_dir}}/kubernetes/kubernetes-join-token.yaml"
 
 - name: Join Kubernetes / set kubeadm-config.yml
   become: yes
@@ -10,8 +10,10 @@
     dest: /etc/kubernetes/kubeadm-config.yml
     mode: "0775"
 
+# requires: kubeadm token create --print-join-command
 - name: Join Kubernetes / Join K8s
-  command: kubeadm join {{kubernetes_master}}:6443 --token {{k8s_join_token}} --discovery-token-unsafe-skip-ca-verification --ignore-preflight-errors=all  ignore_errors: yes
+  become: yes
+  command: 'kubeadm join {{ha_proxy_vir_ip}}:443 --token {{k8s_join_token}} --discovery-token-ca-cert-hash {{k8s_discovery_token_ca_cert_hash}} '
   async: 600
   poll: 5
 

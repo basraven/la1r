@@ -6,8 +6,5 @@
   # - users
   # - ssh
   # - avahi
-  # - haproxy
-  # - containerd
-  # - kubernetes
   - switch-server
   - reboot

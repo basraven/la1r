@@ -13,9 +13,10 @@
   # - nfs
   # - samba
   # - containerd
-  - haproxy
-  # - kubernetes
-  # - kubernetes-init
+  # - haproxy
+  # - kubernetes-install
+  - kubernetes-init
+  - kubernetes-fetch
   
   # - backup
 

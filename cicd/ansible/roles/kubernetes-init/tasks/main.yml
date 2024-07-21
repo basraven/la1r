@@ -2,12 +2,6 @@
 - include: init-kubernetes.yml
   tags:
     - init_kubernetes
-# - include: fetch-kubeconfig.yml
-#   tags:
-#     - fetch_kubernetes
-# - include: join-kubernetes.yml
-#   tags:
-#     - join_kubernetes
 # - include: reset-kubernetes.yml
 #   tags:
 #     - reset_kubernetes

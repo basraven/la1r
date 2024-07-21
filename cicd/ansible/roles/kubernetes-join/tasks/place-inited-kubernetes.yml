@@ -1,0 +1,18 @@
+---
+- name: Place init-ed kube admin config / Fetch admin config from ./.k8s and place it in /etc/kubernetes/
+  become: yes
+  copy:
+    src: ./.k8s/admin.conf
+    dest: /etc/kubernetes/admin.conf
+    # owner: root
+    # group: root
+    # mode: '0755'
+    
+
+- name: Place init-ed kube PKI config / Fetch PKI config from ./.k8s and place it in /etc/kubernetes/pki
+  become: yes
+  synchronize:
+    src: ./.k8s/pki/
+    dest: /etc/kubernetes/pki
+    mode: push
+    recursive: yes

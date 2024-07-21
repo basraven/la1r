@@ -5,33 +5,42 @@
     src: kubeadm-config.yml.j2
     dest: /etc/kubernetes/kubeadm-config.yml
     mode: "0775"
-# - name: Init Kubernetes / Init Kubernetes
-#   become: yes
-#   shell: |
-#     kubeadm init --config /etc/kubernetes/kubeadm-config.yml --upload-certs
-#   args:
-#     executable: /bin/bash
-#   async: 600
-#   poll: 5
+- name: Init Kubernetes / Init Kubernetes
+  become: yes
+  shell: |
+    kubeadm init --config /etc/kubernetes/kubeadm-config.yml --upload-certs
+  args:
+    executable: /bin/bash
+  async: 600
+  poll: 5
 
-# - name: "Init Kubernetes / Copy kubeconfig to {{ target_user_name }} home directory"
-#   become: yes
-#   shell: |
-#     mkdir -p ~/.kube
-#     cp -f /etc/kubernetes/admin.conf ~/.kube/config
-#     chown -f "{{ target_user_name }}:{{ target_user_name }}" ~/.kube/config
-#   args:
-#     executable: /bin/bash
+- name: "Init Kubernetes / Copy kubeconfig to {{ target_user_name }} home directory"
+  become: yes
+  shell: |
+    mkdir -p ~/.kube
+    cp -f /etc/kubernetes/admin.conf ~/.kube/config
+    chown -f "{{ target_user_name }}:{{ target_user_name }}" ~/.kube/config
+  args:
+    executable: /bin/bash
         
-# - name: Init Kubernetes / Fetch Kubernetes pki and admin.conf
+# - name: Init Kubernetes / Fetch Kubernetes admin.conf
 #   become: yes
 #   fetch:
 #     src: "{{ item }}"
-#     dest: "./"
-#     flat: false
+#     dest: "./.k8s/"
+#     flat: true
 #     force: yes
 #   with_items:
 #     - /etc/kubernetes/admin.conf
+
+# - name: Init Kubernetes / Fetch Kubernetes pki
+#   become: yes
+#   fetch:
+#     src: "{{ item }}"
+#     dest: "./.k8s/pki/"
+#     flat: true
+#     force: yes
+#   with_items:
 #     - /etc/kubernetes/pki/ca.crt
 #     - /etc/kubernetes/pki/ca.key
 #     - /etc/kubernetes/pki/sa.pub
@@ -40,5 +49,3 @@
 #     - /etc/kubernetes/pki/front-proxy-ca.key
 #     - /etc/kubernetes/pki/etcd/ca.crt
 #     - /etc/kubernetes/pki/etcd/ca.key
-
-    # TODO: Put the PKI on the other nodes

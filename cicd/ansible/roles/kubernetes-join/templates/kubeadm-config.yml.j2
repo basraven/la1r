@@ -3,6 +3,8 @@ kind: ClusterConfiguration
 kubernetesVersion: stable
 clusterName: {{ kubernetes_cluster_name }}
 certificatesDir: /etc/kubernetes/pki
+{# apiServerCertSANs:
+- "kubernetes.la1r.com" #}
 controlPlaneEndpoint: "{{ ha_proxy_vir_ip }}:443"
 apiServer:
   timeoutForControlPlane: 4m0s
@@ -17,3 +19,6 @@ controllerManager:
     node-monitor-grace-period: 20s
     pod-eviction-timeout: 20s
     resource-quota-sync-period: 1m
+etcd:
+  local:
+    dataDir: /var/lib/etcd
