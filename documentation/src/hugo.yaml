@@ -3,7 +3,7 @@
 baseURL: https://la1r.com/
 title: la1r.com
 theme: hugo-book
-publishDir: docs
+publishDir: public
 
 # Book configuration
 disablePathToLower: true
