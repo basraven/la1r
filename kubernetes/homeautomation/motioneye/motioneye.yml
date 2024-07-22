@@ -61,101 +61,101 @@ spec:
             mountPath: /etc/motioneye 
           - name: motioneye-data-volume
             mountPath: /var/lib/motioneye
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    app: motioneye
-  name: motioneye
-  namespace: homeautomation
-spec:
-  ports:
-  - name: http
-    targetPort: 8765
-    port: 80
-  selector:
-    app: motioneye
-  type: ClusterIP
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   labels:
+#     app: motioneye
+#   name: motioneye
+#   namespace: homeautomation
+# spec:
+#   ports:
+#   - name: http
+#     targetPort: 8765
+#     port: 80
+#   selector:
+#     app: motioneye
+#   type: ClusterIP
 
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    app: motioneye
-  name: motioneye
-  namespace: homeautomation
-spec:
-  ports:
-  - name: http
-    targetPort: 8765
-    port: 80
-  selector:
-    app: motioneye
-  loadBalancerIP: 192.168.6.75
-  type: LoadBalancer
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   labels:
+#     app: motioneye
+#   name: motioneye
+#   namespace: homeautomation
+# spec:
+#   ports:
+#   - name: http
+#     targetPort: 8765
+#     port: 80
+#   selector:
+#     app: motioneye
+#   loadBalancerIP: 192.168.6.75
+#   type: LoadBalancer
 
----
-apiVersion: cert-manager.io/v1
-kind: Certificate
-metadata:
-  name: motioneye-bas
-  namespace: homeautomation
-spec:
-  issuerRef:
-    name: la1r
-    kind: ClusterIssuer
-  secretName: motioneye-bas-tls
-  commonName: cam.bas
-  dnsNames:
-  - cam.bas
-  - www.cam.bas
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: motioneye-https
-  namespace: homeautomation
-  annotations:
-    kubernetes.io/ingress.class: traefik
-    traefik.ingress.kubernetes.io/router.tls: "true"
-    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
-spec:
-  tls:
-  - secretName: motioneye-bas-tls
-  rules:
-  - host: cam.bas
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: motioneye
-            port:
-              number: 80
+# ---
+# apiVersion: cert-manager.io/v1
+# kind: Certificate
+# metadata:
+#   name: motioneye-bas
+#   namespace: homeautomation
+# spec:
+#   issuerRef:
+#     name: la1r
+#     kind: ClusterIssuer
+#   secretName: motioneye-bas-tls
+#   commonName: cam.bas
+#   dnsNames:
+#   - cam.bas
+#   - www.cam.bas
+# ---
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: motioneye-https
+#   namespace: homeautomation
+#   annotations:
+#     kubernetes.io/ingress.class: traefik
+#     traefik.ingress.kubernetes.io/router.tls: "true"
+#     traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+# spec:
+#   tls:
+#   - secretName: motioneye-bas-tls
+#   rules:
+#   - host: cam.bas
+#     http:
+#       paths:
+#       - path: /
+#         pathType: Prefix
+#         backend:
+#           service:
+#             name: motioneye
+#             port:
+#               number: 80
 
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: motioneye-http
-  namespace: homeautomation
-  annotations:
-    kubernetes.io/ingress.class: traefik
-    traefik.ingress.kubernetes.io/router.tls: "false"
-    traefik.ingress.kubernetes.io/router.entrypoints: "web"
-    traefik.ingress.kubernetes.io/router.middlewares: "traefik-http-redirect-to-https@kubernetescrd"
-spec:
-  rules:
-  - host: cam.bas
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: motioneye
-            port:
-              number: 80
+# ---
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: motioneye-http
+#   namespace: homeautomation
+#   annotations:
+#     kubernetes.io/ingress.class: traefik
+#     traefik.ingress.kubernetes.io/router.tls: "false"
+#     traefik.ingress.kubernetes.io/router.entrypoints: "web"
+#     traefik.ingress.kubernetes.io/router.middlewares: "traefik-http-redirect-to-https@kubernetescrd"
+# spec:
+#   rules:
+#   - host: cam.bas
+#     http:
+#       paths:
+#       - path: /
+#         pathType: Prefix
+#         backend:
+#           service:
+#             name: motioneye
+#             port:
+#               number: 80
