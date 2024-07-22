@@ -1,7 +1,6 @@
 #!/bin/bash
 
-#kubectl taint node jay-c node-role.kubernetes.io/control-plane:NoSchedule-
-#kubectl taint node linux-wayne node-role.kubernetes.io/control-plane:NoSchedule-
+kubectl taint node linux-wayne node-role.kubernetes.io/control-plane:NoSchedule-
 kubectl label nodes linux-wayne la1r.workload/essential=true
 kubectl label nodes jay-c la1r.workload/nonessential=true
 
