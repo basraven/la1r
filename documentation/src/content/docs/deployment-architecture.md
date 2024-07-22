@@ -1,5 +1,5 @@
 ---
-bookToc: true
+bookToc: false
 bookCollapseSection : false
 weight: 2
 ---

@@ -57,18 +57,7 @@ jobs:
           TZ: Europe/Amsterdam
         run: |
           cd documentation/src
-          rsync -av --include='*/' --include='*.md' --exclude='*'  ../../kubernetes ./content/docs/
-          # rsync -av --include='*/' --include='*.md' --exclude='*'  ../../cicd/ansible ./content/docs/
-
-          find ./content/docs/kubernetes -type d -exec sh -c '
-            for dir; do
-              if [ "$(find "$dir" -maxdepth 1 -type f | wc -l)" -eq 0 ]; then
-                if [ ! -f "$dir/_index.md" ]; then
-                  touch "$dir/_index.md"
-                fi
-              fi
-            done
-          ' sh {} +
+          chmod +x ./populate-external-docs.sh && ./populate-external-docs.sh
           hugo \
             --gc \
             --minify \
