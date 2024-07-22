@@ -1,6 +1,6 @@
 ---
-# - include: ufw.yml
-# - include: fail2ban.yml
+# - include_tasks: ufw.yml
+# - include_tasks: fail2ban.yml
 # - name: Networking / Restart fail2ban and ufw
 #   service:
 #     name: "{{ item }}"

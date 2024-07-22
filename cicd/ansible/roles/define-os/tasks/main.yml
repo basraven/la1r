@@ -1,4 +1,4 @@
 ---
-- include: define-os.yml
+- include_tasks: define-os.yml
   tags:
     - helper

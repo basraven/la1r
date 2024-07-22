@@ -1,36 +1,36 @@
 ---
-- include: check-target_user.yml
+- include_tasks: check-target_user.yml
   # notify:
   #   - "ssh restart"
   tags: 
     - users
 
-- include: enable-sudo.yml
+- include_tasks: enable-sudo.yml
   tags: 
     - users
   when: target_user_exists != true
 
-- include: add-target_user.yml
+- include_tasks: add-target_user.yml
   tags: 
     - users
   when: target_user_exists != true
 
-- include: add_ssh_settings.yml
+- include_tasks: add_ssh_settings.yml
   tags: 
     - users
   when: target_user_exists != true
 
 
 
-- include: swap-uid.yml
+- include_tasks: swap-uid.yml
   tags: 
     - users
   when: target_user_exists != true
-- include: change-root-password.yml
+- include_tasks: change-root-password.yml
   tags: 
     - users
   when: target_user_exists != true
-- include: remove-default_user.yml
+- include_tasks: remove-default_user.yml
   tags: 
     - users
   when: target_user_exists != true

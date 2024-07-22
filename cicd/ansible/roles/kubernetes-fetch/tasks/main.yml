@@ -1,4 +1,4 @@
 ---
-- include: fetch-kubeconfig.yml
+- include_tasks: fetch-kubeconfig.yml
   tags:
     - fetch_kubernetes

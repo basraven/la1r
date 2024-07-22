@@ -1,19 +1,19 @@
 ---
-- include: install-openvpn.yml
+- include_tasks: install-openvpn.yml
   tags:
     - openvpn_server  
-- include: prepare-folders.yml
+- include_tasks: prepare-folders.yml
   tags:
     - openvpn_server  
-- include: create-server.yml
+- include_tasks: create-server.yml
   tags:
     - openvpn_server  
-- include: install-iptables-persistent.yml
+- include_tasks: install-iptables-persistent.yml
   tags:
     - openvpn_server  
-- include: create-user.yml
+- include_tasks: create-user.yml
   tags: 
     - create_ovpn_user
-- include: delete-user.yml
+- include_tasks: delete-user.yml
   tags: 
     - delete_ovpn_user

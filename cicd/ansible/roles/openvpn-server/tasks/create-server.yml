@@ -112,4 +112,4 @@
     - { regexp: '^;?client-to-client',  line: 'client-to-client' }
     - { regexp: '^;?log ',              line: 'log /var/log/openvpn.log' }
 
-- include: networking.yml
+- include_tasks: networking.yml

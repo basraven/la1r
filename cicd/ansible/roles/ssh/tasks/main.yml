@@ -1,4 +1,4 @@
 ---
-- include: ssh.yml
+- include_tasks: ssh.yml
   tags: 
     - ssh

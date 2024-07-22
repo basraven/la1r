@@ -1,8 +1,8 @@
 ---
 # Place inited not needed?
-# - include: place-inited-kubernetes.yml
+# - include_tasks: place-inited-kubernetes.yml
 #   tags:
 #     - place_inited_kubernetes
-- include: join-kubernetes.yml
+- include_tasks: join-kubernetes.yml
   tags:
     - join_kubernetes

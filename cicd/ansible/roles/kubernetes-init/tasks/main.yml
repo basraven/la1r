@@ -1,7 +1,7 @@
 ---
-- include: init-kubernetes.yml
+- include_tasks: init-kubernetes.yml
   tags:
     - init_kubernetes
-# - include: reset-kubernetes.yml
+# - include_tasks: reset-kubernetes.yml
 #   tags:
 #     - reset_kubernetes

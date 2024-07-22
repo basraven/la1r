@@ -1,4 +1,4 @@
 ---
-- include: copy-toolbox.yml
+- include_tasks: copy-toolbox.yml
   tags:
     - toolbox

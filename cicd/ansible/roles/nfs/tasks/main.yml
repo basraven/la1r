@@ -1,14 +1,14 @@
 ---
-- include: create-backup-user.yml
+- include_tasks: create-backup-user.yml
   tags:
     - nfs_server
     - nfs_client 
-- include: nfs-common.yml
+- include_tasks: nfs-common.yml
   tags: 
     - nfs_server
     - nfs_client 
-- include: nfs-server.yml
+- include_tasks: nfs-server.yml
   tags: nfs_server
-# - include: nfs-client.yml
+# - include_tasks: nfs-client.yml
 #   tags: nfs_client
 

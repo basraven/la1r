@@ -85,12 +85,13 @@ def handle_switch_action(switch_number, action):
             return f"Server {switch_number} is already OFF"
 
     elif action == 'status':
-        return f"Server {switch_number} at {ip} is {'reachable' if ping_ip(ip) else 'unreachable'}"
+        return f"Server {switch_number} at {ip} is {'ON' if ping_ip(ip) else 'OFF'}"
 
     else:
         return "Unknown action"
 
 class MyRequestHandler(http.server.SimpleHTTPRequestHandler):
+    fan_speed = 0
     def do_GET(self):
         if self.path.startswith('/switch/'):
             parts = self.path.strip('/').split('/')
@@ -115,12 +116,17 @@ class MyRequestHandler(http.server.SimpleHTTPRequestHandler):
                 self.send_error(400, 'Bad Request: Invalid request format')
                 return
             try:
-                fan_speed = int(parts[1])
-                if not 0 <= fan_speed <= 100:
-                    self.send_error(400, 'Bad Request: Invalid fan speed')
-                    return
-                set_fan_speed(fan_speed)
-                response_message = 'fan speed set to %i' % fan_speed
+                if 'status' in parts[1]:
+                    response_message = 'fan speed is %i' % MyRequestHandler.fan_speed
+                else:
+                    fan_speed = int(parts[1])
+                    if not 0 <= fan_speed <= 100:
+                        self.send_error(400, 'Bad Request: Invalid fan speed')
+                        return
+                    MyRequestHandler.fan_speed = fan_speed
+                    set_fan_speed(fan_speed)
+                    response_message = 'fan speed set to %i' % fan_speed
+
                 # logging.info(response_message)
                 self.send_response(200)
                 self.send_header('Content-type', 'application/json')

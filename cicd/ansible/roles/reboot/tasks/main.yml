@@ -1,4 +1,4 @@
 ---
-- include: reboot-os.yml
+- include_tasks: reboot-os.yml
   tags:
     - reboot

@@ -1,4 +1,4 @@
 ---
-- include: set-hostname.yml
+- include_tasks: set-hostname.yml
   tags:
     - hostname

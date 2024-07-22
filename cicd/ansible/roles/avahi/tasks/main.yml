@@ -1,4 +1,4 @@
 ---
-- include: install-avahi.yml
+- include_tasks: install-avahi.yml
   tags:
     - avahi  
