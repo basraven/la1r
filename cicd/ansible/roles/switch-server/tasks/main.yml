@@ -5,6 +5,17 @@
     src: switch-server.py.j2
     dest: /home/basraven/switch-server.py
     mode: "0775"
+
+- name: Switch server / Update apt
+  become: yes
+  apt:
+        update_cache: yes
+- name: Switch server / Install RPIO Python package using apt
+  become: yes
+  apt:
+    name: python3-rpi.gpio
+    state: present
+
 - name: Switch server / add crontab
   become: yes
   ansible.builtin.cron:
