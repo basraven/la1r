@@ -9,6 +9,7 @@ import subprocess
 import logging
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor
+import threading
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -43,22 +44,18 @@ for config in SWITCH_CONFIG.values():
     GPIO.setup(config['pin'], GPIO.OUT)
     GPIO.output(config['pin'], GPIO.LOW)
 
-# PWM Set fan speed
-def set_fan_speed(duty_cycle):
-    pwm.ChangeDutyCycle(duty_cycle)
+# LED setup
+LED_PIN = 26
+GPIO.setup(LED_PIN, GPIO.OUT)
 
-def ping_ip(ip):
-    """Ping an IP address and return whether it's reachable."""
-    try:
-        result = subprocess.run(['ping', '-c', '1', ip], stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=3)
-        return result.returncode == 0
-    except subprocess.TimeoutExpired:
-        logging.error(f"Timeout expired when pinging IP {ip}")
-        return False
-    except Exception as e:
-        logging.error(f"Error pinging IP {ip}: {e}")
-        return False
+# Switch GPIO 16 setup
+SWITCH_16_PIN = 16
+GPIO.setup(SWITCH_16_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)  # Assuming pull-up resistor
 
+# Track the previous state of GPIO 16
+previous_switch_16_state = GPIO.HIGH
+
+# Function to handle switch actions
 def handle_switch_action(switch_number, action):
     """Handle the action for a given switch number."""
     if switch_number not in SWITCH_CONFIG:
@@ -99,6 +96,82 @@ def handle_switch_action(switch_number, action):
 
     else:
         return "Unknown action"
+
+# Function to ping an IP address
+def ping_ip(ip):
+    """Ping an IP address and return whether it's reachable."""
+    try:
+        result = subprocess.run(['ping', '-c', '1', ip], stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=3)
+        return result.returncode == 0
+    except subprocess.TimeoutExpired:
+        logging.error(f"Timeout expired when pinging IP {ip}")
+        return False
+    except Exception as e:
+        logging.error(f"Error pinging IP {ip}: {e}")
+        return False
+
+# Function to check the status of switches and control the LED
+def check_switch_and_control_led():
+    global previous_switch_16_state
+    last_ping_time = time.time()
+    blink_interval = 0.1  # Time in seconds for the LED to stay on or off
+    led_on_time = time.time()
+    led_state = GPIO.LOW
+    switch_1_blinking = False
+
+    while True:
+        current_time = time.time()
+
+        # Check if we need to toggle the LED state for blinking
+        if switch_1_blinking and current_time - led_on_time >= blink_interval:
+            led_state = GPIO.HIGH if led_state == GPIO.LOW else GPIO.LOW
+            GPIO.output(LED_PIN, led_state)
+            led_on_time = current_time
+
+        # Manage switch states and control the LED based on switch states
+        if current_time - last_ping_time >= 10:  # Check switches every 10 seconds
+            switch_1_status = not ping_ip(SWITCH_CONFIG[1]['ip'])  # True if switch 1 is off
+            switch_3_status = ping_ip(SWITCH_CONFIG[3]['ip'])  # True if switch 3 is on
+
+            current_switch_16_state = GPIO.input(SWITCH_16_PIN)
+            if current_switch_16_state == GPIO.LOW and previous_switch_16_state == GPIO.HIGH:
+                # GPIO 16 has just been pressed
+                response_message = handle_switch_action(3, 'on')
+                logging.info(f"GPIO 16 pressed. {response_message}")
+                time.sleep(1)  # Debounce delay
+
+            # Update previous state of GPIO 16
+            previous_switch_16_state = current_switch_16_state
+
+            if switch_3_status:
+                # Turn LED on if switch 3 is on
+                GPIO.output(LED_PIN, GPIO.HIGH)
+                switch_1_blinking = False  # Disable blinking
+            elif switch_1_status:
+                # Enable blinking if switch 1 is off
+                switch_1_blinking = True
+                led_state = GPIO.LOW  # Ensure LED starts off for blinking
+            else:
+                # Default to LED off if neither condition is met
+                GPIO.output(LED_PIN, GPIO.LOW)
+                switch_1_blinking = False
+
+            last_ping_time = current_time
+
+        # Small sleep to avoid high CPU usage
+        time.sleep(0.01)
+
+    # Cleanup will never be reached due to infinite loop
+    # Add this for completeness if you decide to add a stopping condition
+    GPIO.cleanup()
+    logging.info("LED monitoring stopped")
+
+# Start the switch checking and LED control in a separate thread
+threading.Thread(target=check_switch_and_control_led, daemon=True).start()
+
+# PWM Set fan speed
+def set_fan_speed(duty_cycle):
+    pwm.ChangeDutyCycle(duty_cycle)
 
 class MyRequestHandler(http.server.SimpleHTTPRequestHandler):
     fan_speed = 0
