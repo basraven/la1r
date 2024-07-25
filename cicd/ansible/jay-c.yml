@@ -5,6 +5,7 @@
   # - users
   # - ssh
   # - hostname
+  - power-savings
   # - avahi
 
   # - update
@@ -15,6 +16,6 @@
   # - haproxy
   # - containerd
   # - kubernetes-install
-  - kubernetes-join
+  # - kubernetes-join
 
   # - backup

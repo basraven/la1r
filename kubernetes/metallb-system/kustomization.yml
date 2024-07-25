@@ -1,7 +1,7 @@
 # kustomization.yml
 namespace: metallb-system
 resources:
-  - namespace.yml
+  # - namespace.yml
   - github.com/metallb/metallb/config/native?ref=v0.14.8
   # - metallb-installation.yml
   # - cluster-admin.yml

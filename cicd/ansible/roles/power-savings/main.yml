@@ -1,0 +1,4 @@
+---
+- include_tasks: cpu-power-save.yml
+  tags:
+    - cpu-power-save
