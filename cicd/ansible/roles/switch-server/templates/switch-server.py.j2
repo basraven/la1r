@@ -14,46 +14,41 @@ import threading
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# PWM Ruck fan control
-PWM_PIN = 18  # GPIO18 (Pin 12)
-FREQUENCY = 25000  # 25 kHz for PWM frequency
-duty_cycle = 0.0  # Initial duty cycle
-
-# Dictionary to store the switch GPIO pins and corresponding IP addresses to ping
+# Config of Server Switches
+## Dictionary to store the server switch GPIO pins and corresponding IP addresses to ping the server
 SWITCH_CONFIG = {
     1: {'pin': 17, 'ip': '192.168.5.1'},
     3: {'pin': 22, 'ip': '192.168.5.3'}
 }
-
-# Dictionary to store the last switch-on timestamps
+## Dictionary to store the last switch-on timestamps of each server
 last_switch_on_time = {switch: None for switch in SWITCH_CONFIG.keys()}
-
-# Cooldown period in seconds (2 minutes)
+## Cooldown period in seconds (2 minutes) for each server
 COOLDOWN_PERIOD = 2 * 60
-
-# Thread pool for asynchronous tasks
-executor = ThreadPoolExecutor(max_workers=4)
-
-# Setup GPIO
 GPIO.setmode(GPIO.BCM)
-GPIO.setup(PWM_PIN, GPIO.OUT)
-pwm = GPIO.PWM(PWM_PIN, FREQUENCY)
-pwm.start(duty_cycle)
-
 for config in SWITCH_CONFIG.values():
     GPIO.setup(config['pin'], GPIO.OUT)
     GPIO.output(config['pin'], GPIO.LOW)
 
-# LED setup
+# Physical control button setup
+# Setup LED of button
 LED_PIN = 26
 GPIO.setup(LED_PIN, GPIO.OUT)
-
 # Switch GPIO 16 setup
 SWITCH_16_PIN = 16
 GPIO.setup(SWITCH_16_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)  # Assuming pull-up resistor
-
 # Track the previous state of GPIO 16
 previous_switch_16_state = GPIO.HIGH
+
+# PWM Ruck fan control
+PWM_PIN = 18  # GPIO18 (Pin 12)
+FREQUENCY = 25000  # 25 kHz for PWM frequency
+duty_cycle = 0.0  # Initial duty cycle
+# Setup GPIO
+GPIO.setup(PWM_PIN, GPIO.OUT)
+pwm = GPIO.PWM(PWM_PIN, FREQUENCY)
+pwm.start(duty_cycle)
+# Thread pool for asynchronous tasks
+executor = ThreadPoolExecutor(max_workers=2)
 
 # Function to handle switch actions
 def handle_switch_action(switch_number, action):
@@ -120,46 +115,50 @@ def check_switch_and_control_led():
     switch_1_blinking = False
 
     while True:
-        current_time = time.time()
+        try:
+            current_time = time.time()
 
-        # Check if we need to toggle the LED state for blinking
-        if switch_1_blinking and current_time - led_on_time >= blink_interval:
-            led_state = GPIO.HIGH if led_state == GPIO.LOW else GPIO.LOW
-            GPIO.output(LED_PIN, led_state)
-            led_on_time = current_time
+            # Check if we need to toggle the LED state for blinking
+            if switch_1_blinking and current_time - led_on_time >= blink_interval:
+                led_state = GPIO.HIGH if led_state == GPIO.LOW else GPIO.LOW
+                GPIO.output(LED_PIN, led_state)
+                led_on_time = current_time
 
-        # Manage switch states and control the LED based on switch states
-        if current_time - last_ping_time >= 10:  # Check switches every 10 seconds
-            switch_1_status = not ping_ip(SWITCH_CONFIG[1]['ip'])  # True if switch 1 is off
-            switch_3_status = ping_ip(SWITCH_CONFIG[3]['ip'])  # True if switch 3 is on
+            # Manage switch states and control the LED based on switch states
+            if current_time - last_ping_time >= 10:  # Check switches every 10 seconds
+                switch_1_status = not ping_ip(SWITCH_CONFIG[1]['ip'])  # True if switch 1 is off
+                switch_3_status = ping_ip(SWITCH_CONFIG[3]['ip'])  # True if switch 3 is on
 
-            current_switch_16_state = GPIO.input(SWITCH_16_PIN)
-            if current_switch_16_state == GPIO.LOW and previous_switch_16_state == GPIO.HIGH:
-                # GPIO 16 has just been pressed
-                response_message = handle_switch_action(3, 'on')
-                logging.info(f"GPIO 16 pressed. {response_message}")
-                time.sleep(1)  # Debounce delay
+                current_switch_16_state = GPIO.input(SWITCH_16_PIN)
+                if current_switch_16_state == GPIO.LOW and previous_switch_16_state == GPIO.HIGH:
+                    # GPIO 16 has just been pressed
+                    response_message = handle_switch_action(3, 'on')
+                    logging.info(f"GPIO 16 pressed. {response_message}")
+                    time.sleep(1)  # Debounce delay
 
-            # Update previous state of GPIO 16
-            previous_switch_16_state = current_switch_16_state
+                # Update previous state of GPIO 16
+                previous_switch_16_state = current_switch_16_state
 
-            if switch_3_status:
-                # Turn LED on if switch 3 is on
-                GPIO.output(LED_PIN, GPIO.HIGH)
-                switch_1_blinking = False  # Disable blinking
-            elif switch_1_status:
-                # Enable blinking if switch 1 is off
-                switch_1_blinking = True
-                led_state = GPIO.LOW  # Ensure LED starts off for blinking
-            else:
-                # Default to LED off if neither condition is met
-                GPIO.output(LED_PIN, GPIO.LOW)
-                switch_1_blinking = False
+                if switch_3_status:
+                    # Turn LED on if switch 3 is on
+                    GPIO.output(LED_PIN, GPIO.HIGH)
+                    switch_1_blinking = False  # Disable blinking
+                elif switch_1_status:
+                    # Enable blinking if switch 1 is off
+                    switch_1_blinking = True
+                    led_state = GPIO.LOW  # Ensure LED starts off for blinking
+                else:
+                    # Default to LED off if neither condition is met
+                    GPIO.output(LED_PIN, GPIO.LOW)
+                    switch_1_blinking = False
 
-            last_ping_time = current_time
+                last_ping_time = current_time
 
-        # Small sleep to avoid high CPU usage
-        time.sleep(0.01)
+            # Small sleep to avoid high CPU usage
+            time.sleep(0.01)
+        except Exception as e:
+            logging.error(f"Error in switch and LED control loop: {e}")
+            time.sleep(1)  # Sleep to avoid rapid logging
 
     # Cleanup will never be reached due to infinite loop
     # Add this for completeness if you decide to add a stopping condition
@@ -254,9 +253,13 @@ def main():
 
         # Start the HTTP server if no command line arguments are provided
         PORT = args.port
-        with socketserver.TCPServer(("", PORT), MyRequestHandler) as httpd:
-            logging.info(f"Serving on port {PORT}")
-            httpd.serve_forever()
+        httpd = socketserver.TCPServer(("", PORT), MyRequestHandler)
+        logging.info(f"Serving on port {PORT}")
+        with httpd:
+            try:
+                httpd.serve_forever()
+            except KeyboardInterrupt:
+                pass
     except KeyboardInterrupt:
         logging.info("Server stopped")
     finally:
