@@ -78,39 +78,39 @@ spec:
 #     app: motioneye
 #   type: ClusterIP
 
-# ---
-# apiVersion: v1
-# kind: Service
-# metadata:
-#   labels:
-#     app: motioneye
-#   name: motioneye
-#   namespace: homeautomation
-# spec:
-#   ports:
-#   - name: http
-#     targetPort: 8765
-#     port: 80
-#   selector:
-#     app: motioneye
-#   loadBalancerIP: 192.168.6.75
-#   type: LoadBalancer
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: motioneye
+  name: motioneye
+  namespace: homeautomation
+spec:
+  ports:
+  - name: http
+    targetPort: 8765
+    port: 80
+  selector:
+    app: motioneye
+  loadBalancerIP: 192.168.6.75
+  type: LoadBalancer
 
-# ---
-# apiVersion: cert-manager.io/v1
-# kind: Certificate
-# metadata:
-#   name: motioneye-bas
-#   namespace: homeautomation
-# spec:
-#   issuerRef:
-#     name: la1r
-#     kind: ClusterIssuer
-#   secretName: motioneye-bas-tls
-#   commonName: cam.bas
-#   dnsNames:
-#   - cam.bas
-#   - www.cam.bas
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: motioneye-bas
+  namespace: homeautomation
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: motioneye-bas-tls
+  commonName: cam.bas
+  dnsNames:
+  - cam.bas
+  - www.cam.bas
 # ---
 # apiVersion: networking.k8s.io/v1
 # kind: Ingress

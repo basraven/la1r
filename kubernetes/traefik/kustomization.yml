@@ -1,0 +1,7 @@
+# kustomization.yml
+namespace: traefik
+resources:
+  - namespace.yml
+  - traefik-crd1.yml
+  - traefik-rbac.yml
+  - traefik.yml
