@@ -14,6 +14,10 @@ kubectl label nodes linux-wayne la1r.storage/ssd-na=true
 kubectl label nodes linux-wayne la1r.storage/hdd-ha=true
 kubectl label nodes linux-wayne la1r.storage/hdd-na=true
 
+# for metallb
+kubectl label node linux-wayne node.kubernetes.io/exclude-from-external-load-balancers-
+kubectl label node jay-c node.kubernetes.io/exclude-from-external-load-balancers-
+
 
 
 

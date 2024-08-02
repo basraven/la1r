@@ -5,14 +5,14 @@ resources:
 # - https://raw.githubusercontent.com/projectcalico/calico/v3.28.1/manifests/tigera-operator.yaml # use kubectl create -f   for this instead because of file size...
 - calico-installation.yaml
 # - calicoctl.yaml
-patches:
-  - target:
-      kind: IPAMConfiguration
-      name: default
-    patch: |-
-      apiVersion: ipam.k8s.io/v1
-      kind: IPAMConfiguration
-      metadata:
-        name: default
-      spec:
-        strictAffinity: true
+# patches:
+#   - target:
+#       kind: IPAMConfiguration
+#       name: default
+#     patch: |-
+#       apiVersion: ipam.k8s.io/v1
+#       kind: IPAMConfiguration
+#       metadata:
+#         name: default
+#       spec:
+#         strictAffinity: true

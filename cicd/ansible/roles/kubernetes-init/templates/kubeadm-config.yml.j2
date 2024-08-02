@@ -6,13 +6,13 @@ certificatesDir: /etc/kubernetes/pki
 controlPlaneEndpoint: "{{ ha_proxy_vir_ip }}:443"
 apiServer:
   timeoutForControlPlane: 4m0s
+dns:
+  type: CoreDNS
+etcd:
+  local:
+    dataDir: /var/lib/etcd
 networking:
     dnsDomain: cluster.local
     podSubnet: {{ kubernetes_pod_cidr }}
     serviceSubnet: {{ kubernetes_service_cidr }}
 scheduler: {}
-controllerManager:
-  extraArgs:
-    node-monitor-period: 5s
-    node-monitor-grace-period: 20s
-    resource-quota-sync-period: 1m

@@ -3,5 +3,5 @@ namespace: metallb-system
 resources:
   # - namespace.yml
   - github.com/metallb/metallb/config/native?ref=v0.14.8
-  # - metallb-installation.yml
+  - metallb-installation.yml
   # - cluster-admin.yml

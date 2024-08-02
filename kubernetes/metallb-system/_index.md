@@ -9,3 +9,5 @@
         strictARP: true
    ```
 > Source: https://metallb.universe.tf/installation/
+3. Run ` kubectl label node linux-wayne node.kubernetes.io/exclude-from-external-load-balancers-
+node/linux-wayne unlabeled` to make sure you can host an LB

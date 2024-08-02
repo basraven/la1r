@@ -217,6 +217,7 @@
   shell: |
     mkdir -p /etc/containerd/
     containerd config default | tee /etc/containerd/config.toml
-    sed -i 's/SystemdCgroup \= false/SystemdCgroup \= true/g' /etc/containerd/config.toml
+    sed -i 's/disable_apparmor \= false/disable_apparmor \= true/g' /etc/containerd/config.toml
+    # sed -i 's/SystemdCgroup \= false/SystemdCgroup \= true/g' /etc/containerd/config.toml
   args:
     executable: /bin/bash
