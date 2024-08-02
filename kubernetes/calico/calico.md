@@ -1,1 +1,0 @@
-# TEST calico example inline docs

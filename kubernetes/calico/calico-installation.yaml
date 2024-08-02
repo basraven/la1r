@@ -15,13 +15,14 @@ spec:
       # interface: "e.*" # enp or eth
       skipInterface: "tun.*"
     ipPools:
-    - blockSize: 26 
+    - name: default-ipv4-ippool
+      blockSize: 26 
       cidr: 10.244.0.0/16
       encapsulation: VXLANCrossSubnet
-      # encapsulation: IPIPCrossSubnet
-      # ipipMode: Always
       natOutgoing: Enabled
       nodeSelector: all()
+      # encapsulation: IPIPCrossSubnet
+      # ipipMode: Always
   # Configures typhaRemoval on ARM
   # typhaAffinity: 
   #   nodeAffinity:
