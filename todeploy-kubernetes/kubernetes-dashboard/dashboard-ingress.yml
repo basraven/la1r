@@ -41,7 +41,6 @@ metadata:
   name: kubernetes-dashboard-https
   namespace: kubernetes-dashboard
   annotations:
-    kubernetes.io/ingress.class: traefik
     traefik.ingress.kubernetes.io/router.tls: "true"
     traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
 spec:
@@ -66,7 +65,6 @@ metadata:
   name: kubernetes-dashboard-http
   namespace: kubernetes-dashboard
   annotations:
-    kubernetes.io/ingress.class: traefik
     traefik.ingress.kubernetes.io/router.tls: "false"
     traefik.ingress.kubernetes.io/router.entrypoints: "web"
     traefik.ingress.kubernetes.io/router.middlewares: "traefik-http-redirect-to-https@kubernetescrd"

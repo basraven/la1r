@@ -23,10 +23,42 @@ metadata:
     contenttype: "nextcloud-data"
 spec:
   capacity:
-    storage: 800Gi
+    storage: 10Gi
   storageClassName: nextcloud-data
   persistentVolumeReclaimPolicy: Retain
   accessModes:
   - ReadWriteOnce
   hostPath:
     path: "/mnt/hdd/ha/nextcloud/data" # path to directory
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: media-bas-pv
+  labels:
+    contenttype: "media-bas"
+spec:
+  capacity:
+    storage: 1000Gi
+  storageClassName: media-bas
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/mnt/hdd/media/bas"
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: media-stephanie-pv
+  labels:
+    contenttype: "media-stephanie"
+spec:
+  capacity:
+    storage: 500Gi
+  storageClassName: media-stephanie
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/mnt/hdd/media/stephanie"

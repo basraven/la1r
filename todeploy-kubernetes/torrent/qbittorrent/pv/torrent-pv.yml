@@ -14,3 +14,19 @@ spec:
   - ReadWriteOnce
   hostPath:
     path: "/mnt/hdd/na/torrent" # path to directory
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: torrent-config-pv
+  labels:
+    contenttype: "torrent-config"
+spec:
+  capacity:
+    storage: 2Gi
+  storageClassName: torrent-config
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/mnt/ssd/na/torrent-config" # path to directory

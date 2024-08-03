@@ -234,23 +234,23 @@
 ;   create mask = 0600
 ;   directory mask = 0700
 
-[printers]
-   comment = All Printers
-   browseable = no
-   path = /var/spool/samba
-   printable = yes
-   guest ok = no
-   read only = yes
-   create mask = 0700
+; [printers]
+;    comment = All Printers
+;    browseable = no
+;    path = /var/spool/samba
+;    printable = yes
+;    guest ok = no
+;    read only = yes
+;    create mask = 0700
 
 # Windows clients look for this share name as a source of downloadable
 # printer drivers
-[print$]
-   comment = Printer Drivers
-   path = /var/lib/samba/printers
-   browseable = yes
-   read only = yes
-   guest ok = no
+; [print$]
+;    comment = Printer Drivers
+;    path = /var/lib/samba/printers
+;    browseable = yes
+;    read only = yes
+;    guest ok = no
 # Uncomment to allow remote administration of Windows print drivers.
 # You may need to replace 'lpadmin' with the name of the group your
 # admin users are members of.
@@ -263,7 +263,7 @@
 
  [basraven]
     comment = Nextcloud Bas
-    path = /mnt/hdd/ha/nextcloud/data/basraven/files
+    path = /mnt/hdd/media/bas
     read only = no
     browsable = yes
     writable = yes
@@ -272,7 +272,7 @@
 
  [stephanie]
     comment = Nextcloud Stephanie
-    path = /mnt/hdd/ha/nextcloud/data/stephanie/files
+    path = /mnt/hdd/media/stephanie
     read only = no
     browsable = yes
     writable = yes
@@ -290,7 +290,7 @@
    
  [cameras]
     comment = Cameras
-    path = /mnt/hdd/na/cameras
+    path = /mnt/ssd/na/cameras
     read only = no
     browsable = yes
     writable = yes

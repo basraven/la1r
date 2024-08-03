@@ -35,7 +35,7 @@ data:
     export VPN_GATEWAY=$(route -n | awk 'NR==3' | awk '{ print $2 }')
     echo "GATEWAY: $VPN_GATEWAY"
     # bash -c "sleep 3 && echo 'Deleting $VPN_GATEWAY' && ip route del 0.0.0.0/1 via $VPN_GATEWAY && curl ipinfo.io && echo '## Finished delete route' "&
-    bash -c "sleep 2 && ip route add 10.244.0.0/16 via 169.254.1.1 dev eth0" &
+    #bash -c "sleep 2 && ip route add 10.244.0.0/16 via 169.254.1.1 dev eth0" &
   
   qBittorrent.conf: |-
     [AutoRun]

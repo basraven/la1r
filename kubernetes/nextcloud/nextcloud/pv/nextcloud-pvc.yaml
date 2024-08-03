@@ -1,0 +1,64 @@
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: nextcloud-web-claim
+  namespace: nextcloud
+spec:
+  accessModes:
+  - ReadWriteOnce 
+  storageClassName: nextcloud-web
+  selector:
+    matchLabels:
+      contenttype: "nextcloud-web"
+  resources:
+    requests:
+      storage: 5Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: nextcloud-data-claim
+  namespace: nextcloud
+spec:
+  accessModes:
+  - ReadWriteOnce  
+  storageClassName: nextcloud-data
+  selector:
+    matchLabels:
+      contenttype: "nextcloud-data"
+  resources:
+    requests:
+      storage: 10Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: media-bas-claim
+  namespace: nextcloud
+spec:
+  accessModes:
+  - ReadWriteOnce  
+  storageClassName: media-bas
+  selector:
+    matchLabels:
+      contenttype: "media-bas"
+  resources:
+    requests:
+      storage: 1000Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: media-stephanie-claim
+  namespace: nextcloud
+spec:
+  accessModes:
+  - ReadWriteOnce  
+  storageClassName: media-stephanie
+  selector:
+    matchLabels:
+      contenttype: "media-stephanie"
+  resources:
+    requests:
+      storage: 500Gi

@@ -90,6 +90,12 @@ spec:
       - name: nextcloud-data
         persistentVolumeClaim:
           claimName: nextcloud-data-claim
+      - name: media-bas
+        persistentVolumeClaim:
+          claimName: media-bas-claim
+      - name: media-stephanie
+        persistentVolumeClaim:
+          claimName: media-stephanie-claim
       containers:
       - name: nextcloud
         image: nextcloud:24.0.2-apache
@@ -147,6 +153,10 @@ spec:
             mountPath: "/var/www/html"
           - name: nextcloud-data
             mountPath: "/var/www/html/data"
+          - name: media-bas
+            mountPath: "/var/www/html/data/basraven/files"
+          - name: media-stephanie
+            mountPath: "/var/www/html/data/stephanie/files"
           # - name: set-nextcloud-volume
           #   mountPath: /set-nextcloud
           # - name: apcu-config-volume
@@ -189,7 +199,6 @@ metadata:
   name: nextcloud-https
   namespace: nextcloud
   annotations:
-    kubernetes.io/ingress.class: traefik
     traefik.ingress.kubernetes.io/router.tls: "true"
     traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
 spec:
@@ -214,7 +223,6 @@ metadata:
   name: nextcloud-http
   namespace: nextcloud
   annotations:
-    kubernetes.io/ingress.class: traefik
     traefik.ingress.kubernetes.io/router.tls: "false"
     traefik.ingress.kubernetes.io/router.entrypoints: "web"
     traefik.ingress.kubernetes.io/router.middlewares: "traefik-http-redirect-to-https@kubernetescrd"
