@@ -48,13 +48,13 @@ spec:
       labels:
         app: coredns
     spec:
-      topologySpreadConstraints:
-      - maxSkew: 1
-        topologyKey: kubernetes.io/hostname
-        whenUnsatisfiable: ScheduleAnyway
-        labelSelector:
-          matchLabels:
-            app: coredns
+      # topologySpreadConstraints:
+      # - maxSkew: 1
+      #   topologyKey: kubernetes.io/hostname
+      #   whenUnsatisfiable: ScheduleAnyway
+      #   labelSelector:
+      #     matchLabels:
+      #       app: coredns
       affinity:
         nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:

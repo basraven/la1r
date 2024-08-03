@@ -61,23 +61,6 @@ spec:
             mountPath: /etc/motioneye 
           - name: motioneye-data-volume
             mountPath: /var/lib/motioneye
-# ---
-# apiVersion: v1
-# kind: Service
-# metadata:
-#   labels:
-#     app: motioneye
-#   name: motioneye
-#   namespace: homeautomation
-# spec:
-#   ports:
-#   - name: http
-#     targetPort: 8765
-#     port: 80
-#   selector:
-#     app: motioneye
-#   type: ClusterIP
-
 ---
 apiVersion: v1
 kind: Service
@@ -85,6 +68,23 @@ metadata:
   labels:
     app: motioneye
   name: motioneye
+  namespace: homeautomation
+spec:
+  ports:
+  - name: http
+    targetPort: 8765
+    port: 80
+  selector:
+    app: motioneye
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: motioneye
+  name: motioneye-lb
   namespace: homeautomation
 spec:
   ports:
@@ -121,7 +121,6 @@ metadata:
     traefik.ingress.kubernetes.io/router.tls: "true"
     traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
 spec:
-  ingressClassName: traefik
   tls:
   - secretName: motioneye-bas-tls
   rules:
@@ -147,7 +146,6 @@ metadata:
     traefik.ingress.kubernetes.io/router.entrypoints: "web"
     traefik.ingress.kubernetes.io/router.middlewares: "traefik-http-redirect-to-https@kubernetescrd"
 spec:
-  ingressClassName: traefik
   rules:
   - host: cam.bas
     http:

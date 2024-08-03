@@ -1,4 +1,14 @@
 ---
+apiVersion: networking.k8s.io/v1
+kind: IngressClass
+metadata:
+  name: lan
+  annotations:
+    ingressclass.kubernetes.io/is-default-class: "true"
+spec:
+  controller: traefik.io/ingress-controller
+
+---
 kind: DaemonSet
 apiVersion: apps/v1
 metadata:
@@ -32,7 +42,6 @@ spec:
         args:
           - --api.dashboard=true
           - --api.insecure=true
-          - --accesslog
           - --metrics=true
           - --serverstransport.insecureskipverify
           - --metrics.prometheus=true
@@ -42,9 +51,11 @@ spec:
           - --entrypoints.websecure.Address=:443
           - --entrypoints.websecure.http.tls
           - --providers.kubernetesingress
+          - --providers.kubernetesIngress.ingressClass=lan
           - --providers.kubernetesingress.ingressendpoint.ip=192.168.6.2
           - --providers.kubernetescrd
-          - --providers.kubernetescrd.labelselector=expose!=online
+          # - --log.level=DEBUG
+          # - --accesslog
 ---
 kind: Service
 apiVersion: v1
@@ -128,7 +139,6 @@ metadata:
     traefik.ingress.kubernetes.io/router.tls: "true"
     traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
 spec:
-  ingressClassName: traefik
   tls:
   - secretName: traefik-bas-tls
   rules:
@@ -150,7 +160,6 @@ metadata:
   name: traefik-http
   namespace: traefik
   annotations:
-    kubernetes.io/ingress.class: traefik
     traefik.ingress.kubernetes.io/router.tls: "false"
     traefik.ingress.kubernetes.io/router.entrypoints: "web"
     traefik.ingress.kubernetes.io/router.middlewares: "traefik-http-redirect-to-https@kubernetescrd"
