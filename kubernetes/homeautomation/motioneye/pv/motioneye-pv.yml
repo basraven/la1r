@@ -13,4 +13,20 @@ spec:
   accessModes:
   - ReadWriteOnce
   hostPath:
-    path: "/mnt/hdd/na/cameras" # path to directory
+    path: "/mnt/ssd/na/cameras" # path to directory
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: camera-settings-data-pv
+  labels:
+    contenttype: "camera-settings-data"
+spec:
+  capacity:
+    storage: 500Mi
+  storageClassName: camera-settings-data
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/mnt/ssd/ha/camera-settings" # path to directory

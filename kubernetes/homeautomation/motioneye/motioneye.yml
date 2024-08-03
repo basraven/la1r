@@ -111,51 +111,51 @@ spec:
   dnsNames:
   - cam.bas
   - www.cam.bas
-# ---
-# apiVersion: networking.k8s.io/v1
-# kind: Ingress
-# metadata:
-#   name: motioneye-https
-#   namespace: homeautomation
-#   annotations:
-#     kubernetes.io/ingress.class: traefik
-#     traefik.ingress.kubernetes.io/router.tls: "true"
-#     traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
-# spec:
-#   tls:
-#   - secretName: motioneye-bas-tls
-#   rules:
-#   - host: cam.bas
-#     http:
-#       paths:
-#       - path: /
-#         pathType: Prefix
-#         backend:
-#           service:
-#             name: motioneye
-#             port:
-#               number: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: motioneye-https
+  namespace: homeautomation
+  annotations:
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+spec:
+  ingressClassName: traefik
+  tls:
+  - secretName: motioneye-bas-tls
+  rules:
+  - host: cam.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: motioneye
+            port:
+              number: 80
 
-# ---
-# apiVersion: networking.k8s.io/v1
-# kind: Ingress
-# metadata:
-#   name: motioneye-http
-#   namespace: homeautomation
-#   annotations:
-#     kubernetes.io/ingress.class: traefik
-#     traefik.ingress.kubernetes.io/router.tls: "false"
-#     traefik.ingress.kubernetes.io/router.entrypoints: "web"
-#     traefik.ingress.kubernetes.io/router.middlewares: "traefik-http-redirect-to-https@kubernetescrd"
-# spec:
-#   rules:
-#   - host: cam.bas
-#     http:
-#       paths:
-#       - path: /
-#         pathType: Prefix
-#         backend:
-#           service:
-#             name: motioneye
-#             port:
-#               number: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: motioneye-http
+  namespace: homeautomation
+  annotations:
+    traefik.ingress.kubernetes.io/router.tls: "false"
+    traefik.ingress.kubernetes.io/router.entrypoints: "web"
+    traefik.ingress.kubernetes.io/router.middlewares: "traefik-http-redirect-to-https@kubernetescrd"
+spec:
+  ingressClassName: traefik
+  rules:
+  - host: cam.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: motioneye
+            port:
+              number: 80

@@ -5,12 +5,15 @@ metadata:
   name: motioneye-config-claim
   namespace: homeautomation
 spec:
-  storageClassName: hdd-ha
   accessModes:
     - ReadWriteOnce
+  storageClassName: camera-settings-data
+  selector:
+    matchLabels:
+      contenttype: "camera-settings-data"
   resources:
     requests:
-      storage: 1Gi
+      storage: 500Mi
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
