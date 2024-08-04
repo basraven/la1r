@@ -12,8 +12,6 @@ spec:
       labels:
         app: database
     spec:
-      securityContext:
-        fsGroup: 999
       # NonEssential
       affinity:
         nodeAffinity:
@@ -24,6 +22,8 @@ spec:
                 operator: In
                 values:
                 - "true"
+      securityContext:
+        fsGroup: 999
       initContainers:
         - name: init-permissions
           image: busybox
@@ -44,31 +44,20 @@ spec:
         image: docker.io/tensorchord/pgvecto-rs:pg14-v0.2.0
         env:
         - name: POSTGRES_PASSWORD
-          value: mysecretpassword
-          # valueFrom:
-          #   secretKeyRef:
-          #     name: db-secrets
-          #     key: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mariadbsecret
+              key: MYSQL_PASSWORD
         - name: POSTGRES_USER
-          value: mydbuser
-          # valueFrom:
-          #   secretKeyRef:
-          #     name: db-secrets
-          #     key: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: mariadbsecret
+              key: MYSQL_USER
         - name: POSTGRES_DB
           value: immich
-          # valueFrom:
-          #   secretKeyRef:
-          #     name: db-secrets
-          #     key: POSTGRES_DB
-        # volumeMounts:
-        # - name: postgres-config
-        #   mountPath: /tmp/postgresql.conf
-        #   subPath: postgres.conf
-        # - name: db-data
-        #   mountPath: /var/lib/postgresql/data
-        # command: ["postgres", "-c", "config_file=/var/lib/postgresql/data/postgresql.conf"]
-        # command: ["cat","/var/lib/postgresql/data/postgresql.conf"]
+        volumeMounts:
+        - name: immich-db-data
+          mountPath: /var/lib/postgresql/data
         # command: ["postgres", "-c" ,"shared_preload_libraries=vectors.so", "-c", 'search_path="$$user", public, vectors', "-c", "logging_collector=on", "-c", "max_wal_size=2GB", "-c", "shared_buffers=512MB", "-c", "wal_compression=on"]
         # livenessProbe:
         #   exec:
@@ -82,6 +71,6 @@ spec:
       - name: postgres-config
         configMap:
           name: postgres-config
-      - name: db-data
+      - name: immich-db-data
         persistentVolumeClaim:
-          claimName: db-data-claim
+          claimName: immich-db-claim

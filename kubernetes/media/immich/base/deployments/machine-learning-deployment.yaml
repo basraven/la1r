@@ -30,9 +30,9 @@ spec:
         volumeMounts:
         - name: model-cache
           mountPath: /cache
-        envFrom:
-        - configMapRef:
-            name: env-config
+        # envFrom:
+        # - configMapRef:
+        #     name: env-config
       volumes:
       - name: model-cache
         emptyDir: {}

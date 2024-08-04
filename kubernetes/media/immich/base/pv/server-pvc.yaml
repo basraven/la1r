@@ -1,0 +1,58 @@
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: immich-server-data-pv
+  labels:
+    contenttype: "immich-server-data"
+spec:
+  capacity:
+    storage: 500Gi
+  storageClassName: immich-server-data
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/mnt/ssd/ha/immich/data"
+
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: immich-media-bas-pv
+  labels:
+    contenttype: "immich-media-bas"
+spec:
+  capacity:
+    storage: 1000Gi
+  storageClassName: immich-media-bas
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/mnt/hdd/media/bas/Pictures"
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: immich-server-data-claim
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: immich-server-data
+  resources:
+    requests:
+      storage: 500Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: immich-media-bas-claim
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: immich-media-bas
+  resources:
+    requests:
+      storage: 1000Gi

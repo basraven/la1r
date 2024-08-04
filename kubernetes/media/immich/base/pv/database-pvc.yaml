@@ -2,27 +2,28 @@
 kind: PersistentVolume
 apiVersion: v1
 metadata:
-  name: media-sample-bas-pv
+  name: immich-db-pv
   labels:
-    contenttype: "media-sample-bas"
+    contenttype: "immich-db"
 spec:
   capacity:
-    storage: 50Gi
-  storageClassName: media-sample-bas
+    storage: 20Gi
+  storageClassName: immich-db
   persistentVolumeReclaimPolicy: Retain
   accessModes:
   - ReadWriteOnce
   hostPath:
-    path: "/mnt/hdd/media-sample"
+    path: "/mnt/ssd/ha/immich/database"
 ---
-apiVersion: v1
 kind: PersistentVolumeClaim
+apiVersion: v1
 metadata:
-  name: immich-server-pvc
+  name: immich-db-claim
+  namespace: media
 spec:
   accessModes:
   - ReadWriteOnce
-  storageClassName: media-sample-bas
+  storageClassName: immich-db
   resources:
     requests:
-      storage: 50Gi
+      storage: 20Gi

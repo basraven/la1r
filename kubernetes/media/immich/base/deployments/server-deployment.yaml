@@ -27,38 +27,40 @@ spec:
         image: ghcr.io/immich-app/immich-server:main
         ports:
         - containerPort: 3001
-        volumeMounts:
-        - name: upload-volume
-          mountPath: /usr/src/app/upload2
-        - name: localtime
-          mountPath: /etc/localtime
-          readOnly: true
-        envFrom:
-        - secretRef:
-            name: db-secrets
         env:
         - name: DB_PASSWORD
-          value: mysecretpassword
-          # valueFrom:
-          #   secretKeyRef:
-          #     name: db-secrets
-          #     key: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mariadbsecret
+              key: MYSQL_PASSWORD
         - name: DB_USERNAME
-          value: mydbuser
-          # valueFrom:
-          #   secretKeyRef:
-          #     name: db-secrets
-          #     key: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: mariadbsecret
+              key: MYSQL_USER
         - name: DB_DATABASE_NAME
           value: immich
         - name: REDIS_PORT
           value: "6379"
         - name: UPLOAD_LOCATION
           value: "/usr/src/app/upload"
+        # - name: IMMICH_MACHINE_LEARNING_SERVICE_HOST
+        #   value: "192.168.6.182"
+        volumeMounts:
+        - name: immich-server-data
+          mountPath: /usr/src/app/upload
+        - name: immich-media-bas-data
+          mountPath: /usr/src/app/external-libs/bas
+        - name: localtime
+          mountPath: /etc/localtime
+          readOnly: true
       volumes:
-      - name: upload-volume
+      - name: immich-server-data
         persistentVolumeClaim:
-          claimName: immich-server-pvc
+          claimName: immich-server-data-claim
+      - name: immich-media-bas-data
+        persistentVolumeClaim:
+          claimName: immich-media-bas-claim
       - name: localtime
         hostPath:
           path: /etc/localtime

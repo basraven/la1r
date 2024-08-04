@@ -1,0 +1,17 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: media
+resources:
+  - base/configMaps/postgres-configmap.yaml
+  - base/pv/server-pvc.yaml
+  - base/pv/database-pvc.yaml
+  - base/deployments/server-deployment.yaml
+  - base/deployments/machine-learning-deployment.yaml
+  - base/deployments/redis-deployment.yaml
+  - base/deployments/database-deployment.yaml
+  - base/services/server-service.yaml
+  - base/services/machine-learning-service.yaml
+  - base/services/redis-service.yaml
+  - base/services/database-service.yaml
+  - base/ingresses/server-ingress.yaml
+  # - ../../../credentials/kubernetes/nextcloud-dbsecret.yaml # manually for now
