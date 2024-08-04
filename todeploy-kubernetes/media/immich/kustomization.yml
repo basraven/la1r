@@ -1,0 +1,27 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: media
+resources:
+  - base/configMaps/postgres-configmap.yaml
+  - base/deployments/immich-server-deployment.yaml
+  - base/deployments/immich-machine-learning-deployment.yaml
+  - base/deployments/redis-deployment.yaml
+  - base/deployments/database-deployment.yaml
+  - base/services/immich-server-service.yaml
+  - base/services/immich-machine-learning-service.yaml
+  - base/services/redis-service.yaml
+  - base/services/database-service.yaml
+  - base/persistentVolumeClaims/immich-server-pvc.yaml
+  - base/persistentVolumeClaims/database-pvc.yaml
+
+configMapGenerator:
+  - name: env-config
+    files:
+      - .env
+
+secretGenerator:
+  - name: db-secrets
+    literals:
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_DB=${DB_DATABASE_NAME}

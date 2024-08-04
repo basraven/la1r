@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: database
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: database
+  template:
+    metadata:
+      labels:
+        app: database
+    spec:
+      securityContext:
+        fsGroup: 999
+      # NonEssential
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: la1r.workload/nonessential
+                operator: In
+                values:
+                - "true"
+      initContainers:
+        - name: init-permissions
+          image: busybox
+          command:
+          - sh
+          - -c
+          - "mkdir -p /var/lib/postgresql/data/ && cp /tmp/postgresql.conf /var/lib/postgresql/data/postgresql.conf && chown -R 999:999 /var/lib/postgresql/data/"
+          volumeMounts:
+            - name: postgres-config
+              mountPath: /tmp/postgresql.conf
+              subPath: postgres.conf
+
+      containers:
+      - name: database
+        securityContext:
+          runAsUser: 999  # postgres user ID
+          runAsGroup: 999  # postgres group ID      
+        image: docker.io/tensorchord/pgvecto-rs:pg14-v0.2.0
+        env:
+        - name: POSTGRES_PASSWORD
+          value: mysecretpassword
+          # valueFrom:
+          #   secretKeyRef:
+          #     name: db-secrets
+          #     key: POSTGRES_PASSWORD
+        - name: POSTGRES_USER
+          value: mydbuser
+          # valueFrom:
+          #   secretKeyRef:
+          #     name: db-secrets
+          #     key: POSTGRES_USER
+        - name: POSTGRES_DB
+          value: immich
+          # valueFrom:
+          #   secretKeyRef:
+          #     name: db-secrets
+          #     key: POSTGRES_DB
+        # volumeMounts:
+        # - name: postgres-config
+        #   mountPath: /tmp/postgresql.conf
+        #   subPath: postgres.conf
+        # - name: db-data
+        #   mountPath: /var/lib/postgresql/data
+        # command: ["postgres", "-c", "config_file=/var/lib/postgresql/data/postgresql.conf"]
+        # command: ["cat","/var/lib/postgresql/data/postgresql.conf"]
+        # command: ["postgres", "-c" ,"shared_preload_libraries=vectors.so", "-c", 'search_path="$$user", public, vectors', "-c", "logging_collector=on", "-c", "max_wal_size=2GB", "-c", "shared_buffers=512MB", "-c", "wal_compression=on"]
+        # livenessProbe:
+        #   exec:
+        #     command:
+        #     - sh
+        #     - -c
+        #     - pg_isready --dbname='${DB_DATABASE_NAME}' --username='${DB_USERNAME}' || exit 1; Chksum="$$(psql --dbname='${DB_DATABASE_NAME}' --username='${DB_USERNAME}' --tuples-only --no-align --command='SELECT COALESCE(SUM(checksum_failures), 0) FROM pg_stat_database')"; echo "checksum failure count is $$Chksum"; [ "$$Chksum" = '0' ] || exit 1
+        #   initialDelaySeconds: 30
+        #   periodSeconds: 300
+      volumes:
+      - name: postgres-config
+        configMap:
+          name: postgres-config
+      - name: db-data
+        persistentVolumeClaim:
+          claimName: db-data-claim
