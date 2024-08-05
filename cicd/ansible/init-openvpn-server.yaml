@@ -1,6 +1,6 @@
 ---
 # SEB: THIS IS A HACK BECAUSE I DIDN'T WANT TO SPEND TIME ON BUILDING MY OPEN OVPN OPERATOR
-- name: init-ovpn-ca
+- name: init-ovpn-server
   hosts: linux-wayne
   tasks:
     - name: Prepare folders

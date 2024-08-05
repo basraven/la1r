@@ -13,15 +13,15 @@
     state: absent
     force: yes
   with_items:
-    - "{{ openvpn_client_configs_dir }}/ovpn/{{ openvpn_user }}.ovpn"
-    - "{{ openvpn_client_configs_dir }}/make_client_ovpn_cert.sh"
-    - "{{ openvpn_client_configs_dir }}/base.conf"
+    - "{{ openvpn_client_configs_dir }}/{{ openvpn_user }}.ovpn"
 
 - name: Delete User / Revoke Access based on certificate
   become: yes
   shell: |
     export EASYRSA_BATCH=1 # non-interactive mode
     ./easyrsa revoke {{ openvpn_user }}
+    ./easyrsa gen-crl
+    chmod 644 pki/crl.pem
   args:
     chdir: "{{ openvpn_ca_dir }}"
     executable: /bin/bash

@@ -1,9 +1,9 @@
 ---
 
-openvpn_ca_dir: "/etc/openvpn/openvpn-ca/current"
-openvpn_ca_backup_dir: "/etc/openvpn/openvpn-ca/backup"
-openvpn_client_configs_dir: "/etc/openvpn/client-configs/current"
-openvpn_client_configs_backup_dir: "/etc/openvpn/client-configs/backup"
+openvpn_ca_dir: "/etc/openvpn/openvpn-ca"
+openvpn_ca_backup_dir: "/etc/openvpn/backup/openvpn-ca"
+openvpn_client_configs_dir: "/etc/openvpn/client-configs"
+openvpn_client_configs_backup_dir: "/etc/openvpn/backup/client-configs"
 
 openvpn_KEY_COUNTRY: "NL"
 openvpn_KEY_PROVINCE: "NH"

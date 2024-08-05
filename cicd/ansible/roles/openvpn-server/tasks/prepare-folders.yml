@@ -1,5 +1,5 @@
 ---
-- name: Prepare CA / Create backup folders
+- name: Prepare CA folder / Create backup folders
   become: yes
   file:
     path: "{{ item }}"
@@ -12,7 +12,7 @@
     - "{{ openvpn_ca_backup_dir }}"
     - "{{ openvpn_client_configs_backup_dir }}"
 
-- name: "Prepare CA / Copy old CA to {{ openvpn_ca_backup_dir }}"
+- name: "Prepare CA folder / Copy old CA to {{ openvpn_ca_backup_dir }}"
   become: yes
   copy:
     remote_src: yes
@@ -20,7 +20,7 @@
     dest: "{{ openvpn_ca_backup_dir }}/ca-{{ ansible_date_time.iso8601 }}"
     force: yes
 
-- name: "Prepare CA / Copy old client-configs to {{ openvpn_client_configs_backup_dir }}"
+- name: "Prepare CA folder / Copy old client-configs to {{ openvpn_client_configs_backup_dir }}"
   become: yes
   copy:
     remote_src: yes
@@ -28,31 +28,31 @@
     dest: "{{ openvpn_client_configs_backup_dir }}/clients-{{ ansible_date_time.iso8601 }}"
     force: yes
 
-- name: "Prepare CA / Remove the {{ openvpn_ca_dir }} folder"
+- name: "Prepare CA folder / Remove the {{ openvpn_ca_dir }} folder"
   become: yes
   file:
     path: "{{ openvpn_ca_dir }}"
     state: absent
     force: yes
 
-- name: "Prepare CA / Remove the {{ openvpn_client_configs_dir }} folder"
+- name: "Prepare CA folder / Remove the {{ openvpn_client_configs_dir }} folder"
   become: yes
   file:
     path: "{{ openvpn_client_configs_dir }}"
     state: absent
     force: yes
 
-- name: "Prepare CA / Create the {{ openvpn_ca_dir }} folder"
+- name: "Prepare CA folder / Create the {{ openvpn_ca_dir }} folder"
   become: yes
   file:
     path: "{{ openvpn_ca_dir }}"
     state: directory
     recurse: yes
-  when: ansible_facts['distribution'] == "CentOS"
+  # when: ansible_facts['distribution'] == "CentOS"
     # group: "{{ target_user_name }}"
     # owner: "{{ target_user_name }}"
 
-- name: "Prepare CA / Create the {{ openvpn_client_configs_dir }} folder"
+- name: "Prepare CA folder / Create the {{ openvpn_client_configs_dir }} folder"
   become: yes
   file:
     path: "{{ openvpn_client_configs_dir }}"
