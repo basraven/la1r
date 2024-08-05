@@ -1,5 +1,5 @@
 {# Based on https://github.com/kylemanna/docker-openvpn/blob/master/bin/ovpn_genconfig #}
-server 10.8.255.0 255.255.255.0
+server 10.8.0.0 255.255.255.0
 verb 3
 key /etc/openvpn/openvpn-ca/pki/private/{{openvpn_server_url}}.key
 ca /etc/openvpn/openvpn-ca/pki/ca.crt
@@ -7,6 +7,7 @@ cert /etc/openvpn/openvpn-ca/pki/issued/{{openvpn_server_url}}.crt
 dh /etc/openvpn/openvpn-ca/pki/dh.pem
 tls-auth /etc/openvpn/openvpn-ca/pki/ta.key
 crl-verify /etc/openvpn/openvpn-ca/pki/crl.pem
+ifconfig-pool-persist /var/log/openvpn/ipp.txt
 key-direction 0
 keepalive 10 60
 persist-key
@@ -28,9 +29,9 @@ status-version 2
 duplicate-cn
 
 ### Push Configurations Below
-push "block-outside-dns"
+#push "block-outside-dns"
 push "dhcp-option DNS 192.168.6.90"
-push "dhcp-option DNS 8.8.8.8"
-push "dhcp-option DNS 8.8.4.4"
+#push "dhcp-option DNS 8.8.8.8"
+#push "dhcp-option DNS 8.8.4.4"
 push "comp-lzo no"
 
