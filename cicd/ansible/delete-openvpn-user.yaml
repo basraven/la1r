@@ -1,0 +1,21 @@
+---
+- name: delete-ovpn-user
+  # vars:
+  #   openvpn_user: "testseb" # use --extra-vars "openvpn_user=testseb"
+  hosts: linux-wayne
+  tasks:
+    - name: Fail if openvpn_user is not defined
+      fail:
+        msg: "The variable 'openvpn_user' is not defined. Please set it before running this playbook."
+      when: openvpn_user is not defined or openvpn_user | length == 0
+
+    - name: Continue with the rest of the playbook
+      debug:
+        msg: "The variable 'openvpn_user' is defined and set to {{ openvpn_user }}."
+
+    - name: Include specific tasks from openvpn-server role
+      include_role:
+        name: openvpn-server
+        tasks_from: delete-user.yml
+
+  

@@ -1,0 +1,15 @@
+---
+# SEB: THIS IS A HACK BECAUSE I DIDN'T WANT TO SPEND TIME ON BUILDING MY OPEN OVPN OPERATOR
+- name: init-ovpn-ca
+  hosts: linux-wayne
+  tasks:
+    - name: Prepare folders
+      include_role:
+        name: openvpn-server
+        tasks_from: prepare-folders.yml
+    - name: Build new CA
+      include_role:
+        name: openvpn-server
+        tasks_from: create-server.yml
+
+  
