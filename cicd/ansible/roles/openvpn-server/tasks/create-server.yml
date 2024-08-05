@@ -10,34 +10,6 @@
     - easy-rsa
     # - gzip
 
-# - name: Create Server Certificates / Create a new CA directory at {{ openvpn_ca_dir }} for non CentOS
-#   become: true
-#   command: make-cadir {{ openvpn_ca_dir }}
-#   when: ansible_facts['distribution'] != "CentOS"
-
-# - name: Create Server Certificates / Create a new CA directory at {{ openvpn_ca_dir }} for CentOS
-#   become: true
-#   copy: 
-#     src: /usr/share/easy-rsa/3/
-#     dest: "{{ openvpn_ca_dir }}"
-#     remote_src: yes
-#   when: ansible_facts['distribution'] == "CentOS"
-
-# - name: Create Server Certificates / Create {{ openvpn_ca_dir }} vars
-#   become: true
-#   template:
-#     src: openvpn.vars.j2
-#     dest: "{{ openvpn_ca_dir }}/vars"
-
-# - name: Create Server Certificates / Remove rand file ref
-#   become: true
-#   lineinfile:
-#     dest: "{{ openvpn_ca_dir }}/openssl-easyrsa.cnf"
-#     regexp: "{{ item.regexp }}"
-#     line: "{{ item.line }}"
-#   with_items:
-#     - { regexp: '^RANDFILE',  line: '# RANDFILE' }
-
 - name: Create Server Certificates / Init PKI and Build CA
   become: true
   shell: |
@@ -77,31 +49,6 @@
     chdir: "{{ openvpn_ca_dir }}"
     executable: /bin/bash
 
-# - name: Create Server Certificates / Create certificate request and sign request
-#   become: true
-#   shell: |
-#     export EASYRSA_BATCH=1 # non-interactive mode
-#     ./easyrsa gen-req {{ inventory_hostname }} nopass
-#     ./easyrsa sign-req server {{ inventory_hostname }}
-#   args:
-#     chdir: "{{ openvpn_ca_dir }}"
-#     executable: /bin/bash
-
-# - name: Create Server Certificates / Copy the generated private keys to /etc/openvpn
-#   become: true
-#   copy:
-#     src: "{{ openvpn_ca_dir }}/pki/{{ item }}"
-#     dest: /etc/openvpn
-#     force: True
-#     remote_src: yes
-#   with_items:
-#     - ca.crt
-#     - dh.pem
-#     - "issued/{{ inventory_hostname }}.crt"
-#     - "private/{{ inventory_hostname }}.key"
-#     # - "private/ca.key"
-
-
 - name: Create Server Certificates / establish openvpn.base.conf.j2 template in {{ openvpn_client_configs_dir }}/{{ openvpn_user }}.ovpn"
   become: yes
   template:
@@ -117,28 +64,5 @@
 #     gunzip -c /usr/share/doc/openvpn/examples/sample-config-files/server.conf.gz | \
 #     tee /etc/openvpn/server.conf
 
-# TODO: Replace for template
-# - name: Create Server Certificates / Adjust /etc/openvpn/server.conf with custom configuration
-#   become: true
-#   lineinfile:
-#     dest: /etc/openvpn/server.conf
-#     regexp: "{{ item.regexp }}"
-#     line: "{{ item.line }}"
-#   with_items:
-#     - { regexp: '^;?tls-auth',          line: 'tls-auth ca.key 0' }
-#     - { regexp: '^;?key-direction',     line: 'key-direction 0' }
-#     - { regexp: '^;?cipher',            line: 'cipher {{ openvpn_cipher }}' }
-#     - { regexp: '^;?auth',              line: 'auth {{ openvpn_auth }}' }
-#     - { regexp: '^;?management',        line: 'management 0.0.0.0 33555' }
-#     - { regexp: '^;?user',              line: 'user nobody' }
-#     - { regexp: '^;?group',             line: 'group nogroup' }
-#     - { regexp: '^;?port',              line: 'port {{ openvpn_port_expose }} ' }
-#     - { regexp: '^;?proto',             line: 'proto {{ openvpn_proto }} ' }
-#     - { regexp: '^;?status-version',    line: 'status-version 2' }
-#     - { regexp: '^;?duplicate-cn',      line: 'duplicate-cn' }
-#     - { regexp: '^;?script-security',   line: 'script-security 2' }
-#     - { regexp: '^;?dhcp-option',       line: 'dhcp-option DNS 10.8.0.1' }
-#     - { regexp: '^;?client-to-client',  line: 'client-to-client' }
-#     - { regexp: '^;?log ',              line: 'log /var/log/openvpn.log' }
 
 - include_tasks: networking.yml
