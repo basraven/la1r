@@ -5,6 +5,7 @@ COMMIT
 *filter
 -A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
 -A FORWARD -s 10.8.0.0/16 -d 192.168.0.0/16 -i tun0 -o enp3s0 -m conntrack --ctstate NEW -j ACCEPT
+-A FORWARD -s 192.168.0.0/16 -d 10.8.0.0/16 -i enp3s0 -o tun0 -m conntrack --ctstate NEW -j ACCEPT
 COMMIT
 *nat
 -A POSTROUTING -s 10.8.0.0/16 -o enp3s0 -j MASQUERADE
