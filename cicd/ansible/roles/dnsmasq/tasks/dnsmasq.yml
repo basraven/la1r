@@ -10,6 +10,21 @@
     src: "../templates/dnsmasq.conf.j2"
     dest: "/etc/dnsmasq.conf"
     mode: "0755"
+- name: Dnsmasq / Create await dir
+  become: yes
+  file:
+    path: "{{ item }}"
+    state: directory
+    force: yes
+    recurse: yes
+  with_items:
+    - "/etc/systemd/system/dnsmasq.service.d"
+- name: Dnsmasq / Await openvpn
+  become: yes
+  template:
+    src: "../templates/dnsmasq-systemd-override.conf"
+    dest: "/etc/systemd/system/dnsmasq.service.d/override.conf"
+    mode: "0755"
 - name: Dnsmasq / Update /etc/hosts
   become: yes
   lineinfile:
