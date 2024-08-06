@@ -1,0 +1,235 @@
+# yaml-language-server: $schema=https://frigate.bas/api/config/schema.json
+mqtt:
+  enabled: False
+
+# Optional: Detectors configuration. Defaults to a single CPU detector
+detectors:
+  # Required: name of the detector
+  openvino:
+    device: AUTO
+    # Required: type of the detector
+    # Frigate provided types include 'cpu', 'edgetpu', 'openvino' and 'tensorrt' (default: shown below)
+    # Additional detector types can also be plugged in.
+    # Detectors may require additional configuration.
+    # Refer to the Detectors configuration page for more information.
+    type: openvino
+    model:
+      path: /openvino-model/ssdlite_mobilenet_v2.xml
+# Optional: Database configuration
+# database:
+#   # The path to store the SQLite DB (default: shown below)
+#   path: /config/frigate.db
+
+model:
+  width: 300
+  height: 300
+  input_tensor: nhwc
+  input_pixel_format: bgr
+  labelmap_path: /openvino-model/coco_91cl_bkgr.txt
+
+# Optional: Audio Events Configuration
+# NOTE: Can be overridden at the camera level
+audio:
+  # Optional: Enable audio events (default: shown below)
+  enabled: False
+
+# # Optional: logger verbosity settings
+# logger:
+#   # Optional: Default log verbosity (default: shown below)
+#   default: info
+#   # Optional: Component specific logger overrides
+#   logs:
+#     frigate.event: debug
+
+
+# Optional: birdseye configuration
+# NOTE: Can (enabled, mode) be overridden at the camera level
+birdseye:
+  # Optional: Enable birdseye view (default: shown below)
+  enabled: False
+  mode: continuous
+  # Optional: Restream birdseye via RTSP (default: shown below)
+  # NOTE: Enabling this will set birdseye to run 24/7 which may increase CPU usage somewhat.
+  restream: False
+
+# Optional: ffmpeg configuration
+# More information about presets at https://docs.frigate.video/configuration/ffmpeg_presets
+ffmpeg:
+  hwaccel_args: preset-rpi-64-h265
+
+
+detect:
+  fps: 2
+  enabled: True
+
+objects:
+  # Optional: list of objects to track from labelmap.txt (default: shown below)
+  track:
+    - person
+
+# Optional: Motion configuration
+# NOTE: Can be overridden at the camera level
+# motion:
+
+
+# Optional: Record configuration
+# NOTE: Can be overridden at the camera level
+record:
+  # Optional: Enable recording (default: shown below)
+  # WARNING: If recording is disabled in the config, turning it on via
+  #          the UI or MQTT later will have no effect.
+  enabled: True
+  # Optional: Number of minutes to wait between cleanup runs (default: shown below)
+  # This can be used to reduce the frequency of deleting recording segments from disk if you want to minimize i/o
+  expire_interval: 120
+  # Optional: Sync recordings with disk on startup and once a day (default: shown below).
+  sync_recordings: True
+  # Optional: Retention settings for recording
+  retain:
+    # Optional: Number of days to retain recordings regardless of events (default: shown below)
+    # NOTE: This should be set to 0 and retention should be defined in events section below
+    #       if you only want to retain recordings of events.
+    days: 32
+    # Optional: Mode for retention. Available options are: all, motion, and active_objects
+    #   all - save all recording segments regardless of activity
+    #   motion - save all recordings segments with any detected motion
+    #   active_objects - save all recording segments with active/moving objects
+    # NOTE: this mode only applies when the days setting above is greater than 0
+    mode: all
+  # Optional: Recording Export Settings
+  export:
+    # Optional: Timelapse Output Args (default: shown below).
+    # NOTE: The default args are set to fit 24 hours of recording into 1 hour playback.
+    # See https://stackoverflow.com/a/58268695 for more info on how these args work.
+    # As an example: if you wanted to go from 24 hours to 30 minutes that would be going
+    # from 86400 seconds to 1800 seconds which would be 1800 / 86400 = 0.02.
+    # The -r (framerate) dictates how smooth the output video is.
+    # So the args would be -vf setpts=0.02*PTS -r 30 in that case.
+    timelapse_args: "-vf setpts=0.04*PTS -r 30"
+  # Optional: Event recording settings
+  events:
+    # Optional: Number of seconds before the event to include (default: shown below)
+    pre_capture: 5
+    # Optional: Number of seconds after the event to include (default: shown below)
+    post_capture: 5
+    # Optional: Objects to save recordings for. (default: all tracked objects)
+    # objects:
+    #   - person
+    # Optional: Restrict recordings to objects that entered any of the listed zones (default: no required zones)
+    # required_zones: []
+    # Optional: Retention settings for recordings of events
+    retain:
+      # Required: Default retention days (default: shown below)
+      default: 10
+      # Optional: Mode for retention. (default: shown below)
+      #   all - save all recording segments for events regardless of activity
+      #   motion - save all recordings segments for events with any detected motion
+      #   active_objects - save all recording segments for event with active/moving objects
+      #
+      # NOTE: If the retain mode for the camera is more restrictive than the mode configured
+      #       here, the segments will already be gone by the time this mode is applied.
+      #       For example, if the camera retain mode is "motion", the segments without motion are
+      #       never stored, so setting the mode to "all" here won't bring them back.
+      mode: motion
+      # Optional: Per object retention days
+      # objects:
+      #   person: 15
+
+# Optional: Configuration for the jpg snapshots written to the clips directory for each event
+# NOTE: Can be overridden at the camera level
+snapshots:
+  # Optional: Enable writing jpg snapshot to /media/frigate/clips (default: shown below)
+  enabled: False
+  # # Optional: save a clean PNG copy of the snapshot image (default: shown below)
+  # clean_copy: True
+  # # Optional: print a timestamp on the snapshots (default: shown below)
+  # timestamp: True
+  # # Optional: draw bounding box on the snapshots (default: shown below)
+  # bounding_box: True
+  # # Optional: crop the snapshot (default: shown below)
+  # crop: False
+  # # Optional: height to resize the snapshot to (default: original size)
+  # height: 175
+  # # Optional: Restrict snapshots to objects that entered any of the listed zones (default: no required zones)
+  # # required_zones: []
+  # # Optional: Camera override for retention settings (default: global values)
+  # retain:
+  #   # Required: Default retention days (default: shown below)
+  #   default: 90
+  #   # Optional: Per object retention days
+  #   # objects:
+  #   #   person: 15
+  # # Optional: quality of the encoded jpeg, 0-100 (default: shown below)
+  # quality: 70
+
+
+# Optional: Restream configuration
+# Uses https://github.com/AlexxIT/go2rtc (v1.8.3)
+# go2rtc:
+
+# Optional: jsmpeg stream configuration for WebUI
+# live:
+  # Optional: Set the name of the stream that should be used for live view
+  # in frigate WebUI. (default: name of camera)
+  # stream_name: camera_name
+  # Optional: Set the height of the jsmpeg stream. (default: 720)
+  # This must be less than or equal to the height of the detect stream. Lower resolutions
+  # reduce bandwidth required for viewing the jsmpeg stream. Width is computed to match known aspect ratio.
+  # height: 720
+  # Optional: Set the encode quality of the jsmpeg stream (default: shown below)
+  # 1 is the highest quality, and 31 is the lowest. Lower quality feeds utilize less CPU resources.
+  # quality: 8
+
+# Optional: in-feed timestamp style configuration
+# NOTE: Can be overridden at the camera level
+timestamp_style:
+  # Optional: Position of the timestamp (default: shown below)
+  #           "tl" (top left), "tr" (top right), "bl" (bottom left), "br" (bottom right)
+  position: "tl"
+  # Optional: Format specifier conform to the Python package "datetime" (default: shown below)
+  #           Additional Examples:
+  #             german: "%d.%m.%Y %H:%M:%S"
+  format: "%m/%d/%Y %H:%M:%S"
+  # Optional: Color of font
+  color:
+    # All Required when color is specified (default: shown below)
+    red: 255
+    green: 255
+    blue: 255
+  # Optional: Line thickness of font (default: shown below)
+  thickness: 2
+  # Optional: Effect of lettering (default: shown below)
+  #           None (No effect),
+  #           "solid" (solid background in inverse color of font)
+  #           "shadow" (shadow for font)
+  # effect: None
+
+
+
+cameras:
+  voortuin: # <------ Name the camera
+    enabled: True
+    ffmpeg:
+      inputs:
+        - path: rtsp://admin:L2C86FC5@192.168.3.1 # <----- The stream you want to use for detection
+          roles:
+            - detect
+    
+    # Optional: Detect configuration
+    # NOTE: Can be overridden at the camera level
+    detect:
+      enabled: False # <---- disable detection until you have a working camera feed
+  
+  achtertuin: # <------ Name the camera
+    enabled: True
+    ffmpeg:
+      inputs:
+        - path: rtsp://admin:L233A448@192.168.3.2 # <----- The stream you want to use for detection
+          roles:
+            - detect
+    
+    # Optional: Detect configuration
+    # NOTE: Can be overridden at the camera level
+    detect:
+      enabled: False # <---- disable detection until you have a working camera feed
+

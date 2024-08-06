@@ -20,16 +20,38 @@ spec:
       # Essential
       affinity:
         nodeAffinity:
+          
+          # Linux-Wayne
+          # requiredDuringSchedulingIgnoredDuringExecution:
+          #   nodeSelectorTerms:
+          #   - matchExpressions:
+          #     - key: la1r.workload/essential
+          #       operator: In
+          #       values:
+          #       - "true"
+          
+          # Stephanie
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
             - matchExpressions:
-              - key: la1r.workload/essential
+              - key: kubernetes.io/hostname
                 operator: In
                 values:
-                - "true"
+                - stephanie
       priorityClassName: essential
 
       volumes:
+        
+        # START RASPI specific config
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 256Mi
+        - name: video11
+          hostPath:
+            path: /dev/video11
+            type: CharDevice
+        # END RASPI specific config
         - name: localtime
           hostPath:
             path: /etc/localtime
@@ -40,32 +62,37 @@ spec:
         - name: frigate-config-volume
           persistentVolumeClaim:
             claimName: frigate-config-claim
+        - name: frigate-config-file
+          configMap:
+            name: frigate-config-file
       containers:
       - name: frigate
         image: ghcr.io/blakeblackshear/frigate:stable
         securityContext:
           privileged: true
-        # resources:
-        #   requests:
-        #     cpu: 400m
-        #     memory: 512Mi
-        #   limits:
-        #     cpu: 600m
-        #     memory: 1Gi
         ports:
         - name: http
           containerPort: 5000
-        env:
-        - name: LIBVA_DRIVER_NAME
-          value: i965
+        # env:
+        # - name: LIBVA_DRIVER_NAME
+        #   value: i965
         # - name: FRIGATE_RTSP_PASSWORD
         #   value: Testing123!
         volumeMounts:
+        # START RASPI specific config
+        - mountPath: /dev/shm
+          name: dshm
+        - name: video11
+          mountPath: /dev/video11
+        # STOP RASPI specific config          
         - name: localtime
           mountPath: /etc/localtime
           readOnly: true
         - name: frigate-config-volume
           mountPath: /config
+        - name: frigate-config-file
+          mountPath: /config/config.yml
+          subPath: config.yml
         # - name: frigate-data-volume
         #   mountPath: /media/frigate
 ---

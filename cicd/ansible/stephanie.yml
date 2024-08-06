@@ -6,5 +6,6 @@
   # - users
   # - ssh
   # - avahi
+  # - kubernetes
   - switch-server
   - reboot

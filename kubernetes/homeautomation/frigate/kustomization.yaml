@@ -5,3 +5,9 @@ resources:
 - pv/frigate-pv.yml
 - pv/frigate-pvc.yml
 - frigate.yml
+
+
+configMapGenerator:
+- name: frigate-config-file
+  files:
+  - config.yml
