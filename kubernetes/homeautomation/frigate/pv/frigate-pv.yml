@@ -1,0 +1,32 @@
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: frigate-data-pv
+  labels:
+    contenttype: "frigate-data"
+spec:
+  capacity:
+    storage: 50Gi
+  storageClassName: frigate-data
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/mnt/ssd/na/frigate/data" # path to directory
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: frigate-settings-data-pv
+  labels:
+    contenttype: "frigate-settings-data"
+spec:
+  capacity:
+    storage: 500Mi
+  storageClassName: frigate-settings-data
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/mnt/ssd/ha/frigate/settings" # path to directory

@@ -1,0 +1,32 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: frigate-config-claim
+  namespace: homeautomation
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: frigate-settings-data
+  selector:
+    matchLabels:
+      contenttype: "frigate-settings-data"
+  resources:
+    requests:
+      storage: 500Mi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: frigate-data-claim
+  namespace: homeautomation
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: frigate-data
+  selector:
+    matchLabels:
+      contenttype: "frigate-data"
+  resources:
+    requests:
+      storage: 50Gi
