@@ -51,6 +51,10 @@ spec:
           hostPath:
             path: /dev/video11
             type: CharDevice
+        - name: coraltpu
+          hostPath:
+            path: /dev/bus/usb
+            type: Directory
         # END RASPI specific config
         - name: localtime
           hostPath:
@@ -84,6 +88,8 @@ spec:
           name: dshm
         - name: video11
           mountPath: /dev/video11
+        - name: coraltpu
+          mountPath: /dev/bus/usb
         # STOP RASPI specific config          
         - name: localtime
           mountPath: /etc/localtime
@@ -93,8 +99,8 @@ spec:
         - name: frigate-config-file
           mountPath: /config/config.yml
           subPath: config.yml
-        # - name: frigate-data-volume
-        #   mountPath: /media/frigate
+        - name: frigate-data-volume
+          mountPath: /media/frigate
 ---
 apiVersion: v1
 kind: Service

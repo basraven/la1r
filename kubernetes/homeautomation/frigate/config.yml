@@ -4,28 +4,32 @@ mqtt:
 
 # Optional: Detectors configuration. Defaults to a single CPU detector
 detectors:
+  coral:
+    type: edgetpu
+    device: usb
+
   # Required: name of the detector
-  openvino:
-    device: AUTO
-    # Required: type of the detector
-    # Frigate provided types include 'cpu', 'edgetpu', 'openvino' and 'tensorrt' (default: shown below)
-    # Additional detector types can also be plugged in.
-    # Detectors may require additional configuration.
-    # Refer to the Detectors configuration page for more information.
-    type: openvino
-    model:
-      path: /openvino-model/ssdlite_mobilenet_v2.xml
+  # openvino:
+  #   device: AUTO
+  #   # Required: type of the detector
+  #   # Frigate provided types include 'cpu', 'edgetpu', 'openvino' and 'tensorrt' (default: shown below)
+  #   # Additional detector types can also be plugged in.
+  #   # Detectors may require additional configuration.
+  #   # Refer to the Detectors configuration page for more information.
+  #   type: openvino
+  #   model:
+  #     path: /openvino-model/ssdlite_mobilenet_v2.xml
 # Optional: Database configuration
 # database:
 #   # The path to store the SQLite DB (default: shown below)
 #   path: /config/frigate.db
 
-model:
-  width: 300
-  height: 300
-  input_tensor: nhwc
-  input_pixel_format: bgr
-  labelmap_path: /openvino-model/coco_91cl_bkgr.txt
+# model:
+#   width: 300
+#   height: 300
+#   input_tensor: nhwc
+#   input_pixel_format: bgr
+#   labelmap_path: /openvino-model/coco_91cl_bkgr.txt
 
 # Optional: Audio Events Configuration
 # NOTE: Can be overridden at the camera level
@@ -95,7 +99,7 @@ record:
     #   motion - save all recordings segments with any detected motion
     #   active_objects - save all recording segments with active/moving objects
     # NOTE: this mode only applies when the days setting above is greater than 0
-    mode: all
+    mode: motion
   # Optional: Recording Export Settings
   export:
     # Optional: Timelapse Output Args (default: shown below).
@@ -109,9 +113,9 @@ record:
   # Optional: Event recording settings
   events:
     # Optional: Number of seconds before the event to include (default: shown below)
-    pre_capture: 5
+    pre_capture: 7
     # Optional: Number of seconds after the event to include (default: shown below)
-    post_capture: 5
+    post_capture: 7
     # Optional: Objects to save recordings for. (default: all tracked objects)
     # objects:
     #   - person
@@ -120,7 +124,7 @@ record:
     # Optional: Retention settings for recordings of events
     retain:
       # Required: Default retention days (default: shown below)
-      default: 10
+      default: 32
       # Optional: Mode for retention. (default: shown below)
       #   all - save all recording segments for events regardless of activity
       #   motion - save all recordings segments for events with any detected motion
@@ -139,28 +143,28 @@ record:
 # NOTE: Can be overridden at the camera level
 snapshots:
   # Optional: Enable writing jpg snapshot to /media/frigate/clips (default: shown below)
-  enabled: False
-  # # Optional: save a clean PNG copy of the snapshot image (default: shown below)
-  # clean_copy: True
-  # # Optional: print a timestamp on the snapshots (default: shown below)
-  # timestamp: True
-  # # Optional: draw bounding box on the snapshots (default: shown below)
-  # bounding_box: True
-  # # Optional: crop the snapshot (default: shown below)
-  # crop: False
-  # # Optional: height to resize the snapshot to (default: original size)
+  enabled: true
+  # Optional: save a clean PNG copy of the snapshot image (default: shown below)
+  clean_copy: True
+  # Optional: print a timestamp on the snapshots (default: shown below)
+  timestamp: True
+  # Optional: draw bounding box on the snapshots (default: shown below)
+  bounding_box: True
+  # Optional: crop the snapshot (default: shown below)
+  crop: False
+  # Optional: height to resize the snapshot to (default: original size)
   # height: 175
-  # # Optional: Restrict snapshots to objects that entered any of the listed zones (default: no required zones)
-  # # required_zones: []
-  # # Optional: Camera override for retention settings (default: global values)
-  # retain:
-  #   # Required: Default retention days (default: shown below)
-  #   default: 90
-  #   # Optional: Per object retention days
-  #   # objects:
-  #   #   person: 15
-  # # Optional: quality of the encoded jpeg, 0-100 (default: shown below)
-  # quality: 70
+  # Optional: Restrict snapshots to objects that entered any of the listed zones (default: no required zones)
+  # required_zones: []
+  # Optional: Camera override for retention settings (default: global values)
+  retain:
+    # Required: Default retention days (default: shown below)
+    default: 90
+    # Optional: Per object retention days
+    # objects:
+    #   person: 15
+  # Optional: quality of the encoded jpeg, 0-100 (default: shown below)
+  quality: 90
 
 
 # Optional: Restream configuration
@@ -209,6 +213,13 @@ timestamp_style:
 cameras:
   voortuin: # <------ Name the camera
     enabled: True
+    motion:
+      mask:
+      - 662,1080,84,1080,64,395,261,316
+      - 1094,758,1158,496,1192,394,1026,302,923,297,658,514,967,793
+      - 1477,497,1188,759,728,1059,1649,1080,1783,860,1891,552,1920,327,1756,223
+      - 0,1080,0,0,1920,0,1920,324,1756,326,1657,349,1150,73,385,425
+    
     ffmpeg:
       inputs:
         - path: rtsp://admin:L2C86FC5@192.168.3.1 # <----- The stream you want to use for detection
@@ -218,10 +229,13 @@ cameras:
     # Optional: Detect configuration
     # NOTE: Can be overridden at the camera level
     detect:
-      enabled: False # <---- disable detection until you have a working camera feed
+      enabled: True # <---- disable detection until you have a working camera feed
   
   achtertuin: # <------ Name the camera
     enabled: True
+    motion:
+      mask:
+        - 1120,116,1282,700,1344,1080,1920,1080,1920,0,1459,0
     ffmpeg:
       inputs:
         - path: rtsp://admin:L233A448@192.168.3.2 # <----- The stream you want to use for detection
@@ -231,5 +245,5 @@ cameras:
     # Optional: Detect configuration
     # NOTE: Can be overridden at the camera level
     detect:
-      enabled: False # <---- disable detection until you have a working camera feed
+      enabled: True # <---- disable detection until you have a working camera feed
 
