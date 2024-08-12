@@ -6,6 +6,20 @@
     dest: /home/basraven/switch-server.py
     mode: "0775"
 
+- name: Switch server / place rpi_hardware_pwm.py
+  become: yes
+  template:
+    src: rpi_hardware_pwm.py.j2
+    dest: /home/basraven/rpi_hardware_pwm.py
+    mode: "0775"
+
+- name: Switch server / Enable hardware PmW
+  become: yes
+  lineinfile:
+    path: /boot/firmware/config.txt
+    line: 'dtoverlay=pwm-2chan'
+    create: yes
+
 - name: Switch server / Update apt
   become: yes
   apt:

@@ -10,6 +10,8 @@ import logging
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor
 import threading
+from rpi_hardware_pwm import HardwarePWM # Local file import from ./rpi_hardware_pwm.py
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -40,12 +42,10 @@ GPIO.setup(SWITCH_16_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)  # Assuming pull-up
 previous_switch_16_state = GPIO.HIGH
 
 # PWM Ruck fan control
-PWM_PIN = 18  # GPIO18 (Pin 12)
-FREQUENCY = 25000  # 25 kHz for PWM frequency
+FREQUENCY = 60  # 25 kHz for PWM frequency
 duty_cycle = 0.0  # Initial duty cycle
-# Setup GPIO
-GPIO.setup(PWM_PIN, GPIO.OUT)
-pwm = GPIO.PWM(PWM_PIN, FREQUENCY)
+
+pwm = HardwarePWM(pwm_channel=0, hz=FREQUENCY, chip=0) # = gpio 18 (pin 12)
 pwm.start(duty_cycle)
 # Thread pool for asynchronous tasks
 executor = ThreadPoolExecutor(max_workers=2)
@@ -170,7 +170,7 @@ threading.Thread(target=check_switch_and_control_led, daemon=True).start()
 
 # PWM Set fan speed
 def set_fan_speed(duty_cycle):
-    pwm.ChangeDutyCycle(duty_cycle)
+    pwm.change_duty_cycle(duty_cycle)
 
 class MyRequestHandler(http.server.SimpleHTTPRequestHandler):
     fan_speed = 0
