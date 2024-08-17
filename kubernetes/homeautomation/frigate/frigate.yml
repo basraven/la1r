@@ -118,24 +118,24 @@ spec:
     app: frigate
   type: ClusterIP
 
- ---
- apiVersion: v1
- kind: Service
- metadata:
-   labels:
-     app: frigate-lb
-   name: frigate-lb
-   namespace: homeautomation
- spec:
-   ports:
-   - name: http
-     targetPort: 5000
-     port: 80
-   selector:
-     app: frigate
-   loadBalancerIP: 192.168.6.75
-   type: LoadBalancer
 
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: frigate-lb
+  name: frigate-lb
+  namespace: homeautomation
+spec:
+  ports:
+  - name: http
+    targetPort: 5000
+    port: 80
+  selector:
+    app: frigate
+  loadBalancerIP: 192.168.6.75
+  type: LoadBalancer
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
