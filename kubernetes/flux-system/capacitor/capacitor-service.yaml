@@ -1,4 +1,19 @@
-
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: capacitor
+  name: capacitor
+  namespace: flux-system
+spec:
+  ports:
+  - name: http
+    targetPort: 9000
+    port: 80
+  selector:
+    app: capacitor
+  type: ClusterIP
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
