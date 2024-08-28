@@ -1,0 +1,62 @@
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: capacitor-bas
+  namespace: flux-system
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: capacitor-bas-tls
+  commonName: capacitor.bas
+  dnsNames:
+  - capacitor.bas
+  - www.capacitor.bas
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: capacitor-https
+  namespace: flux-system
+  annotations:
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+spec:
+  tls:
+  - secretName: capacitor-bas-tls
+  rules:
+  - host: capacitor.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: capacitor
+            port:
+              number: 80
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: capacitor-http
+  namespace: flux-system
+  annotations:
+    traefik.ingress.kubernetes.io/router.tls: "false"
+    traefik.ingress.kubernetes.io/router.entrypoints: "web"
+    traefik.ingress.kubernetes.io/router.middlewares: "traefik-http-redirect-to-https@kubernetescrd"
+spec:
+  rules:
+  - host: capacitor.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: capacitor
+            port:
+              number: 80
