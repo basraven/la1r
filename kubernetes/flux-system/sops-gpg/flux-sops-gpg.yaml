@@ -1,0 +1,36 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: GitRepository
+metadata:
+  name: my-secrets
+  namespace: flux-system
+spec:
+  interval: 1m0s
+  url: ssh://git@github.com/basraven/la1r-cred
+  ref:
+    branch: master
+  secretRef:
+    name: flux-pgp-secret
+
+# Seb: Run this first:
+# flux create secret git flux-pgp-secret \
+#     --url=ssh://git@github.com/basraven/la1r-cred \
+#     --private-key-file=./id_rsa
+
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: my-secrets
+  namespace: flux-system
+spec:
+  interval: 10m
+  sourceRef:
+    kind: GitRepository
+    name: my-secrets
+  path: ./kubernetes
+  prune: true
+  decryption:
+    provider: sops
+    secretRef:
+      name: sops-gpg
+
