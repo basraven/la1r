@@ -1,0 +1,36 @@
+---
+- name: "cpu power savings / install cpufrequtils and tlp"
+  become: yes
+  apt:
+    name: 
+    - cpufrequtils
+    - tlp
+    state: present
+
+- name: "cpu power savings / set CPU governor to power-saving"
+  become: yes
+  shell: cpufreq-set -g powersave
+
+- name: "cpu power savings / Enable default governor as powersave"
+  become: yes
+  lineinfile:
+    path: /etc/default/cpufrequtils
+    line: 'GOVERNOR="powersave"'
+    create: yes
+  
+- name: "cpu power savings / update tlp.conf"
+  become: yes
+  template:
+    src: tlp.conf.j2
+    dest: /etc/tlp.conf
+    mode: "0775"
+
+- name: "cpu power savings / start TLP"
+  become: yes
+  shell: tlp start
+
+- name: "cpu power savings / restart tlp"
+  become: yes
+  ansible.builtin.service:
+    name: tlp
+    state: restarted
