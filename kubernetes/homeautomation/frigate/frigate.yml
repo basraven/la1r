@@ -17,28 +17,21 @@ spec:
         app: frigate
     spec:
       
-      # Essential
+      # specificonly only workloads
+      tolerations:
+        - key: "la1r.workload/specificonly"
+          operator: "Equal"
+          value: "true"
+          effect: "NoSchedule"
       affinity:
         nodeAffinity:
-          
-          # Linux-Wayne
-          # requiredDuringSchedulingIgnoredDuringExecution:
-          #   nodeSelectorTerms:
-          #   - matchExpressions:
-          #     - key: la1r.workload/essential
-          #       operator: In
-          #       values:
-          #       - "true"
-          
-          # Stephanie
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
             - matchExpressions:
-              - key: kubernetes.io/hostname
-                operator: In
+              - key: "la1r.workload/specificonly"
+                operator: "In"
                 values:
-                - stephanie
-      priorityClassName: essential
+                - "true"
 
       volumes:
         

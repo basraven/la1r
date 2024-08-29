@@ -4,7 +4,7 @@ kind: Service
 metadata:
   labels:
     app: capacitor
-  name: capacitor
+  name: capacitor-lb
   namespace: flux-system
 spec:
   ports:
@@ -12,8 +12,9 @@ spec:
     targetPort: 9000
     port: 80
   selector:
-    app: capacitor
-  type: ClusterIP
+    app.kubernetes.io/instance: capacitor
+  loadBalancerIP: 192.168.6.78
+  type: LoadBalancer
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
@@ -49,7 +50,7 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: capacitor
+            name: capacitor-lb
             port:
               number: 80
 
@@ -72,6 +73,6 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: capacitor
+            name: capacitor-lb
             port:
               number: 80

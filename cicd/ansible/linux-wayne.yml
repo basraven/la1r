@@ -3,6 +3,7 @@
   roles:
   - define-os # Should always run!
   # - hostname
+  - power-savings
   # - avahi
 
   # - users
@@ -15,8 +16,8 @@
   # - containerd
   # - haproxy
   # - kubernetes-install
-  - kubernetes-init
-  - kubernetes-fetch
+  # - kubernetes-init
+  # - kubernetes-fetch
   
   # - backup
 

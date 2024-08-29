@@ -1,8 +1,14 @@
 #!/bin/bash
 
+# Taints
 kubectl taint node linux-wayne node-role.kubernetes.io/control-plane:NoSchedule-
+kubectl taint node stephanie la1r.workload/specificonly=true:NoSchedule
+
+
+# Labels
 kubectl label nodes linux-wayne la1r.workload/essential=true
 kubectl label nodes jay-c la1r.workload/nonessential=true
+kubectl label nodes stephanie la1r.workload/specificonly=true
 
 kubectl label nodes jay-c la1r.storage/ssd-ha=true
 kubectl label nodes jay-c la1r.storage/ssd-na=true
