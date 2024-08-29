@@ -1,6 +1,38 @@
 # yaml-language-server: $schema=https://frigate.bas/api/config/schema.json
 mqtt:
-  enabled: False
+  enabled: True
+  # Required: host name
+  host: mqtt
+  # Optional: port (default: shown below)
+  port: 1883
+  # Optional: topic prefix (default: shown below)
+  # NOTE: must be unique if you are running multiple instances
+  # topic_prefix: frigate
+  # Optional: client id (default: shown below)
+  # NOTE: must be unique if you are running multiple instances
+  # client_id: frigate
+  # Optional: user
+  # NOTE: MQTT user can be specified with an environment variable or docker secrets that must begin with 'FRIGATE_'.
+  #       e.g. user: '{FRIGATE_MQTT_USER}'
+  # user: mqtt_user
+  # Optional: password
+  # NOTE: MQTT password can be specified with an environment variable or docker secrets that must begin with 'FRIGATE_'.
+  #       e.g. password: '{FRIGATE_MQTT_PASSWORD}'
+  # password: password
+  # Optional: tls_ca_certs for enabling TLS using self-signed certs (default: None)
+  # tls_ca_certs: /path/to/ca.crt
+  # Optional: tls_client_cert and tls_client key in order to use self-signed client
+  # certificates (default: None)
+  # NOTE: certificate must not be password-protected
+  #       do not set user and password when using a client certificate
+  # tls_client_cert: /path/to/client.crt
+  # tls_client_key: /path/to/client.key
+  # Optional: tls_insecure (true/false) for enabling TLS verification of
+  # the server hostname in the server certificate (default: None)
+  # tls_insecure: false
+  # Optional: interval in seconds for publishing stats (default: shown below)
+  stats_interval: 120
+
 
 # Optional: Detectors configuration. Defaults to a single CPU detector
 detectors:
@@ -230,6 +262,23 @@ cameras:
     # NOTE: Can be overridden at the camera level
     detect:
       enabled: True # <---- disable detection until you have a working camera feed
+
+    # Optional: Configuration for the jpg snapshots published via MQTT
+    mqtt:
+      # Optional: Enable publishing snapshot via mqtt for camera (default: shown below)
+      # NOTE: Only applies to publishing image data to MQTT via 'frigate/<camera_name>/<object_name>/snapshot'.
+      # All other messages will still be published.
+      enabled: True
+      # Optional: print a timestamp on the snapshots (default: shown below)
+      timestamp: True
+      # Optional: draw bounding box on the snapshots (default: shown below)
+      bounding_box: True
+      # Optional: crop the snapshot (default: shown below)
+      crop: True
+      # Optional: height to resize the snapshot to (default: shown below)
+      height: 270
+      # Optional: jpeg encode quality (default: shown below)
+      quality: 80
   
   achtertuin: # <------ Name the camera
     enabled: True
@@ -246,4 +295,21 @@ cameras:
     # NOTE: Can be overridden at the camera level
     detect:
       enabled: True # <---- disable detection until you have a working camera feed
+
+    # Optional: Configuration for the jpg snapshots published via MQTT
+    mqtt:
+      # Optional: Enable publishing snapshot via mqtt for camera (default: shown below)
+      # NOTE: Only applies to publishing image data to MQTT via 'frigate/<camera_name>/<object_name>/snapshot'.
+      # All other messages will still be published.
+      enabled: True
+      # Optional: print a timestamp on the snapshots (default: shown below)
+      timestamp: True
+      # Optional: draw bounding box on the snapshots (default: shown below)
+      bounding_box: True
+      # Optional: crop the snapshot (default: shown below)
+      crop: True
+      # Optional: height to resize the snapshot to (default: shown below)
+      height: 270
+      # Optional: jpeg encode quality (default: shown below)
+      quality: 70
 

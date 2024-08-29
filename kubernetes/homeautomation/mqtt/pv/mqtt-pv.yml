@@ -1,0 +1,16 @@
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: mqtt-data-pv
+  labels:
+    contenttype: "mqtt-data"
+spec:
+  capacity:
+    storage: 150Mi
+  storageClassName: mqtt-data
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/mnt/ssd/na/mqtt/data" # path to directory

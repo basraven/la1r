@@ -1,0 +1,109 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mqtt-to-discord-script
+  namespace: homeautomation
+data:
+  mqtt_to_discord.py: |
+    import paho.mqtt.client as mqtt
+    import requests
+    import json
+    import os
+
+    MQTT_BROKER = "mqtt"
+    MQTT_PORT = 1883
+    MQTT_TOPIC = "frigate/+/person"
+
+    # Fetch Discord Webhook URL from environment variables
+    DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK")
+    
+    def on_connect(client, userdata, flags, rc):
+        print(f"Connected with result code {rc}")
+        client.subscribe(MQTT_TOPIC)
+
+    def on_message(client, userdata, msg):
+        print(f"Received message on topic {msg.topic}: {msg.payload.decode()}")
+        send_to_discord(msg.payload.decode())
+
+    def send_to_discord(message):
+        data = {
+            "content": message
+        }
+        headers = {
+            "Content-Type": "application/json"
+        }
+        response = requests.post(DISCORD_WEBHOOK_URL, data=json.dumps(data), headers=headers)
+        if response.status_code == 204:
+            print("Message sent to Discord successfully.")
+        else:
+            print(f"Failed to send message to Discord: {response.status_code}")
+
+    # Updated client initialization
+    # client = mqtt.Client(protocol=mqtt.MQTTv5)  # or mqtt.MQTTv311 if v5 is not supported
+    client = mqtt.Client() # Use default MQTT version
+
+    client.on_connect = on_connect
+    client.on_message = on_message
+
+    client.connect(MQTT_BROKER, MQTT_PORT, 60)
+    client.loop_start()  # Use loop_start() for non-blocking behavior
+
+    # Keep the script running
+    try:
+        while True:
+            pass
+    except KeyboardInterrupt:
+        print("Script interrupted")
+    finally:
+        client.loop_stop()  # Stop the loop when done
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mqtt-to-discord
+  namespace: homeautomation
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mqtt-to-discord
+  template:
+    metadata:
+      labels:
+        app: mqtt-to-discord
+    spec:
+      
+      # specificonly only workloads
+      tolerations:
+        - key: "la1r.workload/specificonly"
+          operator: "Equal"
+          value: "true"
+          effect: "NoSchedule"
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: "la1r.workload/specificonly"
+                operator: "In"
+                values:
+                - "true"
+
+      containers:
+      - name: mqtt-to-discord
+        image: python:3.9-slim
+        command: ["sh", "-c", "pip install paho-mqtt requests && python /scripts/mqtt_to_discord.py"]
+        volumeMounts:
+        - name: script-volume
+          mountPath: /scripts
+        env:
+        - name: DISCORD_WEBHOOK
+          valueFrom:
+            secretKeyRef:
+              name: discord-webhook
+              key: DISCORD_WEBHOOK
+      volumes:
+      - name: script-volume
+        configMap:
+          name: mqtt-to-discord-script
+      restartPolicy: Always
