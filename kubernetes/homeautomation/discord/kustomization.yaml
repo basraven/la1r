@@ -3,3 +3,9 @@ kind: Kustomization
 namespace: homeautomation
 resources:
 - discord.yml
+
+
+configMapGenerator:
+- name: mqtt-to-discord-script
+  files:
+  - mqtt_to_discord.py
