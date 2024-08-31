@@ -1,6 +1,7 @@
 import paho.mqtt.client as mqtt
 import requests
 import json
+import time
 import os
 from io import BytesIO
 import re
@@ -68,7 +69,7 @@ def send_to_discord(msg):
         response = requests.post(DISCORD_WEBHOOK_URL, data=json.dumps(data), headers=headers)
     
     
-    if response.status_code == 204:
+    if response.status_code == 204 or response.status_code == 200:
         print("Message sent to Discord successfully.")
     else:
         print(f"Failed to send message to Discord: {response.status_code}")
@@ -86,7 +87,7 @@ client.loop_start()  # Use loop_start() for non-blocking behavior
 # Keep the script running
 try:
     while True:
-        pass
+        time.sleep(1)  # Sleep for 1 second
 except KeyboardInterrupt:
     print("Script interrupted")
 finally:

@@ -83,7 +83,7 @@ audio:
 birdseye:
   # Optional: Enable birdseye view (default: shown below)
   enabled: False
-  mode: continuous
+  # mode: continuous
   # Optional: Restream birdseye via RTSP (default: shown below)
   # NOTE: Enabling this will set birdseye to run 24/7 which may increase CPU usage somewhat.
   restream: False
@@ -91,7 +91,7 @@ birdseye:
 # Optional: ffmpeg configuration
 # More information about presets at https://docs.frigate.video/configuration/ffmpeg_presets
 ffmpeg:
-  hwaccel_args: preset-rpi-64-h265
+  hwaccel_args: preset-rpi-64-h264
 
 
 detect:
@@ -105,8 +105,9 @@ objects:
 
 # Optional: Motion configuration
 # NOTE: Can be overridden at the camera level
-# motion:
-
+motion:
+  threshold: 50
+  contour_area: 30
 
 # Optional: Record configuration
 # NOTE: Can be overridden at the camera level
@@ -119,7 +120,7 @@ record:
   # This can be used to reduce the frequency of deleting recording segments from disk if you want to minimize i/o
   expire_interval: 120
   # Optional: Sync recordings with disk on startup and once a day (default: shown below).
-  sync_recordings: True
+  sync_recordings: False
   # Optional: Retention settings for recording
   retain:
     # Optional: Number of days to retain recordings regardless of events (default: shown below)
@@ -133,7 +134,7 @@ record:
     # NOTE: this mode only applies when the days setting above is greater than 0
     mode: motion
   # Optional: Recording Export Settings
-  export:
+  # export:
     # Optional: Timelapse Output Args (default: shown below).
     # NOTE: The default args are set to fit 24 hours of recording into 1 hour playback.
     # See https://stackoverflow.com/a/58268695 for more info on how these args work.
@@ -141,7 +142,7 @@ record:
     # from 86400 seconds to 1800 seconds which would be 1800 / 86400 = 0.02.
     # The -r (framerate) dictates how smooth the output video is.
     # So the args would be -vf setpts=0.02*PTS -r 30 in that case.
-    timelapse_args: "-vf setpts=0.04*PTS -r 30"
+    # timelapse_args: "-vf setpts=0.04*PTS -r 30"
   # Optional: Event recording settings
   events:
     # Optional: Number of seconds before the event to include (default: shown below)
@@ -247,16 +248,17 @@ cameras:
     enabled: True
     motion:
       mask:
-      - 662,1080,84,1080,64,395,261,316
-      - 1094,758,1158,496,1192,394,1026,302,923,297,658,514,967,793
-      - 1477,497,1188,759,728,1059,1649,1080,1783,860,1891,552,1920,327,1756,223
-      - 0,1080,0,0,1920,0,1920,324,1756,326,1657,349,1150,73,385,425
+      - 719,1080,84,1080,0,1080,0,605,0,350,273,187
+      - 1151,777,1217,494,1184,353,1010,263,923,297,658,514,977,861
+      - 1477,497,1181,747,697,1080,1920,1080,1920,327,1745,213
+      - 0,1080,0,0,1920,0,1920,423,1657,349,1118,130,777,309,600,452,447,550,696,1080
     
     ffmpeg:
       inputs:
         - path: rtsp://admin:L2C86FC5@192.168.3.1 # <----- The stream you want to use for detection
           roles:
             - detect
+            - record
     
     # Optional: Detect configuration
     # NOTE: Can be overridden at the camera level
@@ -290,6 +292,7 @@ cameras:
         - path: rtsp://admin:L233A448@192.168.3.2 # <----- The stream you want to use for detection
           roles:
             - detect
+            - record
     
     # Optional: Detect configuration
     # NOTE: Can be overridden at the camera level
