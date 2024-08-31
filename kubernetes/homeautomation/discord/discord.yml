@@ -38,11 +38,11 @@ spec:
         - name: script-volume
           mountPath: /scripts
         env:
-        - name: DISCORD_WEBHOOK
+        - name: FRIGATE_DISCORD_WEBHOOK
           valueFrom:
             secretKeyRef:
-              name: discord-webhook
-              key: DISCORD_WEBHOOK
+              name: discord-webhooks
+              key: FRIGATE_DISCORD_WEBHOOK
       volumes:
       - name: script-volume
         configMap:
