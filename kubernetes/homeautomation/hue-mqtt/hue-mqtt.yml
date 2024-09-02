@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hue-mqtt
+  namespace: homeautomation
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hue-mqtt
+  template:
+    metadata:
+      labels:
+        app: hue-mqtt
+    spec:
+      
+      # specificonly only workloads
+      tolerations:
+        - key: "la1r.workload/specificonly"
+          operator: "Equal"
+          value: "true"
+          effect: "NoSchedule"
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: "la1r.workload/specificonly"
+                operator: "In"
+                values:
+                - "true"
+
+      containers:
+      - name: hue-mqtt
+        image: python:3.9-slim
+        command: ["sh", "-c", "pip install hue2mqtt && hue2mqtt --config-file /config/hue2mqtt.toml"]
+        volumeMounts:
+        - name: config-volume
+          mountPath: /config/
+      volumes:
+      - name: config-volume
+        secret:
+          secretName: hue-config
+      restartPolicy: Always

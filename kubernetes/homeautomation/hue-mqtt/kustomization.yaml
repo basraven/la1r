@@ -1,8 +1,5 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
+namespace: homeautomation
 resources:
-- namespace.yml
-- frigate
-- mqtt
-- discord
-- hue-mqtt
+- hue-mqtt.yml
