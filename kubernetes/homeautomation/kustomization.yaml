@@ -6,3 +6,4 @@ resources:
 - mqtt
 - discord
 - hue-mqtt
+- mqtt-automation

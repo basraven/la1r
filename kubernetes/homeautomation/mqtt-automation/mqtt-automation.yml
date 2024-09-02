@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mqtt-automation
+  namespace: homeautomation
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mqtt-automation
+  template:
+    metadata:
+      labels:
+        app: mqtt-automation
+    spec:
+      
+      # specificonly only workloads
+      tolerations:
+        - key: "la1r.workload/specificonly"
+          operator: "Equal"
+          value: "true"
+          effect: "NoSchedule"
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: "la1r.workload/specificonly"
+                operator: "In"
+                values:
+                - "true"
+
+      containers:
+      - name: mqtt-automation
+        image: python:3.9-slim
+        command: ["sh", "-c", "pip install paho-mqtt ephem requests && python /scripts/mqtt_automation.py"]
+        volumeMounts:
+        - name: script-volume
+          mountPath: /scripts
+      volumes:
+      - name: script-volume
+        configMap:
+          name: mqtt-automation-script
+      restartPolicy: Always
