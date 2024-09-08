@@ -1,0 +1,27 @@
+---
+apiVersion: notification.toolkit.fluxcd.io/v1beta3
+kind: Provider
+metadata:
+  name: discord
+  namespace: homeautomation
+spec:
+  type: discord
+  secretRef:
+    name: flux-discord-webhook
+    
+---
+apiVersion: notification.toolkit.fluxcd.io/v1beta3
+kind: Alert
+metadata:
+  name: discord
+  namespace: homeautomation
+spec:
+  summary: "Flux alert"
+  providerRef:
+    name: discord
+  eventSeverity: error
+  eventSources:
+    - kind: GitRepository
+      name: '*'
+    - kind: Kustomization
+      name: '*'

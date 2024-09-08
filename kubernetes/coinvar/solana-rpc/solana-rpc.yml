@@ -45,8 +45,8 @@ spec:
         #     nvidia.com/gpu: 1 # Adjust if you need more GPUs or specific resource limits
       volumes:
       - name: solana-rpc-volume
-          persistentVolumeClaim:
-            claimName: solana-rpc-claim
+        persistentVolumeClaim:
+          claimName: solana-rpc-claim
       - name: entrypoint-script
         configMap:
           name: entrypoint-script
