@@ -1,0 +1,15 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: solana-rpc-claim
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: solana-rpc
+  selector:
+    matchLabels:
+      contenttype: "solana-rpc"
+  resources:
+    requests:
+      storage: 500Gi

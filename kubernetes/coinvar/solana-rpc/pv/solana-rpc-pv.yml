@@ -1,0 +1,16 @@
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: solana-rpc-pv
+  labels:
+    contenttype: "solana-rpc"
+spec:
+  capacity:
+    storage: 500Gi
+  storageClassName: solana-rpc
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/mnt/hdd/na/solana-rpc"

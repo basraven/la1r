@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: solana-rpc
+  labels:
+    app: solana-rpc
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: solana-rpc
+  template:
+    metadata:
+      labels:
+        app: solana-rpc
+    spec:
+      # NonEssential
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: la1r.workload/nonessential
+                operator: In
+                values:
+                - "true"
+      containers:
+      - name: solana-rpc
+        image: solanalabs/solana:v1.18.23
+        command: ["/bin/bash", "-c", "/usr/bin/solana-run.sh"]
+        ports:
+        - containerPort: 8899
+          name: rpc
+        env:
+        - name: RUST_LOG
+          value: "info,solana_metrics::metrics=warn"
+        volumeMounts:
+        - name: solana-rpc-volume
+          mountPath: /usr/bin/config/ledger
+        - name: entrypoint-script
+          mountPath: /usr/bin/solana-run.sh
+          subPath: solana-run.sh
+        # resources:
+        #   limits:
+        #     nvidia.com/gpu: 1 # Adjust if you need more GPUs or specific resource limits
+      volumes:
+      - name: solana-rpc-volume
+          persistentVolumeClaim:
+            claimName: solana-rpc-claim
+      - name: entrypoint-script
+        configMap:
+          name: entrypoint-script
+
+configMapGenerator:
+- name: entrypoint-script
+  files:
+  - solana-run.sh
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: solana-rpc
+  name: solana-rpc
+spec:
+  ports:
+  - name: rpc
+    targetPort: 8899
+    port: 8899
+  selector:
+    app: solana-rpc
+  type: ClusterIP
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: solana-rpc-lb
+  name: solana-rpc-lb
+spec:
+  ports:
+  - name: rpc
+    targetPort: 8899
+    port: 8899
+  selector:
+    app: solana-rpc
+  loadBalancerIP: 192.168.6.78
+  type: LoadBalancer
