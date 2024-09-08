@@ -24,6 +24,14 @@ spec:
                 operator: In
                 values:
                 - "true"
+      volumes:
+      - name: solana-rpc-volume
+        persistentVolumeClaim:
+          claimName: solana-rpc-claim
+      - name: entrypoint-script
+        configMap:
+          name: entrypoint-script
+          defaultMode: 0755
       containers:
       - name: solana-rpc
         image: solanalabs/solana:v1.18.23
@@ -43,19 +51,6 @@ spec:
         # resources:
         #   limits:
         #     nvidia.com/gpu: 1 # Adjust if you need more GPUs or specific resource limits
-      volumes:
-      - name: solana-rpc-volume
-        persistentVolumeClaim:
-          claimName: solana-rpc-claim
-      - name: entrypoint-script
-        configMap:
-          name: entrypoint-script
-
-configMapGenerator:
-- name: entrypoint-script
-  files:
-  - solana-run.sh
-
 ---
 apiVersion: v1
 kind: Service

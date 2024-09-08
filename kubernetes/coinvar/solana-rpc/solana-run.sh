@@ -126,6 +126,11 @@ args=(
   --limit-ledger-size 50000000
   --maximum-local-snapshot-age 86400
   --minimal-snapshot-download-speed 10
+  --entrypoint mainnet-beta.solana.com:8001
+  --entrypoint entrypoint2.mainnet-beta.solana.com:8001
+  --entrypoint entrypoint3.mainnet-beta.solana.com:8001
+  --entrypoint entrypoint4.mainnet-beta.solana.com:8001
+  --entrypoint entrypoint5.mainnet-beta.solana.com:8001
   --rpc-port 8899
   --no-port-check
   --snapshots /usr/bin/config/ledger/snapshot

@@ -4,6 +4,7 @@ namespace: coinvar
 resources:
   - pv/solana-rpc-pv.yml
   - pv/solana-rpc-pvc.yml
+  - solana-rpc.yml
 
 configMapGenerator:
 - name: entrypoint-script

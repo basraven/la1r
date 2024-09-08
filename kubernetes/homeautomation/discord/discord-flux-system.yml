@@ -3,7 +3,7 @@ apiVersion: notification.toolkit.fluxcd.io/v1beta3
 kind: Provider
 metadata:
   name: discord
-  namespace: homeautomation
+  namespace: flux-system
 spec:
   type: discord
   secretRef:
@@ -14,14 +14,38 @@ apiVersion: notification.toolkit.fluxcd.io/v1beta3
 kind: Alert
 metadata:
   name: discord
-  namespace: homeautomation
+  namespace: flux-system
 spec:
   summary: "Flux alert"
   providerRef:
     name: discord
-  eventSeverity: error
+  eventSeverity: info
   eventSources:
     - kind: GitRepository
       name: '*'
     - kind: Kustomization
       name: '*'
+    - kind: HelmRelease
+      name: '*'
+  # exclusionList:
+  #   - "^Reconciliation finished"
+# ---
+# apiVersion: notification.toolkit.fluxcd.io/v1beta3
+# kind: Alert
+# metadata:
+#   name: discord
+#   namespace: coinvar
+# spec:
+#   summary: "Flux alert"
+#   providerRef:
+#     name: discord
+#   eventSeverity: info
+#   eventSources:
+#     - kind: GitRepository
+#       name: '*'
+#     - kind: Kustomization
+#       name: '*'
+#     - kind: HelmRelease
+#       name: '*'
+#   # exclusionList:
+#   #   - "^Reconciliation finished"

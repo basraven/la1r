@@ -3,6 +3,7 @@ kind: Kustomization
 namespace: homeautomation
 resources:
 - discord.yml
+- discord-flux-system.yml
 
 
 configMapGenerator:
