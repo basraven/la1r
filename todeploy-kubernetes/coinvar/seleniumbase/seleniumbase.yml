@@ -1,0 +1,89 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: seleniumbase
+  labels:
+    app: seleniumbase
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: seleniumbase
+  template:
+    metadata:
+      labels:
+        app: seleniumbase
+    spec:
+      # Essential
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            preference:
+              matchExpressions:
+              - key: la1r.workload/essential
+                operator: In
+                values:
+                - "true"
+      priorityClassName: essential
+                
+      volumes:
+      - name: seleniumbase-volume
+        persistentVolumeClaim:
+          claimName: seleniumbase-claim
+      - name: pyrunner
+        configMap:
+          name: pyrunner
+          defaultMode: 0755
+      containers:
+      - name: seleniumbase
+        image: seleniumbase/seleniumbase:latest
+        # command: [ "pytest", "my_first_test.py", "--browser=chrome", "--headless"]
+        command: ["bash", "-c", "sleep infinity"]
+        # ports:
+        # - containerPort: 8899
+        #   name: rpc
+        # env:
+        # - name: RUST_LOG
+        #   value: "info,solana_metrics::metrics=warn"
+        volumeMounts:
+        - name: seleniumbase-volume
+          mountPath: /storage
+        - name: pyrunner
+          mountPath: /root/pyrunner/runner.py
+          subPath: runner.py
+        # resources:
+        #   limits:
+        #     nvidia.com/gpu: 1 # Adjust if you need more GPUs or specific resource limits
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   labels:
+#     app: seleniumbase
+#   name: seleniumbase
+# spec:
+#   ports:
+#   - name: rpc
+#     targetPort: 8899
+#     port: 8899
+#   selector:
+#     app: seleniumbase
+#   type: ClusterIP
+
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   labels:
+#     app: seleniumbase-lb
+#   name: seleniumbase-lb
+# spec:
+#   ports:
+#   - name: rpc
+#     targetPort: 8899
+#     port: 8899
+#   selector:
+#     app: seleniumbase
+#   loadBalancerIP: 192.168.6.78
+#   type: LoadBalancer

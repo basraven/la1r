@@ -1,0 +1,16 @@
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: seleniumbase-pv
+  labels:
+    contenttype: "seleniumbase"
+spec:
+  capacity:
+    storage: 5Gi
+  storageClassName: seleniumbase
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/mnt/hdd/na/seleniumbase"

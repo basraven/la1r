@@ -1,0 +1,12 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: coinvar
+resources:
+  - pv/seleniumbase-pv.yml
+  - pv/seleniumbase-pvc.yml
+  - seleniumbase.yml
+
+configMapGenerator:
+- name: pyrunner
+  files:
+  - runner.py

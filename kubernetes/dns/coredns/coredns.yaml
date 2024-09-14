@@ -55,6 +55,8 @@ spec:
       #   labelSelector:
       #     matchLabels:
       #       app: coredns
+      
+      # Essential
       affinity:
         nodeAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
@@ -66,6 +68,7 @@ spec:
                 values:
                 - "true"
       priorityClassName: essential
+      
       volumes:
       - name: etcd-pki
         hostPath:
