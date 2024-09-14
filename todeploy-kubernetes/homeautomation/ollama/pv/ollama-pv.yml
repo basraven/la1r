@@ -7,10 +7,10 @@ metadata:
     contenttype: "ollama"
 spec:
   capacity:
-    storage: 500Gi
+    storage: 50Gi
   storageClassName: ollama
   persistentVolumeReclaimPolicy: Retain
   accessModes:
   - ReadWriteOnce
   hostPath:
-    path: "/mnt/hdd/na/ollama"
+    path: "/mnt/ssd/na/ollama"
