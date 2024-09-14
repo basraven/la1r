@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: discord-llm
+  labels:
+    app: discord-llm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: discord-llm
+  template:
+    metadata:
+      labels:
+        app: discord-llm
+    spec:
+      # NonEssential
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: la1r.workload/nonessential
+                operator: In
+                values:
+                - "true"
+                
+      volumes:
+      - name: discord-llm-volume
+        persistentVolumeClaim:
+          claimName: discord-llm-claim
+      # - name: pyrunner
+      #   configMap:
+      #     name: pyrunner
+      #     defaultMode: 0755
+      containers:
+      - name: discord-llm
+        image: discord-llm/discord-llm:latest
+        command: [ "pytest", "my_first_test.py", "--browser=chrome", "--headless"]
+        # ports:
+        # - containerPort: 8899
+        #   name: rpc
+        # env:
+        # - name: RUST_LOG
+        #   value: "info,solana_metrics::metrics=warn"
+        volumeMounts:
+        - name: discord-llm-volume
+          mountPath: /storage
+        # - name: pyrunner
+        #   mountPath: /root/pyrunner/runner.py
+        #   subPath: runner.py
+        # resources:
+        #   limits:
+        #     nvidia.com/gpu: 1 # Adjust if you need more GPUs or specific resource limits
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   labels:
+#     app: discord-llm
+#   name: discord-llm
+# spec:
+#   ports:
+#   - name: rpc
+#     targetPort: 8899
+#     port: 8899
+#   selector:
+#     app: discord-llm
+#   type: ClusterIP
+
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   labels:
+#     app: discord-llm-lb
+#   name: discord-llm-lb
+# spec:
+#   ports:
+#   - name: rpc
+#     targetPort: 8899
+#     port: 8899
+#   selector:
+#     app: discord-llm
+#   loadBalancerIP: 192.168.6.78
+#   type: LoadBalancer
