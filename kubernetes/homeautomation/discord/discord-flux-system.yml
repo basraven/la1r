@@ -27,8 +27,8 @@ spec:
       name: '*'
     - kind: HelmRelease
       name: '*'
-  # exclusionList:
-  #   - "^Reconciliation finished"
+  exclusionList:
+    - "CustomResourceDefinition/bgppeers\\.metallb\\.io configured"
 # ---
 # apiVersion: notification.toolkit.fluxcd.io/v1beta3
 # kind: Alert
