@@ -1,0 +1,16 @@
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: ollama-pv
+  labels:
+    contenttype: "ollama"
+spec:
+  capacity:
+    storage: 500Gi
+  storageClassName: ollama
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/mnt/hdd/na/ollama"
