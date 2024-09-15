@@ -2,8 +2,15 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: immich-machine-learning
+  labels:
+    app: immich-machine-learning
+    sablier.enable: "false"
+    sablier.group: immich
 spec:
-  replicas: 1
+  autoscaler:
+    enabled: true
+    minReplicas: 0
+    maxReplicas: 1
   selector:
     matchLabels:
       app: immich-machine-learning

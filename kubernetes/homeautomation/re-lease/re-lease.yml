@@ -30,13 +30,19 @@ spec:
       containers:
       - name: re-lease
         image: python:3.9-slim
-        command: ["sh", "-c", "pip install requests etcd3 protobuf==3.20.* && python /scripts/re-lease.py"]
+        command: ["sh", "-c", "pip install requests kubernetes protobuf==3.20.* && python /scripts/re-lease.py"]
         volumeMounts:
         - name: script-volume
           mountPath: /scripts
         - name: kubernetes-config
-          mountPath: /etc/kubernetes/pki
-        # env:
+          mountPath: /etc/kubernetes
+        - name: re-lease-override
+          mountPath: /etc/re-lease/override
+        env:
+        - name: RECHECK_INTERVAL
+          value: "120" # in seconds
+        - name: OVERRIDE_FILE
+          value: "/etc/re-lease/re-lease-override"
         # - name: FRIGATE_DISCORD_WEBHOOK
         #   valueFrom:
         #     secretKeyRef:
@@ -48,6 +54,10 @@ spec:
           name: re-lease-script
       - name: kubernetes-config
         hostPath:
-          path: /etc/kubernetes/pki
+          path: /etc/kubernetes
           type: Directory
+      - name: re-lease-override
+        hostPath:
+          path: /etc/re-lease/override
+          type: FileOrCreate
       restartPolicy: Always
