@@ -1,9 +1,5 @@
-
 import os
 import etcd3
-import kubernetes.client
-from kubernetes.client.rest import ApiException
-from kubernetes import config
 
 # Get etcd credentials from the host path
 etcd_ca_cert = '/etc/kubernetes/pki/etcd/ca.crt'
@@ -12,7 +8,7 @@ etcd_client_key = '/etc/kubernetes/pki/apiserver-etcd-client.key'
 
 # Connect to etcd
 etcd_client = etcd3.client(
-    host='127.0.0.1',
+    host='192.168.5.1',
     port=2379,
     ca_cert=etcd_ca_cert,
     cert_key=etcd_client_key,
@@ -30,22 +26,21 @@ try:
 except Exception as e:
     print(f"Error accessing etcd: {str(e)}")
 
-# Use kubernetes client to get additional information
-config.load_kube_config()
-v1 = kubernetes.client.CoreV1Api()
-
-print("\nListing Kubernetes resources:")
+# List Kubernetes resources using etcd
+print("\nListing Kubernetes resources using etcd:")
 try:
     # List namespaces
-    namespaces = v1.list_namespace()
+    namespaces = etcd_client.get_prefix('/registry/namespaces')
     print("Namespaces:")
-    for ns in namespaces.items:
-        print(f"- {ns.metadata.name}")
+    for _, metadata in namespaces:
+        namespace = metadata.key.decode('utf-8').split('/')[-1]
+        print(f"- {namespace}")
 
-    # List pods in default namespace
-    pods = v1.list_namespaced_pod("homeautomation")
-    print("\nPods in default namespace:")
-    for pod in pods.items:
-        print(f"- {pod.metadata.name}")
-except ApiException as e:
-    print(f"Error accessing Kubernetes API: {str(e)}")
+    # List pods in homeautomation namespace
+    pods = etcd_client.get_prefix('/registry/pods/homeautomation')
+    print("\nPods in homeautomation namespace:")
+    for _, metadata in pods:
+        pod = metadata.key.decode('utf-8').split('/')[-1]
+        print(f"- {pod}")
+except Exception as e:
+    print(f"Error accessing etcd: {str(e)}")
