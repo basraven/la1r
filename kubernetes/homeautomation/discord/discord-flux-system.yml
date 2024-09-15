@@ -29,7 +29,9 @@ spec:
       name: '*'
   exclusionList:
     - "CustomResourceDefinition/bgppeers\\.metallb\\.io configured"
-# ---
+    - "Installation/default configured"
+    - "CustomResourceDefinition/bgppeers.metallb.io configured"
+    - "Installation/default configured"# ---
 # apiVersion: notification.toolkit.fluxcd.io/v1beta3
 # kind: Alert
 # metadata:
