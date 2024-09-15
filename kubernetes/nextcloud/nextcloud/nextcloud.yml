@@ -47,8 +47,13 @@ metadata:
   namespace: nextcloud
   labels:
     app: nextcloud
+    sablier.enable: "false"
+    sablier.group: nextcloud
 spec:
-  replicas: 1
+  autoscaler:
+    enabled: true
+    minReplicas: 0
+    maxReplicas: 1
   strategy:
     type: Recreate
   selector:
@@ -201,6 +206,7 @@ metadata:
   annotations:
     traefik.ingress.kubernetes.io/router.tls: "true"
     traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+    traefik.ingress.kubernetes.io/router.middlewares: "traefik-sablier-nextcloud@kubernetescrd"
 spec:
   tls:
   - secretName: nextcloud-bas-tls
@@ -215,27 +221,3 @@ spec:
             name: nextcloud
             port:
               number: 80
-
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: nextcloud-http
-  namespace: nextcloud
-  annotations:
-    traefik.ingress.kubernetes.io/router.tls: "false"
-    traefik.ingress.kubernetes.io/router.entrypoints: "web"
-    traefik.ingress.kubernetes.io/router.middlewares: "traefik-http-redirect-to-https@kubernetescrd"
-spec:
-  rules:
-  - host: cloud.bas
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: nextcloud
-            port:
-              number: 80
-

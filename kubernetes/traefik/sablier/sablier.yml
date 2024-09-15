@@ -1,0 +1,89 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sablier
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sablier
+  template:
+    metadata:
+      labels:
+        app: sablier
+    spec:
+      
+      # Essential
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            preference:
+              matchExpressions:
+              - key: la1r.workload/essential
+                operator: In
+                values:
+                - "true"
+      priorityClassName: essential
+
+      serviceAccountName: sablier
+      containers:
+      - name: sablier
+        image: acouvreur/sablier:1.7.0
+        args: 
+        - "start"
+        - "--provider.name=kubernetes"
+        ports:
+        - name: sablier
+          containerPort: 10000
+        # volumeMounts:
+        # - name: script-volume
+        #   mountPath: /etc/sablier/sablier.yaml
+        #   subPath: sablier.yaml
+        # env:
+        # - name: PROVIDER_NAME
+        #   value: kubernetes
+        # - name: FRIGATE_DISCORD_WEBHOOK
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: discord-webhooks
+        #       key: FRIGATE_DISCORD_WEBHOOK
+      volumes:
+      - name: script-volume
+        configMap:
+          name: sablier-script
+      restartPolicy: Always
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sablier
+  labels:
+    name: sablier
+spec:
+  selector:
+    app: sablier
+  type: ClusterIP
+  ports:
+    - name: sablier
+      port: 10000
+      targetPort: 10000
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: sablier-nextcloud
+spec:
+  plugin:
+    sablier:
+      group: nextcloud
+      # blocking:
+      #   defaultTimeout: 10s
+      dynamic:
+        displayName: Awaiting to start cloud
+        refreshFrequency: 5s
+        showDetails: "true"
+        theme: shuffle
+      sablierUrl: http://sablier:10000
+      sessionDuration: 10m

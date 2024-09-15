@@ -28,12 +28,8 @@ spec:
     - kind: HelmRelease
       name: '*'
   exclusionList:
-    - "CustomResourceDefinition/bgppeers\\.metallb\\.io configured"
-    - "Installation/default configured"
-    - "CustomResourceDefinition/bgppeers.metallb.io configured"
-    - "Installation/default configured"
-    - "^CustomResourceDefinition/bgppeers\\.metallb\\.io configured$"
-    - "^Installation/default configured$"
+    - github.com/metallb/metallb/config/native?ref=v0.14.8
+
 # ---
 # apiVersion: notification.toolkit.fluxcd.io/v1beta3
 # kind: Alert
