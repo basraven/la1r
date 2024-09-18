@@ -37,8 +37,15 @@ spec:
         volumeMounts:
         - name: script-volume
           mountPath: /scripts
+        - name: host-time
+          mountPath: /etc/localtime
+          readOnly: true
       volumes:
       - name: script-volume
         configMap:
           name: mqtt-automation-script
+      - name: host-time
+        hostPath:
+          path: /etc/localtime
+          type: File
       restartPolicy: Always

@@ -6,7 +6,7 @@ resources:
   - pv/discord-llm-pvc.yml
   - discord-llm.yml
 
-# configMapGenerator:
-# - name: pyrunner
-#   files:
-#   - runner.py
+configMapGenerator:
+- name: discord-llm-script
+  files:
+  - discord-llm.py

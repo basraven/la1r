@@ -29,21 +29,17 @@ spec:
       - name: discord-llm-volume
         persistentVolumeClaim:
           claimName: discord-llm-claim
-      # - name: pyrunner
-      #   configMap:
-      #     name: pyrunner
-      #     defaultMode: 0755
+      - name: discord-llm-script
+        configMap:
+          name: discord-llm-script
+          defaultMode: 0755
       containers:
       - name: discord-llm
-        image: discord-llm/discord-llm:latest
-        command: [ "pytest", "my_first_test.py", "--browser=chrome", "--headless"]
-        # ports:
-        # - containerPort: 8899
-        #   name: rpc
-        # env:
-        # - name: RUST_LOG
-        #   value: "info,solana_metrics::metrics=warn"
+        image: python:3.9-slim
+        command: ["sh", "-c", "pip install requests && python /scripts/discord-llm.py"]
         volumeMounts:
+        - name: discord-llm-script
+          mountPath: /scripts
         - name: discord-llm-volume
           mountPath: /storage
         # - name: pyrunner

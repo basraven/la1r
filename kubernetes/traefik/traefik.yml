@@ -53,7 +53,10 @@ spec:
           - --providers.kubernetesingress
           - --providers.kubernetesIngress.ingressClass=lan
           - --providers.kubernetesingress.ingressendpoint.ip=192.168.6.2
+          - --providers.kubernetesIngress.allowEmptyServices=true
           - --providers.kubernetescrd
+          - --experimental.plugins.sablier.modulename=github.com/acouvreur/sablier
+          - --experimental.plugins.sablier.version=v1.7.0
           # - --log.level=DEBUG
           # - --accesslog
 ---

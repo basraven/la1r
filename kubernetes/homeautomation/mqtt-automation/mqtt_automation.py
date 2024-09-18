@@ -46,32 +46,31 @@ def mqtt_topic_matches(pattern, topic):
 def is_dark_now():
     # Define the timezone offset for Hilversum (CET or CEST)
     # CET is UTC+1, and CEST is UTC+2
-    # Assume Daylight Saving Time is currently in effect (CEST, UTC+2)
-    timezone_offset = timedelta(hours=2)  # Use 1 for CET, 2 for CEST
-    
-    # Get the current time in UTC
-    utc_now = datetime.utcnow()
+    now = datetime.now(datetime.timezone.utc)
+    is_dst = time.localtime().tm_isdst > 0
+    timezone_offset = timedelta(hours=2 if is_dst else 1)
     
     # Create an observer for Hilversum
     observer = ephem.Observer()
     observer.lat = latitude
     observer.lon = longitude
-    observer.date = utc_now
+    observer.date = now
     
     # Calculate sunrise and sunset times in UTC
     sunrise = observer.next_rising(ephem.Sun()).datetime()
     sunset = observer.next_setting(ephem.Sun()).datetime()
     
     # Adjust times to local timezone
-    local_now = utc_now + timezone_offset
+    local_now = now + timezone_offset
     local_sunrise = sunrise + timezone_offset
     local_sunset = sunset + timezone_offset
     
-    # Check if it's dark outside
-    if local_now < local_sunrise or local_now > local_sunset:
-        return True
-    else:
-        return False
+    # Calculate 1 hour before sunrise and 1 hour after sunset
+    one_hour_before_sunrise = local_sunrise - timedelta(hours=1)
+    one_hour_after_sunset = local_sunset + timedelta(hours=1)
+    
+    # Check if it's dark outside (1 hour after sunset or 1 hour before sunrise)
+    return local_now > one_hour_after_sunset or local_now < one_hour_before_sunrise
 
 # App logic functions
 def on_connect(client, userdata, flags, rc):

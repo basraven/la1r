@@ -42,7 +42,10 @@ func NewHardwarePWM(pwmChannel int, hz float64, chip int) (*HardwarePWM, error) 
 		return nil, &HardwarePWMException{fmt.Sprintf("Need write access to files in '%s'", h.chipPath)}
 	}
 	if !h.doesPWMExist() {
-		h.createPWM()
+		err := h.createPWM()
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	for {
@@ -89,23 +92,23 @@ func (h *HardwarePWM) createPWM() error {
 	return h.echo(h.pwmChannel, filepath.Join(h.chipPath, "export"))
 }
 
-func (h *HardwarePWM) start(initialDutyCycle float64) error {
-	err := h.changeDutyCycle(initialDutyCycle)
+func (h *HardwarePWM) Start(initialDutyCycle float64) error {
+	err := h.ChangeDutyCycle(initialDutyCycle)
 	if err != nil {
 		return err
 	}
 	return h.echo(1, filepath.Join(h.pwmDir, "enable"))
 }
 
-func (h *HardwarePWM) stop() error {
-	err := h.changeDutyCycle(0)
+func (h *HardwarePWM) Stop() error {
+	err := h.ChangeDutyCycle(0)
 	if err != nil {
 		return err
 	}
 	return h.echo(0, filepath.Join(h.pwmDir, "enable"))
 }
 
-func (h *HardwarePWM) changeDutyCycle(dutyCycle float64) error {
+func (h *HardwarePWM) ChangeDutyCycle(dutyCycle float64) error {
 	if dutyCycle < 0 || dutyCycle > 100 {
 		return &HardwarePWMException{"Duty cycle must be between 0 and 100 (inclusive)."}
 	}
@@ -128,7 +131,7 @@ func (h *HardwarePWM) changeFrequency(hz float64) error {
 
 	originalDutyCycle := h.dutyCycle
 	if h.dutyCycle != 0 {
-		err := h.changeDutyCycle(0)
+		err := h.ChangeDutyCycle(0)
 		if err != nil {
 			return err
 		}
@@ -140,7 +143,7 @@ func (h *HardwarePWM) changeFrequency(hz float64) error {
 		return err
 	}
 
-	return h.changeDutyCycle(originalDutyCycle)
+	return h.ChangeDutyCycle(originalDutyCycle)
 }
 
 func (h *HardwarePWM) getPeriod() (int, error) {
