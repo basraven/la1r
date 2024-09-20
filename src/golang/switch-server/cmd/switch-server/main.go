@@ -23,12 +23,18 @@ func main() {
 	}
 	defer rpio.Close()
 
-	// Initialize pin 16 as input
-	pin = rpio.Pin(16)
-	pin.Input()
+	// Set input pins
+	inputPins := []rpio.Pin{
+		rpio.Pin(16),
+	}
+	// Set output pins
+	outputPins := []rpio.Pin{
+		rpio.Pin(13),
+	}
 
 	// Start parallel pin reading
-	go readPin()
+	go readPins(&inputPins)
+	go writePins(&outputPins)
 
 	// Initialize Gin router
 	r := gin.Default()
@@ -43,11 +49,31 @@ func main() {
 	}
 }
 
-func readPin() {
+func writePins(pin *[]rpio.Pin) {
+	for _, pin := range *pin {
+		pin.Output()
+		pin.Low()
+	}
 	for {
-		mu.Lock()
-		pinValue = int(pin.Read())
-		mu.Unlock()
+		for _, pin := range *pin {
+			pin.High()
+			time.Sleep(100 * time.Millisecond)
+			pin.Low()
+			time.Sleep(100 * time.Millisecond)
+		}
+	}
+}
+
+func readPins(inputPins *[]rpio.Pin) {
+	for _, pin := range *inputPins {
+		pin.Input()
+		pin.PullUp()
+	}
+	for {
+		for _, pin := range *inputPins {
+			pinValue = int(pin.Read())
+			log.Printf("Pin %d value: %d", pin, pinValue)
+		}
 		time.Sleep(100 * time.Millisecond)
 	}
 }
