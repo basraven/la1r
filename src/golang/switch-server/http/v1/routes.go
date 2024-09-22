@@ -8,6 +8,7 @@ import (
 
 	httphandlers "switch-server/http/v1/handlers"
 	"switch-server/internal/models"
+	// "switch-server/http/v1/middleware"
 )
 
 // HandleRequest is a basic HTTP handler for the API.
@@ -15,8 +16,8 @@ func HandleRequest(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Hello from API v1")
 }
 
-func SetupRoutes(r *gin.RouterGroup, deviceStates *[]models.DeviceStates, deviceStatesEvents chan models.DeviceStateEvent) {
-	// router.Use(middleware.Auth())
+func SetupRoutes(r *gin.RouterGroup, deviceStates *models.DeviceStates, deviceStatesEvents chan models.DeviceState) {
+	// r.Use(middleware.Auth())
 
 	// Route handles & endpoints for deviceStates
 	r.GET("/status", func(c *gin.Context) {

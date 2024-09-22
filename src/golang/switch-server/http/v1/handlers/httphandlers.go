@@ -9,11 +9,11 @@ import (
 	"switch-server/internal/models"
 )
 
-func HandleAllStatusRequest(c *gin.Context, deviceStates *[]models.DeviceStates) {
+func HandleAllStatusRequest(c *gin.Context, deviceStates *models.DeviceStates) {
 	c.JSON(200, deviceStates)
 }
 
-func HandleSpecificStatusRequest(c *gin.Context, deviceStates *[]models.DeviceStates) {
+func HandleSpecificStatusRequest(c *gin.Context, deviceStates *models.DeviceStates) {
 	identifier := c.Param("identifier")
 
 	// Try to parse the identifier as an integer (ID)
@@ -37,13 +37,13 @@ func HandleSpecificStatusRequest(c *gin.Context, deviceStates *[]models.DeviceSt
 	c.JSON(404, gin.H{"error": "Server state not found"})
 }
 
-func HandleStartRequest(c *gin.Context, deviceStates *[]models.DeviceStates, deviceStatesEvents chan<- models.DeviceStateEvent) {
+func HandleStartRequest(c *gin.Context, deviceStates *models.DeviceStates, deviceStatesEvents chan<- models.DeviceState) {
 	identifier := c.Param("identifier")
 	// Try to parse the identifier as an integer (ID)
 	if id, err := strconv.Atoi(identifier); err == nil {
 		for _, state := range *deviceStates {
 			if state.Id == id {
-				deviceStatesEvents <- models.DeviceStateEvent{Id: id, State: 1}
+				deviceStatesEvents <- models.DeviceState{Id: id, State: 1}
 				c.JSON(200, gin.H{"message": "Server started"})
 				return
 			}
@@ -52,7 +52,7 @@ func HandleStartRequest(c *gin.Context, deviceStates *[]models.DeviceStates, dev
 		// If not an integer, treat it as a name
 		for _, state := range *deviceStates {
 			if strings.EqualFold(state.Name, identifier) {
-				deviceStatesEvents <- models.DeviceStateEvent{Id: state.Id, State: 1}
+				deviceStatesEvents <- models.DeviceState{Id: state.Id, State: 1}
 				c.JSON(200, gin.H{"message": "Server started"})
 				return
 			}
@@ -61,13 +61,13 @@ func HandleStartRequest(c *gin.Context, deviceStates *[]models.DeviceStates, dev
 	c.JSON(404, gin.H{"message": "Server not found"})
 }
 
-func HandleStopRequest(c *gin.Context, deviceStates *[]models.DeviceStates, deviceStatesEvents chan<- models.DeviceStateEvent) {
+func HandleStopRequest(c *gin.Context, deviceStates *models.DeviceStates, deviceStatesEvents chan<- models.DeviceState) {
 	identifier := c.Param("identifier")
 	// Try to parse the identifier as an integer (ID)
 	if id, err := strconv.Atoi(identifier); err == nil {
 		for _, state := range *deviceStates {
 			if state.Id == id {
-				deviceStatesEvents <- models.DeviceStateEvent{Id: id, State: 0}
+				deviceStatesEvents <- models.DeviceState{Id: id, State: 0}
 				c.JSON(200, gin.H{"message": "Server stopped"})
 				return
 			}
@@ -76,7 +76,7 @@ func HandleStopRequest(c *gin.Context, deviceStates *[]models.DeviceStates, devi
 		// If not an integer, treat it as a name
 		for _, state := range *deviceStates {
 			if strings.EqualFold(state.Name, identifier) {
-				deviceStatesEvents <- models.DeviceStateEvent{Id: state.Id, State: 0}
+				deviceStatesEvents <- models.DeviceState{Id: state.Id, State: 0}
 				c.JSON(200, gin.H{"message": "Server stopped"})
 				return
 			}
