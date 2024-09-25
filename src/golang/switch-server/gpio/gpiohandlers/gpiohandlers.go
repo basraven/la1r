@@ -28,7 +28,7 @@ func ReadForGpioInputChange(deviceStates *models.DeviceStates, deviceEvents *mod
 					pastToggleValue[state.Id] = pinValue
 					continue
 				} else if pastToggleValue[state.Id] != pinValue { // if the pin value has changed
-					log.Printf("State.Id %d Checking GpioIn %+v", state.Id, state.GpioIn)
+					log.Printf("pastToggleValue[%d] = %d, pinValue = %d", state.Id, pastToggleValue[state.Id], pinValue)
 					changeEvent := models.DeviceStateChange{
 						Timestamp: time.Now(),
 						Id:        state.Id,
@@ -44,20 +44,30 @@ func ReadForGpioInputChange(deviceStates *models.DeviceStates, deviceEvents *mod
 }
 
 func OutputLedOnStateChange(deviceStates *models.DeviceStates) {
+	for _, state := range *deviceStates {
+		if state.StatusLed != 0 {
+			state.StatusLed.Output()
+			state.StatusLed.Low()
+		}
+	}
+
 	blinkStates := make(map[int]bool)
 	for {
 		for _, state := range *deviceStates {
 			if state.StatusLed != 0 {
+
 				if state.State == 2 {
+					// log.Printf("State %d is unsure", state.Id)
 					blink(&blinkStates, &state)
-					time.Sleep(200 * time.Millisecond)
+					time.Sleep(1000 * time.Millisecond)
 					blink(&blinkStates, &state)
-					time.Sleep(200 * time.Millisecond)
+					time.Sleep(1000 * time.Millisecond)
 					blink(&blinkStates, &state)
-				}
-				if state.State == 1 {
+				} else if state.State == 1 {
+					// log.Printf("State %d is turned on", state.Id)
 					state.StatusLed.High() // Turn on the LED
 				} else if state.State == 0 {
+					// log.Printf("State %d is turned off", state.Id)
 					blink(&blinkStates, &state)
 				}
 			}
@@ -67,18 +77,20 @@ func OutputLedOnStateChange(deviceStates *models.DeviceStates) {
 }
 
 func blink(blinkStates *map[int]bool, state *models.DeviceState) {
-	if state.State == 1 && !(*blinkStates)[state.Id] {
-		state.StatusLed.High()
-		(*blinkStates)[state.Id] = true
-	} else if state.State == 0 && !(*blinkStates)[state.Id] {
-		state.StatusLed.Low()
-		(*blinkStates)[state.Id] = false
-	} else if state.State == 1 && (*blinkStates)[state.Id] {
-		state.StatusLed.Low()
-		(*blinkStates)[state.Id] = false
-	} else if state.State == 0 && (*blinkStates)[state.Id] {
-		state.StatusLed.High()
-		(*blinkStates)[state.Id] = true
+	// Initialize state.Id in blinkStates if it doesn't exist
+	if _, exists := (*blinkStates)[state.Id]; !exists {
+		(*blinkStates)[state.Id] = false // Initialize as low (off)
+	}
+
+	// Alternate the LED state based on current blink state
+	if (*blinkStates)[state.Id] {
+		state.StatusLed.Low()            // Turn off the LED
+		(*blinkStates)[state.Id] = false // Update blink state to off
+		log.Printf("Blink Low %d", state.Id)
+	} else {
+		state.StatusLed.High()          // Turn on the LED
+		(*blinkStates)[state.Id] = true // Update blink state to on
+		log.Printf("Blink High %d", state.Id)
 	}
 }
 
