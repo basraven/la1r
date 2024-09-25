@@ -1,30 +1,49 @@
 package models
 
 import (
-	"log"
+	hwpwm "switch-server/internal/hardware-pwm"
+	"time"
 
 	"github.com/stianeikeland/go-rpio/v4"
 )
 
 type DeviceState struct {
-	Id         int
-	Name       string
-	State      int      // 2 = unsure, 1 = on, 0 = off
-	GpioIn     rpio.Pin // GPIO Pin
-	PwmChannel int      // PWM Channel
+	Id        int
+	Name      string
+	State     int               // 2 = unsure, 1 = on, 0 = off
+	GpioIn    rpio.Pin          // GPIO Pin
+	GpioOut   rpio.Pin          // GPIO Pin
+	StatusLed rpio.Pin          // Status LED
+	Pwm       hwpwm.HardwarePWM // PWM Object
+	Ssh       string            // ssh server address
 }
 
-// Private method to set the value (unexported)
-func (deviceState *DeviceState) setValue(value DeviceState) {
-	*deviceState = value
+type DeviceStateChange struct {
+	Timestamp      time.Time
+	Id             int
+	State          int
+	OutputChannels []*chan DeviceStateChange
+	Callback       *chan string
 }
 
 type DeviceStates []DeviceState
 
+type DeviceEvents struct {
+	State        chan DeviceStateChange
+	OutputDevice chan DeviceStateChange
+	OutputPwm    chan DeviceStateChange
+}
+
 // Constructor function to create a new instance of MyClass
-func NewDeviceStates(deviceStateList []DeviceState) *DeviceStates {
+func NewDeviceStates(deviceStateList []DeviceState) (*DeviceStates, *DeviceEvents) {
 	deviceStates := DeviceStates(deviceStateList)
-	return &deviceStates
+	deviceEvents := DeviceEvents{
+		State:        make(chan DeviceStateChange),
+		OutputDevice: make(chan DeviceStateChange),
+		OutputPwm:    make(chan DeviceStateChange),
+	}
+	go deviceStates.handleDeviceStateEvents(&deviceEvents)
+	return &deviceStates, &deviceEvents
 }
 
 // Getter method to access the readonly value
@@ -36,14 +55,27 @@ func (deviceStates *DeviceStates) GetAll() *DeviceStates {
 	return deviceStates
 }
 
-func (deviceStates *DeviceStates) HandleDeviceStateEvents(deviceStatesEvents <-chan DeviceState) {
-	for event := range deviceStatesEvents {
-		// Update server state based on the event
-		for i := range *deviceStates {
-			if (*deviceStates)[i].Id == event.Id {
-				log.Printf("Device %d with state %+v to update to: %+v", i, (*deviceStates)[i], event)
-				(*deviceStates)[i] = event
-			}
+func (deviceStates *DeviceStates) GetById(Id int) *DeviceState {
+	for i := range *deviceStates {
+		if (*deviceStates)[i].Id == Id {
+			return &(*deviceStates)[i] // Return the address of the element in the slice
 		}
+	}
+	return nil
+}
+
+func (deviceStates *DeviceStates) handleDeviceStateEvents(deviceEvents *DeviceEvents) {
+	for event := range deviceEvents.State {
+		state := deviceStates.GetById(event.Id)
+
+		// log.Printf("\n\t#> %+v \n\t\tupdated:\n\t#> %+v \n", state, event)
+
+		state.State = event.State
+
+		// Send event to the appropriate outputchannels
+		for _, outputChannel := range event.OutputChannels {
+			*outputChannel <- event
+		}
+
 	}
 }

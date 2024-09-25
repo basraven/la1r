@@ -16,8 +16,8 @@ func (e *HardwarePWMException) Error() string {
 }
 
 type HardwarePWM struct {
-	dutyCycle  float64
-	hz         float64
+	DutyCycle  float64
+	Hz         float64
 	chipPath   string
 	pwmDir     string
 	pwmChannel int
@@ -31,7 +31,7 @@ func NewHardwarePWM(pwmChannel int, hz float64, chip int) (*HardwarePWM, error) 
 	h := &HardwarePWM{
 		chipPath:   fmt.Sprintf("/sys/class/pwm/pwmchip%d", chip),
 		pwmChannel: pwmChannel,
-		hz:         hz,
+		Hz:         hz,
 	}
 	h.pwmDir = filepath.Join(h.chipPath, fmt.Sprintf("pwm%d", pwmChannel))
 
@@ -112,7 +112,7 @@ func (h *HardwarePWM) ChangeDutyCycle(dutyCycle float64) error {
 	if dutyCycle < 0 || dutyCycle > 100 {
 		return &HardwarePWMException{"Duty cycle must be between 0 and 100 (inclusive)."}
 	}
-	h.dutyCycle = dutyCycle
+	h.DutyCycle = dutyCycle
 
 	period, err := h.getPeriod()
 	if err != nil {
@@ -127,10 +127,10 @@ func (h *HardwarePWM) changeFrequency(hz float64) error {
 	if hz < 0.1 {
 		return &HardwarePWMException{"Frequency can't be lower than 0.1 on the Rpi."}
 	}
-	h.hz = hz
+	h.Hz = hz
 
-	originalDutyCycle := h.dutyCycle
-	if h.dutyCycle != 0 {
+	originalDutyCycle := h.DutyCycle
+	if h.DutyCycle != 0 {
 		err := h.ChangeDutyCycle(0)
 		if err != nil {
 			return err

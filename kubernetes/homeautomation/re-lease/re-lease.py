@@ -2,6 +2,7 @@ import logging
 from kubernetes import client, config, watch
 import time
 import requests
+import json
 import os
 from requests.exceptions import RequestException
 
@@ -10,7 +11,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 RECHECK_INTERVAL = int(os.environ.get('RECHECK_INTERVAL', "60"))
 SWITCH_IP = os.environ.get('SWITCH_IP', "192.168.5.2")
-SWITCH_PORT = os.environ.get('SWITCH_PORT', "49250")
+SWITCH_PORT = os.environ.get('SWITCH_PORT', "50505")
 SWITCH_NUMBER = os.environ.get('SWITCH_NUMBER', "3")
 OVERRIDE_FILE = os.environ.get('OVERRIDE_FILE', "/etc/re-lease/re-lease-override")
 
@@ -38,7 +39,7 @@ def check_override_file():
             return
 
 def get_switch_url(action):
-    return f"http://{SWITCH_IP}:{SWITCH_PORT}/switch/{SWITCH_NUMBER}/{action}"
+    return f"http://{SWITCH_IP}:{SWITCH_PORT}/api/v1/{action}/{SWITCH_NUMBER}"
 
 def send_switch_request(url):
     try:
@@ -69,12 +70,12 @@ def check_deployments_with_labels():
 
     if has_scaling_above_zero:
         logging.info("At least one deployment has scaling above 0.")
-        if "is ON" not in status_response.text:
-            on_response = send_switch_request(get_switch_url("on"))
+        if json.loads(status_response.json)["State"] == 1:
+            on_response = send_switch_request(get_switch_url("start"))
             if on_response:
-                if "is switched ON" not in on_response.text:
+                if "Device is switched on" not in on_response.text:
                     logging.warning("Response: Switch {SWITCH_NUMBER} could not be switched on")
-                elif "already ON" in on_response.text:
+                elif "is already switched on" in on_response.text:
                     logging.info(f"Response: Switch {SWITCH_NUMBER} is already ON")
                 else:
                     logging.info(f"Response: Switch {SWITCH_NUMBER} turned ON")
@@ -82,8 +83,8 @@ def check_deployments_with_labels():
             logging.info(f"Switch {SWITCH_NUMBER} is already ON")
     else:
         logging.info("No deployments with scaling above 0 found, switching off server.")
-        if "is ON" in status_response.text:
-            off_response = send_switch_request(get_switch_url("off"))
+        if json.loads(status_response.json)["State"] == 1:
+            off_response = send_switch_request(get_switch_url("stop"))
             if off_response:
                 if "already OFF" in off_response.text:
                     logging.info(f"Response: Switch {SWITCH_NUMBER} is already OFF")

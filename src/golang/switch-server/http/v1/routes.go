@@ -1,9 +1,6 @@
 package v1
 
 import (
-	"fmt"
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 
 	httphandlers "switch-server/http/v1/handlers"
@@ -11,12 +8,7 @@ import (
 	// "switch-server/http/v1/middleware"
 )
 
-// HandleRequest is a basic HTTP handler for the API.
-func HandleRequest(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hello from API v1")
-}
-
-func SetupRoutes(r *gin.RouterGroup, deviceStates *models.DeviceStates, deviceStatesEvents chan models.DeviceState) {
+func SetupRoutes(r *gin.RouterGroup, deviceStates *models.DeviceStates, deviceEvents *models.DeviceEvents) {
 	// r.Use(middleware.Auth())
 
 	// Route handles & endpoints for deviceStates
@@ -27,10 +19,13 @@ func SetupRoutes(r *gin.RouterGroup, deviceStates *models.DeviceStates, deviceSt
 		httphandlers.HandleSpecificStatusRequest(c, deviceStates)
 	})
 	r.GET("/start/:identifier", func(c *gin.Context) {
-		httphandlers.HandleStartRequest(c, deviceStates, deviceStatesEvents)
+		httphandlers.HandleStartRequest(c, deviceStates, deviceEvents)
 	})
 	r.GET("/stop/:identifier", func(c *gin.Context) {
-		httphandlers.HandleStopRequest(c, deviceStates, deviceStatesEvents)
+		httphandlers.HandleStopRequest(c, deviceStates, deviceEvents)
 	})
-	// Add more routes as needed
+	r.GET("/set/:identifier/:value", func(c *gin.Context) {
+		httphandlers.HandleSetRequest(c, deviceStates, deviceEvents)
+	})
+
 }
