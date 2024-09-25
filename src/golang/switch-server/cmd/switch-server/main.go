@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"sync"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stianeikeland/go-rpio/v4"
@@ -27,11 +28,14 @@ func main() {
 	}
 	defer pwm.Stop()
 
+	// Creat blocking readMutex
+	var readMutex sync.Mutex
+
 	var deviceStates, deviceEvents = models.NewDeviceStates(
 		[]models.DeviceState{
 			{Id: 1, Name: "Linux-Wayne", State: 2, GpioOut: rpio.Pin(17), Ssh: "192.168.5.1"},
 			{Id: 2, Name: "Stephanie", State: 2},
-			{Id: 3, Name: "Jay-C", State: 2, GpioIn: rpio.Pin(16), GpioOut: rpio.Pin(22), StatusLed: rpio.Pin(13), Ssh: "192.168.5.3"},
+			{Id: 3, Name: "Jay-C", State: 2, GpioIn: rpio.Pin(26), GpioOut: rpio.Pin(22), StatusLed: rpio.Pin(16), ReadMutex: &readMutex, Ssh: "192.168.5.3"},
 			{Id: 4, Name: "Kirby", State: 2, Pwm: *pwm},
 		},
 	)

@@ -2,6 +2,7 @@ package models
 
 import (
 	hwpwm "switch-server/internal/hardware-pwm"
+	"sync"
 	"time"
 
 	"github.com/stianeikeland/go-rpio/v4"
@@ -16,6 +17,7 @@ type DeviceState struct {
 	StatusLed rpio.Pin          // Status LED
 	Pwm       hwpwm.HardwarePWM // PWM Object
 	Ssh       string            // ssh server address
+	ReadMutex *sync.Mutex       // Mutex for reading the pin value from a writing pin
 }
 
 type DeviceStateChange struct {
