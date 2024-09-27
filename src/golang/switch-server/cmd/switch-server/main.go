@@ -43,12 +43,12 @@ func main() {
 	log.SetFlags(log.Ltime)
 
 	// Start parallel pin reading
-	go gpiohandlers.ReadForGpioInputChange(deviceStates, deviceEvents)
+	go gpiohandlers.ReadForGpioInputChangeAndBlink(deviceStates, deviceEvents)
 
 	// // // Start parallel output writing
 	go gpiohandlers.OutputPWMOnEvent(deviceStates, deviceEvents)
 	go gpiohandlers.OutputDeviceOnEvent(deviceStates, deviceEvents)
-	go gpiohandlers.OutputLedOnStateChange(deviceStates)
+	// go gpiohandlers.OutputLedOnStateChange(deviceStates)
 
 	// Initialize Gin router
 	r := gin.Default()
