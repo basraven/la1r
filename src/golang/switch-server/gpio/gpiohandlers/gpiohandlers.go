@@ -31,6 +31,9 @@ func ReadForGpioInputChangeAndBlink(deviceStates *models.DeviceStates, deviceEve
 		lastToggleTime[state.Id] = time.Now()
 	}
 	blinkStates := make(map[int]bool)
+
+	ticker := time.NewTicker(1000 * time.Microsecond)
+	defer ticker.Stop()
 	for {
 		for _, state := range *deviceStates {
 
@@ -57,27 +60,7 @@ func ReadForGpioInputChangeAndBlink(deviceStates *models.DeviceStates, deviceEve
 					// If cooldown not active
 					if time.Since(lastToggleTime[state.Id]) > GPIO_SWITCHON_COOLDOWN {
 						// log.Printf("switching server to %d", pinValue)
-						callback := make(chan string)
-						changeEvent := models.DeviceStateChange{
-							Timestamp: time.Now(),
-							Id:        state.Id,
-							State:     targetState,
-							OutputChannels: []*chan models.DeviceStateChange{
-								&deviceEvents.OutputDevice,
-							},
-							Callback: &callback,
-						}
-						deviceEvents.State <- changeEvent
-
-						callbackValue, ok := <-callback
-						if ok {
-							log.Printf("Hardware switch changed device with %s", callbackValue)
-							lastToggleTime[state.Id] = time.Now()
-							lastToggleValue[state.Id] = pinValue
-						} else {
-							log.Printf("Hardware switch ERROR, did not change device state")
-						}
-						close(callback)
+						performWithCallback(targetState, &state, deviceEvents, &lastToggleTime, &lastToggleValue, pinValue)
 
 					} else {
 						remainingCooldown := GPIO_SWITCHON_COOLDOWN - time.Since(lastToggleTime[state.Id])
@@ -92,7 +75,6 @@ func ReadForGpioInputChangeAndBlink(deviceStates *models.DeviceStates, deviceEve
 			if state.StatusLed != 0 {
 				if state.State == 2 {
 					// log.Printf("State %d is unsure", state.Id)
-					// time.Sleep(200 * time.Millisecond)
 					blink(&blinkStates, &state)
 					time.Sleep(300 * time.Millisecond)
 					blink(&blinkStates, &state)
@@ -109,8 +91,32 @@ func ReadForGpioInputChangeAndBlink(deviceStates *models.DeviceStates, deviceEve
 				}
 			}
 		}
-		time.Sleep(600 * time.Millisecond)
+		<-ticker.C // Wait for the next tick
 	}
+}
+
+func performWithCallback(targetState int, state *models.DeviceState, deviceEvents *models.DeviceEvents, lastToggleTime *map[int]time.Time, lastToggleValue *map[int]int, pinValue int) {
+	callback := make(chan string)
+	changeEvent := models.DeviceStateChange{
+		Timestamp: time.Now(),
+		Id:        state.Id,
+		State:     targetState,
+		OutputChannels: []*chan models.DeviceStateChange{
+			&deviceEvents.OutputDevice,
+		},
+		Callback: &callback,
+	}
+	deviceEvents.State <- changeEvent
+
+	callbackValue, ok := <-callback
+	if ok {
+		log.Printf("Hardware switch changed device with %s", callbackValue)
+		(*lastToggleTime)[state.Id] = time.Now()
+		(*lastToggleValue)[state.Id] = pinValue
+	} else {
+		log.Printf("Hardware switch ERROR, did not change device state")
+	}
+	close(callback)
 }
 
 func blink(blinkStates *map[int]bool, state *models.DeviceState) {

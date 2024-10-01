@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stianeikeland/go-rpio/v4"
 
+	"switch-server/gist/gisthandlers"
 	gpiohandlers "switch-server/gpio/gpiohandlers"
 	v1 "switch-server/http/v1"
 	hwpwm "switch-server/internal/hardware-pwm"
@@ -40,15 +41,16 @@ func main() {
 		},
 	)
 	// Set up logging
-	log.SetFlags(log.Ltime)
+	log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile)
+	log.SetPrefix("INFO: ")
 
 	// Start parallel pin reading
 	go gpiohandlers.ReadForGpioInputChangeAndBlink(deviceStates, deviceEvents)
+	go gisthandlers.WatchGistChanges(deviceStates, deviceEvents)
 
-	// // // Start parallel output writing
+	// Start output handlers
 	go gpiohandlers.OutputPWMOnEvent(deviceStates, deviceEvents)
 	go gpiohandlers.OutputDeviceOnEvent(deviceStates, deviceEvents)
-	// go gpiohandlers.OutputLedOnStateChange(deviceStates)
 
 	// Initialize Gin router
 	r := gin.Default()
