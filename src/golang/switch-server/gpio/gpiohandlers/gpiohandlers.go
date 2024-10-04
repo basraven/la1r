@@ -158,27 +158,27 @@ func handleSwitchDevice(state *models.DeviceState, event *models.DeviceStateChan
 		time.Sleep(700 * time.Millisecond)
 		state.GpioOut.Low()
 		if *event.Callback != nil {
-			*event.Callback <- fmt.Sprintf("Device is switched on %d", state.Id)
+			*event.Callback <- fmt.Sprintf("Device %d is switched on", state.Id)
 		}
 	} else if event.State == 0 && err != nil { // Target: Off, Host: unavailable
 		if *event.Callback != nil {
-			*event.Callback <- "Device is already off"
+			*event.Callback <- fmt.Sprintf("Device %d is already off", state.Id)
 		}
 	} else if event.State == 0 && err == nil && available { // Target: Off, Host: available
 		// path := os.Getenv("HOME") + "/.ssh/id_rsa"
 		path := "/home/basraven/.ssh/id_rsa"
 		if err := softShutdownHost(state.Ssh, "basraven", path); err != nil {
 			if *event.Callback != nil {
-				*event.Callback <- fmt.Sprintf("Error in soft shutdown: %v", err)
+				*event.Callback <- fmt.Sprintf("Error in soft shutdown of device %d: %v", state.Id, err)
 			}
 		} else {
 			if *event.Callback != nil {
-				*event.Callback <- "Device is switched off softly"
+				*event.Callback <- fmt.Sprintf("Device %d is switched off softly", state.Id)
 			}
 		}
 	} else if event.State == 1 && err == nil && available { // Target: On, Host: available
 		if *event.Callback != nil {
-			*event.Callback <- "Device is already switched on"
+			*event.Callback <- fmt.Sprintf("Device %d is already off", state.Id)
 		}
 	} else {
 		if *event.Callback != nil {

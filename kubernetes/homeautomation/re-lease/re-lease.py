@@ -1,10 +1,12 @@
 import logging
 from kubernetes import client, config, watch
-import time
 import requests
 import json
 import os
 from requests.exceptions import RequestException
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
+import threading
 
 # Configure logging to write to stdout
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -15,28 +17,29 @@ SWITCH_PORT = os.environ.get('SWITCH_PORT', "50505")
 SWITCH_NUMBER = os.environ.get('SWITCH_NUMBER', "3")
 OVERRIDE_FILE = os.environ.get('OVERRIDE_FILE', "/etc/re-lease/re-lease-override")
 
-
 # Load kubeconfig from default location
 config.load_kube_config(config_file="/etc/kubernetes/admin.conf")
 
 # Create a Kubernetes API client
 api_instance = client.AppsV1Api()
 
+class OverrideFileHandler(FileSystemEventHandler):
+    def on_modified(self, event):
+        if event.src_path == OVERRIDE_FILE:
+            check_override_file()
+
 def check_override_file():
-    while True:
-        try:
-            with open(OVERRIDE_FILE, 'r') as file:
-                content = file.read().strip()
-                if content:
-                    logging.info(f"Override file {OVERRIDE_FILE} has content. Waiting {RECHECK_INTERVAL} seconds before checking again.")
-                    time.sleep(RECHECK_INTERVAL)
-                else:
-                    return
-        except FileNotFoundError:
-            return
-        except IOError as e:
-            logging.error(f"Error reading override file: {e}")
-            return
+    try:
+        with open(OVERRIDE_FILE, 'r') as file:
+            content = file.read().strip()
+            if content:
+                logging.info(f"Override file {OVERRIDE_FILE} has content.")
+            else:
+                logging.info(f"Override file {OVERRIDE_FILE} is empty.")
+    except FileNotFoundError:
+        logging.error(f"Override file {OVERRIDE_FILE} not found.")
+    except IOError as e:
+        logging.error(f"Error reading override file: {e}")
 
 def get_switch_url(action):
     return f"http://{SWITCH_IP}:{SWITCH_PORT}/api/v1/{action}/{SWITCH_NUMBER}"
@@ -51,19 +54,18 @@ def send_switch_request(url):
         return None
 
 def check_deployments_with_labels():
-    """Check existing deployments for the required labels and manage switch accordingly."""
+    """Watch deployments for the required labels and manage switch accordingly."""
+    w = watch.Watch()
     try:
-        deployments = api_instance.list_deployment_for_all_namespaces()
+        for event in w.stream(api_instance.list_deployment_for_all_namespaces):
+            deployment = event['object']
+            if deployment.metadata.labels and 'sablier.enable' in deployment.metadata.labels and 'sablier.group' in deployment.metadata.labels:
+                has_scaling_above_zero = deployment.spec.replicas > 0
+                manage_switch_based_on_scaling(has_scaling_above_zero)
     except Exception as e:
-        logging.error(f"Failed to list deployments: {e}")
-        return
+        logging.error(f"Error watching deployments: {e}")
 
-    has_scaling_above_zero = any(
-        deployment.spec.replicas > 0
-        for deployment in deployments.items
-        if deployment.metadata.labels and 'sablier.enable' in deployment.metadata.labels and 'sablier.group' in deployment.metadata.labels
-    )
-
+def manage_switch_based_on_scaling(has_scaling_above_zero):
     status_response = send_switch_request(get_switch_url("status"))
     if not status_response:
         return
@@ -73,12 +75,7 @@ def check_deployments_with_labels():
         if json.loads(status_response.json)["State"] == 1:
             on_response = send_switch_request(get_switch_url("start"))
             if on_response:
-                if "Device is switched on" not in on_response.text:
-                    logging.warning("Response: Switch {SWITCH_NUMBER} could not be switched on")
-                elif "is already switched on" in on_response.text:
-                    logging.info(f"Response: Switch {SWITCH_NUMBER} is already ON")
-                else:
-                    logging.info(f"Response: Switch {SWITCH_NUMBER} turned ON")
+                logging.info(f"Response: Switch {SWITCH_NUMBER} turned ON")
         else:
             logging.info(f"Switch {SWITCH_NUMBER} is already ON")
     else:
@@ -86,38 +83,36 @@ def check_deployments_with_labels():
         if json.loads(status_response.json)["State"] == 1:
             off_response = send_switch_request(get_switch_url("stop"))
             if off_response:
-                if "already OFF" in off_response.text:
-                    logging.info(f"Response: Switch {SWITCH_NUMBER} is already OFF")
-                elif "is switched OFF" in off_response.text:
-                    logging.warning(F"Response: Switch {SWITCH_NUMBER} could not be switched off")
-                else:
-                    logging.info(f"Response: Switch {SWITCH_NUMBER} turned OFF")
+                logging.info(f"Response: Switch {SWITCH_NUMBER} turned OFF")
         else:
             logging.info(f"Switch {SWITCH_NUMBER} is already OFF")
 
+def start_file_watcher():
+    """Start a watchdog observer to monitor file changes."""
+    event_handler = OverrideFileHandler()
+    observer = Observer()
+    observer.schedule(event_handler, path=os.path.dirname(OVERRIDE_FILE), recursive=False)
+    observer.start()
+    observer.join()  # Keeps the observer running
+
+def start_kubernetes_watcher():
+    """Start a watcher for Kubernetes deployment events."""
+    check_deployments_with_labels()
+
 def main():
-    logging.info(f"Starting the re-release with sleep interval: {RECHECK_INTERVAL} seconds.")
-    while True:
-        check_override_file()
-        check_deployments_with_labels()
-        time.sleep(RECHECK_INTERVAL)
+    logging.info("Starting the re-release event-driven watch.")
+    
+    # Create threads for file watcher and Kubernetes watcher
+    file_watcher_thread = threading.Thread(target=start_file_watcher, daemon=True)
+    kubernetes_watcher_thread = threading.Thread(target=start_kubernetes_watcher, daemon=True)
+
+    # Start both threads
+    file_watcher_thread.start()
+    kubernetes_watcher_thread.start()
+
+    # Join threads to keep them running in the background
+    file_watcher_thread.join()
+    kubernetes_watcher_thread.join()
 
 if __name__ == "__main__":
     main()
-
-# def main():
-    # # Watch for new deployments with specific labels
-    # logging.info("Watching for new deployments...")
-    # w = watch.Watch()
-    # while True:
-    #     for event in w.stream(api_instance.list_deployment_for_all_namespaces, timeout_seconds=60):
-    #         deployment = event['object']
-    #         labels = deployment.metadata.labels
-    #         if labels and 'sablier.enable' in labels and 'sablier.group' in labels:
-    #             name = deployment.metadata.name
-    #             namespace = deployment.metadata.namespace
-    #             replicas = deployment.spec.replicas
-    #             logging.info("New Deployment %s in namespace %s has the required labels.", name, namespace)
-    #             logging.info("  Desired replicas: %s", replicas)
-
-    #         time.sleep(1)

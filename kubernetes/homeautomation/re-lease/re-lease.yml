@@ -30,7 +30,7 @@ spec:
       containers:
       - name: re-lease
         image: python:3.9-slim
-        command: ["sh", "-c", "pip install requests kubernetes protobuf==3.20.* && python /scripts/re-lease.py"]
+        command: ["sh", "-c", "pip install requests watchdog kubernetes protobuf==3.20.* && python /scripts/re-lease.py"]
         volumeMounts:
         - name: script-volume
           mountPath: /scripts
