@@ -31,6 +31,7 @@ spec:
       - name: re-lease
         image: python:3.9-slim
         command: ["sh", "-c", "pip install requests watchdog kubernetes protobuf==3.20.* && python /scripts/re-lease.py"]
+        # command: ["sh", "-c", "pip install requests watchdog kubernetes protobuf==3.20.* && sleep 10000000"]
         volumeMounts:
         - name: script-volume
           mountPath: /scripts
@@ -40,7 +41,7 @@ spec:
           mountPath: /etc/re-lease/override
         env:
         - name: RECHECK_INTERVAL
-          value: "120" # in seconds
+          value: "60" # in seconds
         - name: OVERRIDE_FILE
           value: "/etc/re-lease/re-lease-override"
         # - name: FRIGATE_DISCORD_WEBHOOK

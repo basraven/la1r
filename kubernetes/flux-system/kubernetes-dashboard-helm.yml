@@ -30,7 +30,13 @@ spec:
         name: kubernetes-dashboard
         namespace: flux-system
   values:
-    # Add any specific values here (for example, enabling metrics, setting resource limits, etc.)
+    metricsScraper:
+      enabled: true
+    metrics-server:
+      enabled: true
+      args:
+        - --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname
+        - --kubelet-insecure-tls
 
 ---
 apiVersion: cert-manager.io/v1
