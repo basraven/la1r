@@ -61,7 +61,7 @@ def check_deployments_with_labels():
             deployment = event['object']
             if deployment.metadata.labels and 'sablier.enable' in deployment.metadata.labels and 'sablier.group' in deployment.metadata.labels:
                 has_scaling_above_zero = deployment.spec.replicas > 0
-                manage_switch_based_on_scaling(has_scaling_above_zero)
+                # manage_switch_based_on_scaling(has_scaling_above_zero)
     except Exception as e:
         logging.error(f"Error watching deployments: {e}")
 
