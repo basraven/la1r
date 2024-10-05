@@ -5,3 +5,4 @@ resources:
 - kubernetes-dashboard-helm.yml
 - kubernetes-dashboard-ingress.yml
 - kubernetes-dashboard-admin.yml
+- oauth2-proxy

@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oauth2-proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: oauth2-proxy
+  template:
+    metadata:
+      labels:
+        app: oauth2-proxy
+    spec:
+      
+      # Essential
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            preference:
+              matchExpressions:
+              - key: la1r.workload/essential
+                operator: In
+                values:
+                - "true"
+      priorityClassName: essential
+
+      containers:
+      - name: oauth2-proxy
+        image: quay.io/oauth2-proxy/oauth2-proxy:v7.4.0
+        args:
+          - --upstream=http://kubernetes-dashboard.kubernetes-dashboard.svc.cluster.local
+          - --cookie-secure=true
+          - --cookie-samesite=lax
+          - --redirect-url=https://kubernetes.bas/oauth2/callback
+          - --reverse-proxy
+          - --cookie-domain=kubernetes.bas
+          - --http-address=0.0.0.0:4180
+          - --request-logging    
+          - --cookie-expire=24h
+          - --htpasswd-file=/etc/oauth2-proxy/auth-users.txt 
+          - --client-id=dummy-client-id
+          - --client-secret=dummy-client-secret
+          - --cookie-secret=$(OAUTH2_PROXY_COOKIE_SECRET)
+          # - --skip-auth-preflight
+          # - --ssl-insecure-skip-verify
+        env:
+        - name: OAUTH2_PROXY_COOKIE_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-proxy-basic-auth
+              key: cookie-secret
+        volumeMounts:
+          - name: auth-secret
+            mountPath: /etc/oauth2-proxy/
+            readOnly: true
+      volumes:
+        - name: auth-secret
+          secret:
+            secretName: oauth2-proxy-basic-auth
+            items:
+              - key: auth-users.txt
+                path: auth-users.txt  # This mounts the auth file in the right path
