@@ -1,0 +1,35 @@
+---
+apiVersion: source.toolkit.fluxcd.io/v1beta1
+kind: HelmRepository
+metadata:
+  name: kubernetes-dashboard
+  namespace: flux-system
+spec:
+  interval: 10m0s
+  url: https://kubernetes.github.io/dashboard/
+---
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: kubernetes-dashboard
+  namespace: kubernetes-dashboard
+spec:
+  interval: 5m0s
+  releaseName: kubernetes-dashboard
+  chart:
+    spec:
+      chart: kubernetes-dashboard
+      version: 5.* # Adjust the version if needed
+      sourceRef:
+        kind: HelmRepository
+        name: kubernetes-dashboard
+        namespace: flux-system
+  values:
+    metricsScraper:
+      enabled: true
+    metrics-server:
+      enabled: true
+      args:
+        - --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname
+        - --kubelet-insecure-tls
+
