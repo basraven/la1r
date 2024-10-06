@@ -1,22 +1,24 @@
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    app: receiver
-  name: receiver
-  namespace: flux-system
-spec:
-  ports:
-  - name: http
-    targetPort: 9292
-    port: 80
-  selector:
-    app: notification-controller
-  loadBalancerIP: 192.168.6.81
-  type: LoadBalancer
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   labels:
+#     app: receiver
+#   name: receiver
+#   namespace: flux-system
+# spec:
+#   ports:
+#   - name: http
+#     targetPort: 9292
+#     port: 80
+#   selector:
+#     app: notification-controller
+#   loadBalancerIP: 192.168.6.81
+#   type: ClusterIP
 
 # kubectl -n flux-system get receiver/flux-system
+
+# Since I'm using the annotation to trigger this, we don't really need to expose this further
 ---
 apiVersion: notification.toolkit.fluxcd.io/v1
 kind: Receiver
@@ -24,7 +26,7 @@ metadata:
   name: flux-system
   namespace: flux-system
 spec:
-  type: github
+  type: generic
   events:
     - "ping"
     - "push"
