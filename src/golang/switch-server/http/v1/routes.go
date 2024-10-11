@@ -27,5 +27,11 @@ func SetupRoutes(r *gin.RouterGroup, deviceStates *models.DeviceStates, deviceEv
 	r.GET("/set/:identifier/:value", func(c *gin.Context) {
 		httphandlers.HandleSetRequest(c, deviceStates, deviceEvents)
 	})
+	r.GET("/block/:identifier", func(c *gin.Context) {
+		httphandlers.HandleBlockRequest(c, deviceStates, deviceEvents)
+	})
+	r.GET("/unblock/:identifier", func(c *gin.Context) {
+		httphandlers.HandleUnblockRequest(c, deviceStates, deviceEvents)
+	})
 
 }

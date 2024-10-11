@@ -12,7 +12,8 @@ import (
 )
 
 var (
-	GPIO_SWITCHON_COOLDOWN = time.Second * 10
+	PRIVATE_KEY_PATH       = "/home/basraven/.ssh/id_rsa"
+	GPIO_SWITCHON_COOLDOWN = time.Second * 120
 )
 
 func ReadForGpioInputChangeAndBlink(deviceStates *models.DeviceStates, deviceEvents *models.DeviceEvents) {
@@ -158,22 +159,20 @@ func handleSwitchDevice(state *models.DeviceState, event *models.DeviceStateChan
 		time.Sleep(700 * time.Millisecond)
 		state.GpioOut.Low()
 		if *event.Callback != nil {
-			*event.Callback <- fmt.Sprintf("Device %d is switched on", state.Id)
+			*event.Callback <- fmt.Sprintf("Device %d was switched on", state.Id)
 		}
 	} else if event.State == 0 && err != nil { // Target: Off, Host: unavailable
 		if *event.Callback != nil {
-			*event.Callback <- fmt.Sprintf("Device %d is already off", state.Id)
+			*event.Callback <- fmt.Sprintf("Device %d was already off", state.Id)
 		}
 	} else if event.State == 0 && err == nil && available { // Target: Off, Host: available
-		// path := os.Getenv("HOME") + "/.ssh/id_rsa"
-		path := "/home/basraven/.ssh/id_rsa"
-		if err := softShutdownHost(state.Ssh, "basraven", path); err != nil {
+		if err := softShutdownHost(state.Ssh, "basraven"); err != nil {
 			if *event.Callback != nil {
 				*event.Callback <- fmt.Sprintf("Error in soft shutdown of device %d: %v", state.Id, err)
 			}
 		} else {
 			if *event.Callback != nil {
-				*event.Callback <- fmt.Sprintf("Device %d is switched off softly", state.Id)
+				*event.Callback <- fmt.Sprintf("Device %d was switched off softly", state.Id)
 			}
 		}
 	} else if event.State == 1 && err == nil && available { // Target: On, Host: available
@@ -197,9 +196,9 @@ func isHostAvailable(host string, port int, timeout time.Duration) (bool, error)
 	return true, nil   // Connection successful
 }
 
-func softShutdownHost(host, user, privateKeyPath string) error {
+func softShutdownHost(host, user string) error {
 	// Load the private key
-	privateKey, err := os.ReadFile(privateKeyPath)
+	privateKey, err := os.ReadFile(PRIVATE_KEY_PATH)
 	if err != nil {
 		return fmt.Errorf("unable to read private key: %w", err)
 	}
