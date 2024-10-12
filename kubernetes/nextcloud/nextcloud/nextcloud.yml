@@ -206,7 +206,7 @@ metadata:
   annotations:
     traefik.ingress.kubernetes.io/router.tls: "true"
     traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
-    traefik.ingress.kubernetes.io/router.middlewares: "traefik-sablier-nextcloud@kubernetescrd"
+    traefik.ingress.kubernetes.io/router.middlewares: "nextcloud-sablier-nextcloud@kubernetescrd"
 spec:
   tls:
   - secretName: nextcloud-bas-tls

@@ -1,0 +1,19 @@
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: sablier-kubernetes-dashboard
+  namespace: kubernetes-dashboard
+spec:
+  plugin:
+    sablier:
+      group: kubernetes-dashboard
+      # blocking:
+      #   defaultTimeout: 10s
+      dynamic:
+        displayName: kubernetes-dashboard
+        refreshFrequency: 5s
+        showDetails: "true"
+        theme: shuffle
+      sablierUrl: http://sablier:10000
+      sessionDuration: 10m

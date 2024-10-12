@@ -20,7 +20,7 @@ metadata:
   annotations:
     traefik.ingress.kubernetes.io/router.tls: "true"
     traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
-    traefik.ingress.kubernetes.io/router.middlewares: "traefik-sablier-immich@kubernetescrd"
+    traefik.ingress.kubernetes.io/router.middlewares: "media-sablier-immich@kubernetescrd"
 spec:
   tls:
   - secretName: immich-bas-tls

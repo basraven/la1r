@@ -2,4 +2,11 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
 - capacitor.yaml
+# - middleware.yml
 - capacitor-ingress.yaml
+# patches:
+#   - target:
+#       kind: Deployment
+#       name: capacitor
+#       namespace: flux-system
+#     path: deploy-add-sablier.yaml

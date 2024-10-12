@@ -25,6 +25,20 @@ spec:
         name: kubernetes-dashboard
         namespace: flux-system
   values:
+    app:
+      settings:
+        itemsPerPage: 50
+        labelsLimit: 3
+    # web:
+    #   labels:
+    #     sablier.enable: "false"
+    #     sablier.group: kubernetes-dashboard
+    #   scaling:
+    #     replicas: 0
+    #     autoscaler:
+    #       enabled: true
+    #       minReplicas: 0
+    #       maxReplicas: 1
     metricsScraper:
       enabled: true
     metrics-server:

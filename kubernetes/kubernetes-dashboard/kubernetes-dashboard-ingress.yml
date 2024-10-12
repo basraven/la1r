@@ -22,6 +22,7 @@ metadata:
   annotations:
     traefik.ingress.kubernetes.io/router.tls: "true"
     traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+    # traefik.ingress.kubernetes.io/router.middlewares: "kubernetes-dashboard-sablier-kubernetes-dashboard@kubernetescrd"
 spec:
   tls:
   - secretName: kubernetes-bas-tls

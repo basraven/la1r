@@ -54,6 +54,7 @@ metadata:
   annotations:
     traefik.ingress.kubernetes.io/router.tls: "true"
     traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+    # traefik.ingress.kubernetes.io/router.middlewares: "flux-system-sablier-capacitor@kubernetescrd"
 spec:
   tls:
   - secretName: capacitor-bas-tls

@@ -1,0 +1,19 @@
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: sablier-capacitor
+  namespace: flux-system
+spec:
+  plugin:
+    sablier:
+      group: capacitor
+      # blocking:
+      #   defaultTimeout: 10s
+      dynamic:
+        displayName: capacitor
+        refreshFrequency: 5s
+        showDetails: "true"
+        theme: shuffle
+      sablierUrl: http://sablier:10000
+      sessionDuration: 10m
