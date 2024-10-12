@@ -1,0 +1,10 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: storage
+resources:
+- local-path-provisioner-helper-pod.yaml
+- local-path-provisioner-sa.yaml
+- ssd-ha.yaml
+- ssd-na.yaml
+- hdd-ha.yaml
+- hdd-na.yaml

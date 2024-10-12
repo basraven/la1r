@@ -1,0 +1,29 @@
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: minio-pv
+  labels:
+    contenttype: "minio"
+spec:
+  capacity:
+    storage: 10Gi
+  storageClassName: minio
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/mnt/ssd/ha/minio"
+
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: minio-pvc
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: minio
+  resources:
+    requests:
+      storage: 10Gi
