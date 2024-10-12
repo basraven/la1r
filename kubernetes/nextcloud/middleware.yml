@@ -1,0 +1,19 @@
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: sablier-nextcloud
+  namespace: nextcloud
+spec:
+  plugin:
+    sablier:
+      group: nextcloud
+      # blocking:
+      #   defaultTimeout: 10s
+      dynamic:
+        displayName: Nextcloud
+        refreshFrequency: 5s
+        showDetails: "true"
+        theme: shuffle
+      sablierUrl: http://sablier:10000
+      sessionDuration: 10m

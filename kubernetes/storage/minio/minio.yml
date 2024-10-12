@@ -7,10 +7,7 @@ metadata:
     # sablier.enable: "false"
     # sablier.group: llm
 spec:
-  autoscaler:
-    enabled: true
-    minReplicas: 0
-    maxReplicas: 1
+  replicas: 1
   selector:
     matchLabels:
       app: minio
@@ -20,16 +17,18 @@ spec:
         app: minio
     spec:
           
-      # NonEssential
+      # Essential
       affinity:
         nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-            - matchExpressions:
-              - key: la1r.workload/nonessential
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            preference:
+              matchExpressions:
+              - key: la1r.workload/essential
                 operator: In
                 values:
                 - "true"
+      priorityClassName: essential
 
       containers:
         - name: minio
@@ -37,15 +36,29 @@ spec:
           args:
             - server
             - /data
+            - --console-address
+            - ":9001"
           ports:
-            - containerPort: 9000
+            - name: api
+              containerPort: 9000
+            - name: webui
+              containerPort: 9001
           env:
+            - name: MINIO_BROWSER_REDIRECT_URL 
+              value: https://minio.bas
             - name: MINIO_ACCESS_KEY
               valueFrom:
                 secretKeyRef:
                   name: minio-credentials
                   key: MINIO_ACCESS_KEY
             - name: MINIO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-credentials
+                  key: MINIO_SECRET_KEY
+            - name: MINIO_ROOT_USER
+              value: basraven
+            - name: MINIO_ROOT_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: minio-credentials
@@ -67,9 +80,14 @@ spec:
   selector:
     app: minio
   ports:
-    - protocol: TCP
+    - name: api
+      protocol: TCP
       port: 9000
       targetPort: 9000
+    - name: webui
+      protocol: TCP
+      port: 80
+      targetPort: 9001
   type: ClusterIP
 
 ---
@@ -108,4 +126,4 @@ spec:
           service:
             name: minio
             port:
-              number: 9000
+              number: 80

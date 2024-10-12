@@ -33,43 +33,14 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: oauth2-proxy
+            # name: oauth2-proxy
+            name: kubernetes-dashboard
             port:
-              number: 80
-      - path: /oauth2
-        pathType: Prefix
-        backend:
-          service:
-            name: oauth2-proxy
-            port:
-              number: 80
-
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: kubernetes-dashboard-http
-  namespace: kubernetes-dashboard
-  annotations:
-    traefik.ingress.kubernetes.io/router.tls: "false"
-    traefik.ingress.kubernetes.io/router.entrypoints: "web"
-    traefik.ingress.kubernetes.io/router.middlewares: "traefik-http-redirect-to-https@kubernetescrd"
-spec:
-  rules:
-  - host: kubernetes.bas
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: oauth2-proxy
-            port:
-              number: 80
-      - path: /oauth2
-        pathType: Prefix
-        backend:
-          service:
-            name: oauth2-proxy
-            port:
-              number: 80
+              number: 443
+      # - path: /oauth2
+      #   pathType: Prefix
+      #   backend:
+      #     service:
+      #       name: oauth2-proxy
+      #       port:
+      #         number: 80

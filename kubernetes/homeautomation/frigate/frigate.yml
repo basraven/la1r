@@ -167,26 +167,3 @@ spec:
             name: frigate
             port:
               number: 80
-
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: frigate-http
-  namespace: homeautomation
-  annotations:
-    traefik.ingress.kubernetes.io/router.tls: "false"
-    traefik.ingress.kubernetes.io/router.entrypoints: "web"
-    traefik.ingress.kubernetes.io/router.middlewares: "traefik-http-redirect-to-https@kubernetescrd"
-spec:
-  rules:
-  - host: frigate.bas
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: frigate
-            port:
-              number: 80
