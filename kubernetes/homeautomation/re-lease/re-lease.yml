@@ -42,13 +42,16 @@ spec:
         env:
         - name: RECHECK_INTERVAL
           value: "60" # in seconds
+        - name: CONTROLLER_IP
+          value: "192.168.5.2"
+        - name: CONTROLLER_PORT
+          value: "50505"
+        - name: TARGET_DEVICE_NUMBER
+          value: "3"
         - name: OVERRIDE_FILE
           value: "/etc/re-lease/re-lease-override"
-        # - name: FRIGATE_DISCORD_WEBHOOK
-        #   valueFrom:
-        #     secretKeyRef:
-        #       name: discord-webhooks
-        #       key: FRIGATE_DISCORD_WEBHOOK
+        - name: TARGETNODE_LABEL
+          value: "la1r.workload/nonessential=true" # in seconds
       volumes:
       - name: script-volume
         configMap:

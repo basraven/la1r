@@ -65,7 +65,7 @@ func ReadForGpioInputChangeAndBlink(deviceStates *models.DeviceStates, deviceEve
 
 					} else {
 						remainingCooldown := GPIO_SWITCHON_COOLDOWN - time.Since(lastToggleTime[state.Id])
-						log.Printf("Cooldown of %.2f seconds remaining", remainingCooldown.Seconds())
+						log.Printf("GPIO button sensor cooldown of %.2f seconds remaining", remainingCooldown.Seconds())
 						lastToggleValue[state.Id] = pinValue
 					}
 				}
@@ -177,7 +177,7 @@ func handleSwitchDevice(state *models.DeviceState, event *models.DeviceStateChan
 		}
 	} else if event.State == 1 && err == nil && available { // Target: On, Host: available
 		if *event.Callback != nil {
-			*event.Callback <- fmt.Sprintf("Device %d is already off", state.Id)
+			*event.Callback <- fmt.Sprintf("Device %d is already on", state.Id)
 		}
 	} else {
 		if *event.Callback != nil {

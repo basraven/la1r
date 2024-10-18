@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -40,92 +41,65 @@ func HandleSpecificStatusRequest(c *gin.Context, deviceStates *models.DeviceStat
 
 func HandleStartRequest(c *gin.Context, deviceStates *models.DeviceStates, deviceEvents *models.DeviceEvents) {
 	identifier := c.Param("identifier")
-	// Try to parse the identifier as an integer (ID)
-	if id, err := strconv.Atoi(identifier); err == nil {
-		for _, state := range *deviceStates {
-			if state.Id == id {
-				performDeviceStateChangeWithCallback(c, state, 1, deviceEvents, []*chan models.DeviceStateChange{
-					&deviceEvents.OutputDevice,
-				})
-				return
-			}
-		}
-	} else {
-		// If not an integer, treat it as a name
-		for _, state := range *deviceStates {
-			if strings.EqualFold(state.Name, identifier) {
-				performDeviceStateChangeWithCallback(c, state, 1, deviceEvents, []*chan models.DeviceStateChange{
-					&deviceEvents.OutputDevice,
-				})
-				return
-			}
-		}
+	state := findDeviceState(deviceStates, identifier)
+	if state == nil {
+		c.JSON(404, gin.H{"message": "Server not found"})
+		return
 	}
-	c.JSON(404, gin.H{"message": "Server not found"})
+
+	performDeviceStateChangeWithCallback(c, *state, 1, deviceEvents, []*chan models.DeviceStateChange{
+		&deviceEvents.OutputDevice,
+	})
 }
 
 func HandleStopRequest(c *gin.Context, deviceStates *models.DeviceStates, deviceEvents *models.DeviceEvents) {
 	identifier := c.Param("identifier")
-	// Try to parse the identifier as an integer (ID)
-	if id, err := strconv.Atoi(identifier); err == nil {
-		for _, state := range *deviceStates {
-			if state.Id == id {
-				performDeviceStateChangeWithCallback(c, state, 0, deviceEvents, []*chan models.DeviceStateChange{
-					&deviceEvents.OutputDevice,
-				})
-				return
-			}
-		}
-	} else {
-		// If not an integer, treat it as a name
-		for _, state := range *deviceStates {
-			if strings.EqualFold(state.Name, identifier) {
-				performDeviceStateChangeWithCallback(c, state, 0, deviceEvents, []*chan models.DeviceStateChange{
-					&deviceEvents.OutputDevice,
-				})
-				return
-			}
-		}
+	state := findDeviceState(deviceStates, identifier)
+	if state == nil {
+		c.JSON(404, gin.H{"message": "Server not found"})
+		return
 	}
-	c.JSON(404, gin.H{"message": "Server not found"})
+
+	performDeviceStateChangeWithCallback(c, *state, 0, deviceEvents, []*chan models.DeviceStateChange{
+		&deviceEvents.OutputDevice,
+	})
 }
 
 func HandleSetRequest(c *gin.Context, deviceStates *models.DeviceStates, deviceEvents *models.DeviceEvents) {
 	identifier := c.Param("identifier")
 	value := c.Param("value")
-	// Try to parse the identifier as an integer (ID)
-	if id, err := strconv.Atoi(identifier); err == nil {
-		for _, state := range *deviceStates {
-			if state.Id == id {
-				if newStateValue, err := strconv.Atoi(value); err == nil {
-					performDeviceStateChangeWithCallback(c, state, newStateValue, deviceEvents, []*chan models.DeviceStateChange{
-						&deviceEvents.OutputPwm,
-					})
-					return
-				} else {
-					c.JSON(400, gin.H{"message": "Invalid value of " + value})
-					return
-				}
-			}
-		}
+	state := findDeviceState(deviceStates, identifier)
+	if state == nil {
+		c.JSON(404, gin.H{"message": "Server not found"})
+		return
+	}
+
+	if newStateValue, err := strconv.Atoi(value); err == nil {
+		performDeviceStateChangeWithCallback(c, *state, newStateValue, deviceEvents, []*chan models.DeviceStateChange{
+			&deviceEvents.OutputPwm,
+		})
 	} else {
-		// If not an integer, treat it as a name
-		for _, state := range *deviceStates {
-			if strings.EqualFold(state.Name, identifier) {
-				if newStateValue, err := strconv.Atoi(value); err == nil {
-					performDeviceStateChangeWithCallback(c, state, newStateValue, deviceEvents, []*chan models.DeviceStateChange{
-						&deviceEvents.OutputPwm,
-					})
-					return
-				} else {
-					c.JSON(400, gin.H{"message": "Invalid value of " + value})
-					return
-				}
-			}
-		}
+		c.JSON(400, gin.H{"message": "Invalid value of " + value})
 	}
 }
 
+// Helper function to find a device state by identifier (ID or name)
+func findDeviceState(deviceStates *models.DeviceStates, identifier string) *models.DeviceState {
+	if id, err := strconv.Atoi(identifier); err == nil {
+		for _, state := range *deviceStates {
+			if state.Id == id {
+				return &state
+			}
+		}
+	} else {
+		for _, state := range *deviceStates {
+			if strings.EqualFold(state.Name, identifier) {
+				return &state
+			}
+		}
+	}
+	return nil
+}
 func HandleBlockRequest(c *gin.Context, deviceStates *models.DeviceStates, deviceEvents *models.DeviceEvents) {
 	identifier := c.Param("identifier")
 	// Try to parse the identifier as an integer (ID)
@@ -178,7 +152,15 @@ func HandleUnblockRequest(c *gin.Context, deviceStates *models.DeviceStates, dev
 	c.JSON(404, gin.H{"message": "Server not found"})
 }
 
+const cooldownPeriod = 60 * time.Second
+
 func performDeviceStateChangeWithCallback(c *gin.Context, state models.DeviceState, newStateValue int, deviceEvents *models.DeviceEvents, OutputChannels []*chan models.DeviceStateChange) {
+	if time.Since(state.LastActionTime) < cooldownPeriod {
+		remainingTime := cooldownPeriod - time.Since(state.LastActionTime)
+		c.JSON(429, gin.H{"message": fmt.Sprintf("Too many requests, please wait for %.2f seconds remaining", remainingTime.Seconds())})
+		return
+	}
+
 	callback := make(chan string)
 	changeEvent := models.DeviceStateChange{
 		Timestamp:      time.Now(),
@@ -196,7 +178,6 @@ func performDeviceStateChangeWithCallback(c *gin.Context, state models.DeviceSta
 	}
 	close(callback)
 }
-
 func performDeviceBlockChangeWithCallback(c *gin.Context, state models.DeviceState, newBlockValue bool, deviceEvents *models.DeviceEvents, OutputChannels []*chan models.DeviceStateChange) {
 	callback := make(chan string)
 	changeEvent := models.DeviceStateChange{

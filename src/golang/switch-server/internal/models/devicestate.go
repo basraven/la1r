@@ -18,17 +18,17 @@ var (
 )
 
 type DeviceState struct {
-	Id        int
-	Name      string
-	State     int               // 2 = unsure, 1 = on, 0 = off
-	GpioIn    rpio.Pin          // GPIO Pin
-	GpioOut   rpio.Pin          // GPIO Pin
-	StatusLed rpio.Pin          // Status LED
-	Pwm       hwpwm.HardwarePWM // PWM Object
-	Ssh       string            // ssh server address
-	Blocked   *bool             // Pointer to bool to support Nil state
+	Id             int
+	Name           string
+	State          int               // 2 = unsure, 1 = on, 0 = off
+	GpioIn         rpio.Pin          // GPIO Pin
+	GpioOut        rpio.Pin          // GPIO Pin
+	StatusLed      rpio.Pin          // Status LED
+	Pwm            hwpwm.HardwarePWM // PWM Object
+	Ssh            string            // ssh server address
+	Blocked        *bool             // Pointer to bool to support Nil state
+	LastActionTime time.Time
 }
-
 type DeviceStateChange struct {
 	Timestamp      time.Time
 	Id             int
@@ -80,6 +80,7 @@ func (deviceStates *DeviceStates) GetById(Id int) *DeviceState {
 func (deviceStates *DeviceStates) handleDeviceStateEvents(deviceEvents *DeviceEvents) {
 	for event := range deviceEvents.State {
 		state := deviceStates.GetById(event.Id)
+		state.LastActionTime = event.Timestamp
 
 		// log.Printf("\n\t#> %+v \n\t\tupdated:\n\t#> %+v \n", state, event)
 
@@ -102,7 +103,7 @@ func (deviceStates *DeviceStates) handleDeviceStateEvents(deviceEvents *DeviceEv
 
 				reachedMinimalUpdate, errUptime := reachedMinimalUptime(state.Ssh, "basraven")
 				if errUptime != nil {
-					*event.Callback <- fmt.Sprintf("Error checking uptime for device %d: %v", state.Id, errUptime)
+					*event.Callback <- fmt.Sprintf("Device down, error checking uptime for device %d: %v", state.Id, errUptime)
 					continue
 				}
 				if !reachedMinimalUpdate {
