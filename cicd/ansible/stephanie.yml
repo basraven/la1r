@@ -7,5 +7,6 @@
   # - ssh
   # - avahi
   # - kubernetes
+  - samba
   - switch-server
   - reboot

@@ -120,19 +120,19 @@ record:
   # This can be used to reduce the frequency of deleting recording segments from disk if you want to minimize i/o
   expire_interval: 120
   # Optional: Sync recordings with disk on startup and once a day (default: shown below).
-  sync_recordings: False
+  sync_recordings: True
   # Optional: Retention settings for recording
   retain:
     # Optional: Number of days to retain recordings regardless of events (default: shown below)
     # NOTE: This should be set to 0 and retention should be defined in events section below
     #       if you only want to retain recordings of events.
-    days: 32
+    days: 10
     # Optional: Mode for retention. Available options are: all, motion, and active_objects
     #   all - save all recording segments regardless of activity
     #   motion - save all recordings segments with any detected motion
     #   active_objects - save all recording segments with active/moving objects
     # NOTE: this mode only applies when the days setting above is greater than 0
-    mode: motion
+    mode: all
   # Optional: Recording Export Settings
   # export:
     # Optional: Timelapse Output Args (default: shown below).
