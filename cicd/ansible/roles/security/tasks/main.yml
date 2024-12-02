@@ -1,14 +1,10 @@
 ---
-- include_tasks: fail2ban.yml
-  tags: 
-    - fail2ban
+# - include_tasks: fail2ban.yml
+#   tags: 
+#     - fail2ban
 - include_tasks: ufw.yml
   tags: 
     - ufw
-  # when: baremetal is defined and baremetal
-# - include_tasks: kerberos-server.yml
-#   tags: 
-#     - kerberos_server
-# - include_tasks: kerberos-client.yml
-#   tags: 
-#     - kerberos_client
+- include_tasks: ufw-forward-rules.yml
+  tags: 
+    - ufw

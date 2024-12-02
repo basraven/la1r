@@ -4,46 +4,114 @@
   package:
     name: ufw
     state: present
-- name: UFW / Enable UFW
+
+# Enable logging to: /var/log/ufw.log
+- name: UFW / enable logging
+  become: yes
+  shell: |
+    ufw logging on
+  args:
+    executable: /bin/bash
+
+- name: UFW / Enable OpenSSH application profile
   become: yes
   ufw:
+    name: OpenSSH
     state: enabled
-  when: '"qemu" not in group_names' # QEMU raspberry doesn't like this for some reason, not wasting time on this now, good luck future Seb (:
 
-- name: UFW / Stop firewalld for CentOS, we are using ufw
-  become: yes
-  systemd:
-    name: firewalld
-    state: stopped
-    force: yes
-  when: ansible_facts['distribution'] == "CentOS"
-
-- name: UFW / Disable firewalld for CentOS, we are using ufw
-  become: yes
-  systemd:
-    name: firewalld
-    enabled: no
-    force: yes
-  when: ansible_facts['distribution'] == "CentOS"
-  
-- name: UFW / Allow SSH
+- name: UFW / UFW passthrough for tun0 interface
   become: yes
   ufw:
     rule: allow
-    port: "22"
-    proto: tcp
-    
-# - name: UFW / Rate Limit Ssh
-#   become: yes
-#   ufw:
-#     rule: limit
-#     port: "22"
-#     proto: tcp
+    direction: out
+    interface: tun0
 
-# FIXME: should be working..?
-# - name: UFW / Enable service
-#   service:
-#     name: ufw
-#     enabled: yes
-#     state: started
-#   when: '"qemu" not in group_names' # QEMU raspberry doesn't like this for some reason, not wasting time on this now, good luck future Seb (:
+- name: UFW / Allow in UFW passthrough for tun0 interface
+  become: yes
+  ufw:
+    rule: allow
+    direction: in
+    interface: tun0
+
+- name: UFW / Allow UFW passthrough for vpn port {{ openvpn_port }}
+  become: yes
+  ufw:
+    rule: allow
+    port: "{{ openvpn_port }}"
+
+- name: UFW / Allow outgoing VPN traffic to external IPs on port 443
+  become: yes
+  ufw:
+    rule: allow
+    from_ip: 10.8.0.0/16
+    to_ip: any
+    port: 443
+    proto: tcp
+    direction: out
+
+- name: UFW / Allow outgoing VPN traffic to external IPs on port 53 (DNS)
+  become: yes
+  ufw:
+    rule: allow
+    from_ip: 10.8.0.0/16
+    to_ip: any
+    port: 53
+    proto: udp
+    direction: out
+
+
+- name: UFW / Allow kubernetes through UFW
+  become: yes
+  copy:
+    content: |
+      [kubernetes]
+      title=Kubernetes by Seb
+      description=Ports required for Kubernetes
+      ports=443,6443,2379:2380,10250:10255,10256/tcp|8472,51820/udp
+    dest: /etc/ufw/applications.d/kubernetes
+    mode: '0644'
+
+- name: UFW / Enable UFW application profile for Kubernetes
+  become: yes
+  ufw:
+    name: kubernetes
+    state: enabled
+
+- name: UFW / Allow calico through UFW
+  become: yes
+  copy:
+    content: |
+      [calico]
+      title=Calico by Seb
+      description=Ports required for Calico
+      ports=8472,51820/udp
+    dest: /etc/ufw/applications.d/calico
+    mode: '0644'
+
+- name: UFW / Enable UFW application profile for Calico
+  become: yes
+  ufw:
+    name: calico
+    state: enabled
+
+- name: UFW / Allow Kubernetes NodePort through UFW
+  become: yes
+  copy:
+    content: |
+      [kubernetesnodeport]
+      title=Kubernetes Nodeport Range by Seb
+      description=Ports required for kubernetesnodeport
+      ports=30000:32767/tcp
+    dest: /etc/ufw/applications.d/kubernetesnodeport
+    mode: '0644'
+
+- name: UFW / Allow Kubernetes NodePort through UFW
+  become: yes
+  ufw:
+    name: kubernetesnodeport
+    state: enabled
+
+- name: UFW / Enable UFW if not already enabled
+  become: yes
+  ufw:
+    state: enabled

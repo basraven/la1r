@@ -1,0 +1,7 @@
+---
+- name: Install Openvpn server / UFW Forward rules
+  become: yes
+  ansible.builtin.blockinfile:
+        path: /etc/ufw/before.rules
+        marker: "# {mark} SEBs Custom NAT rules"
+        block: "{{ lookup('template', 'rules.v4.j2') }}"

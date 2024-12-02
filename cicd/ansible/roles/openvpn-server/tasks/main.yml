@@ -1,19 +1,22 @@
 ---
-- include_tasks: install-openvpn.yml
+# - include_tasks: install-openvpn.yml
+#   tags:
+#     - openvpn_server  
+# - include_tasks: prepare-folders.yml
+#   tags:
+#     - openvpn_server  
+# - include_tasks: create-server.yml
+#   tags:
+#     - openvpn_server  
+- include_tasks: ufw.yml
   tags:
     - openvpn_server  
-- include_tasks: prepare-folders.yml
-  tags:
-    - openvpn_server  
-- include_tasks: create-server.yml
-  tags:
-    - openvpn_server  
-- include_tasks: install-iptables-persistent.yml
-  tags:
-    - openvpn_server  
-- include_tasks: create-user.yml
-  tags: 
-    - create_ovpn_user
-- include_tasks: delete-user.yml
-  tags: 
-    - delete_ovpn_user
+# - include_tasks: ufw-forward-rules.yml
+#   tags:
+#     - openvpn_server  
+# - include_tasks: create-user.yml
+#   tags: 
+#     - create_ovpn_user
+# - include_tasks: delete-user.yml
+#   tags: 
+#     - delete_ovpn_user

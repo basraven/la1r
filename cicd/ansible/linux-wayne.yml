@@ -3,13 +3,13 @@
   roles:
   - define-os # Should always run!
   # - hostname
-  - power-savings
+  # - power-savings
   # - avahi
 
   # - users
   # - update
   # - ssh
-  # - security
+  - security
   # - reboot
   # - nfs
   # - samba
