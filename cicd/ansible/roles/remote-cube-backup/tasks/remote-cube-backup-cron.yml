@@ -1,0 +1,18 @@
+---
+- name: Remote-cube backup / backup cron folder
+  become: yes
+  file:
+    path: /mnt/hdd/media/bas
+    state: directory
+    # owner: basraven
+    # group: basraven
+
+- name: Remote-cube backup / create crontab
+  become: yes
+  cron:
+    name: "Weekly Backup at Sunday 2am of /mnt/hdd/media/bas folder from jay-c to remote-cube every week"
+    minute: "0"      # Run at the top of the hour
+    hour: "2"        # Run at 2 AM
+    day: "7"         # Run on Sundays (day 7 of the week)
+    job: "rsync -av --delete /mnt/jay-c/media/bas/ /mnt/jay-c/media/bas/" # the delete stand for removing deleted file on the SOURCE
+    state: present
