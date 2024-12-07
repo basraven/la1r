@@ -49,7 +49,7 @@ func HandleStartRequest(c *gin.Context, deviceStates *models.DeviceStates, devic
 
 	performDeviceStateChangeWithCallback(c, *state, 1, deviceEvents, []*chan models.DeviceStateChange{
 		&deviceEvents.OutputDevice,
-	})
+	}, false)
 }
 
 func HandleStopRequest(c *gin.Context, deviceStates *models.DeviceStates, deviceEvents *models.DeviceEvents) {
@@ -62,7 +62,33 @@ func HandleStopRequest(c *gin.Context, deviceStates *models.DeviceStates, device
 
 	performDeviceStateChangeWithCallback(c, *state, 0, deviceEvents, []*chan models.DeviceStateChange{
 		&deviceEvents.OutputDevice,
-	})
+	}, false)
+}
+
+func HandleStartRequestForce(c *gin.Context, deviceStates *models.DeviceStates, deviceEvents *models.DeviceEvents) {
+	identifier := c.Param("identifier")
+	state := findDeviceState(deviceStates, identifier)
+	if state == nil {
+		c.JSON(404, gin.H{"message": "Server not found"})
+		return
+	}
+
+	performDeviceStateChangeWithCallback(c, *state, 1, deviceEvents, []*chan models.DeviceStateChange{
+		&deviceEvents.OutputDevice,
+	}, true)
+}
+
+func HandleStopRequestForce(c *gin.Context, deviceStates *models.DeviceStates, deviceEvents *models.DeviceEvents) {
+	identifier := c.Param("identifier")
+	state := findDeviceState(deviceStates, identifier)
+	if state == nil {
+		c.JSON(404, gin.H{"message": "Server not found"})
+		return
+	}
+
+	performDeviceStateChangeWithCallback(c, *state, 0, deviceEvents, []*chan models.DeviceStateChange{
+		&deviceEvents.OutputDevice,
+	}, true)
 }
 
 func HandleSetRequest(c *gin.Context, deviceStates *models.DeviceStates, deviceEvents *models.DeviceEvents) {
@@ -77,7 +103,7 @@ func HandleSetRequest(c *gin.Context, deviceStates *models.DeviceStates, deviceE
 	if newStateValue, err := strconv.Atoi(value); err == nil {
 		performDeviceStateChangeWithCallback(c, *state, newStateValue, deviceEvents, []*chan models.DeviceStateChange{
 			&deviceEvents.OutputPwm,
-		})
+		}, false)
 	} else {
 		c.JSON(400, gin.H{"message": "Invalid value of " + value})
 	}
@@ -154,8 +180,8 @@ func HandleUnblockRequest(c *gin.Context, deviceStates *models.DeviceStates, dev
 
 const cooldownPeriod = 60 * time.Second
 
-func performDeviceStateChangeWithCallback(c *gin.Context, state models.DeviceState, newStateValue int, deviceEvents *models.DeviceEvents, OutputChannels []*chan models.DeviceStateChange) {
-	if time.Since(state.LastActionTime) < cooldownPeriod {
+func performDeviceStateChangeWithCallback(c *gin.Context, state models.DeviceState, newStateValue int, deviceEvents *models.DeviceEvents, OutputChannels []*chan models.DeviceStateChange, force bool) {
+	if !force && time.Since(state.LastActionTime) < cooldownPeriod {
 		remainingTime := cooldownPeriod - time.Since(state.LastActionTime)
 		c.JSON(429, gin.H{"message": fmt.Sprintf("Too many requests, please wait for %.2f seconds remaining", remainingTime.Seconds())})
 		return

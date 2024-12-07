@@ -7,7 +7,6 @@ cert /etc/openvpn/openvpn-ca/pki/issued/{{openvpn_server_url}}.crt
 dh /etc/openvpn/openvpn-ca/pki/dh.pem
 tls-auth /etc/openvpn/openvpn-ca/pki/ta.key
 crl-verify /etc/openvpn/openvpn-ca/pki/crl.pem
-ifconfig-pool-persist /var/log/openvpn/ipp.txt
 key-direction 0
 keepalive 10 60
 persist-key
@@ -17,8 +16,11 @@ proto udp
 port {{openvpn_port}} 
 dev tun0
 status /tmp/openvpn-status.log
-log /var/log/openvpn.log
+log-append /var/log/openvpn.log
 management 0.0.0.0 33555
+
+client-config-dir /etc/openvpn/client-configs
+ifconfig-pool-persist /var/log/openvpn/ipp.txt
 
 user nobody
 group nogroup

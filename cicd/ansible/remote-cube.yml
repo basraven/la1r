@@ -2,11 +2,12 @@
 - hosts: remote 
   roles:
   - define-os # Should always run!
-  - hostname
-  - users
-  - openvpn-client
-  - update
-  - ssh  
+  # - hostname
+  # - users
+  # - openvpn-client
+  # - update
+  # - ssh  
+  - remote-cube-backup
   # - reboot
   # - prometheus_node_exporter
   # - toolbox
