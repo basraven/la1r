@@ -1,22 +1,23 @@
 ---
-- name: Remote-cube backup / Install Samba
+- name: Remote-cube backup / Install Samba and netcat (for ping)
   become: yes
   package:
     name: "{{ item }}"
     state: present
   with_items:
     - cifs-utils 
+    - netcat-openbsd
 
 - name: Remote-cube backup / Create mount folder
   become: yes
   ansible.builtin.file:
-    path: /mnt/jay-c/media/bas
+    path: /mnt/jayc/media/bas
     state: directory
   async: 5          # Set the timeout to 5 seconds
   poll: 1           # Wait for the task to complete, but timeout after 5 seconds
   ignore_errors: yes  # Ignore errors and continue execution if it fails or times out
 
-- name: Remote-cube backup / Ensure the .samba directory exists\
+- name: Remote-cube backup / Ensure the .samba directory exists
   become: yes
   file:
     path: /home/basraven/.samba
@@ -45,71 +46,51 @@
     group: basraven
     mode: '0600'
 
-- name: Remote-cube backup / Add to fstab
+- name: Remote-cube backup / Create systemd mount unit for remote filesystem
   become: yes
-  lineinfile:
-    path: /etc/fstab
-    line: "//10.8.0.1/basraven /mnt/jay-c/media/bas cifs credentials=/home/basraven/.samba/credentials,iocharset=utf8,vers=3.0,ro" # read-only
-    # line: "//10.8.0.1/basraven /mnt/jay-c/media/bas cifs credentials=/home/basraven/.samba/credentials,iocharset=utf8,vers=3.0 0 0"
-    state: present
-    create: yes
-    backup: yes
-
-# - name: Remote-cube backup / Mount the Samba share
-#   become: yes
-#   command: mount -a
-#   args:
-#     warn: false
-
-## Make sure the network connection is established 
-
-- name: Remote-cube backup / Create the systemd directory for remote-fs.target overrides if it doesn't exist
-  become: yes
-  file:
-    path: /etc/systemd/system/remote-fs.target.d
-    state: directory
-    owner: root
-    group: root
-    mode: '0755'
-
-- name: Remote-cube backup / Create override configuration for remote-fs.target to wait for tun0
-  become: yes
-  copy:
-    dest: /etc/systemd/system/remote-fs.target.d/override.conf
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/mnt-jayc-media-bas.mount
     content: |
       [Unit]
+      Description=Mount remote filesystem /mnt/jayc/media/bas
       After=network-online.target
-      Wants=network-online.target
-      After=network.target
-      Requires=tun0.network
+
+      [Mount]
+      What=//10.8.0.1/basraven
+      Where=/mnt/jayc/media/bas
+      Type=cifs
+      Options=credentials=/home/basraven/.samba/credentials,iocharset=utf8,vers=3.0,ro
+      TimeoutSec=20
+
+      [Install]
+      WantedBy=multi-user.target
     owner: root
     group: root
     mode: '0644'
 
-- name: Remote-cube backup / Create systemd network configuration for tun0
-  become: yes
-  copy:
-    dest: /etc/systemd/network/tun0.network
-    content: |
-      [Match]
-      Name=tun0
-
-      [Network]
-      DHCP=yes
-    owner: root
-    group: root
-    mode: '0644'
-
-- name: Remote-cube backup / Reload systemd daemon and networkd
-  become: yes
-  command: systemctl daemon-reload
-
-- name: Remote-cube backup / Restart systemd-networkd
-  become: yes
-  command: systemctl restart systemd-networkd
-
-- name: Remote-cube backup / Ensure remote-fs.target waits for tun0
+- name: Remote-cube backup / Reload systemd to pick up the new mount unit
   become: yes
   systemd:
-    name: remote-fs.target
+    daemon_reload: yes
+
+- name: Remote-cube backup / Enable the mount unit to start at boot
+  become: yes
+  systemd:
+    name: mnt-jayc-media-bas.mount
     enabled: yes
+
+- name: Remote-cube backup / Start the mount unit
+  become: yes
+  systemd:
+    name: mnt-jayc-media-bas.mount
+    state: started
+
+- name: Remote-cube backup / Check status of the mount unit
+  become: yes
+  command: systemctl status mnt-jayc-media-bas.mount
+  register: mount_status
+  changed_when: false
+
+- name: Remote-cube backup / Display the mount unit status
+  debug:
+    msg: "{{ mount_status.stdout }}"

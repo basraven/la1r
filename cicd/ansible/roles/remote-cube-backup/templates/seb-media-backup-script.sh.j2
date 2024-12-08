@@ -1,0 +1,67 @@
+#!/bin/bash
+
+LOG_FILE="{{ log_file_path }}"
+
+echo "###> Backup started at $(date)" | tee -a "$LOG_FILE"
+
+if nc -z -v 10.8.0.1 445 2>/dev/null; then
+    echo "Samba is available, proceeding with backup" | tee -a "$LOG_FILE"
+    
+    if [ -d "/mnt/jayc/media/bas/Pictures" ]; then
+        # call 192.168.5.2:50505/api/v1/block/3 to stop the backup server from swithing off
+        echo "Calling 192.168.5.2:50505/api/v1/block/3 to stop the backup server from swithing off" | tee -a "$LOG_FILE"
+        curl -X GET http://192.168.5.2:50505/api/v1/block/3
+
+        # Sync the directory
+        echo "Syncing directory" | tee -a "$LOG_FILE"
+        rsync -avz --progress  --stats --bwlimit=10000 --delete --info=progress2 {{ source_directory }} {{ destination_directory }} 2>&1 | tee -a "$LOG_FILE"
+        echo "Syncing directory completed" | tee -a "$LOG_FILE"
+
+        # Unblocking the backup server
+        echo "Unblocking and stopping the backup server" | tee -a "$LOG_FILE"
+        curl -X GET http://192.168.5.2:50505/api/v1/unblock/3
+        curl -X GET http://192.168.5.2:50505/api/v1/stop/3
+    else
+        echo "Directory /mnt/jayc/media/bas/Pictures does not exist" | tee -a "$LOG_FILE"
+        exit 1
+    fi
+else
+    # If Samba is not available, try to wake up the backup server
+    echo "Samba is not available, trying to wake up backup server" | tee -a "$LOG_FILE"
+    curl -X GET http://192.168.5.2:50505/api/v1/start/3/force
+    sleep 100
+
+    # Check if Samba is now available
+    if nc -z -v 10.8.0.1 445 2>/dev/null; then
+        echo "Samba is now available, restarting mount" | tee -a "$LOG_FILE"
+        systemctl restart mnt-jayc-media-bas.mount
+        
+        if [ -d "/mnt/jayc/media/bas/Pictures" ]; then
+            # call 192.168.5.2:50505/api/v1/block/3 to stop the backup server from swithing off
+            echo "Calling 192.168.5.2:50505/api/v1/block/3 to stop the backup server from swithing off" | tee -a "$LOG_FILE"
+            curl -X GET http://192.168.5.2:50505/api/v1/block/3 | tee -a "$LOG_FILE"
+
+            # Sync the directory
+            echo "Syncing directory" | tee -a "$LOG_FILE"
+            rsync -avz --progress  --stats --bwlimit=10000 --delete --info=progress2 {{ source_directory }} {{ destination_directory }} 2>&1 | tee -a "$LOG_FILE"
+            echo "Syncing directory completed" | tee -a "$LOG_FILE"
+
+            # Unblocking the backup server
+            echo "Unblocking and stopping the backup server" | tee -a "$LOG_FILE"
+            curl -X GET http://192.168.5.2:50505/api/v1/unblock/3
+            curl -X GET http://192.168.5.2:50505/api/v1/stop/3
+        else
+            echo "Directory /mnt/jayc/media/bas/Pictures does not exist" | tee -a "$LOG_FILE"
+            exit 1
+        fi
+    else
+        echo "Samba is still not available after wake up attempt" | tee -a "$LOG_FILE"
+        exit 1
+    fi
+fi
+
+if [ $? -eq 0 ]; then
+    echo "Backup completed successfully at $(date)" | tee -a "$LOG_FILE"
+else
+    echo "Backup failed at $(date)" | tee -a "$LOG_FILE"
+fi

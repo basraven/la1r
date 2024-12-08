@@ -7,6 +7,15 @@
     # owner: basraven
     # group: basraven
 
+- name: Remote-cube backup / Deploy the backup script
+  become: yes
+  template:
+    src: seb-media-backup-script.sh.j2
+    dest: /root/seb-media-backup-script.sh
+    owner: root
+    group: root
+    mode: '0755'
+
 - name: Remote-cube backup / create crontab
   become: yes
   cron:
@@ -14,5 +23,5 @@
     minute: "0"      # Run at the top of the hour
     hour: "2"        # Run at 2 AM
     day: "7"         # Run on Sundays (day 7 of the week)
-    job: "rsync -av --delete /mnt/jay-c/media/bas/ /mnt/jay-c/media/bas/" # the delete stand for removing deleted file on the SOURCE
+    job: "/bin/bash /root/seb-media-backup-script.sh"
     state: present
