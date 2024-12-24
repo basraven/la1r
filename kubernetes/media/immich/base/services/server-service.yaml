@@ -11,20 +11,21 @@ spec:
     targetPort: 3001
   type: ClusterIP
 
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    app: immich-server
-  name: immich-server-lb
-spec:
-  ports:
-  - name: http
-    targetPort: 3001
-    port: 80
-  selector:
-    app: immich-server
-  loadBalancerIP: 192.168.6.77
-  type: LoadBalancer
+# Can't have both an LB and a normal service
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   labels:
+#     app: immich-server
+#   name: immich-server-lb
+# spec:
+#   ports:
+#   - name: http
+#     targetPort: 3001
+#     port: 80
+#   selector:
+#     app: immich-server
+#   loadBalancerIP: 192.168.6.77
+#   type: LoadBalancer
 
