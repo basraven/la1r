@@ -31,9 +31,9 @@ spec:
                 - "true"
       containers:
       - name: immich-server
-        image: ghcr.io/immich-app/immich-server:main
+        image: ghcr.io/immich-app/immich-server:v1.123.0
         ports:
-        - containerPort: 3001
+        - containerPort: 2283
         env:
         - name: DB_PASSWORD
           valueFrom:
@@ -51,6 +51,8 @@ spec:
           value: "6379"
         - name: UPLOAD_LOCATION
           value: "/usr/src/app/upload"
+        - name: IMMICH_PORT
+          value: "2283"
         # - name: IMMICH_MACHINE_LEARNING_SERVICE_HOST
         #   value: "192.168.6.182"
         volumeMounts:
