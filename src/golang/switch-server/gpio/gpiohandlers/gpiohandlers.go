@@ -13,7 +13,7 @@ import (
 
 var (
 	PRIVATE_KEY_PATH       = "/home/basraven/.ssh/id_rsa"
-	GPIO_SWITCHON_COOLDOWN = time.Second * 120
+	GPIO_SWITCHON_COOLDOWN = time.Second * 900 // 15 minutes
 )
 
 func ReadForGpioInputChangeAndBlink(deviceStates *models.DeviceStates, deviceEvents *models.DeviceEvents) {

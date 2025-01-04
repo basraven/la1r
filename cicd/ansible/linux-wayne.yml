@@ -9,12 +9,12 @@
   # - users
   # - update
   # - ssh
-  - security
+  # - security
   # - reboot
   # - nfs
   # - samba
   # - containerd
-  # - haproxy
+  - haproxy
   # - kubernetes-install
   # - kubernetes-init
   # - kubernetes-fetch

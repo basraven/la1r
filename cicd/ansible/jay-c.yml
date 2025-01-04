@@ -5,15 +5,15 @@
   # - users
   # - ssh
   # - hostname
-  - power-savings
+  # - power-savings
   # - avahi
 
   # - update
   # - security
-  # # - reboot
+  # - reboot
   # - nfs
   # - samba
-  # - haproxy
+  - haproxy
   # - containerd
   # - kubernetes-install
   # - kubernetes-join
