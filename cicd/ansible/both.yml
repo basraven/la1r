@@ -1,0 +1,23 @@
+---
+- hosts: 
+  - linux-wayne
+  - jay-c
+  roles:
+  - define-os # Should always run!
+  # - users
+  # - ssh
+  # - hostname
+  # - power-savings
+  # - avahi
+
+  # - update
+  # - security
+  # - reboot
+  # - nfs
+  # - samba
+  - haproxy
+  # - containerd
+  # - kubernetes-install
+  # - kubernetes-join
+
+  # - backup

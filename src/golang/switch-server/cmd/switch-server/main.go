@@ -30,9 +30,9 @@ func main() {
 
 	var deviceStates, deviceEvents = models.NewDeviceStates(
 		[]models.DeviceState{
-			{Id: 1, Name: "Linux-Wayne", State: 2, GpioOut: rpio.Pin(17), Ssh: "192.168.5.1"},
+			{Id: 1, Name: "Linux-Wayne", State: 2, Ssh: "192.168.5.1", Gpio: models.Gpio{Out: rpio.Pin(17)}},
 			{Id: 2, Name: "Stephanie", State: 2},
-			{Id: 3, Name: "Jay-C", State: 2, GpioIn: rpio.Pin(26), GpioOut: rpio.Pin(22), StatusLed: rpio.Pin(16), Ssh: "192.168.5.3"},
+			{Id: 3, Name: "Jay-C", State: 2, Ssh: "192.168.5.3", Gpio: models.Gpio{In: rpio.Pin(26), Out: rpio.Pin(22), StatusLed: rpio.Pin(16)}},
 			{Id: 4, Name: "Kirby", State: 2, Pwm: *pwm},
 		},
 	)
@@ -49,6 +49,7 @@ func main() {
 	go gpiohandlers.OutputDeviceOnEvent(deviceStates, deviceEvents)
 
 	// Initialize Gin router
+	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 	if err := r.SetTrustedProxies([]string{"10.8.0.0/24", "192.168.0.0/16"}); err != nil {
 		log.Fatal(err)

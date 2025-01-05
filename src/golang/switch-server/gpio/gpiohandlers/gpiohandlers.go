@@ -20,12 +20,12 @@ func ReadForGpioInputChangeAndBlink(deviceStates *models.DeviceStates, deviceEve
 	lastToggleValue := make(map[int]int)
 	lastToggleTime := make(map[int]time.Time)
 	for _, state := range *deviceStates {
-		if state.GpioIn != 0 {
-			state.GpioIn.Input()
-			state.GpioIn.PullDown()
+		if state.Gpio.In != 0 {
+			state.Gpio.In.Input()
+			state.Gpio.In.PullDown()
 		}
-		if state.StatusLed != 0 {
-			state.StatusLed.Output()
+		if state.Gpio.StatusLed != 0 {
+			state.Gpio.StatusLed.Output()
 		}
 
 		// Start with cooldown time to not switch servers from the getgo
@@ -39,12 +39,12 @@ func ReadForGpioInputChangeAndBlink(deviceStates *models.DeviceStates, deviceEve
 		for _, state := range *deviceStates {
 
 			// Read part
-			if state.GpioIn != 0 {
+			if state.Gpio.In != 0 {
 				var pinValue int
 
-				state.StatusLed.High()
+				state.Gpio.StatusLed.High()
 				time.Sleep(500 * time.Millisecond)
-				pinValue = int(state.GpioIn.Read())
+				pinValue = int(state.Gpio.In.Read())
 				// log.Printf("pinValue with = %d with state.Id %d", pinValue, state.Id)
 				if lastToggleValue[state.Id] != pinValue { // if the pin value has changed
 					// log.Printf("pastToggleValue[%d] = %d, pinValue = %d", state.Id, lastToggleValue[state.Id], pinValue)
@@ -69,11 +69,11 @@ func ReadForGpioInputChangeAndBlink(deviceStates *models.DeviceStates, deviceEve
 						lastToggleValue[state.Id] = pinValue
 					}
 				}
-				// state.StatusLed.Low()
+				// state.Gpio.StatusLed.Low()
 			}
 
 			// Blink part
-			if state.StatusLed != 0 {
+			if state.Gpio.StatusLed != 0 {
 				if state.State == 2 {
 					// log.Printf("State %d is unsure", state.Id)
 					blink(&blinkStates, &state)
@@ -84,7 +84,7 @@ func ReadForGpioInputChangeAndBlink(deviceStates *models.DeviceStates, deviceEve
 				} else if state.State == 1 {
 					// log.Printf("State %d is turned on", state.Id)
 					time.Sleep(500 * time.Millisecond)
-					state.StatusLed.High() // Turn on the LED
+					state.Gpio.StatusLed.High() // Turn on the LED
 				} else if state.State == 0 {
 					// log.Printf("State %d is turned off", state.Id)
 					time.Sleep(500 * time.Millisecond)
@@ -128,10 +128,10 @@ func blink(blinkStates *map[int]bool, state *models.DeviceState) {
 
 	// Alternate the LED state based on current blink state
 	if (*blinkStates)[state.Id] {
-		state.StatusLed.Low()
+		state.Gpio.StatusLed.Low()
 		(*blinkStates)[state.Id] = false // Update blink state to off
 	} else {
-		state.StatusLed.High()
+		state.Gpio.StatusLed.High()
 		(*blinkStates)[state.Id] = true // Update blink state to on
 	}
 }
@@ -140,11 +140,10 @@ func OutputDeviceOnEvent(deviceStates *models.DeviceStates, deviceEvents *models
 	for event := range deviceEvents.OutputDevice {
 		// log.Printf("event in SwitchDeviceOnChange %+v", event)
 		state := deviceStates.GetById(event.Id)
-		if state.GpioOut == 0 { // If no gpio out put is set, skip
+		if state.Gpio.Out == 0 { // If no gpio out put is set, skip
 			continue
 		}
 		handleSwitchDevice(state, &event)
-
 	}
 }
 
@@ -154,10 +153,10 @@ func handleSwitchDevice(state *models.DeviceState, event *models.DeviceStateChan
 	available, err := isHostAvailable(state.Ssh, 22, (5 * time.Second))
 
 	if event.State == 1 && err != nil { // Target: On, Host: unavailable
-		state.GpioOut.Output()
-		state.GpioOut.High()
+		state.Gpio.Out.Output()
+		state.Gpio.Out.High()
 		time.Sleep(700 * time.Millisecond)
-		state.GpioOut.Low()
+		state.Gpio.Out.Low()
 		if *event.Callback != nil {
 			*event.Callback <- fmt.Sprintf("Device %d was switched on", state.Id)
 		}

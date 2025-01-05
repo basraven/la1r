@@ -20,25 +20,31 @@ func SetupRoutes(r *gin.RouterGroup, deviceStates *models.DeviceStates, deviceEv
 		httphandlers.HandleSpecificStatusRequest(c, deviceStates)
 	})
 	r.GET("/start/:identifier", func(c *gin.Context) {
-		httphandlers.HandleStartRequest(c, deviceStates, deviceEvents)
+		httphandlers.HandleDeviceToggleRequest(c, deviceStates, deviceEvents, 1, false)
 	})
 	r.GET("/stop/:identifier", func(c *gin.Context) {
-		httphandlers.HandleStopRequest(c, deviceStates, deviceEvents)
+		httphandlers.HandleDeviceToggleRequest(c, deviceStates, deviceEvents, 0, false)
 	})
 	r.GET("/start/:identifier/force", func(c *gin.Context) {
-		httphandlers.HandleStartRequestForce(c, deviceStates, deviceEvents)
+		httphandlers.HandleDeviceToggleRequest(c, deviceStates, deviceEvents, 1, true)
 	})
 	r.GET("/stop/:identifier/force", func(c *gin.Context) {
-		httphandlers.HandleStopRequestForce(c, deviceStates, deviceEvents)
+		httphandlers.HandleDeviceToggleRequest(c, deviceStates, deviceEvents, 0, true)
 	})
 	r.GET("/set/:identifier/:value", func(c *gin.Context) {
-		httphandlers.HandleSetRequest(c, deviceStates, deviceEvents)
+		httphandlers.HandleSetRequest(c, deviceStates, deviceEvents, false)
+	})
+	r.GET("/set/:identifier/:value/force", func(c *gin.Context) {
+		httphandlers.HandleSetRequest(c, deviceStates, deviceEvents, true)
 	})
 	r.GET("/block/:identifier", func(c *gin.Context) {
-		httphandlers.HandleBlockRequest(c, deviceStates, deviceEvents)
+		httphandlers.HandleBlockRequest(c, deviceStates, deviceEvents, true)
 	})
 	r.GET("/unblock/:identifier", func(c *gin.Context) {
-		httphandlers.HandleUnblockRequest(c, deviceStates, deviceEvents)
+		httphandlers.HandleBlockRequest(c, deviceStates, deviceEvents, false)
+	})
+	r.GET("/lease/:identifier/:secondsToAdd", func(c *gin.Context) {
+		httphandlers.HandleLeaseRequest(c, deviceStates, deviceEvents)
 	})
 
 }

@@ -1,7 +1,9 @@
 package models
 
 import (
+	"context"
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -17,23 +19,43 @@ var (
 	MINIMAL_UPTIME   = time.Minute * 5
 )
 
+type Gpio struct {
+	In        rpio.Pin // GPIO Pin
+	Out       rpio.Pin // GPIO Pin
+	StatusLed rpio.Pin // Status LED
+}
 type DeviceState struct {
-	Id             int
-	Name           string
-	State          int               // 2 = unsure, 1 = on, 0 = off
-	GpioIn         rpio.Pin          // GPIO Pin
-	GpioOut        rpio.Pin          // GPIO Pin
-	StatusLed      rpio.Pin          // Status LED
-	Pwm            hwpwm.HardwarePWM // PWM Object
-	Ssh            string            // ssh server address
-	Blocked        *bool             // Pointer to bool to support Nil state
-	LastActionTime time.Time
+	Id      int
+	Name    string
+	State   int // 2 = unsure, 1 = on, 0 = off TODO: remove state 2
+	Gpio    Gpio
+	Pwm     hwpwm.HardwarePWM // PWM Object
+	Ssh     string            // ssh server address
+	Blocked *bool             // Pointer to bool to support Nil state
+	Lease   struct {
+		CloseTime  time.Time // Time when the lease is closed
+		CancelFunc func()    `json:"-"` // Function to call when to cancel lease close. Fiels is ignored in serrialization
+	}
 }
 type DeviceStateChange struct {
 	Timestamp      time.Time
 	Id             int
 	State          int
+	OutputChannels []*chan DeviceStateChange
+	Callback       *chan string
+}
+type DeviceBlockedChange struct {
+	Timestamp      time.Time
+	Id             int
 	Blocked        *bool
+	OutputChannels []*chan DeviceStateChange
+	Callback       *chan string
+}
+
+type DeviceLeaseChange struct {
+	Timestamp      time.Time
+	Id             int
+	SecondsToAdd   int // The amount of seconds to add or subtract to the lease time
 	OutputChannels []*chan DeviceStateChange
 	Callback       *chan string
 }
@@ -42,6 +64,8 @@ type DeviceStates []DeviceState
 
 type DeviceEvents struct {
 	State        chan DeviceStateChange
+	Blocked      chan DeviceBlockedChange
+	Leased       chan DeviceLeaseChange
 	OutputDevice chan DeviceStateChange
 	OutputPwm    chan DeviceStateChange
 }
@@ -51,11 +75,15 @@ func NewDeviceStates(deviceStateList []DeviceState) (*DeviceStates, *DeviceEvent
 	deviceStates := DeviceStates(deviceStateList)
 	deviceEvents := DeviceEvents{
 		State:        make(chan DeviceStateChange),
+		Blocked:      make(chan DeviceBlockedChange),
+		Leased:       make(chan DeviceLeaseChange),
 		OutputDevice: make(chan DeviceStateChange),
 		OutputPwm:    make(chan DeviceStateChange),
 	}
 
 	go deviceStates.handleDeviceStateEvents(&deviceEvents)
+	go deviceStates.handleDeviceBlockedEvents(&deviceEvents)
+	go deviceStates.handleDeviceLeasedEvents(&deviceEvents)
 	return &deviceStates, &deviceEvents
 }
 
@@ -80,50 +108,128 @@ func (deviceStates *DeviceStates) GetById(Id int) *DeviceState {
 func (deviceStates *DeviceStates) handleDeviceStateEvents(deviceEvents *DeviceEvents) {
 	for event := range deviceEvents.State {
 		state := deviceStates.GetById(event.Id)
-		state.LastActionTime = event.Timestamp
 
 		// log.Printf("\n\t#> %+v \n\t\tupdated:\n\t#> %+v \n", state, event)
 
-		// check if event has blocked update
-		if event.Blocked != nil {
+		// Check if we're trying to switch off a device
+		if event.State == 0 {
+			// Check if we're trying to switch off a device that is blocked
+			if state.Blocked != nil && *state.Blocked {
+				*event.Callback <- fmt.Sprintf("Device %d is blocked", state.Id)
+				continue
+			}
 
-			// Update state.Blocked
-			state.Blocked = event.Blocked
-
-			*event.Callback <- fmt.Sprintf("Device %d blocked state updated to %t", event.Id, *event.Blocked)
-		} else {
-
-			// Check if we're trying to switch off a device
-			if event.State != 1 {
-				// Check if we're trying to switch off a device that is blocked
-				if event.State == 0 && state.Blocked != nil && *state.Blocked {
-					*event.Callback <- fmt.Sprintf("Device %d is blocked", state.Id)
+			// Check if lease time is not zero
+			if !state.Lease.CloseTime.IsZero() {
+				// Check if we're trying to switch off a device that still has a lease that is before the current time
+				if state.Lease.CloseTime.After(time.Now()) {
+					*event.Callback <- fmt.Sprintf("Device %d is still leased for %.0f seconds and cannot be switched off", state.Id, time.Until(state.Lease.CloseTime).Seconds())
 					continue
-				}
-
-				reachedMinimalUpdate, errUptime := reachedMinimalUptime(state.Ssh, "basraven")
-				if errUptime != nil {
-					*event.Callback <- fmt.Sprintf("Device down, error checking uptime for device %d: %v", state.Id, errUptime)
-					continue
-				}
-				if !reachedMinimalUpdate {
-					*event.Callback <- fmt.Sprintf("Device %d is still starting up", state.Id)
-					continue
+				} else {
+					// Lease time is expired, so we can set it to zero
+					state.Lease.CloseTime = time.Time{}
 				}
 
 			}
 
-			state.State = event.State
-
-			// Send event to the appropriate outputchannels
-			for _, outputChannel := range event.OutputChannels {
-				*outputChannel <- event
+			reachedMinimalUpdate, errUptime := reachedMinimalUptime(state.Ssh)
+			if errUptime != nil {
+				*event.Callback <- fmt.Sprintf("Device down, error checking uptime for device %d: %v", state.Id, errUptime)
+				continue
 			}
+			if !reachedMinimalUpdate {
+				*event.Callback <- fmt.Sprintf("Device %d is still starting up", state.Id)
+				continue
+			}
+
+		}
+
+		state.State = event.State
+
+		// Send event to the appropriate outputchannels
+		for _, outputChannel := range event.OutputChannels {
+			*outputChannel <- event
 		}
 	}
 }
 
-func reachedMinimalUptime(host string, user string) (bool, error) {
+func (deviceStates *DeviceStates) handleDeviceBlockedEvents(deviceEvents *DeviceEvents) {
+	for event := range deviceEvents.Blocked {
+		state := deviceStates.GetById(event.Id)
+
+		// Update state.Blocked
+		state.Blocked = event.Blocked
+		*event.Callback <- fmt.Sprintf("Device %d blocked state updated to %t", event.Id, *event.Blocked)
+	}
+}
+
+func (deviceStates *DeviceStates) handleDeviceLeasedEvents(deviceEvents *DeviceEvents) {
+	for event := range deviceEvents.Leased {
+		state := deviceStates.GetById(event.Id)
+
+		oldLeaseCloseTime := state.Lease.CloseTime
+		if state.Lease.CloseTime.IsZero() {
+			state.Lease.CloseTime = time.Now().Add(time.Second * time.Duration(event.SecondsToAdd))
+		} else {
+			state.Lease.CancelFunc()
+			state.Lease.CloseTime = state.Lease.CloseTime.Add(time.Second * time.Duration(event.SecondsToAdd))
+		}
+
+		// run a goroutine to close the device after the lease time has passed
+		ctx, cancel := context.WithCancel(context.Background())
+		go handleDeviceLeaseExpired(ctx, state.Lease.CloseTime, func() {
+			log.Printf("Lease expired for device state, switching off device %d", state.Id)
+			changeEvent := DeviceStateChange{
+				Timestamp: time.Now(),
+				Id:        state.Id,
+				State:     0,
+			}
+			deviceEvents.State <- changeEvent
+		})
+		state.Lease.CancelFunc = cancel
+
+		// If the device is off, we need to send a state change event to turn the device on
+		if state.State == 0 {
+			changeEvent := DeviceStateChange{
+				Timestamp: time.Now(),
+				Id:        state.Id,
+				State:     1,
+			}
+			deviceEvents.State <- changeEvent
+
+			*event.Callback <- fmt.Sprintf("Device started and %d lease updated from %s to %s, adding %d seconds", event.Id, oldLeaseCloseTime.Format(time.RFC3339), state.Lease.CloseTime.Format(time.RFC3339), event.SecondsToAdd)
+		} else { // Device is already on
+			*event.Callback <- fmt.Sprintf("Device %d lease updated from %s to %s, adding %d seconds", event.Id, oldLeaseCloseTime.Format(time.RFC3339), state.Lease.CloseTime.Format(time.RFC3339), event.SecondsToAdd)
+		}
+	}
+}
+
+func handleDeviceLeaseExpired(ctx context.Context, startTime time.Time, task func()) {
+	// Calculate the delay until the start time
+	delay := time.Until(startTime)
+	if delay <= 0 {
+		task() // Start time is in the past, starting immediately
+		return
+	}
+
+	// Create a timer for the delay
+	timer := time.NewTimer(delay)
+
+	select {
+	case <-ctx.Done():
+		// If the context is canceled, stop the timer and return
+		log.Printf("Lease planned stop canceled")
+		timer.Stop()
+	case <-timer.C:
+		// Timer triggered, execute the task
+		task()
+	}
+}
+
+// TODO: Relocate to GPIO function
+func reachedMinimalUptime(host string) (bool, error) {
+	user := "basraven"
+
 	// Load the private key
 	privateKey, err := os.ReadFile(PRIVATE_KEY_PATH)
 	if err != nil {

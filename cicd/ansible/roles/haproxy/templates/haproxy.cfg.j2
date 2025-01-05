@@ -51,18 +51,17 @@ frontend http_stats
     mode http
     stats uri /haproxy?stats
 
-frontend haproxy_kube
+frontend kubernetes_masters_fe
     bind {{ ha_proxy_vir_ip }}:443
     bind {{ ansible_host }}:443
     bind 127.0.0.1:80
     mode tcp
     option tcplog
-    default_backend masters
+    default_backend kubernetes_masters_be
     {# timeout client  10800s #}
 
-backend masters
+backend kubernetes_masters_be
     mode tcp
-    option tcplog
     balance leastconn
     default-server inter 3s downinter 2s rise 2 fall 2 slowstart 20s maxconn 250 maxqueue 256 weight 100
     server jay-c 192.168.5.3:6443 check port 6443
@@ -70,27 +69,61 @@ backend masters
     {# server stephanie 192.168.5.2:6443 check port 6443 backup #}
     {# timeout server  10800s #}
 
-frontend haproxy_kube_sec
+
+frontend samba_jayc_fe
+    bind {{ ha_proxy_vir_ip_sec }}:137
+    bind {{ ha_proxy_vir_ip_sec }}:138
+    bind {{ ha_proxy_vir_ip_sec }}:139
+    bind {{ ha_proxy_vir_ip_sec }}:445
+    mode tcp
+
+    # Default backend is samba_jayc_be
+    use_backend samba_jayc_be if { nbsrv(samba_jayc_be) ge 1 }
+
+    # Fallback to samba_spoofed_be if no servers in samba_jayc_be are available
+    default_backend samba_spoofed_be
+
+
+backend samba_jayc_be
+    mode tcp
+    # Use TCP-based health checks to verify the backend servers, use SSH port
+    option tcp-check
+    tcp-check connect port 22
+
+    # Use the same port as the client connected to on the frontend
+    server jay-c 192.168.5.3 port %[dst_port] check
+
+backend samba_spoofed_be
+    server linux-wayne-spoof {{ ha_proxy_samba_hostport }} check
+
+    # Allow proxy to forward headers
+    option forwardfor
+
+    # Ensure X-Forwarded-For header is forwarded correctly
+    http-request set-header X-Forwarded-For %[src]
+    
+    # Forward the correct protocol (HTTP/HTTPS) to the backend
+    http-request set-header X-Forwarded-Proto http  # or 'https' if you're using HTTPS
+
+    # Rewrite the request path to prepend `{{ ha_proxy_samba_path }}` to the original path
+    http-request set-path {{ ha_proxy_samba_path }}
+  
+
+{# frontend kubernetes_sec
     bind {{ ha_proxy_vir_ip_sec }}:443
     bind {{ ansible_host }}:443
     bind 127.0.0.1:80
     mode tcp
     option tcplog
-    default_backend masterssec
-    {# timeout client  10800s #}
+    default_backend kubernetes_masters_sec
+    # timeout client  10800s
 
-backend masterssec
+backend kubernetes_masters_sec
     mode tcp
-    option tcplog
     balance leastconn
     default-server inter 3s downinter 2s rise 2 fall 2 slowstart 20s maxconn 250 maxqueue 256 weight 100
     server linux-wayne 192.168.5.1:6443 check port 6443 
     server jay-c 192.168.5.3:6443 check port 6443
-    {# server stephanie 192.168.5.2:6443 check port 6443 backup #}
-    {# timeout server  10800s #}
-    
-
-
-
-
-
+    # server stephanie 192.168.5.2:6443 check port 6443 backup
+    # timeout server  10800s
+#}
