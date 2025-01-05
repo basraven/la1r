@@ -8,4 +8,3 @@ resources:
 - hue-mqtt
 - mqtt-automation
 - re-lease
-# - samba-traffic-listener
