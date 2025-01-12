@@ -8,6 +8,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	handlers "switch-server/gpio/gpiohandlers"
 	"switch-server/internal/models"
 )
 
@@ -34,12 +35,29 @@ func findDeviceState(deviceStates *models.DeviceStates, identifier string) *mode
 }
 
 func HandleAllStatusRequest(c *gin.Context, deviceStates *models.DeviceStates) {
+	// loop through deviceStates and get state.ssh, then use isHostAvailable to check if it's available
+	actuals := make(map[string]string)
+	for _, state := range *deviceStates {
+		available, err := handlers.IsHostAvailable(state.Ssh, (5 * time.Second))
+		if err != nil {
+			// Handle the error if needed
+			// actuals[state.Name] = "Error: " + err.Error()
+			actuals[state.Name] = "Unavailable"
+		} else {
+			if available {
+				actuals[state.Name] = "Available"
+			} else {
+				actuals[state.Name] = "Unavailable"
+			}
+		}
+	}
+
 	c.JSON(200, gin.H{
-		"state": deviceStates,
-		"spam":  requestSpamProtection,
+		"actuals": actuals,
+		"state":   deviceStates,
+		"spam":    requestSpamProtection,
 	})
 }
-
 func HandleSpecificStatusRequest(c *gin.Context, deviceStates *models.DeviceStates) {
 	identifier := c.Param("identifier")
 

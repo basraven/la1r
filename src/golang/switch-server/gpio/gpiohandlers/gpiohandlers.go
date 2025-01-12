@@ -150,7 +150,12 @@ func OutputDeviceOnEvent(deviceStates *models.DeviceStates, deviceEvents *models
 func handleSwitchDevice(state *models.DeviceState, event *models.DeviceStateChange) {
 	// log.Printf("event in SwitchDeviceOnChange %+v", event)
 
-	available, err := isHostAvailable(state.Ssh, 22, (5 * time.Second))
+	if state == nil || event == nil {
+		log.Printf("State or event is nil in handleSwitchDevice")
+		return
+	}
+
+	available, err := IsHostAvailable(state.Ssh, (5 * time.Second))
 
 	if event.State == 1 && err != nil { // Target: On, Host: unavailable
 		state.Gpio.Out.Output()
@@ -185,7 +190,9 @@ func handleSwitchDevice(state *models.DeviceState, event *models.DeviceStateChan
 	}
 }
 
-func isHostAvailable(host string, port int, timeout time.Duration) (bool, error) {
+func IsHostAvailable(host string, timeout time.Duration) (bool, error) {
+
+	port := 22
 	address := fmt.Sprintf("%s:%d", host, port)
 	conn, err := net.DialTimeout("tcp", address, timeout)
 	if err != nil {

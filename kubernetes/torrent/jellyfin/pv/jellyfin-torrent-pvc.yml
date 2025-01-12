@@ -1,0 +1,17 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: jellyfin-torrent-data-claim
+  namespace: torrent
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: jellyfin-torrent-data
+  selector:
+    matchLabels:
+      contenttype: "jellyfin-torrent-data"
+  resources:
+    requests:
+      storage: 2000Gi
+      

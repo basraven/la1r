@@ -1,11 +1,7 @@
-{# /etc/haproxy/haproxy.cfg #}
-global
-    {# log /dev/log    local0 #}
-    {# log /dev/log    local1 notice #}
-    
+global    
     chroot /var/lib/haproxy
-    {# stats socket /run/haproxy/admin.sock mode 660 level admin expose-fd listeners #}
-    {# stats timeout 30s #}
+    # stats socket /run/haproxy/admin.sock mode 660 level admin expose-fd listeners
+    # stats timeout 30s
     
     user haproxy
     group haproxy
@@ -24,6 +20,7 @@ global
     
     ssl-default-bind-ciphers ECDH+AESGCM:DH+AESGCM:ECDH+AES256:DH+AES256:ECDH+AES128:DH+AES:RSA+AESGCM:RSA+AES:!aNULL:!MD5:!DSS
     ssl-default-bind-options no-sslv3
+
 
 defaults
     log global
@@ -64,11 +61,10 @@ backend kubernetes_masters_be
     mode tcp
     balance leastconn
     default-server inter 3s downinter 2s rise 2 fall 2 slowstart 20s maxconn 250 maxqueue 256 weight 100
-    server jay-c 192.168.5.3:6443 check port 6443
+    # server jay-c 192.168.5.3:6443 check port 6443
     server linux-wayne 192.168.5.1:6443 check port 6443 
     {# server stephanie 192.168.5.2:6443 check port 6443 backup #}
     {# timeout server  10800s #}
-
 
 frontend samba_jayc_fe
     bind {{ ha_proxy_vir_ip_sec }}:137
@@ -76,37 +72,43 @@ frontend samba_jayc_fe
     bind {{ ha_proxy_vir_ip_sec }}:139
     bind {{ ha_proxy_vir_ip_sec }}:445
     mode tcp
-
-    # Default backend is samba_jayc_be
-    use_backend samba_jayc_be if { nbsrv(samba_jayc_be) ge 1 }
-
-    # Fallback to samba_spoofed_be if no servers in samba_jayc_be are available
-    default_backend samba_spoofed_be
+    option tcplog
+    log global  
+    log {{ ha_proxy_samba_logtarget }} local0 
+    log-format "{ \"timestamp\": \"%t\", \"haproxy_host\": \"{{ inventory_hostname }}\", \"frontend\": \"%ft\", \"client_ip\": \"%ci\", \"backend\": \"%b\", \"con_status\": \"%ts\", \"server\": \"%s\" }"  # Custom log format
+    
+    default_backend samba_jayc_be
 
 
 backend samba_jayc_be
+    log global
+    log {{ ha_proxy_samba_logtarget }} local0 
+    log-format "{ \"timestamp\": \"%t\", \"haproxy_host\": \"{{ inventory_hostname }}\", \"frontend\": \"%ft\", \"client_ip\": \"%ci\", \"backend\": \"%b\", \"con_status\": \"%ts\", \"server\": \"%s\" }"  # Custom log format
+    
     mode tcp
-    # Use TCP-based health checks to verify the backend servers, use SSH port
+     # TCP-based health checks to verify the backend server (checking the port on the server)
     option tcp-check
-    tcp-check connect port 22
+    tcp-check connect port 445  # Replace with the port that your Samba server is listening on (usually 445)
 
     # Use the same port as the client connected to on the frontend
     server jay-c 192.168.5.3 port %[dst_port] check
 
-backend samba_spoofed_be
-    server linux-wayne-spoof {{ ha_proxy_samba_hostport }} check
+backend samba_spoofed_error_be
+    errorfile 503 /etc/haproxy/errors/503.http
+    
+    # server linux-wayne-spoof { ha_proxy_samba_hostport } check
 
     # Allow proxy to forward headers
-    option forwardfor
+    # option forwardfor
 
     # Ensure X-Forwarded-For header is forwarded correctly
-    http-request set-header X-Forwarded-For %[src]
+    # http-request set-header X-Forwarded-For %[src]
     
     # Forward the correct protocol (HTTP/HTTPS) to the backend
-    http-request set-header X-Forwarded-Proto http  # or 'https' if you're using HTTPS
+    # http-request set-header X-Forwarded-Proto http  # or 'https' if you're using HTTPS
 
-    # Rewrite the request path to prepend `{{ ha_proxy_samba_path }}` to the original path
-    http-request set-path {{ ha_proxy_samba_path }}
+    # Rewrite the request path to prepend `{ ha_proxy_samba_path }` to the original path
+    # http-request set-path { ha_proxy_samba_path }
   
 
 {# frontend kubernetes_sec

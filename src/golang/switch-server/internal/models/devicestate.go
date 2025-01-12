@@ -34,7 +34,7 @@ type DeviceState struct {
 	Blocked *bool             // Pointer to bool to support Nil state
 	Lease   struct {
 		CloseTime  time.Time // Time when the lease is closed
-		CancelFunc func()    `json:"-"` // Function to call when to cancel lease close. Fiels is ignored in serrialization
+		CancelFunc *func()   `json:"-"` // Function to call when to cancel lease close. Fiels is ignored in serrialization
 	}
 }
 type DeviceStateChange struct {
@@ -171,10 +171,16 @@ func (deviceStates *DeviceStates) handleDeviceLeasedEvents(deviceEvents *DeviceE
 		if state.Lease.CloseTime.IsZero() {
 			state.Lease.CloseTime = time.Now().Add(time.Second * time.Duration(event.SecondsToAdd))
 		} else {
-			state.Lease.CancelFunc()
+			log.Printf("Canceling the last lease stopper")
+			if state.Lease.CancelFunc != nil {
+				(*state.Lease.CancelFunc)()
+			} else {
+				log.Printf("No cancel function found for device %d", state.Id)
+			}
 			state.Lease.CloseTime = state.Lease.CloseTime.Add(time.Second * time.Duration(event.SecondsToAdd))
 		}
 
+		callback := make(chan string)
 		// run a goroutine to close the device after the lease time has passed
 		ctx, cancel := context.WithCancel(context.Background())
 		go handleDeviceLeaseExpired(ctx, state.Lease.CloseTime, func() {
@@ -183,10 +189,23 @@ func (deviceStates *DeviceStates) handleDeviceLeasedEvents(deviceEvents *DeviceE
 				Timestamp: time.Now(),
 				Id:        state.Id,
 				State:     0,
+				OutputChannels: []*chan DeviceStateChange{
+					&deviceEvents.OutputDevice,
+				},
+				Callback: &callback,
 			}
 			deviceEvents.State <- changeEvent
+			callbackValue, ok := <-callback
+			if ok {
+				log.Printf("ACK Switch off because of expired lease %s ", callbackValue)
+			} else {
+				log.Printf("ERROR in Switch off because of expired lease %s ", callbackValue)
+			}
+			close(callback)
+
 		})
-		state.Lease.CancelFunc = cancel
+		cancelFunc := func() { cancel() }
+		state.Lease.CancelFunc = &cancelFunc
 
 		// If the device is off, we need to send a state change event to turn the device on
 		if state.State == 0 {
@@ -194,6 +213,9 @@ func (deviceStates *DeviceStates) handleDeviceLeasedEvents(deviceEvents *DeviceE
 				Timestamp: time.Now(),
 				Id:        state.Id,
 				State:     1,
+				OutputChannels: []*chan DeviceStateChange{
+					&deviceEvents.OutputDevice,
+				},
 			}
 			deviceEvents.State <- changeEvent
 
@@ -203,7 +225,6 @@ func (deviceStates *DeviceStates) handleDeviceLeasedEvents(deviceEvents *DeviceE
 		}
 	}
 }
-
 func handleDeviceLeaseExpired(ctx context.Context, startTime time.Time, task func()) {
 	// Calculate the delay until the start time
 	delay := time.Until(startTime)
@@ -218,7 +239,7 @@ func handleDeviceLeaseExpired(ctx context.Context, startTime time.Time, task fun
 	select {
 	case <-ctx.Done():
 		// If the context is canceled, stop the timer and return
-		log.Printf("Lease planned stop canceled")
+		log.Printf("Lease planned stop refreshed")
 		timer.Stop()
 	case <-timer.C:
 		// Timer triggered, execute the task

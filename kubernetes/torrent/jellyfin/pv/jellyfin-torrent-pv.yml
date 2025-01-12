@@ -1,0 +1,16 @@
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: jellyfin-torrent-data-pv
+  labels:
+    contenttype: "jellyfin-torrent-data"
+spec:
+  capacity:
+    storage: 2000Gi
+  storageClassName: jellyfin-torrent-data
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/mnt/hdd/na/torrent" # path to directory

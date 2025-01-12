@@ -2,5 +2,4 @@
 ha_proxy_vir_ip: "192.168.5.100"
 ha_proxy_vir_ip_sec: "192.168.5.103"
 ha_proxy_pw: "66d5cee7d4d9466c43da503798cd58dc51a925c9"
-ha_proxy_samba_hostport: "192.168.5.2:50505"
-ha_proxy_samba_path: "/api/v1/lease/3/300"
+ha_proxy_samba_logtarget: "192.168.6.144:44414"

@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: haproxy-logreceiver
+  namespace: homeautomation
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: haproxy-logreceiver
+  template:
+    metadata:
+      labels:
+        app: haproxy-logreceiver
+    spec:
+      
+      # specificonly only workloads
+      tolerations:
+        - key: "la1r.workload/specificonly"
+          operator: "Equal"
+          value: "true"
+          effect: "NoSchedule"
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: "la1r.workload/specificonly"
+                operator: "In"
+                values:
+                - "true"
+
+      containers:
+      - name: haproxy-logreceiver
+        image: golang:latest
+        ports:
+        - name: http
+          protocol: UDP
+          containerPort: 44414
+        command: ["sh", "-c", "go run /scripts/haproxy-logreceiver.go"]
+        # command: ["sh", "-c", "pip install requests watchdog kubernetes protobuf==3.20.* && sleep 10000000"]
+        volumeMounts:
+        - name: script-volume
+          mountPath: /scripts
+        env:
+        - name: LEASE_TIME
+          value: "5m"
+        - name: STARTUP_DURATION
+          value: "2m"
+        - name: PORT
+          value: "44414"
+      volumes:
+      - name: script-volume
+        configMap:
+          name: haproxy-logreceiver-script
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: haproxy-logreceiver
+  name: haproxy-logreceiver
+  namespace: homeautomation
+spec:
+  ports:
+  - name: logreceiver
+    protocol: UDP
+    port: 44414
+    targetPort: 44414
+  selector:
+    app: haproxy-logreceiver
+  type: LoadBalancer
+  loadBalancerIP: 192.168.6.144

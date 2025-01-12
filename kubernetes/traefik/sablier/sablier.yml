@@ -29,7 +29,7 @@ spec:
       serviceAccountName: sablier
       containers:
       - name: sablier
-        image: acouvreur/sablier:1.7.0
+        image: sablierapp/sablier:1.8.1
         args: 
         - "start"
         - "--provider.name=kubernetes"

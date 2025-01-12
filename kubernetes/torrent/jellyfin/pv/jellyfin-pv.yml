@@ -1,0 +1,16 @@
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: jellyfin-config-pv
+  labels:
+    contenttype: "jellyfin-config"
+spec:
+  capacity:
+    storage: 1Gi
+  storageClassName: jellyfin-config
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/mnt/ssd/ha/jellyfin/config" # path to directory
