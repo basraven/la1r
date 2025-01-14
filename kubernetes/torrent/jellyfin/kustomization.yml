@@ -4,3 +4,4 @@ namespace: torrent
 resources:
   - pv
   - jellyfin.yml
+  - middleware.yml

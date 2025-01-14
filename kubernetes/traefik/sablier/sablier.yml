@@ -33,10 +33,14 @@ spec:
         args: 
         - "start"
         - "--provider.name=kubernetes"
+        - "--storage.file=/state/state.json"
         ports:
         - name: sablier
           containerPort: 10000
-        # volumeMounts:
+          
+        volumeMounts:
+        - name: debug-volume
+          mountPath: /state
         # - name: script-volume
         #   mountPath: /etc/sablier/sablier.yaml
         #   subPath: sablier.yaml
@@ -52,6 +56,9 @@ spec:
       - name: script-volume
         configMap:
           name: sablier-script
+      - name: debug-volume
+        hostPath:
+          path: /tmp/sablier
       restartPolicy: Always
 
 ---

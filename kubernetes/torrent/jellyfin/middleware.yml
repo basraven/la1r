@@ -1,0 +1,17 @@
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: sablier-jellyfin
+  namespace: torrent
+spec:
+  plugin:
+    github.com/sablierapp/sablier:
+      group: jellyfin
+      dynamic:
+        displayName: Jellyfin
+        refreshFrequency: 5s
+        showDetails: "true"
+        theme: shuffle
+      sablierUrl: http://sablier:10000
+      sessionDuration: 1m
