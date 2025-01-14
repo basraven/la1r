@@ -6,8 +6,9 @@ metadata:
   namespace: torrent
   labels:
     app: jellyfin
+    sablier.enable: "false"
+    sablier.group: jellyfin
 spec:
-  replicas: 1
   strategy:
     type: Recreate
   selector:
@@ -41,12 +42,11 @@ spec:
         ports:
         - name: http
           containerPort: 8096
-          # hostPort: 8096 # blocks scheduling
         env:
         - name: TZ
           value: "Europe//Amsterdam"
         - name: JELLYFIN_PublishedServerUrl
-          value: "http://192.168.6.61:8096/"
+          value: "http://192.168.6.2:8096/"
         volumeMounts:
           - name: jellyfin-torrent-volume
             mountPath: /torrent
@@ -69,99 +69,99 @@ spec:
         # - name: jellyfin-transcode-volume
         #   persistentVolumeClaim:
         #     claimName: jellyfin-transcode-claim
-# ---
-# apiVersion: v1
-# kind: Service
-# metadata:
-#   labels:
-#     app: jellyfin
-#   name: jellyfin-service
-#   namespace: torrent
-# spec:
-#   ports:
-#   - port: 80
-#     targetPort: 8096
-#   selector:
-#     app: jellyfin
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: jellyfin-lb-service
+  labels:
+    app: jellyfin
+  name: jellyfin
   namespace: torrent
 spec:
   ports:
   - name: jellyfin
     port: 8096
     targetPort: 8096
-  - name: http
-    port: 80
-    targetPort: 8096
   selector:
     app: jellyfin
-  type: LoadBalancer
-  loadBalancerIP: 192.168.6.61
-
 # ---
-# apiVersion: cert-manager.io/v1
-# kind: Certificate
+# apiVersion: v1
+# kind: Service
 # metadata:
-#   name: jellyfin-bas
+#   name: jellyfin-lb
 #   namespace: torrent
 # spec:
-#   issuerRef:
-#     name: la1r
-#     kind: ClusterIssuer
-#   secretName: jellyfin-bas-tls
-#   commonName: jellyfin.bas
-#   dnsNames:
-#   - jellyfin.bas
-#   - www.jellyfin.bas
+#   ports:
+#   - name: jellyfin
+#     port: 8096
+#     targetPort: 8096
+#   selector:
+#     app: jellyfin
+#   type: LoadBalancer
+#   loadBalancerIP: 192.168.6.61
 
-# ---
-# apiVersion: networking.k8s.io/v1
-# kind: Ingress
-# metadata:
-#   name: jellyfin-https
-#   namespace: torrent
-#   annotations:
-#     traefik.ingress.kubernetes.io/router.tls: "true"
-#     traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
-# spec:
-#   tls:
-#   - secretName: jellyfin-bas-tls
-#   rules:
-#   - host: jellyfin.bas
-#     http:
-#       paths:
-#       - path: /
-#         pathType: Prefix
-#         backend:
-#           service:
-#             name: jellyfin-service
-#             port:
-#               number: 80
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: jellyfin-bas
+  namespace: torrent
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: jellyfin-bas-tls
+  commonName: jellyfin.bas
+  dnsNames:
+  - jellyfin.bas
+  - www.jellyfin.bas
+  ipAddresses:
+  - 192.168.6.2
 
-# ---
-# apiVersion: networking.k8s.io/v1
-# kind: Ingress
-# metadata:
-#   name: jellyfin-http
-#   namespace: torrent
-#   annotations:
-#     traefik.ingress.kubernetes.io/router.tls: "false"
-#     traefik.ingress.kubernetes.io/router.entrypoints: "web"
-#     traefik.ingress.kubernetes.io/router.middlewares: "traefik-http-redirect-to-https@kubernetescrd"
-# spec:
-#   rules:
-#   - host: jellyfin.bas
-#     http:
-#       paths:
-#       - path: /
-#         pathType: Prefix
-#         backend:
-#           service:
-#             name: jellyfin-service
-#             port:
-#               number: 80
 
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: jellyfin-https
+  namespace: torrent
+  annotations:
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+    traefik.ingress.kubernetes.io/router.middlewares: "torrent-sablier-jellyfin@kubernetescrd"
+spec:
+  tls:
+  - secretName: jellyfin-bas-tls
+  rules:
+  - host: jellyfin.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: jellyfin
+            port:
+              number: 8096
+
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: jellyfin-jellyfin-ingress
+  namespace: torrent
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: "jellyfin"
+    traefik.ingress.kubernetes.io/router.middlewares: "torrent-sablier-jellyfin@kubernetescrd"
+spec:
+  entryPoints:
+    - jellyfin
+  routes:
+    - kind: Rule
+      match: PathPrefix(`/`)
+      services:
+        - name: jellyfin
+          port: 8096
+      middlewares:
+      - name: sablier-jellyfin
+        namespace: torrent

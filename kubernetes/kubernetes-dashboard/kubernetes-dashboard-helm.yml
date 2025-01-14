@@ -29,6 +29,9 @@ spec:
       settings:
         itemsPerPage: 50
         labelsLimit: 3
+    web:
+      scaling:
+      replicas: 1
     # web:
     #   labels:
     #     sablier.enable: "false"
