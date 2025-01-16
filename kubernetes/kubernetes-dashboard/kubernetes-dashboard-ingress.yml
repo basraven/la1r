@@ -35,13 +35,13 @@ spec:
         backend:
           service:
             # name: oauth2-proxy
-            name: kubernetes-dashboard
+            name: kubernetes-dashboard-web
             port:
-              number: 443
-      # - path: /oauth2
-      #   pathType: Prefix
-      #   backend:
-      #     service:
-      #       name: oauth2-proxy
-      #       port:
-      #         number: 80
+              number: 8000
+#       # - path: /oauth2
+#       #   pathType: Prefix
+#       #   backend:
+#       #     service:
+#       #       name: oauth2-proxy
+#       #       port:
+#       #         number: 80
