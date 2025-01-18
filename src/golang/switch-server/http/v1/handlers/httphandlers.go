@@ -35,26 +35,52 @@ func findDeviceState(deviceStates *models.DeviceStates, identifier string) *mode
 }
 
 func HandleAllStatusRequest(c *gin.Context, deviceStates *models.DeviceStates) {
+	// Check if queryParam update=false was set, to lowercase
+	toUpdateBoolean := strings.ToLower(c.Query("update")) != "false"
+
 	// loop through deviceStates and get state.ssh, then use isHostAvailable to check if it's available
 	actuals := make(map[string]string)
-	for _, state := range *deviceStates {
-		available, err := handlers.IsHostAvailable(state.Ssh, (5 * time.Second))
-		if err != nil {
-			// Handle the error if needed
-			// actuals[state.Name] = "Error: " + err.Error()
-			actuals[state.Name] = "Unavailable"
-		} else {
-			if available {
-				actuals[state.Name] = "Available"
-			} else {
+	if !toUpdateBoolean {
+		for _, state := range *deviceStates {
+			available, err := handlers.IsHostAvailable(state.Ssh, (5 * time.Second))
+			if err != nil {
+				// Handle the error if needed
+				// actuals[state.Name] = "Error: " + err.Error()
 				actuals[state.Name] = "Unavailable"
+			} else {
+				if available {
+					actuals[state.Name] = "Available"
+				} else {
+					actuals[state.Name] = "Unavailable"
+				}
 			}
+		}
+	}
+
+	updatedDeviceStates := *deviceStates
+	if toUpdateBoolean {
+		// Loop all device status and check if it's available, otherwise update the state
+		for _, state := range updatedDeviceStates {
+
+			// updatedDeviceStates = make([]models.DeviceState, 0)
+
+			available, err := handlers.IsHostAvailable(state.Ssh, (5 * time.Second))
+			if err != nil {
+				// Handle the error if needed
+			} else {
+				if available {
+					state.State = 1
+				} else {
+					state.State = 0
+				}
+			}
+			// updatedDeviceStates = append(updatedDeviceStates, state)
 		}
 	}
 
 	c.JSON(200, gin.H{
 		"actuals": actuals,
-		"state":   deviceStates,
+		"state":   updatedDeviceStates,
 		"spam":    requestSpamProtection,
 	})
 }

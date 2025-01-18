@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: traefik-watcher
+  namespace: torrent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: traefik-watcher
+  template:
+    metadata:
+      labels:
+        app: traefik-watcher
+    spec:
+      
+      # Essential
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            preference:
+              matchExpressions:
+              - key: la1r.workload/essential
+                operator: In
+                values:
+                - "true"
+      priorityClassName: essential
+
+      containers:
+      - name: traefik-watcher
+        image: golang:latest
+        command: ["sh", "-c", "go run /scripts/traefik-watcher.go"]
+        # command: ["sh", "-c", "sleep infinity"]
+        volumeMounts:
+        - name: script-volume
+          mountPath: /scripts
+        env:
+        - name: METRIC_TARGET_STRING
+          value: "traefik_entrypoint_requests_total{code=\"404\",entrypoint=\"jellyfin\""
+        - name: METRIC_URL
+          value: "http://traefik-ingress-service.traefik:8082/metrics"
+        - name: METRIC_REQUEST_PAUSE
+          value: "15s"
+        - name: REQUEST_URL
+          value: http://sablier.traefik:10000/api/strategies/blocking?group=jellyfin&session_duration=180m&timeout=3m
+
+      volumes:
+      - name: script-volume
+        configMap:
+          name: traefik-watcher-script
+      restartPolicy: Always
