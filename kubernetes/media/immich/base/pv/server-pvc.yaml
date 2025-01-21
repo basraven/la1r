@@ -31,6 +31,22 @@ spec:
   - ReadWriteOnce
   hostPath:
     path: "/mnt/hdd/media/bas/Pictures"
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: immich-media-gezin-pv
+  labels:
+    contenttype: "immich-media-gezin"
+spec:
+  capacity:
+    storage: 1000Gi
+  storageClassName: immich-media-gezin
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/mnt/hdd/media/gezin/Pictures"
 
 ---
 apiVersion: v1
@@ -53,6 +69,18 @@ spec:
   accessModes:
   - ReadWriteOnce
   storageClassName: immich-media-bas
+  resources:
+    requests:
+      storage: 1000Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: immich-media-gezin-claim
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: immich-media-gezin
   resources:
     requests:
       storage: 1000Gi

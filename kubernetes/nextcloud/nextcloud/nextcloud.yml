@@ -101,6 +101,9 @@ spec:
       - name: media-stephanie
         persistentVolumeClaim:
           claimName: media-stephanie-claim
+      - name: media-gezin
+        persistentVolumeClaim:
+          claimName: media-gezin-claim
       containers:
       - name: nextcloud
         image: nextcloud:24.0.2-apache
@@ -122,6 +125,8 @@ spec:
           value: "https://nextcloud.bas"
         - name: OVERWRITEPROTOCOL
           value: "https"
+        - name: NEXTCLOUD_CONFIG_ENABLE_FOLLOW_SYMLINKS
+          value: "true"
         # - name: NEXTCLOUD_TABLE_PREFIX
         #   value: ""
         - name: NEXTCLOUD_DATA_DIR
@@ -162,6 +167,8 @@ spec:
             mountPath: "/var/www/html/data/basraven/files"
           - name: media-stephanie
             mountPath: "/var/www/html/data/stephanie/files"
+          - name: media-gezin
+            mountPath: "/var/www/html/data/gezin/files"
           # - name: set-nextcloud-volume
           #   mountPath: /set-nextcloud
           # - name: apcu-config-volume

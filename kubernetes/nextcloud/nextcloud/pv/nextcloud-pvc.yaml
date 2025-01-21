@@ -62,3 +62,19 @@ spec:
   resources:
     requests:
       storage: 500Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: media-gezin-claim
+  namespace: nextcloud
+spec:
+  accessModes:
+  - ReadWriteOnce  
+  storageClassName: media-gezin
+  selector:
+    matchLabels:
+      contenttype: "media-gezin"
+  resources:
+    requests:
+      storage: 1000Gi

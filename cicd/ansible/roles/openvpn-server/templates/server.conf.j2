@@ -11,13 +11,15 @@ key-direction 0
 keepalive 10 60
 persist-key
 persist-tun
+topology subnet
+data-ciphers AES-256-GCM:AES-128-GCM:BF-CBC
 
 proto udp 
 port {{openvpn_port}} 
 dev tun0
-status /tmp/openvpn-status.log
-log-append /var/log/openvpn.log
-management 0.0.0.0 33555
+status /var/log/openvpn/openvpn-status.log
+log-append /var/log/openvpn/openvpn.log
+# management 0.0.0.0 33555 # very insecure
 
 client-config-dir /etc/openvpn/client-configs
 ifconfig-pool-persist /var/log/openvpn/ipp.txt
@@ -28,7 +30,7 @@ client-to-client
 comp-lzo no
 
 status-version 2
-duplicate-cn
+# duplicate-cn # disabled because we want to have a static IP pool
 
 ### Push Configurations Below
 #push "block-outside-dns"

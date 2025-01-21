@@ -70,6 +70,9 @@ spec:
       - name: immich-media-bas-data
         persistentVolumeClaim:
           claimName: immich-media-bas-claim
+      - name: immich-media-gezin-data
+        persistentVolumeClaim:
+          claimName: immich-media-gezin-claim
       - name: localtime
         hostPath:
           path: /etc/localtime

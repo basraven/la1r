@@ -62,3 +62,19 @@ spec:
   - ReadWriteOnce
   hostPath:
     path: "/mnt/hdd/media/stephanie"
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: media-gezin-pv
+  labels:
+    contenttype: "media-gezin"
+spec:
+  capacity:
+    storage: 1000Gi
+  storageClassName: media-gezin
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/mnt/hdd/media/gezin"

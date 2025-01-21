@@ -262,7 +262,7 @@
 # CUSTOM BY SEB:
 
  [basraven]
-    comment = Nextcloud Bas
+    comment = Media Bas
     path = /mnt/hdd/media/bas
     read only = no
     browsable = yes
@@ -271,8 +271,17 @@
     force group = {{ target_user_name }}
 
  [stephanie]
-    comment = Nextcloud Stephanie
+    comment = Media Stephanie
     path = /mnt/hdd/media/stephanie
+    read only = no
+    browsable = yes
+    writable = yes
+    force user = {{ target_user_name }}
+    force group = {{ target_user_name }}
+
+ [gezin]
+    comment = Media Stephanie
+    path = /mnt/hdd/media/gezin
     read only = no
     browsable = yes
     writable = yes
