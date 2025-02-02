@@ -9,8 +9,9 @@ if nc -z -v 10.8.0.1 445 2>/dev/null; then
     
     if [ -d "/mnt/jayc/media/bas/Pictures" ]; then
         # call 192.168.5.2:50505/api/v1/block/3 to stop the backup server from swithing off
-        echo "Calling 192.168.5.2:50505/api/v1/block/3 to stop the backup server from swithing off" | tee -a "$LOG_FILE"
-        curl -X GET http://192.168.5.2:50505/api/v1/block/3
+        # FIXME: for some reason this doens't work, to fix
+        # echo "Calling 192.168.5.2:50505/api/v1/block/3 to stop the backup server from swithing off" | tee -a "$LOG_FILE"
+        # curl -X GET http://192.168.5.2:50505/api/v1/block/3
 
         # Sync the directory
         echo "Syncing directory" | tee -a "$LOG_FILE"
