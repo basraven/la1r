@@ -115,3 +115,13 @@
   become: yes
   ufw:
     state: enabled
+
+- name: UFW / Allow incoming SSH passthrough on enp3s0 (Port 52223) with destination 10.8.0.4:22 (remotecube)
+  become: yes
+  ufw:
+    rule: allow
+    from_ip: 192.168.0.0/16
+    direction: in
+    port: 52223
+    proto: tcp
+

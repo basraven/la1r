@@ -1,4 +1,4 @@
 ---
 log_file_path : "/var/log/remote-cube-backup.log"
-source_directory: /mnt/jayc/media/bas
-destination_directory: /mnt/hdd/media/bas
+source_directory: /mnt/jayc/media
+destination_directory: /mnt/hdd/media
