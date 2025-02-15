@@ -6,3 +6,4 @@ resources:
   - jellyfin-pvc.yml
   - jellyfin-torrent-pv.yml
   - jellyfin-torrent-pvc.yml
+  - jellyfin-media-pv.yaml

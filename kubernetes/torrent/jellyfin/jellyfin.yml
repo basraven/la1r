@@ -54,6 +54,9 @@ spec:
             mountPath: /cache
           - name: jellyfin-config-volume
             mountPath: /config
+          - name: jellyfin-media-gezin-videos-volume
+            mountPath: /gezin/Video
+            readOnly: true
           # - name: jellyfin-transcode-volume
           #   mountPath: /transcode
       volumes:
@@ -66,6 +69,9 @@ spec:
         - name: jellyfin-config-volume
           persistentVolumeClaim:
             claimName: jellyfin-config-claim
+        - name: jellyfin-media-gezin-videos-volume
+          persistentVolumeClaim:
+            claimName: jellyfin-media-gezin-videos-claim
         # - name: jellyfin-transcode-volume
         #   persistentVolumeClaim:
         #     claimName: jellyfin-transcode-claim

@@ -1,0 +1,28 @@
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: jellyfin-media-gezin-videos-pv
+  labels:
+    contenttype: "jellyfin-media-gezin-videos"
+spec:
+  capacity:
+    storage: 1000Gi
+  storageClassName: jellyfin-media-gezin-videos
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadOnlyMany
+  hostPath:
+    path: "/mnt/hdd/media/gezin/Video"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: jellyfin-media-gezin-videos-claim
+spec:
+  accessModes:
+  - ReadOnlyMany
+  storageClassName: jellyfin-media-gezin-videos
+  resources:
+    requests:
+      storage: 1000Gi
