@@ -6,7 +6,7 @@ metadata:
   namespace: torrent
   labels:
     app: jellyfin
-    sablier.enable: "false"
+    sablier.enable: "true"
     sablier.group: jellyfin
 spec:
   strategy:

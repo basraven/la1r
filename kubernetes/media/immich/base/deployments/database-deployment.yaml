@@ -4,7 +4,7 @@ metadata:
   name: database
   labels:
     app: database
-    sablier.enable: "false"
+    sablier.enable: "true"
     sablier.group: immich
 spec:
   autoscaler:

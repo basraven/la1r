@@ -17,7 +17,7 @@ metadata:
   namespace: nextcloud
   labels:
     app: email-sender
-    sablier.enable: "false"
+    sablier.enable: "true"
     sablier.group: nextcloud
 spec:
   autoscaler:
@@ -52,7 +52,7 @@ metadata:
   namespace: nextcloud
   labels:
     app: nextcloud-email
-    sablier.enable: "false"
+    sablier.enable: "true"
     sablier.group: nextcloud
 spec:
   autoscaler:

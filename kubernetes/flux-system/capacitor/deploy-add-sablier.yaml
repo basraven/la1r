@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: capacitor
   labels:
-    sablier.enable: "false"
+    sablier.enable: "true"
     sablier.group: capacitor
 selector:
   matchLabels:

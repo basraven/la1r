@@ -6,7 +6,7 @@ metadata:
   namespace: nextcloud
   labels:
     app: redis
-    sablier.enable: "false"
+    sablier.enable: "true"
     sablier.group: nextcloud
 spec:
   autoscaler:

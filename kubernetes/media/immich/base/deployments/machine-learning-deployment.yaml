@@ -4,7 +4,7 @@ metadata:
   name: immich-machine-learning
   labels:
     app: immich-machine-learning
-    sablier.enable: "false"
+    sablier.enable: "true"
     sablier.group: immich
 spec:
   autoscaler:

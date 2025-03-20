@@ -23,6 +23,13 @@ rules:
       - list
       - watch
   - apiGroups:
+      - discovery.k8s.io
+    resources:
+      - endpointslices
+    verbs:
+      - list
+      - watch
+  - apiGroups:
       - extensions
       - networking.k8s.io
     resources:
@@ -41,6 +48,7 @@ rules:
       - update
   - apiGroups:
       - traefik.containo.us
+      - traefik.io
     resources:
       - middlewares
       - middlewaretcps
@@ -51,10 +59,19 @@ rules:
       - tlsoptions
       - tlsstores
       - serverstransports
+      - serverstransporttcps
     verbs:
       - get
       - list
       - watch
+  - apiGroups:
+    - ""
+    resources:
+    - pods
+    verbs:
+    - get
+    - list
+    - watch
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1

@@ -47,7 +47,7 @@ metadata:
   namespace: nextcloud
   labels:
     app: nextcloud
-    sablier.enable: "false"
+    sablier.enable: "true"
     sablier.group: nextcloud
 spec:
   autoscaler:
