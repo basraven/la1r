@@ -1,0 +1,66 @@
+global:
+  scrape_interval: 15s
+  scrape_timeout: 10s
+  evaluation_interval: 15s
+scrape_configs:
+- job_name: 'targetsjson'
+  file_sd_configs:
+  - files:
+    - '/etc/prometheus/targets.json'
+
+# - job_name: "kubernetes-nodes"
+#   scrape_interval: 120s
+#   kubernetes_sd_configs:
+#     - role: "node"
+
+- job_name: 'blackbox'
+  scrape_interval: 30s
+  metrics_path: /probe
+  params:
+    module: [icmp_ipv4]
+  static_configs:
+    - targets: [ '192.168.5.1' ]
+      labels:
+          nodeName: 'linux-wayne'
+          jobscope: 'node'
+    - targets: [ '192.168.5.2' ]
+      labels:
+          nodeName: 'stephanie'
+          jobscope: 'node'
+    - targets: [ '192.168.5.3' ]
+      labels:
+          nodeName: 'jay-c'
+          jobscope: 'node'
+    - targets: [ '192.168.3.6' ]
+      labels:
+          nodeName: 'gameraver'
+          jobscope: 'node'
+  relabel_configs:
+    - source_labels: [__address__]
+      target_label: __param_target
+    - source_labels: [__param_target]
+      target_label: instance
+    - target_label: __address__
+      replacement: prometheus-blackbox-exporter:80  # This is your blackbox exporter.
+
+- job_name: 'kubernetes_pod_annotations_based'
+  kubernetes_sd_configs:
+    - role: pod
+  relabel_configs:
+    - source_labels: [__meta_kubernetes_pod_annotation_seb_scrape]
+      action: keep
+      regex: "true"
+    - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_port]
+      target_label: __param_port
+    - source_labels: [__param_port]
+      target_label: port
+    - source_labels: [__meta_kubernetes_namespace]
+      target_label: namespace
+    - source_labels: [__meta_kubernetes_pod_name]
+      target_label: pod
+    - source_labels: [__meta_kubernetes_pod_container_name]
+      target_label: container
+    
+    - source_labels: [__meta_kubernetes_pod_deleted]
+      regex: "true"  # Drop any deleted pods
+      action: drop

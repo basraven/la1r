@@ -25,6 +25,11 @@ spec:
       labels:
         app: traefik-ingress-controller
         name: traefik-ingress-controller
+      annotations:
+        seb_scrape: "true"                     # Tells Prometheus to scrape metrics for Seb
+        # prometheus.io/scrape: "true"         # Tells Prometheus to scrape metrics
+        prometheus.io/port: "8082"             # Port where metrics are exposed
+        prometheus.io/path: "/metrics"         # The path for the metrics endpoint
     spec:
       serviceAccountName: traefik-ingress-controller
       containers:
