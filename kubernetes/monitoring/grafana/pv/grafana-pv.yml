@@ -1,0 +1,16 @@
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: grafana-data-pv
+  labels:
+    contenttype: "grafana-data"
+spec:
+  capacity:
+    storage: 5Gi
+  storageClassName: grafana-data
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/mnt/ssd/na/grafana/data"

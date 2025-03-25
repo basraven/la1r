@@ -1,0 +1,19 @@
+groups:
+  - name: server_target_state_jay-c
+    interval: 30s  # How often the rules are evaluated
+
+    # Recording rules (precompute metrics)
+    rules:
+      - record: server:target:state
+        
+        
+        expr: |
+          # 1. HTTPS DNS endpoint
+          SUM(increase(traefik_router_requests_total{router=~".*jellyfin.*"}[5m]))
+          +
+          # 2. HTTP IP endpoint
+          SUM(increase(traefik_entrypoint_requests_total{entrypoint="jellyfin"}[5m]))
+          +
+          # 3. Jay-C Server is already online
+          scalar(1 - probe_success{nodeName="jay-c"})
+          

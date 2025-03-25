@@ -1,11 +1,3 @@
 [
-    {
-      // "targets": [
-      //   "localhost:9090"
-      // ],
-      // "labels": {
-      //   "targetname": "prometheus-local",
-      //   "jobscope": "application"
-      // }
-    }
-  ]
+    
+]

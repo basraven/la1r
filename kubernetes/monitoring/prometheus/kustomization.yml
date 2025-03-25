@@ -11,8 +11,12 @@ resources:
 configMapGenerator:
   - name: prometheus-config
     files:
-      - config/prometheus.yml
+      - prometheus.yml=config/prometheus-config.yml
   
   - name: prometheus-targets
     files:
       - config/targets.json
+  
+  - name: prometheus-rules
+    files:
+      - config/rules.yml

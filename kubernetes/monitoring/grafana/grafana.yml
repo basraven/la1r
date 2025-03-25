@@ -1,0 +1,160 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: monitoring
+  labels:
+    app: grafana
+    sablier.enable: "true"
+    sablier.group: grafana
+spec:
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        task: monitoring
+        app: grafana
+    spec:
+      # Essential
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            preference:
+              matchExpressions:
+              - key: la1r.workload/essential
+                operator: In
+                values:
+                - "true"
+      priorityClassName: essential
+      containers:
+      - name: grafana
+        resources:
+          requests:
+            cpu: 50m
+            memory: 56Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+        image: grafana/grafana:latest
+        ports:
+        - containerPort: 3000
+          protocol: TCP
+        volumeMounts:
+        # - mountPath: /etc/ssl/certs
+        #   name: ca-certificates
+        #   readOnly: true
+        - name: grafana-data
+          mountPath: /var/lib/grafana
+        # - name: grafana-dashboards
+        #   mountPath: /etc/grafana/provisioning/dashboards
+
+        env:
+        # - name: INFLUXDB_HOST
+        #   value: monitoring-influxdb
+        - name: GF_SERVER_HTTP_PORT
+          value: "3000"
+          # The following env variables are required to make Grafana accessible via
+          # the kubernetes api-server proxy. On production clusters, we recommend
+          # removing these env variables, setup auth for grafana, and expose the grafana
+          # service using a LoadBalancer or a public IP.
+        - name: GF_AUTH_BASIC_ENABLED
+          value: "false"
+        - name: GF_AUTH_ANONYMOUS_ENABLED
+          value: "true"
+        - name: GF_AUTH_ANONYMOUS_ORG_ROLE
+          value: "Admin"
+        # - name: GF_AUTH_DISABLE_LOGIN_FORM
+        #   value: "true"
+        # - name: GF_AUTH_DISABLE_SIGNOUT_MENU
+        #   value: "true"
+        - name: GF_USERS_ALLOW_SIGN_UP
+          value: "false"
+        
+        # - name: GF_SMTP_ENABLED
+        #   value: "true"
+        # - name: GF_SMTP_SKIP_VERIFY
+        #   value: "true"
+        # - name: GF_SMTP_HOST
+        #   value: "email.network:25"
+        # - name: GF_SMTP_FROM_ADDRESS
+        #   value: "admin@basraven.nl"
+        
+        - name: REQUESTS_CA_BUNDLE 
+          value: "false"
+        - name: GF_SERVER_ROOT_URL
+          # If you're only using the API Server proxy, set this value instead:
+          # value: /api/v1/namespaces/monitoring/services/grafana/proxy
+          value: /
+        # - name: plugins
+        #   value: "vonage-status-panel"
+          # value: "grafana-clock-panel,grafana-simple-json-datasource"
+      volumes:
+      # - name: ca-certificates
+        # hostPath:
+        #   path: /etc/ssl/certs
+        # emptyDir: {}
+      - name: grafana-data
+        persistentVolumeClaim:
+          claimName: grafana-data-claim
+      # - name: grafana-dashboards
+      #   configMap:
+      #     name: grafana-dashboards
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  namespace: monitoring
+spec:
+  ports:
+  - port: 80
+    targetPort: 3000
+  selector:
+    app: grafana
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: grafana-bas
+  namespace: monitoring
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: grafana-bas-tls
+  commonName: grafana.bas
+  dnsNames:
+  - grafana.bas
+  - www.grafana.bas
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: grafana-https
+  namespace: monitoring
+  annotations:
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+spec:
+  tls:
+  - secretName: grafana-bas-tls
+  rules:
+  - host: grafana.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: grafana
+            port:
+              number: 80

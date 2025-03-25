@@ -18,15 +18,17 @@ kind: Deployment
 metadata:
   name: prometheus-blackbox-exporter
   namespace: monitoring
+  labels:
+    app: prometheus-blackbox-exporter
 spec:
   replicas: 1
   selector:
     matchLabels:
-      k8s-app: prometheus-blackbox-exporter
+      app: prometheus-blackbox-exporter
   template:
     metadata:
       labels:
-        k8s-app: prometheus-blackbox-exporter
+        app: prometheus-blackbox-exporter
     spec:
       volumes:
         - name: blackbox-exporter-config-volume
@@ -78,7 +80,7 @@ spec:
   - port: 80
     targetPort: 9115
   selector:
-    k8s-app: prometheus-blackbox-exporter
+    app: prometheus-blackbox-exporter
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
