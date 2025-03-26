@@ -39,12 +39,3 @@
     name: smbd
     state: restarted
     enabled: yes
-  when: ansible_facts['distribution'] != "CentOS"
-
-- name: Install Samba Server / Restart service smb CentOS
-  become: yes
-  service:
-    name: smb
-    state: restarted
-    enabled: yes
-  when: ansible_facts['distribution'] == "CentOS"

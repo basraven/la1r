@@ -1,3 +1,5 @@
 ---
+- include_tasks: add-backup_user.yml
+  tags: samba-server
 - include_tasks: install-samba-server.yml
   tags: samba-server

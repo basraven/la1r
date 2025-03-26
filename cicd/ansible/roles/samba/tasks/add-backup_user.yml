@@ -1,0 +1,11 @@
+---
+- name: Add backup User /  Add the user "{{ backup_user_name }}"
+  become: yes
+  user:
+    name: "{{ backup_user_name }}"
+    comment: "{{ backup_user_comment }}"
+    groups : "{{ backup_user_groups }}"
+    append: yes
+    state: present
+    createhome: false
+

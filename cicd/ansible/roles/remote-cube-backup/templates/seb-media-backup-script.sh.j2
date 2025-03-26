@@ -7,14 +7,14 @@ echo "###> Backup started at $(date)" | tee -a "$LOG_FILE"
 if nc -z -v 10.8.0.1 445 2>/dev/null; then
     echo "Samba is available, proceeding with backup" | tee -a "$LOG_FILE"
     
-    if [ -d "/mnt/jayc/media/bas/Pictures" ]; then
+    if [ -d "{{ source_directory }}" ]; then
         # call 192.168.5.2:50505/api/v1/block/3 to stop the backup server from swithing off
         echo "Calling 192.168.5.2:50505/api/v1/block/3 to stop the backup server from swithing off" | tee -a "$LOG_FILE"
         curl -X GET http://192.168.5.2:50505/api/v1/block/3
 
         # Sync the directory
         echo "Syncing directory" | tee -a "$LOG_FILE"
-        rsync -avz --progress  --stats --bwlimit=10000 --delete --info=progress2 {{ source_directory }} {{ destination_directory }} 2>&1 | tee -a "$LOG_FILE"
+        rsync -avz --progress  --stats --bwlimit=10000 --delete --info=progress2 {{ source_directory }}/ {{ destination_directory }}/ 2>&1 | tee -a "$LOG_FILE"
         echo "Syncing directory completed" | tee -a "$LOG_FILE"
 
         # Unblocking the backup server
@@ -22,7 +22,7 @@ if nc -z -v 10.8.0.1 445 2>/dev/null; then
         curl -X GET http://192.168.5.2:50505/api/v1/unblock/3
         curl -X GET http://192.168.5.2:50505/api/v1/stop/3
     else
-        echo "Directory /mnt/jayc/media/bas/Pictures does not exist" | tee -a "$LOG_FILE"
+        echo "Directory {{ source_directory }} does not exist" | tee -a "$LOG_FILE"
         exit 1
     fi
 else
@@ -36,14 +36,14 @@ else
         echo "Samba is now available, restarting mount" | tee -a "$LOG_FILE"
         systemctl restart mnt-jayc-media-bas.mount
         
-        if [ -d "/mnt/jayc/media/bas/Pictures" ]; then
+        if [ -d "{{ source_directory }}" ]; then
             # call 192.168.5.2:50505/api/v1/block/3 to stop the backup server from swithing off
             echo "Calling 192.168.5.2:50505/api/v1/block/3 to stop the backup server from swithing off" | tee -a "$LOG_FILE"
             curl -X GET http://192.168.5.2:50505/api/v1/block/3 | tee -a "$LOG_FILE"
 
             # Sync the directory
             echo "Syncing directory" | tee -a "$LOG_FILE"
-            rsync -avz --progress  --stats --bwlimit=10000 --delete --info=progress2 {{ source_directory }} {{ destination_directory }} 2>&1 | tee -a "$LOG_FILE"
+            rsync -avz --progress  --stats --bwlimit=10000 --delete --info=progress2 {{ source_directory }}/ {{ destination_directory }}/ 2>&1 | tee -a "$LOG_FILE"
             echo "Syncing directory completed" | tee -a "$LOG_FILE"
 
             # Unblocking the backup server
@@ -51,7 +51,7 @@ else
             curl -X GET http://192.168.5.2:50505/api/v1/unblock/3
             curl -X GET http://192.168.5.2:50505/api/v1/stop/3
         else
-            echo "Directory /mnt/jayc/media/bas/Pictures does not exist" | tee -a "$LOG_FILE"
+            echo "Directory {{ source_directory }} does not exist" | tee -a "$LOG_FILE"
             exit 1
         fi
     else

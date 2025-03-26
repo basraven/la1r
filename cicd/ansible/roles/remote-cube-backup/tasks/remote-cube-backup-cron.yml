@@ -2,7 +2,7 @@
 - name: Remote-cube backup / backup cron folder
   become: yes
   file:
-    path: /mnt/hdd/media/bas
+    path: /mnt/hdd/media
     state: directory
     # owner: basraven
     # group: basraven

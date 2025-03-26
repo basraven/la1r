@@ -11,7 +11,7 @@
 - name: Remote-cube backup / Create mount folder
   become: yes
   ansible.builtin.file:
-    path: /mnt/jayc/media/bas
+    path: /mnt/jayc/media
     state: directory
   async: 5          # Set the timeout to 5 seconds
   poll: 1           # Wait for the task to complete, but timeout after 5 seconds
@@ -30,16 +30,16 @@
   include_vars:
     file: ../../credentials/samba/samba-credentials.yml
 
-- name: Get the password for basraven
+- name: Get the password for sebackup
   set_fact:
-    samba_password: "{{ samba_users | selectattr('name', 'equalto', 'basraven') | map(attribute='passwd') | first }}"
+    samba_password: "{{ samba_users | selectattr('name', 'equalto', 'sebackup') | map(attribute='passwd') | first }}"
 
 - name: Remote-cube backup / Create the Samba credentials file
   become: yes
   copy:
     dest: /home/basraven/.samba/credentials
     content: |
-      username=basraven
+      username=sebackup
       password={{ samba_password }}
       domain=WORKGROUP
     owner: basraven
@@ -49,15 +49,15 @@
 - name: Remote-cube backup / Create systemd mount unit for remote filesystem
   become: yes
   ansible.builtin.copy:
-    dest: /etc/systemd/system/mnt-jayc-media-bas.mount
+    dest: /etc/systemd/system/mnt-jayc-media.mount
     content: |
       [Unit]
-      Description=Mount remote filesystem /mnt/jayc/media/bas
+      Description=Mount remote filesystem /mnt/jayc/media
       After=network-online.target
 
       [Mount]
-      What=//10.8.0.1/basraven
-      Where=/mnt/jayc/media/bas
+      What=//10.8.0.1/media
+      Where=/mnt/jayc/media
       Type=cifs
       Options=credentials=/home/basraven/.samba/credentials,iocharset=utf8,vers=3.0,ro
       TimeoutSec=20
@@ -76,18 +76,18 @@
 - name: Remote-cube backup / Enable the mount unit to start at boot
   become: yes
   systemd:
-    name: mnt-jayc-media-bas.mount
+    name: mnt-jayc-media.mount
     enabled: yes
 
 - name: Remote-cube backup / Start the mount unit
   become: yes
   systemd:
-    name: mnt-jayc-media-bas.mount
+    name: mnt-jayc-media.mount
     state: started
 
 - name: Remote-cube backup / Check status of the mount unit
   become: yes
-  command: systemctl status mnt-jayc-media-bas.mount
+  command: systemctl status mnt-jayc-media.mount
   register: mount_status
   changed_when: false
 

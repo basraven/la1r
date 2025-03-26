@@ -1,2 +1,6 @@
 ---
-samba_user : "{{ target_user_name }}"
+backup_user_name : "sebackup"
+backup_user_comment: "sebackup backup user" 
+backup_user_groups: "www-data" 
+backup_user_id: 1044
+backup_user_group_id: 1044
