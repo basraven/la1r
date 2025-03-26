@@ -43,6 +43,10 @@ defaults
     # errorfile 504 /etc/haproxy/errors/504.http
     #}
 
+frontend prometheus_exporter
+    bind *:9101
+    http-request use-service prometheus-exporter
+
 frontend http_stats
     bind *:8080
     mode http
@@ -74,16 +78,16 @@ frontend samba_jayc_fe
     mode tcp
     option tcplog
     log global  
-    log {{ ha_proxy_samba_logtarget }} local0 
-    log-format "{ \"timestamp\": \"%t\", \"haproxy_host\": \"{{ inventory_hostname }}\", \"frontend\": \"%ft\", \"client_ip\": \"%ci\", \"backend\": \"%b\", \"con_status\": \"%ts\", \"server\": \"%s\" }"  # Custom log format
+    # log {{ ha_proxy_samba_logtarget }} local0 
+    # log-format "{ \"timestamp\": \"%t\", \"haproxy_host\": \"{{ inventory_hostname }}\", \"frontend\": \"%ft\", \"client_ip\": \"%ci\", \"backend\": \"%b\", \"con_status\": \"%ts\", \"server\": \"%s\" }"  # Custom log format
     
     default_backend samba_jayc_be
 
 
 backend samba_jayc_be
     log global
-    log {{ ha_proxy_samba_logtarget }} local0 
-    log-format "{ \"timestamp\": \"%t\", \"haproxy_host\": \"{{ inventory_hostname }}\", \"frontend\": \"%ft\", \"client_ip\": \"%ci\", \"backend\": \"%b\", \"con_status\": \"%ts\", \"server\": \"%s\" }"  # Custom log format
+    # log {{ ha_proxy_samba_logtarget }} local0 
+    # log-format "{ \"timestamp\": \"%t\", \"haproxy_host\": \"{{ inventory_hostname }}\", \"frontend\": \"%ft\", \"client_ip\": \"%ci\", \"backend\": \"%b\", \"con_status\": \"%ts\", \"server\": \"%s\" }"  # Custom log format
     
     mode tcp
      # TCP-based health checks to verify the backend server (checking the port on the server)
@@ -93,6 +97,7 @@ backend samba_jayc_be
     # Use the same port as the client connected to on the frontend
     server jay-c 192.168.5.3 port %[dst_port] check
 
+{#
 backend samba_spoofed_error_be
     errorfile 503 /etc/haproxy/errors/503.http
     
@@ -111,7 +116,7 @@ backend samba_spoofed_error_be
     # http-request set-path { ha_proxy_samba_path }
   
 
-{# frontend kubernetes_sec
+frontend kubernetes_sec
     bind {{ ha_proxy_vir_ip_sec }}:443
     bind {{ ansible_host }}:443
     bind 127.0.0.1:80

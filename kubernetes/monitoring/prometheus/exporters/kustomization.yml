@@ -3,4 +3,3 @@ kind: Kustomization
 namespace: monitoring
 resources:
   - prometheus-blackbox-exporter.yml
-  - samba-exporter.yml

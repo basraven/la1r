@@ -11,11 +11,11 @@
   # - avahi
 
   # - update
-  # - security
+  - security
   # - reboot
   # - nfs
   # - samba
-  - haproxy
+  # - haproxy
   # - containerd
   # - kubernetes-install
   # - kubernetes-join

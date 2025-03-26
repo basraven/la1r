@@ -1,3 +1,11 @@
 [
-    
+    {
+      "targets": [
+        "192.168.5.103:9101"
+      ],
+      "labels": {
+        "job": "haproxy",
+        "jobscope": "application"
+      }
+    }
 ]

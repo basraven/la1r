@@ -105,7 +105,7 @@
     dest: /etc/ufw/applications.d/kubernetesnodeport
     mode: '0644'
 
-- name: UFW / Allow Kubernetes NodePort through UFW
+- name: UFW / Enable Kubernetes NodePort through UFW
   become: yes
   ufw:
     name: kubernetesnodeport
@@ -125,3 +125,20 @@
     port: 52223
     proto: tcp
 
+- name: UFW / Allow Ports required for prometheus to scrape HAProxy metrics
+  become: yes
+  copy:
+    content: |
+      [haproxyprometheus]
+      title=HAProxy Prometheus metric endpoint
+      description=Ports required for prometheus to scrape HAProxy metrics
+      ports=9101/tcp
+    dest: /etc/ufw/applications.d/haproxyprometheus
+    mode: '0644'
+
+- name: UFW / Enable Ports required for prometheus to scrape HAProxy metrics
+  become: yes
+  ufw:
+    name: haproxyprometheus
+    state: enabled
+    

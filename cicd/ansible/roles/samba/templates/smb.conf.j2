@@ -262,6 +262,15 @@
 # CUSTOM BY SEB:
 
  [basraven]
+    comment = Media
+    path = /mnt/hdd/media
+    read only = yes
+    browsable = yes
+    writable = no
+    force user = {{ target_user_name }}
+    force group = {{ target_user_name }}
+
+ [basraven]
     comment = Media Bas
     path = /mnt/hdd/media/bas
     read only = no

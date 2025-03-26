@@ -14,6 +14,9 @@ groups:
           # 2. HTTP IP endpoint
           SUM(increase(traefik_entrypoint_requests_total{entrypoint="jellyfin"}[5m]))
           +
-          # 3. Jay-C Server is already online
-          scalar(1 - probe_success{nodeName="jay-c"})
+          # 3. Was there an open samba session in the past 5 mins?
+          SUM(max_over_time(haproxy_frontend_current_sessions{proxy="samba_jayc_fe"}[5m]) )
+          +
+          # 4. Jay-C Server is already online
+          SUM(1 - max_over_time(probe_success{nodeName="jay-c"}[5m]))
           
