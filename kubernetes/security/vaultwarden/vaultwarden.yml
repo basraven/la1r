@@ -1,0 +1,122 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vaultwarden
+  namespace: security
+  labels:
+    app: vaultwarden
+    sablier.enable: "true"
+    sablier.group: vaultwarden
+spec:
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: vaultwarden
+  template:
+    metadata:
+      labels:
+        task: monitoring
+        app: vaultwarden
+    spec:
+      # Essential
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            preference:
+              matchExpressions:
+              - key: la1r.workload/essential
+                operator: In
+                values:
+                - "true"
+      priorityClassName: essential
+      containers:
+      - name: vaultwarden
+        resources:
+          # requests:
+          #   cpu: 50m
+          #   memory: 56Mi
+          # limits:
+          #   cpu: 200m
+          #   memory: 256Mi
+        image: vaultwarden/server:latest
+        ports:
+        - containerPort: 80
+          protocol: TCP
+        volumeMounts:
+        - name: vaultwarden-data
+          mountPath: /data
+        env:
+        - name: DOMAIN
+          value: "https://vaultwarden.bas"
+      volumes:
+      - name: vaultwarden-data
+        persistentVolumeClaim:
+          claimName: vaultwarden-data-claim
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vaultwarden
+  namespace: security
+spec:
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    app: vaultwarden
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: vaultwarden-bas
+  namespace: security
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: vaultwarden-bas-tls
+  commonName: vaultwarden.bas
+  dnsNames:
+  - vaultwarden.bas
+  - www.vaultwarden.bas
+  - vw.bas
+  - www.vw.bas
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: vaultwarden-https
+  namespace: security
+  annotations:
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+spec:
+  tls:
+  - secretName: vaultwarden-bas-tls
+  rules:
+  - host: vaultwarden.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: vaultwarden
+            port:
+              number: 80
+  - host: vw.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: vaultwarden
+            port:
+              number: 80
