@@ -1,10 +1,10 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-namespace: homeautomation
+namespace: traefik
 resources:
-  - re-lease.yml
+  - scaleto0.yml
 
 configMapGenerator:
-- name: re-lease-script
+- name: scaleto0-script
   files:
-  - re-lease.py
+  - scaleto0.py

@@ -7,3 +7,4 @@ resources:
   - traefik.yml
   - traefik-rbac.yml
   - sablier
+  # - scaleto0

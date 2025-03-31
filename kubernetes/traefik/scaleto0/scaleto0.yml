@@ -1,17 +1,17 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: re-lease
-  namespace: homeautomation
+  name: scaleto0
+  namespace: traefik
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: re-lease
+      app: scaleto0
   template:
     metadata:
       labels:
-        app: re-lease
+        app: scaleto0
     spec:
       
       # Essential
@@ -28,17 +28,17 @@ spec:
       priorityClassName: essential
 
       containers:
-      - name: re-lease
+      - name: scaleto0
         image: python:3.9-slim
-        command: ["sh", "-c", "pip install requests watchdog kubernetes protobuf==3.20.* && python /scripts/re-lease.py"]
+        command: ["sh", "-c", "pip install requests watchdog kubernetes protobuf==3.20.* && python /scripts/scaleto0.py"]
         # command: ["sh", "-c", "pip install requests watchdog kubernetes protobuf==3.20.* && sleep 10000000"]
         volumeMounts:
         - name: script-volume
           mountPath: /scripts
         - name: kubernetes-config
           mountPath: /etc/kubernetes
-        - name: re-lease-override
-          mountPath: /etc/re-lease/override
+        - name: scaleto0-override
+          mountPath: /etc/scaleto0/override
         env:
         - name: RECHECK_INTERVAL
           value: "60" # in seconds
@@ -49,19 +49,19 @@ spec:
         - name: TARGET_DEVICE_NUMBER
           value: "3"
         - name: OVERRIDE_FILE
-          value: "/etc/re-lease/re-lease-override"
+          value: "/etc/scaleto0/scaleto0-override"
         - name: TARGETNODE_LABEL
           value: "la1r.workload/nonessential=true" # in seconds
       volumes:
       - name: script-volume
         configMap:
-          name: re-lease-script
+          name: scaleto0-script
       - name: kubernetes-config
         hostPath:
           path: /etc/kubernetes
           type: Directory
-      - name: re-lease-override
+      - name: scaleto0-override
         hostPath:
-          path: /etc/re-lease/override
+          path: /etc/scaleto0/override
           type: FileOrCreate
       restartPolicy: Always
