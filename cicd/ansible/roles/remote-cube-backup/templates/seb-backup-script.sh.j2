@@ -1,0 +1,96 @@
+#!/bin/bash
+
+# Constants
+LOG_FILE="{{ log_file_path }}"
+BWLIMIT="{{ backup_bandwidth_limit | default(10000) }}"
+BACKUP_API_BASE="http://192.168.5.2:50505/api/v1"
+SAMBA_HOST="10.8.0.1"
+SAMBA_PORT="445"
+
+# Error handling
+set -e
+trap cleanup SIGINT EXIT
+
+# Functions
+cleanup() {
+    echo 'Cleaning up and exiting...' | tee -a "$LOG_FILE"
+    unblock_and_stop_backup_server
+    kill 0
+    exit 1
+}
+
+log_message() {
+    echo "$1" | tee -a "$LOG_FILE"
+}
+
+check_samba_availability() {
+    nc -z -v $SAMBA_HOST $SAMBA_PORT 2>/dev/null
+}
+
+block_backup_server() {
+    log_message "Blocking backup server from switching off"
+    curl -X GET "${BACKUP_API_BASE}/block/3"
+    echo ""
+}
+
+unblock_and_stop_backup_server() {
+    log_message "Unblocking and stopping the backup server"
+    # curl -X GET "${BACKUP_API_BASE}/unblock/3"
+    # curl -X GET "${BACKUP_API_BASE}/stop/3"
+}
+
+sync_directory() {
+    local source="$1"
+    local dest="$2"
+    
+    log_message "Syncing directory $source"
+    rsync -azv --progress --bwlimit=$BWLIMIT --delete "$source/" "$dest/" 2>&1 | tee -a "$LOG_FILE"
+    log_message "Syncing directory completed"
+}
+
+perform_backup() {
+    local source="$1"
+    local dest="$2"
+    
+    if [ ! -d "$source" ]; then
+        log_message "Directory $source does not exist"
+        return 1
+    fi
+    
+    sync_directory "$source" "$dest"
+}
+
+execute_backup() {
+    block_backup_server
+    {% for dir in source_directories %}
+    perform_backup "/mnt/jayc/{{ dir }}" "{{ destination_directory }}/{{ dir }}"
+    {% endfor %}
+    unblock_and_stop_backup_server
+}
+
+# Main execution
+log_message "###> Backup started at $(date)"
+
+if check_samba_availability; then
+    log_message "Samba is available, proceeding with backup"
+    execute_backup
+else
+    log_message "Samba is not available, trying to wake up backup server"
+    curl -X GET "${BACKUP_API_BASE}/start/3/force"
+    sleep 100
+
+    if check_samba_availability; then
+        log_message "Samba is now available, restarting mount"
+        systemctl restart mnt-jayc-media-bas.mount
+        execute_backup
+    else
+        log_message "Samba is still not available after wake up attempt"
+        exit 1
+    fi
+fi
+
+if [ $? -eq 0 ]; then
+    log_message "Backup completed successfully at $(date)"
+else
+    log_message "Backup failed at $(date)"
+fi

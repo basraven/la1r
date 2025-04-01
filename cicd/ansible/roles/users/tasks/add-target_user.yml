@@ -4,8 +4,20 @@
   user:
     name: "{{ target_user_name }}"
     comment: "{{ target_user_comment }}"
-    groups : "{{ 'sudo' if ansible_os_family == 'Debian' else '' }}" 
+    groups : "{{ target_user_groups }}"
     append: yes
     state: present
     createhome: yes
+    shell: /bin/bash
+
+- name: Add sebnoaccess User
+  become: yes
+  user:
+    name: "sebnoaccess"
+    comment: "Should have no access"
+    groups : ""
+    append: yes
+    state: present
+    createhome: no
+    shell: /bin/bash
 

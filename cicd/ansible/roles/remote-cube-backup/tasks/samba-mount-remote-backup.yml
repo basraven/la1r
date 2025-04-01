@@ -8,14 +8,25 @@
     - cifs-utils 
     - netcat-openbsd
 
-- name: Remote-cube backup / Create mount folder
+- name: Remote-cube backup / Create mount folders
   become: yes
   ansible.builtin.file:
-    path: /mnt/jayc/media
+    path: /mnt/jayc/{{ item }}
     state: directory
   async: 5          # Set the timeout to 5 seconds
   poll: 1           # Wait for the task to complete, but timeout after 5 seconds
   ignore_errors: yes  # Ignore errors and continue execution if it fails or times out
+  with_items: "{{ source_directories }}"
+
+- name: Remote-cube backup / Create target folders
+  become: yes
+  ansible.builtin.file:
+    path: /mnt/hdd/backup/{{ item }}
+    state: directory
+  async: 5          # Set the timeout to 5 seconds
+  poll: 1           # Wait for the task to complete, but timeout after 5 seconds
+  ignore_errors: yes  # Ignore errors and continue execution if it fails or times out
+  with_items: "{{ source_directories }}"
 
 - name: Remote-cube backup / Ensure the .samba directory exists
   become: yes
@@ -46,18 +57,18 @@
     group: basraven
     mode: '0600'
 
-- name: Remote-cube backup / Create systemd mount unit for remote filesystem
+- name: Remote-cube backup / Create systemd mount unit for remote filesystems
   become: yes
   ansible.builtin.copy:
-    dest: /etc/systemd/system/mnt-jayc-media.mount
+    dest: /etc/systemd/system/mnt-jayc-{{ item | replace('/', '-') }}.mount
     content: |
       [Unit]
-      Description=Mount remote filesystem /mnt/jayc/media
+      Description=Mount remote filesystem /mnt/jayc/{{ item }}
       After=network-online.target
 
       [Mount]
-      What=//10.8.0.1/media
-      Where=/mnt/jayc/media
+      What=//10.8.0.1/{{ item | replace('/', '-') }}
+      Where=/mnt/jayc/{{ item }}
       Type=cifs
       Options=credentials=/home/basraven/.samba/credentials,iocharset=utf8,vers=3.0,ro
       TimeoutSec=20
@@ -67,30 +78,23 @@
     owner: root
     group: root
     mode: '0644'
+  with_items: "{{ source_directories }}"
 
-- name: Remote-cube backup / Reload systemd to pick up the new mount unit
+- name: Remote-cube backup / Reload systemd to pick up the new mount units
   become: yes
   systemd:
     daemon_reload: yes
 
-- name: Remote-cube backup / Enable the mount unit to start at boot
+- name: Remote-cube backup / Enable the mount units to start at boot
   become: yes
   systemd:
-    name: mnt-jayc-media.mount
+    name: mnt-jayc-{{ item | replace('/', '-') }}.mount
     enabled: yes
+  with_items: "{{ source_directories }}"
 
-- name: Remote-cube backup / Start the mount unit
+- name: Remote-cube backup / Start the mount units
   become: yes
   systemd:
-    name: mnt-jayc-media.mount
+    name: mnt-jayc-{{ item | replace('/', '-') }}.mount
     state: started
-
-- name: Remote-cube backup / Check status of the mount unit
-  become: yes
-  command: systemctl status mnt-jayc-media.mount
-  register: mount_status
-  changed_when: false
-
-- name: Remote-cube backup / Display the mount unit status
-  debug:
-    msg: "{{ mount_status.stdout }}"
+  with_items: "{{ source_directories }}"

@@ -13,7 +13,7 @@ spec:
   accessModes:
   - ReadWriteOnce
   hostPath:
-    path: "/mnt/hdd/na/torrent" # path to directory
+    path: "/mnt/hdd/torrent" # path to directory
 ---
 kind: PersistentVolume
 apiVersion: v1

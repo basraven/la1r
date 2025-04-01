@@ -12,8 +12,8 @@
   # - security
   # - reboot
   # - nfs
-  # - samba
-  - haproxy
+  - samba
+  # - haproxy
   # - containerd
   # - kubernetes-install
   # - kubernetes-join

@@ -8,4 +8,5 @@
     append: yes
     state: present
     createhome: false
+    shell: /bin/bash
 

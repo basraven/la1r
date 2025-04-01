@@ -261,12 +261,45 @@
 
 # CUSTOM BY SEB:
 
- [media]
+ [hdd-media]
     comment = Media
     path = /mnt/hdd/media
     read only = yes
     browsable = yes
     writable = no
+    valid users = {{ backup_user_name }}
+
+ [ssd-ha]
+    comment = ssd-ha
+    path = /mnt/ssd/ha
+    read only = yes
+    browsable = yes
+    writable = no
+    valid users = {{ backup_user_name }}
+ 
+ [ssd-na]
+    comment = ssd-na
+    path = /mnt/ssd/na
+    read only = yes
+    browsable = yes
+    writable = no
+    valid users = {{ backup_user_name }}
+ 
+ [hdd-ha]
+    comment = hdd-ha
+    path = /mnt/hdd/ha
+    read only = yes
+    browsable = yes
+    writable = no
+    valid users = {{ backup_user_name }}
+ 
+ [hdd-na]
+    comment = hdd-na
+    path = /mnt/hdd/na
+    read only = yes
+    browsable = yes
+    writable = no
+    valid users = {{ backup_user_name }}
 
  [basraven]
     comment = Media Bas
@@ -276,6 +309,7 @@
     writable = yes
     force user = {{ target_user_name }}
     force group = {{ target_user_name }}
+    valid users = {{ target_user_name }}
 
  [stephanie]
     comment = Media Stephanie
@@ -285,6 +319,7 @@
     writable = yes
     force user = {{ target_user_name }}
     force group = {{ target_user_name }}
+    valid users = {{ target_user_name }}
 
  [gezin]
     comment = Media Stephanie
@@ -294,15 +329,17 @@
     writable = yes
     force user = {{ target_user_name }}
     force group = {{ target_user_name }}
+    valid users = {{ target_user_name }}
 
  [torrent]
     comment = Torrent
-    path = /mnt/hdd/na/torrent
+    path = /mnt/hdd/torrent
     read only = no
     browsable = yes
     writable = yes
     force user = {{ target_user_name }}
     force group = {{ target_user_name }}
+    valid users = {{ target_user_name }}
    
  [cameras]
     comment = Cameras
@@ -312,6 +349,7 @@
     writable = yes
     force user = {{ target_user_name }}
     force group = {{ target_user_name }}
+    valid users = {{ target_user_name }}
     
  [windowsbackup]
     comment = windowsbackup
@@ -321,6 +359,7 @@
     writable = yes
     force user = {{ target_user_name }}
     force group = {{ target_user_name }}
+    valid users = {{ target_user_name }}
 
  [staging]
     comment = staging
@@ -330,6 +369,7 @@
     writable = yes
     force user = {{ target_user_name }}
     force group = {{ target_user_name }}
+    valid users = {{ target_user_name }}
 
 
 ; [openhab]
