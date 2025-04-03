@@ -1,0 +1,9 @@
+---
+- include_tasks: add-backup-user.yml
+  tags: samba-server
+
+- include_tasks: verify-paths.yml
+  tags: samba-server
+
+- include_tasks: install-samba-server.yml
+  tags: samba-server

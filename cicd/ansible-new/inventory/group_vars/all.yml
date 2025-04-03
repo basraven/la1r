@@ -1,0 +1,10 @@
+---
+ansible_user: basraven
+ansible_port: 22
+credentials_dir: "../../credentials"
+
+# Common variables that apply to all hosts
+common_settings:
+  ssh_password_authentication: false
+  ssh_pubkey_authentication: true
+  ssh_root_login: false

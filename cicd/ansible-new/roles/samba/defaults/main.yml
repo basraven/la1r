@@ -1,0 +1,31 @@
+---
+# Default Samba settings
+samba_workgroup: "WORKGROUP"
+samba_server_string: "%h {{ansible_hostname}}"
+samba_log_file: "/var/log/samba/log.%m"
+samba_max_log_size: 1000
+
+# Default share settings
+samba_default_share_settings:
+  browsable: "yes"
+  writable: "no"
+  read_only: "yes"
+  guest_ok: "no"
+
+samba_media_shares_settings:
+  read_only: "no"
+  browsable: "yes"
+  writable: "yes"
+  valid_users: "{{ ansible_user }}"
+
+samba_backup_shares_settings:
+  read_only: "yes"
+  browsable: "yes"
+  writable: "no"
+  valid_users: "{{ backup_user_name }}"
+
+samba_special_write_shares_settings:
+  read_only: "no"
+  browsable: "yes"
+  writable: "yes"
+  valid_users: "{{ ansible_user }}"

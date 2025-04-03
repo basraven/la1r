@@ -1,36 +1,9 @@
-#
-# Sample configuration file for the Samba suite for Debian GNU/Linux.
-#
-#
-# This is the main Samba configuration file. You should read the
-# smb.conf(5) manual page in order to understand the options listed
-# here. Samba has a huge number of configurable options most of which 
-# are not shown in this example
-#
-# Some options that are often worth tuning have been included as
-# commented-out examples in this file.
-#  - When such options are commented with ";", the proposed setting
-#    differs from the default Samba behaviour
-#  - When commented with "#", the proposed setting is the default
-#    behaviour of Samba but the option is considered important
-#    enough to be mentioned here
-#
-# NOTE: Whenever you modify this file you should run the command
-# "testparm" to check that you have not made any basic syntactic 
-# errors. 
-
-#======================= Global Settings =======================
-
 [global]
-
-## Browsing/Identification ###
-
-# Change this to the workgroup/NT-domain name your Samba server will part of
-   workgroup = WORKGROUP
-
-# server string is the equivalent of the NT Description field
-	server string = %h server (Samba, Ubuntu)
-
+   workgroup = {{ samba_workgroup }}
+   server string = {{ samba_server_string }}
+   log file = {{ samba_log_file }}
+   max log size = {{ samba_max_log_size }}
+   
 # Windows Internet Name Serving Support Section:
 # WINS Support - Tells the NMBD component of Samba to enable its WINS Server
 #   wins support = no
@@ -212,180 +185,38 @@
 # can connect to \\server\username
 # This might need tweaking when using external authentication schemes
 ;   valid users = %S
-
-# Un-comment the following and create the netlogon directory for Domain Logons
-# (you need to configure Samba to act as a domain controller too.)
-;[netlogon]
-;   comment = Network Logon Service
-;   path = /home/samba/netlogon
-;   guest ok = yes
-;   read only = yes
-
-# Un-comment the following and create the profiles directory to store
-# users profiles (see the "logon path" option above)
-# (you need to configure Samba to act as a domain controller too.)
-# The path below should be writable by all users so that their
-# profile directory may be created the first time they log on
-;[profiles]
-;   comment = Users profiles
-;   path = /home/samba/profiles
-;   guest ok = no
-;   browseable = no
-;   create mask = 0600
-;   directory mask = 0700
-
-; [printers]
-;    comment = All Printers
-;    browseable = no
-;    path = /var/spool/samba
-;    printable = yes
-;    guest ok = no
-;    read only = yes
-;    create mask = 0700
-
-# Windows clients look for this share name as a source of downloadable
-# printer drivers
-; [print$]
-;    comment = Printer Drivers
-;    path = /var/lib/samba/printers
-;    browseable = yes
-;    read only = yes
-;    guest ok = no
-# Uncomment to allow remote administration of Windows print drivers.
-# You may need to replace 'lpadmin' with the name of the group your
-# admin users are members of.
-# Please note that you also need to set appropriate Unix permissions
-# to the drivers directory for these users to have write rights in it
-;   write list = root, @lpadmin
-
-
-# CUSTOM BY SEB:
-
- [hdd-media]
-    comment = Media
-    path = /mnt/hdd/media
-    read only = yes
-    browsable = yes
-    writable = no
-    valid users = {{ backup_user_name }}
-
- [ssd-ha]
-    comment = ssd-ha
-    path = /mnt/ssd/ha
-    read only = yes
-    browsable = yes
-    writable = no
-    valid users = {{ backup_user_name }}
- 
- [ssd-na]
-    comment = ssd-na
-    path = /mnt/ssd/na
-    read only = yes
-    browsable = yes
-    writable = no
-    valid users = {{ backup_user_name }}
- 
- [hdd-ha]
-    comment = hdd-ha
-    path = /mnt/hdd/ha
-    read only = yes
-    browsable = yes
-    writable = no
-    valid users = {{ backup_user_name }}
- 
- [hdd-na]
-    comment = hdd-na
-    path = /mnt/hdd/na
-    read only = yes
-    browsable = yes
-    writable = no
-    valid users = {{ backup_user_name }}
-
- [basraven]
-    comment = Media Bas
-    path = /mnt/hdd/media/bas
-    read only = no
-    browsable = yes
-    writable = yes
-    force user = {{ target_user_name }}
-    force group = {{ target_user_name }}
-    valid users = {{ target_user_name }}
-
- [stephanie]
-    comment = Media Stephanie
-    path = /mnt/hdd/media/stephanie
-    read only = no
-    browsable = yes
-    writable = yes
-    force user = {{ target_user_name }}
-    force group = {{ target_user_name }}
-    valid users = {{ target_user_name }}
-
- [gezin]
-    comment = Media Stephanie
-    path = /mnt/hdd/media/gezin
-    read only = no
-    browsable = yes
-    writable = yes
-    force user = {{ target_user_name }}
-    force group = {{ target_user_name }}
-    valid users = {{ target_user_name }}
-
- [torrent]
-    comment = Torrent
-    path = /mnt/hdd/torrent
-    read only = no
-    browsable = yes
-    writable = yes
-    force user = {{ target_user_name }}
-    force group = {{ target_user_name }}
-    valid users = {{ target_user_name }}
    
- [cameras]
-    comment = Cameras
-    path = /mnt/ssd/na/frigate/data
-    read only = no
-    browsable = yes
-    writable = yes
-    force user = {{ target_user_name }}
-    force group = {{ target_user_name }}
-    valid users = {{ target_user_name }}
-    
- [windowsbackup]
-    comment = windowsbackup
-    path = /mnt/hdd/windowsbackup
-    read only = no
-    browsable = yes
-    writable = yes
-    force user = {{ target_user_name }}
-    force group = {{ target_user_name }}
-    valid users = {{ target_user_name }}
 
- [staging]
-    comment = staging
-    path = /mnt/hdd/staging
-    read only = no
-    browsable = yes
-    writable = yes
-    force user = {{ target_user_name }}
-    force group = {{ target_user_name }}
-    valid users = {{ target_user_name }}
+#======================= Share Definitions =======================
 
+{% for share in (samba_shares.media_shares | default([])) 
+    + (samba_shares.special_write_shares | default([])) 
+    + (samba_shares.backup_shares | default([])) 
+%}
 
-; [openhab]
-;    comment = OpenHab
-;    path = /mnt/largessd/configs/openhab
-;    read only = no
-;    browsable = yes
-;    writable = yes
-;    force user = {{ target_user_name }}
-;    force group = {{ target_user_name }}
+[{{ share.name }}]
+    comment = {{ share.comment }}
+    path = {{ share.path }}
+    {% if share in samba_shares.media_shares -%}
+    read only = {{ samba_media_shares_settings.read_only }}
+    browsable = {{ samba_media_shares_settings.browsable }}
+    writable = {{ samba_media_shares_settings.writable }}
+    valid users = {{ samba_media_shares_settings.valid_users }}
+    {% elif share in samba_shares.special_write_shares -%}
+    read only = {{ samba_special_write_shares_settings.read_only }}
+    browsable = {{ samba_special_write_shares_settings.browsable }}
+    writable = {{ samba_special_write_shares_settings.writable }}
+    valid users = {{ samba_special_write_shares_settings.valid_users }}
+    {% elif share in samba_shares.backup_shares -%}
+    read only = {{ samba_backup_shares_settings.read_only }}
+    browsable = {{ samba_backup_shares_settings.browsable }}
+    writable = {{ samba_backup_shares_settings.writable }}
+    valid users = {{ samba_backup_shares_settings.valid_users }}
+    {% else -%}
+    read only = {{ samba_default_share_settings.read_only }}
+    browsable = {{ samba_default_share_settings.browsable }}
+    writable = {{ samba_default_share_settings.writable }}
+    valid users = {{ backup_user_name }}
+    {% endif -%}
 
-; [homeassistant]
-;    comment = HomeAssistant
-;    path = /mnt/largessd/configs/homeassistant
-;    read only = no
-;    browsable = yes
-;    writable = yes
-;    force user = {{ target_user_name }}
-;    force group = {{ target_user_name }}
+{% endfor %}

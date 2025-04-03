@@ -1,0 +1,15 @@
+---
+ansible_host: 192.168.5.1
+ha_proxy_settings:
+  node_state: MASTER
+  node_state_sec: BACKUP
+  node_prio: 100
+  node_prio_sec: 50
+  node_interface: "enp3s0"
+  keepalived_peers:
+    - 192.168.5.3
+
+nfs_storage_capabilities:
+  - 111
+  - 211
+  - 221

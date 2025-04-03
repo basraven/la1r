@@ -1,0 +1,21 @@
+---
+# - name: Configure all hosts
+#   hosts: all
+#   roles:
+#     - { role: users, tags: ['users'] }
+#     - { role: ssh, tags: ['ssh'] }
+#     - { role: hostname, tags: ['hostname'] }
+#     - { role: security, tags: ['security'] }
+
+- name: Configure cluster nodes
+  hosts: cluster
+  roles:
+    - { role: samba, tags: ['samba']}
+#     - { role: haproxy, tags: ['haproxy'], when: "'ha_proxy_settings' in hostvars[inventory_hostname]" }
+#     - { role: kubernetes-install, tags: ['kubernetes'] }
+#     - { role: kubernetes-join, tags: ['kubernetes'] }
+
+# - name: Configure peripheral nodes
+#   hosts: peripheral
+#   roles:
+#     - { role: common-peripheral, tags: ['peripheral'] }

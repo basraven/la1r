@@ -1,0 +1,11 @@
+---
+- name: Verify Paths / Verify share paths exist
+  become: yes
+  file:
+    path: "{{ item.path }}"
+    state: directory
+    mode: '0755'
+  with_items:
+    - "{{ samba_shares.media_shares | default([]) }}"
+    - "{{ samba_shares.special_write_shares | default([]) }}"
+    - "{{ samba_shares.backup_shares | default([]) }}"
