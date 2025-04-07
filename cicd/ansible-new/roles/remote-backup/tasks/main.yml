@@ -1,0 +1,3 @@
+---
+- include_tasks: samba-remote-backup.yml
+  tags: remote-backup

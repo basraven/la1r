@@ -1,0 +1,96 @@
+---
+# - name: Remote backup / Install Samba and netcat (for ping)
+#   become: yes
+#   package:
+#     name: "{{ item }}"
+#     state: present
+#   with_items:
+#     - cifs-utils 
+#     - netcat-openbsd
+
+- name: Prepare list of share paths per host
+  set_fact:
+    backup_mount_paths: >-
+      {{
+        backup_mount_paths | default([]) + [
+          {
+            'name': item,
+            'address': hostvars[item].ansible_host,
+            'shares': hostvars[item].samba_shares.backup_shares | default([])
+          }
+        ]
+      }}
+  loop: "{{ groups['cluster'] }}"
+  when: hostvars[item].samba_shares is defined and hostvars[item].samba_shares.backup_shares is defined
+
+# - name: Remote backup / Print list of mount folders to create
+#   debug:
+#     var: backup_mount_paths
+
+
+- name: Remote backup / Deploy the backup script
+  become: yes
+  template:
+    src: seb-backup-script.sh.j2
+    dest: /root/seb-backup-script.sh
+    owner: root
+    group: root
+    mode: '0755'
+
+
+- name: Create backup mount folders per host
+  become: yes
+  ansible.builtin.file:
+    path: "/mnt/{{ item.0.name }}/{{ item.1.path | regex_replace('^/mnt/', '') }}"
+    state: directory
+    mode: '0755'
+  loop: "{{ backup_mount_paths | subelements('shares') }}"
+
+
+- name: Remote backup / Create target folders
+  become: yes
+  ansible.builtin.file:
+    path: "/mnt/hdd/backup/{{ item.0.name }}/{{ item.1.path | regex_replace('^/mnt/', '') }}"
+    state: directory
+    mode: '0755'
+  loop: "{{ backup_mount_paths | subelements('shares') }}"
+
+- name: Remote backup / Ensure the .samba directory exists
+  become: yes
+  file:
+    path: /home/basraven/.samba
+    state: directory
+    owner: basraven
+    group: basraven
+    mode: '0700'
+
+- name: Remote backup / Load Samba credentials
+  include_vars:
+    file: ../../credentials/samba/samba-credentials.yml
+
+- name: Get the password for sebackup
+  set_fact:
+    samba_password: "{{ samba_users | selectattr('name', 'equalto', 'sebackup') | map(attribute='passwd') | first }}"
+
+- name: Remote backup / Create the Samba credentials file
+  become: yes
+  copy:
+    dest: /home/basraven/.samba/credentials
+    content: |
+      username=sebackup
+      password={{ samba_password }}
+      domain=WORKGROUP
+    owner: basraven
+    group: basraven
+    mode: '0600'
+
+
+# - name: Remote backup / create crontab
+#   become: yes
+#   cron:
+#     name: "Weekly Backup at Sunday 2am of /mnt/ folders from jay-c to remote-cube every week"
+#     minute: "0"      # Run at the top of the hour
+#     hour: "2"        # Run at 2 AM
+#     day: "7"         # Run on Sundays (day 7 of the week)
+#     job: "/bin/bash /root/seb-backup-script.sh"
+#     state: present

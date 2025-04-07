@@ -13,3 +13,18 @@ nfs_storage_capabilities:
   - 111
   - 211
   - 221
+
+  
+samba_shares:
+
+  # media_shares:
+
+  # special_write_shares:
+  
+  backup_shares:
+    - name: "ssd-na"
+      comment: "Backup - ssd-na"
+      path: "/mnt/ssd/na"
+    - name: "ssd-ha"
+      comment: "Backup - ssd-ha"
+      path: "/mnt/ssd/ha"

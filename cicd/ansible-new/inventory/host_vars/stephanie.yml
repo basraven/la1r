@@ -1,0 +1,19 @@
+---
+ansible_host: 192.168.5.2
+
+samba_shares:
+
+  # media_shares:
+
+  special_write_shares:
+    - name: "cameras"
+      comment: "Cameras"
+      path: "/mnt/ssd/na/frigate/data"
+
+  backup_shares:
+    - name: "ssd-na"
+      comment: "Backup - ssd-na"
+      path: "/mnt/ssd/na"
+    - name: "ssd-ha"
+      comment: "Backup - ssd-ha"
+      path: "/mnt/ssd/ha"

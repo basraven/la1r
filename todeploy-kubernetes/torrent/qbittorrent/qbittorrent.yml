@@ -155,7 +155,7 @@ spec:
           items:
           - key: update-resolv-conf
             path: update-resolv-conf-custom
-          defaultMode: 0777
+          defaultMode: 0755
       - name: qbittorrent-config-client
         configMap:
           name: qbittorrent-config

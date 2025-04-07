@@ -1,0 +1,112 @@
+#!/bin/bash
+
+# Constants
+LOG_FILE="{{ log_file_path }}"
+BWLIMIT="{{ backup_bandwidth_limit | default(10000) }}"
+BACKUP_API_BASE="http://192.168.5.2:50505/api/v1"
+SAMBA_HOST="10.8.0.1"
+SAMBA_PORT="445"
+
+# Error handling
+set -e
+trap cleanup SIGINT EXIT
+
+# Functions
+cleanup() {
+    echo 'Cleaning up and exiting...' | tee -a "$LOG_FILE"
+    unblock_and_stop_backup_server
+    kill 0
+    exit 1
+}
+
+log_message() {
+    echo "$1" | tee -a "$LOG_FILE"
+}
+
+check_samba_availability() {
+    nc -z -v $SAMBA_HOST $SAMBA_PORT 2>/dev/null
+}
+
+block_backup_server() {
+    log_message "Blocking backup server from switching off"
+    curl -X GET "${BACKUP_API_BASE}/block/3"
+    echo ""
+}
+
+unblock_and_stop_backup_server() {
+    log_message "Unblocking and stopping the backup server"
+    # curl -X GET "${BACKUP_API_BASE}/unblock/3"
+    # curl -X GET "${BACKUP_API_BASE}/stop/3"
+}
+
+sync_directory() {
+    local source="$1"
+    local dest="$2"
+    
+    log_message "Syncing directory $source to $dest"
+    rsync -azv --progress --bwlimit=$BWLIMIT --delete "$source/" "$dest/" 2>&1 | tee -a "$LOG_FILE"
+    log_message "Syncing directory completed"
+}
+
+perform_backup() {
+    local source="$1"
+    local dest="$2"
+    
+    if [ ! -d "$source" ]; then
+        log_message "Directory $source does not exist"
+        return 1
+    fi
+    
+    sync_directory "$source" "$dest"
+}
+
+execute_backup() {
+    block_backup_server
+    {% for server in backup_mount_paths %}
+    {% for share in server.shares %}
+    
+    # BEGIN /mnt/{{server.name}}/{{ share.path | regex_replace('^/mnt/', '') }}
+        echo "Mounting /mnt/{{server.name}}/{{ share.path | regex_replace('^/mnt/', '') }}"
+        # Attempt to mount and check if successful
+        mount -t cifs //{{server.address}}/{{share.name}} /mnt/{{server.name}}/{{ share.path | regex_replace('^/mnt/', '') }} -o credentials=/home/basraven/.samba/credentials,iocharset=utf8,vers=3.0,ro
+        
+        # If mount is successful (exit code 0), perform backup
+        if [ $? -eq 0 ]; then
+            perform_backup "/mnt/{{server.name}}/{{ share.path | regex_replace('^/mnt/', '') }}" "{{ destination_directory }}/{{server.name}}/{{ share.path | regex_replace('^/mnt/', '') }}"
+            echo "Unmounting /mnt/{{server.name}}/{{ share.path | regex_replace('^/mnt/', '') }}"
+            umount /mnt/{{server.name}}/{{ share.path | regex_replace('^/mnt/', '') }}
+        else
+            echo "Mount failed for /mnt/{{server.name}}/{{ share.path | regex_replace('^/mnt/', '') }}. Skipping backup."
+        fi
+    # END /mnt/{{server.name}}/{{ share.path | regex_replace('^/mnt/', '') }}
+    
+    {% endfor %}
+    {% endfor %}
+    unblock_and_stop_backup_server
+}
+
+# Main execution
+log_message "###> Backup started at $(date)"
+
+if check_samba_availability; then
+    log_message "Samba is available, proceeding with backup"
+    execute_backup
+else
+    log_message "Samba is not available, trying to wake up backup server"
+    curl -X GET "${BACKUP_API_BASE}/start/3/force"
+    sleep 100
+
+    if check_samba_availability; then
+        log_message "Samba is now available, restarting mount"
+        execute_backup
+    else
+        log_message "Samba is still not available after wake up attempt"
+        exit 1
+    fi
+fi
+
+if [ $? -eq 0 ]; then
+    log_message "Backup completed successfully at $(date)"
+else
+    log_message "Backup failed at $(date)"
+fi

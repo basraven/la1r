@@ -197,17 +197,17 @@
 [{{ share.name }}]
     comment = {{ share.comment }}
     path = {{ share.path }}
-    {% if share in samba_shares.media_shares -%}
+    {% if share in (samba_shares.media_shares | default([])) -%}
     read only = {{ samba_media_shares_settings.read_only }}
     browsable = {{ samba_media_shares_settings.browsable }}
     writable = {{ samba_media_shares_settings.writable }}
     valid users = {{ samba_media_shares_settings.valid_users }}
-    {% elif share in samba_shares.special_write_shares -%}
+    {% elif share in (samba_shares.special_write_shares | default([])) -%}
     read only = {{ samba_special_write_shares_settings.read_only }}
     browsable = {{ samba_special_write_shares_settings.browsable }}
     writable = {{ samba_special_write_shares_settings.writable }}
     valid users = {{ samba_special_write_shares_settings.valid_users }}
-    {% elif share in samba_shares.backup_shares -%}
+    {% elif share in (samba_shares.backup_shares | default([])) -%}
     read only = {{ samba_backup_shares_settings.read_only }}
     browsable = {{ samba_backup_shares_settings.browsable }}
     writable = {{ samba_backup_shares_settings.writable }}
