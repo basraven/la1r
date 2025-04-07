@@ -1,0 +1,57 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ansible-runner
+  namespace: ansible
+  annotations:
+    fluxcd.io/commit: "${COMMIT_HASH}"  # forces re-deploy on commit change
+spec:
+  ttlSecondsAfterFinished: 60  # auto-delete job+pod after 1 min
+  template:
+    metadata:
+      labels:
+        app: ansible-runner
+    spec:
+      # Essential
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            preference:
+              matchExpressions:
+              - key: la1r.workload/essential
+                operator: In
+                values:
+                - "true"
+      priorityClassName: essential
+      containers:
+        - name: runner
+          image: quay.io/ansible/ansible-runner:latest
+          # image: alpine:latest
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              git clone --depth 1 https://github.com/basraven/la1r.git /la1r && \
+              cd /la1r/cicd/ansible-new && \
+              ANSIBLE_SSH_ARGS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" && \
+              ansible-playbook -i inventory/hosts.yml site.yml
+              sleep infinity
+
+          volumeMounts:
+          - name: ssh-key
+            mountPath: /root/.ssh/id_rsa
+            readOnly: true
+          - name: known-hosts
+            mountPath: /root/.ssh/known_hosts
+            readOnly: true
+      restartPolicy: Never
+      volumes:
+        - name: ssh-key
+          hostPath:
+            path: /home/basraven/.ssh/id_rsa
+            type: File
+        - name: known-hosts
+          hostPath:
+            path: /home/basraven/.ssh/known_hosts
+            type: File
