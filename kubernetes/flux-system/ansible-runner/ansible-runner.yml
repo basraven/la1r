@@ -1,0 +1,21 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ansible-runner
+  namespace: ansible
+  annotations:
+    fluxcd.io/commit: "${COMMIT_HASH}"  # forces re-deploy on commit change
+spec:
+  template:
+    spec:
+      containers:
+        - name: runner
+          image: quay.io/ansible/ansible-runner:latest
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              git clone --depth 1 https://github.com/basraven/la1r.git /work && \
+              cd /work/cicd/ansible-new && \
+              ansible-playbook -i inventory/hosts.yml site.yml
+      restartPolicy: Never
