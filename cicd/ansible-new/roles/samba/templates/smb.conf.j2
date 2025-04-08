@@ -212,6 +212,8 @@
     browsable = {{ samba_backup_shares_settings.browsable }}
     writable = {{ samba_backup_shares_settings.writable }}
     valid users = {{ samba_backup_shares_settings.valid_users }}
+    force user = root
+    force group = {{ backup_user_name }}
     {% else -%}
     read only = {{ samba_default_share_settings.read_only }}
     browsable = {{ samba_default_share_settings.browsable }}
