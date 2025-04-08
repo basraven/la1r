@@ -1,0 +1,7 @@
+---
+- name: inotify /  Increase fs.inotify.max_user_watches
+  become: yes
+  lineinfile:
+    path: /etc/sysctl.conf
+    regexp: '^fs.inotify.max_user_watches'
+    line: 'fs.inotify.max_user_watches=1048576'

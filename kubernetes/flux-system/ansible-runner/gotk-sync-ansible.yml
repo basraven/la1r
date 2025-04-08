@@ -4,7 +4,7 @@ metadata:
   name: ansible-only
   namespace: flux-system
 spec:
-  interval: 1m
+  interval: 2m
   url: https://github.com/basraven/la1r.git
   ref:
     branch: rick
@@ -19,12 +19,9 @@ metadata:
   name: ansible-job
   namespace: flux-system
 spec:
-  interval: 2m0s
+  interval: 2m
   path: ./kubernetes/flux-system/ansible-runner/job
   sourceRef:
     kind: GitRepository
     name: ansible-only
   prune: true
-  postBuild:
-    substitute:
-      COMMIT_HASH: "${GIT_COMMIT_HASH}"

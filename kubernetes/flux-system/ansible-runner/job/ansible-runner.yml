@@ -3,15 +3,12 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: ansible-runner
+  generateName: ansible-runner-
   namespace: ansible
-  annotations:
-    fluxcd.io/commit: "${COMMIT_HASH}"  # forces re-deploy on commit change
 spec:
   ttlSecondsAfterFinished: 60  # auto-delete job+pod after 1 min
+  backoffLimit: 1  # Only retry once
   template:
-    metadata:
-      labels:
-        app: ansible-runner
     spec:
       # Essential
       affinity:
@@ -28,22 +25,42 @@ spec:
       containers:
         - name: runner
           image: quay.io/ansible/ansible-runner:latest
-          # image: alpine:latest
           command: ["/bin/sh", "-c"]
           args:
             - |
+              # Import credentials
+              mkdir -p /home/runner/.gnupg/ && \
+              chmod 600 /home/runner/.gnupg/ && \
+              gpg --batch --import /home/runner/.gnupg/imported_keys/automation-gpg-private.asc && \
+              gpg --batch --import /home/runner/.gnupg/imported_keys/automation-gpg-public.asc && \
+              
+              gpg --batch --with-colons --fingerprint | \
+              awk -F: '/^fpr:/ {print $10":6:"; exit}' | \
+              gpg --batch --import-ownertrust && \
+              
               git clone --depth 1 https://github.com/basraven/la1r.git /la1r && \
+              
+              rm -rf /la1r/credentials && \
+              GITHUB_PAT=$(echo "$GITHUB_PAT" | tr -d '\n') && \
+              git clone "https://basraven:$GITHUB_PAT@github.com/basraven/la1r-cred.git" /la1r/credentials && \
+              cd /la1r/credentials && \
+              chmod +x ./decrypt.sh && \
+              ./decrypt.sh && \
+              
               cd /la1r/cicd/ansible-new && \
-              ANSIBLE_SSH_ARGS="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" && \
-              ansible-playbook -i inventory/hosts.yml site.yml
-              sleep infinity
-
+              ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i inventory/hosts.yml site.yml
+          env:
+          - name: GITHUB_PAT
+            valueFrom:
+              secretKeyRef:
+                name: github-la1r-cred-pat
+                key: GITHUB_PAT
           volumeMounts:
           - name: ssh-key
             mountPath: /root/.ssh/id_rsa
             readOnly: true
-          - name: known-hosts
-            mountPath: /root/.ssh/known_hosts
+          - name: gpg-automated-keys
+            mountPath: /home/runner/.gnupg/imported_keys
             readOnly: true
       restartPolicy: Never
       volumes:
@@ -51,7 +68,6 @@ spec:
           hostPath:
             path: /home/basraven/.ssh/id_rsa
             type: File
-        - name: known-hosts
-          hostPath:
-            path: /home/basraven/.ssh/known_hosts
-            type: File
+        - name: gpg-automated-keys
+          secret:
+            secretName: gpg-automated-keys

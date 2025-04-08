@@ -1,0 +1,8 @@
+apiVersion: builtin
+kind: NameSuffixTransformer
+metadata:
+  name: name-suffix-transformer
+suffix: -$(date +%s)  # This will add a Unix timestamp suffix
+fieldSpecs:
+- path: metadata/name
+  kind: Job
