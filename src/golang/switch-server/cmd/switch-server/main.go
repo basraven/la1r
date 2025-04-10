@@ -41,7 +41,8 @@ func main() {
 	log.SetPrefix("INFO: ")
 
 	// Start parallel pin reading
-	go gpiohandlers.ReadForGpioInputChangeAndBlink(deviceStates, deviceEvents)
+	// FIXME: The GPIO handler is very unreliable, so disabled for now
+	// go gpiohandlers.ReadForGpioInputChangeAndBlink(deviceStates, deviceEvents)
 	go gisthandlers.WatchGistChanges(deviceStates, deviceEvents)
 
 	// Start output handlers

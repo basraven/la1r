@@ -10,6 +10,8 @@ spec:
     branch: rick
   ignore: |
     /*
+    *
+    */
     !/cicd/ansible/
     !/kubernetes/flux-system/ansible-runner/job
 ---

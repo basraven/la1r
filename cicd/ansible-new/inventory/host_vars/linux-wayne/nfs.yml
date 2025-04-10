@@ -1,0 +1,5 @@
+---
+nfs_storage_capabilities:
+  - 111
+  - 211
+  - 221

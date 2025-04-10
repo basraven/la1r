@@ -44,6 +44,22 @@ spec:
           containerPort: 8080
         - name: prometheus
           containerPort: 8082
+        livenessProbe:
+          exec:
+            command:
+              - /bin/sh
+              - -c
+              - |
+                # Count occurrences of the error message in the log
+                count=$(grep -o "configuration: invalid middleware type or middleware does not exist" /tmp/traefik.log | wc -l)
+                if [ "$count" -ge 3 ]; then
+                  exit 1 # Fail the probe if 3 or more errors are found
+                else
+                  exit 0 # Pass the probe if the error occurs less than 3 times
+                fi
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          failureThreshold: 2
         args:
           - --api.dashboard=true
           - --api.insecure=true
@@ -64,7 +80,8 @@ spec:
           - --providers.kubernetescrd
           - --experimental.plugins.sablier.modulename=github.com/sablierapp/sablier
           - --experimental.plugins.sablier.version=v1.8.5
-          # - --log.level=DEBUG
+          - --log.filePath=/tmp/traefik.log
+          - --log.level=INFO
           # - --accesslog
           # - --serverstransport.insecureskipverify
 ---

@@ -1,0 +1,9 @@
+---
+ha_proxy_settings:
+  node_state: BACKUP
+  node_state_sec: MASTER
+  node_prio: 50
+  node_prio_sec: 100
+  node_interface: "enp4s0"
+  keepalived_peers:
+    - 192.168.5.1

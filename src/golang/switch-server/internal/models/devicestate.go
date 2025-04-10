@@ -16,7 +16,7 @@ import (
 
 var (
 	PRIVATE_KEY_PATH = "/home/basraven/.ssh/id_rsa"
-	MINIMAL_UPTIME   = time.Minute * 5
+	MINIMAL_UPTIME   = time.Minute * 1 // Minimum of 1 minute uptime
 )
 
 type Gpio struct {
