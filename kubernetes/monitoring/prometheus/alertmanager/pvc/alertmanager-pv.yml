@@ -1,0 +1,16 @@
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: alertmanager-data-pv
+  labels:
+    contenttype: "alertmanager-data"
+spec:
+  capacity:
+    storage: 1Gi
+  storageClassName: alertmanager-data
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/mnt/ssd/na/prometheus/alertmanager/data" # path to directory

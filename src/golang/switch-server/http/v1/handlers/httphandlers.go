@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -179,6 +180,77 @@ func HandleLeaseRequest(c *gin.Context, deviceStates *models.DeviceStates, devic
 		return
 	}
 	c.JSON(404, gin.H{"message": "Server not found"})
+}
+
+type AlertManagerRequest struct {
+	Receiver string `json:"receiver"`
+	Status   string `json:"status"`
+	Alerts   []struct {
+		Status string `json:"status"`
+		Labels struct {
+			AlertName string `json:"alertname"`
+			Severity  string `json:"severity"`
+		} `json:"labels"`
+		Annotations struct {
+			Description string `json:"description"`
+			Summary     string `json:"summary"`
+		} `json:"annotations"`
+		StartsAt     string `json:"startsAt"`
+		EndsAt       string `json:"endsAt"`
+		GeneratorURL string `json:"generatorURL"`
+		Fingerprint  string `json:"fingerprint"`
+	} `json:"alerts"`
+	GroupLabels struct {
+		AlertName string `json:"alertname"`
+	} `json:"groupLabels"`
+	CommonLabels struct {
+		AlertName string `json:"alertname"`
+		Severity  string `json:"severity"`
+	} `json:"commonLabels"`
+	CommonAnnotations struct {
+		Description string `json:"description"`
+		Summary     string `json:"summary"`
+	} `json:"commonAnnotations"`
+	ExternalURL     string `json:"externalURL"`
+	Version         string `json:"version"`
+	GroupKey        string `json:"groupKey"`
+	TruncatedAlerts int    `json:"truncatedAlerts"`
+}
+
+func HandleAlertManagerRequest(c *gin.Context, deviceStates *models.DeviceStates, deviceEvents *models.DeviceEvents) {
+	var alertManagerRequest AlertManagerRequest
+
+	if err := c.ShouldBindJSON(&alertManagerRequest); err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	log.Printf("alertManagerRequest.Status: %s", alertManagerRequest.Status)
+
+	var newStateValue int
+	var identifier string = "3"
+
+	if alertManagerRequest.Status == "firing" { // Server should be turned on
+		newStateValue = 1
+	} else if alertManagerRequest.Status == "resolved" { // Server should be turned off
+		newStateValue = 0
+	} else {
+		log.Printf("Invalid status: %s", alertManagerRequest.Status)
+		c.JSON(400, gin.H{"error": "Invalid status"})
+		return
+	}
+
+	state := findDeviceState(deviceStates, identifier)
+	if state == nil {
+		c.JSON(404, gin.H{"message": "Server not found"})
+		return
+	}
+
+	performDeviceStateChangeWithCallback(c, *state, newStateValue, deviceEvents, []*chan models.DeviceStateChange{
+		&deviceEvents.OutputDevice,
+	})
+
+	c.JSON(200, gin.H{"message": "Alert received successfully"})
 }
 
 func performDeviceStateChangeWithCallback(c *gin.Context, state models.DeviceState, newStateValue int, deviceEvents *models.DeviceEvents, OutputChannels []*chan models.DeviceStateChange) {

@@ -1,0 +1,205 @@
+---
+# source: https://github.com/mateobur/prometheus-monitoring-guide/tree/master/alertmanager-example
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-config
+  namespace: monitoring
+data:
+  alertmanager.yml: |-
+    global:
+      resolve_timeout: 5m
+    route:
+      group_by: ['alertname']
+      group_wait: 5s
+      group_interval: 10s
+      repeat_interval: 7d
+      receiver: blackhole # Default receiver: none
+      routes:
+      - match:
+          severity: critical
+        receiver: discord_webhook
+        continue: true
+      - match:
+          alertname: "Jay-C Server should be online"
+        receiver: jayc_webhook
+      # capture All WARN to the 'warning' with P3
+
+    receivers:
+      - name: blackhole
+      - name: discord_webhook
+        webhook_configs:
+        - url: "http://discord-webhook:9094"
+          send_resolved: true
+      - name: jayc_webhook
+        webhook_configs:
+        - url: "http://192.168.5.2:50505/api/v1/prometheus/alertmanager"
+          send_resolved: true
+        # - url: "http://requestbin.net/r/1kbudtc1"
+        # - url: "http://czxcf5wz1wg0000dvczggx6s8uyyyyyyb.oast.pro"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alertmanager
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: alertmanager
+  template:
+    metadata:
+      labels:
+        task: monitoring
+        k8s-app: alertmanager
+    spec:
+      # Essential
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            preference:
+              matchExpressions:
+              - key: la1r.workload/essential
+                operator: In
+                values:
+                - "true"
+      priorityClassName: essential
+
+      containers:
+      - name: alertmanager
+        ports:
+        - containerPort: 9093
+        image: prom/alertmanager
+        resources:
+          requests:
+            cpu: 10m
+            memory: 56Mi
+          limits:
+            cpu: 100m
+            memory: 128Mi
+        volumeMounts:
+        # - name: alertmanager
+        #   mountPath: /alertmanager
+        - name: alertmanager-config
+          mountPath: /etc/alertmanager/alertmanager.yml
+          subPath: alertmanager.yml
+        - mountPath: /alertmanager
+          name: alertmanager-volume
+      volumes:
+      # - name: alertmanager
+      #   persistentVolumeClaim:
+      #     claimName: alertmanager-claim
+      - name: alertmanager-config
+        configMap:
+          name: alertmanager-config
+          items:
+          - key: alertmanager.yml
+            path: alertmanager.yml
+          defaultMode: 0744
+      - name: alertmanager-volume
+        persistentVolumeClaim:
+          claimName: alertmanager-data-claim
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    task: monitoring
+  name: alertmanager-service
+  namespace: monitoring
+spec:
+  ports:
+  - name: alsohttp
+    port: 9093
+    targetPort: 9093
+  - name: http
+    port: 80
+    targetPort: 9093
+  selector:
+    k8s-app: alertmanager
+
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: alertmanager-loadbalancer-service
+#   namespace: monitoring
+# spec:
+#   loadBalancerIP: 192.168.6.66
+#   type: LoadBalancer
+#   ports:
+#     - name: http
+#       protocol: TCP
+#       port: 80
+#       targetPort: 9093
+#     - name: alsohttp
+#       port: 9093
+#       targetPort: 9093
+#   selector:
+#     k8s-app: alertmanager
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: alertmanager-bas
+  namespace: monitoring
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: alertmanager-bas-tls
+  commonName: alerts.bas
+  dnsNames:
+  - alerts.bas
+  - www.alerts.bas
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: alertmanager-https
+  namespace: monitoring
+  annotations:
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+spec:
+  tls:
+  - secretName: alertmanager-bas-tls
+  rules:
+  - host: alerts.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: alertmanager-service
+            port:
+              number: 80
+
+# ---
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: alertmanager-http
+#   namespace: monitoring
+#   annotations:
+#     traefik.ingress.kubernetes.io/router.tls: "false"
+#     traefik.ingress.kubernetes.io/router.entrypoints: "web"
+#     traefik.ingress.kubernetes.io/router.middlewares: "traefik-http-redirect-to-https@kubernetescrd"
+# spec:
+#   rules:
+#   - host: alerts.bas
+#     http:
+#       paths:
+#       - path: /
+#         pathType: Prefix
+#         backend:
+#           service:
+#             name: alertmanager-service
+#             port:
+#               number: 80
+

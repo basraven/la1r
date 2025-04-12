@@ -46,5 +46,8 @@ func SetupRoutes(r *gin.RouterGroup, deviceStates *models.DeviceStates, deviceEv
 	r.GET("/lease/:identifier/:secondsToAdd", func(c *gin.Context) {
 		httphandlers.HandleLeaseRequest(c, deviceStates, deviceEvents)
 	})
+	r.POST("/prometheus/alertmanager", func(c *gin.Context) {
+		httphandlers.HandleAlertManagerRequest(c, deviceStates, deviceEvents)
+	})
 
 }
