@@ -2,3 +2,5 @@ public
 credentials
 credentials-backup
 .vscode
+.terraform
+*.tfstate*

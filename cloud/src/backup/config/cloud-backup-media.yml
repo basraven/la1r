@@ -1,0 +1,30 @@
+---
+apiVersion: backup.la1r.com/v1
+kind: cloudbackup
+metadata:
+  name: cloudbackup-media
+spec:
+  cloud:
+    type: s3-deeparchive
+    bucket: la1r-cloud-backup
+    region: us-east-1
+    prefix: media/
+    compression: 
+      type: 7zip
+      arguments: -m0=lzma2 -mx=9
+    encryption:
+      type: gpg
+  sources:
+    - name: "basraven"
+      path: "/mnt/hdd/media/bas"
+      target: "bas/"
+      excludes:
+    - name: "stephanie"
+      path: "/mnt/hdd/media/stephanie"
+      target: "stephanie/"
+      excludes:
+    - name: "gezin"
+      path: "/mnt/hdd/media/gezin"
+      target: "gezin/"
+      excludes:
+
