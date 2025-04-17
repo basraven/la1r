@@ -11,7 +11,7 @@ spec:
       # blocking:
       #   defaultTimeout: 10s
       dynamic:
-        displayName: Jellyfin
+        displayName: Grafana
         refreshFrequency: 5s
         showDetails: "true"
         theme: shuffle

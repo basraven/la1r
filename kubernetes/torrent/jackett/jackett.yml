@@ -1,0 +1,95 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jackett
+  namespace: torrent
+  labels:
+    app: jackett
+    sablier.enable: "true"
+    sablier.group: qbittorent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jackett
+  template:
+    metadata:
+      labels:
+        app: jackett
+    spec:
+      volumes:
+        - name: jackett-config-volume
+          persistentVolumeClaim:
+            claimName: jackett-config-claim
+      containers:
+      - name: jackett
+        image: linuxserver/jackett
+        ports:
+        - name: http
+          containerPort: 9117
+        env:
+        - name: TZ
+          value: Europe/Amsterdam
+        - name: PGID
+          value: "1000"
+        - name: PUID
+          value: "1000"
+        volumeMounts:
+          - name: jackett-config-volume
+            mountPath: /config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: jackett
+  name: jackett
+  namespace: torrent
+spec:
+  ports:
+  - name: http
+    targetPort: 9117
+    port: 80
+  selector:
+    app: jackett
+  type: ClusterIP
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: jackett-bas
+  namespace: torrent
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: jackett-bas-tls
+  commonName: jackett.bas
+  dnsNames:
+  - jackett.bas
+  - www.jackett.bas
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: jackett-https
+  namespace: torrent
+  annotations:
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+    traefik.ingress.kubernetes.io/router.middlewares: "torrent-sablier-qbittorent@kubernetescrd"
+spec:
+  tls:
+  - secretName: jackett-bas-tls
+  rules:
+  - host: jackett.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: jackett
+            port:
+              number: 80

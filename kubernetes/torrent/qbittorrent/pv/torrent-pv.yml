@@ -1,0 +1,32 @@
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: torrent-config-pv
+  labels:
+    contenttype: "torrent-config"
+spec:
+  capacity:
+    storage: 1Gi
+  storageClassName: torrent-config
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/mnt/ssd/na/torrent-config" # path to directory
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: qbit-torrent-data-pv
+  labels:
+    contenttype: "qbit-torrent-data"
+spec:
+  capacity:
+    storage: 2000Gi
+  storageClassName: qbit-torrent-data
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/mnt/hdd/torrent" # path to directory

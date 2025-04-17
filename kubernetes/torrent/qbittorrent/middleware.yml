@@ -1,0 +1,19 @@
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: sablier-qbittorrent
+  namespace: torrent
+spec:
+  plugin:
+    sablier:
+      group: qbittorrent
+      # blocking:
+      #   defaultTimeout: 10s
+      dynamic:
+        displayName: Qbittorrent
+        refreshFrequency: 5s
+        showDetails: "true"
+        theme: shuffle
+      sablierUrl: http://sablier:10000
+      sessionDuration: 30m
