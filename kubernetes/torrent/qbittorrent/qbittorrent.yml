@@ -36,6 +36,10 @@ spec:
       - name: qbit-torrent-data-volume
         persistentVolumeClaim:
           claimName: qbit-torrent-data-claim
+      - name: qbittorent-openvpn-start-volume
+        configMap:
+          name: qbittorrent-openvpn-start
+          defaultMode: 0744
       containers:
       - name: qbitvpn
         resources: 
@@ -59,14 +63,14 @@ spec:
           capabilities:
             add:
               - NET_ADMIN
-        livenessProbe:
-          httpGet:
-            path: /
-            port: 8080
-          initialDelaySeconds: 20
-          periodSeconds: 10
-          timeoutSeconds: 5
-          failureThreshold: 3
+        # livenessProbe:
+        #   httpGet:
+        #     path: /
+        #     port: 8080
+        #   initialDelaySeconds: 60
+        #   periodSeconds: 10
+        #   timeoutSeconds: 5
+        #   failureThreshold: 3
         ports:
         - name: webui
           containerPort: 8080
@@ -86,6 +90,10 @@ spec:
           value: "1000"
         - name: VPN_ENABLED
           value: yes
+        - name: HEALTH_CHECK_INTERVAL
+          value: "60"
+        - name: HEALTH_CHECK_SILENT
+          value: "0"
         - name: VPN_TYPE
           value: openvpn
         - name: LAN_NETWORK
@@ -95,6 +103,9 @@ spec:
             mountPath: /config
           - name: qbit-torrent-data-volume
             mountPath: /downloads
+          - name: qbittorent-openvpn-start-volume
+            mountPath: /etc/openvpn/start.sh
+            subPath: start.sh
         
 # ---
 # apiVersion: v1

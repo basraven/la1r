@@ -5,3 +5,11 @@ resources:
 - pv
 - middleware.yml
 - qbittorrent.yml
+
+# configmap based on config/start.sh
+configMapGenerator:
+- name: qbittorrent-openvpn-start
+  files:
+  - config/start.sh
+generatorOptions:
+  disableNameSuffixHash: true
