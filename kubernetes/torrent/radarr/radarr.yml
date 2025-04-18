@@ -2,21 +2,26 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: jackett
+  name: radarr
   namespace: torrent
   labels:
-    app: jackett
+    app: radarr
     sablier.enable: "true"
     sablier.group: qbittorrent
 spec:
   replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
   selector:
     matchLabels:
-      app: jackett
+      app: radarr
   template:
     metadata:
       labels:
-        app: jackett
+        app: radarr
     spec:
       # NonEssential
       affinity:
@@ -29,15 +34,19 @@ spec:
                 values:
                 - "true"
       volumes:
-        - name: jackett-config-volume
+        - name: radarr-config-volume
           persistentVolumeClaim:
-            claimName: jackett-config-claim
+            claimName: radarr-config-claim
+        - name: radarr-torrent-volume
+          persistentVolumeClaim:
+            claimName: radarr-torrent-data-claim
       containers:
-      - name: jackett
-        image: linuxserver/jackett
+      - name: radarr
+        resources:
+        image: linuxserver/radarr
         ports:
         - name: http
-          containerPort: 9117
+          containerPort: 7878
         env:
         - name: TZ
           value: Europe/Amsterdam
@@ -46,60 +55,64 @@ spec:
         - name: PUID
           value: "1000"
         volumeMounts:
-          - name: jackett-config-volume
+          - name: radarr-config-volume
             mountPath: /config
+          - name: radarr-torrent-volume
+            mountPath: /downloads
+       
 ---
 apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: jackett
-  name: jackett
+    app: radarr
+  name: radarr
   namespace: torrent
 spec:
   ports:
   - name: http
-    targetPort: 9117
+    targetPort: 7878
     port: 80
   selector:
-    app: jackett
+    app: radarr
   type: ClusterIP
+
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: jackett-bas
+  name: radarr-bas
   namespace: torrent
 spec:
   issuerRef:
     name: la1r
     kind: ClusterIssuer
-  secretName: jackett-bas-tls
-  commonName: jackett.bas
+  secretName: radarr-bas-tls
+  commonName: radarr.bas
   dnsNames:
-  - jackett.bas
-  - www.jackett.bas
+  - radarr.bas
+  - www.radarr.bas
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: jackett-https
+  name: radarr-https
   namespace: torrent
   annotations:
     traefik.ingress.kubernetes.io/router.tls: "true"
     traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
-    traefik.ingress.kubernetes.io/router.middlewares: "torrent-sablier-jackett@kubernetescrd"
+    traefik.ingress.kubernetes.io/router.middlewares: "torrent-sablier-radarr@kubernetescrd"
 spec:
   tls:
-  - secretName: jackett-bas-tls
+  - secretName: radarr-bas-tls
   rules:
-  - host: jackett.bas
+  - host: radarr.bas
     http:
       paths:
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: jackett
+            name: radarr
             port:
               number: 80

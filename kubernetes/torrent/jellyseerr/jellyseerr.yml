@@ -2,21 +2,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: jackett
+  name: jellyseerr
   namespace: torrent
   labels:
-    app: jackett
+    app: jellyseerr
     sablier.enable: "true"
     sablier.group: qbittorrent
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: jackett
+      app: jellyseerr
   template:
     metadata:
       labels:
-        app: jackett
+        app: jellyseerr
     spec:
       # NonEssential
       affinity:
@@ -28,16 +28,21 @@ spec:
                 operator: In
                 values:
                 - "true"
+
       volumes:
-        - name: jackett-config-volume
+        - name: jellyseerr-config-volume
           persistentVolumeClaim:
-            claimName: jackett-config-claim
+            claimName: jellyseerr-config-claim
+        # - name: jellyseerr-torrent-volume
+        #   persistentVolumeClaim:
+        #     claimName: jellyseerr-torrent-data-claim
       containers:
-      - name: jackett
-        image: linuxserver/jackett
+      - name: jellyseerr
+        resources:
+        image: ghcr.io/fallenbagel/jellyseerr
         ports:
         - name: http
-          containerPort: 9117
+          containerPort: 5055
         env:
         - name: TZ
           value: Europe/Amsterdam
@@ -45,61 +50,78 @@ spec:
           value: "1000"
         - name: PUID
           value: "1000"
+        - name: port
+          value: "5055" # default 5055
         volumeMounts:
-          - name: jackett-config-volume
-            mountPath: /config
+          - name: jellyseerr-config-volume
+            mountPath: /app/config
+          # - name: jellyseerr-torrent-volume
+          #   mountPath: /downloads
 ---
 apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: jackett
-  name: jackett
+    app: jellyseerr
+  name: jellyseerr
   namespace: torrent
 spec:
   ports:
   - name: http
-    targetPort: 9117
+    targetPort: 5055
     port: 80
   selector:
-    app: jackett
+    app: jellyseerr
   type: ClusterIP
+
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: jackett-bas
+  name: jellyseerr-bas
   namespace: torrent
 spec:
   issuerRef:
     name: la1r
     kind: ClusterIssuer
-  secretName: jackett-bas-tls
-  commonName: jackett.bas
+  secretName: jellyseerr-bas-tls
+  commonName: jellyseerr.bas
   dnsNames:
-  - jackett.bas
-  - www.jackett.bas
+  - jellyseerr.bas
+  - www.jellyseerr.bas
+  - basflix.bas
+  - www.basflix.bas
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: jackett-https
+  name: jellyseerr-https
   namespace: torrent
   annotations:
     traefik.ingress.kubernetes.io/router.tls: "true"
     traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
-    traefik.ingress.kubernetes.io/router.middlewares: "torrent-sablier-jackett@kubernetescrd"
+    traefik.ingress.kubernetes.io/router.middlewares: "torrent-sablier-jellyseerr@kubernetescrd"
 spec:
   tls:
-  - secretName: jackett-bas-tls
+  - secretName: jellyseerr-bas-tls
   rules:
-  - host: jackett.bas
+  - host: jellyseerr.bas
     http:
       paths:
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: jackett
+            name: jellyseerr
+            port:
+              number: 80
+  - host: basflix.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: jellyseerr
             port:
               number: 80

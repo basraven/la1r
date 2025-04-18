@@ -2,21 +2,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: jackett
+  name: sonarr
   namespace: torrent
   labels:
-    app: jackett
+    app: sonarr
     sablier.enable: "true"
     sablier.group: qbittorrent
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: jackett
+      app: sonarr
   template:
     metadata:
       labels:
-        app: jackett
+        app: sonarr
     spec:
       # NonEssential
       affinity:
@@ -28,16 +28,21 @@ spec:
                 operator: In
                 values:
                 - "true"
+
       volumes:
-        - name: jackett-config-volume
+        - name: sonarr-config-volume
           persistentVolumeClaim:
-            claimName: jackett-config-claim
+            claimName: sonarr-config-claim
+        - name: sonarr-torrent-volume
+          persistentVolumeClaim:
+            claimName: sonarr-torrent-data-claim
       containers:
-      - name: jackett
-        image: linuxserver/jackett
+      - name: sonarr
+        resources:
+        image: linuxserver/sonarr
         ports:
         - name: http
-          containerPort: 9117
+          containerPort: 8989
         env:
         - name: TZ
           value: Europe/Amsterdam
@@ -46,60 +51,63 @@ spec:
         - name: PUID
           value: "1000"
         volumeMounts:
-          - name: jackett-config-volume
+          - name: sonarr-config-volume
             mountPath: /config
+          - name: sonarr-torrent-volume
+            mountPath: /downloads
 ---
 apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app: jackett
-  name: jackett
+    app: sonarr
+  name: sonarr
   namespace: torrent
 spec:
   ports:
   - name: http
-    targetPort: 9117
+    targetPort: 8989
     port: 80
   selector:
-    app: jackett
+    app: sonarr
   type: ClusterIP
+
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: jackett-bas
+  name: sonarr-bas
   namespace: torrent
 spec:
   issuerRef:
     name: la1r
     kind: ClusterIssuer
-  secretName: jackett-bas-tls
-  commonName: jackett.bas
+  secretName: sonarr-bas-tls
+  commonName: sonarr.bas
   dnsNames:
-  - jackett.bas
-  - www.jackett.bas
+  - sonarr.bas
+  - www.sonarr.bas
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: jackett-https
+  name: sonarr-https
   namespace: torrent
   annotations:
     traefik.ingress.kubernetes.io/router.tls: "true"
     traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
-    traefik.ingress.kubernetes.io/router.middlewares: "torrent-sablier-jackett@kubernetescrd"
+    traefik.ingress.kubernetes.io/router.middlewares: "torrent-sablier-sonarr@kubernetescrd"
 spec:
   tls:
-  - secretName: jackett-bas-tls
+  - secretName: sonarr-bas-tls
   rules:
-  - host: jackett.bas
+  - host: sonarr.bas
     http:
       paths:
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: jackett
+            name: sonarr
             port:
               number: 80

@@ -4,13 +4,13 @@ apiVersion: v1
 metadata:
   name: jackett-config-pv
   labels:
-    contenttype: "jackett-config"
+    contenttype: "jackett-config-data"
 spec:
   capacity:
     storage: 1Gi
-  storageClassName: jackett-config
+  storageClassName: jackett-config-data
   persistentVolumeReclaimPolicy: Retain
   accessModes:
   - ReadWriteOnce
   hostPath:
-    path: "/mnt/ssd/na/jackett-config" # path to directory
+    path: "/mnt/ssd/na/jackett-config"

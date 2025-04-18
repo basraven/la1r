@@ -6,8 +6,8 @@ metadata:
   namespace: torrent
   labels:
     app: qbittorrent
-    sablier.enable: "true"
-    sablier.group: qbittorrent
+    # sablier.enable: "true"
+    # sablier.group: qbittorrent
 spec:
   replicas: 1
   selector:
@@ -59,6 +59,14 @@ spec:
           capabilities:
             add:
               - NET_ADMIN
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
         ports:
         - name: webui
           containerPort: 8080
@@ -97,7 +105,7 @@ metadata:
 spec:
   ports:
   - name: webui
-    port: 8086
+    port: 80
     targetPort: 8080
     protocol: TCP
   - name: tcplisten

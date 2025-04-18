@@ -1,0 +1,32 @@
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: radarr-config-pv
+  labels:
+    contenttype: "radarr-config"
+spec:
+  capacity:
+    storage: 1Gi
+  storageClassName: radarr-config-data
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/mnt/ssd/na/radarr-config"
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: radarr-torrent-data-pv
+  labels:
+    contenttype: "radarr-torrent-data"
+spec:
+  capacity:
+    storage: 10Gi
+  storageClassName: radarr-torrent-data
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/mnt/hdd/torrent"

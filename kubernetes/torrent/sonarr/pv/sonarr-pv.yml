@@ -2,31 +2,31 @@
 kind: PersistentVolume
 apiVersion: v1
 metadata:
-  name: torrent-data-pv
+  name: sonarr-config-pv
   labels:
-    contenttype: "torrent-data"
+    contenttype: "sonarr-config"
 spec:
   capacity:
-    storage: 2000Gi
-  storageClassName: torrent-data
+    storage: 1Gi
+  storageClassName: sonarr-config-data
   persistentVolumeReclaimPolicy: Retain
   accessModes:
   - ReadWriteOnce
   hostPath:
-    path: "/mnt/hdd/torrent" # path to directory
+    path: "/mnt/ssd/na/sonarr-config"
 ---
 kind: PersistentVolume
 apiVersion: v1
 metadata:
-  name: torrent-config-pv
+  name: sonarr-torrent-data-pv
   labels:
-    contenttype: "torrent-config"
+    contenttype: "sonarr-torrent-data"
 spec:
   capacity:
-    storage: 2Gi
-  storageClassName: torrent-config
+    storage: 10Gi
+  storageClassName: sonarr-torrent-data
   persistentVolumeReclaimPolicy: Retain
   accessModes:
   - ReadWriteOnce
   hostPath:
-    path: "/mnt/ssd/na/torrent-config" # path to directory
+    path: "/mnt/hdd/torrent"

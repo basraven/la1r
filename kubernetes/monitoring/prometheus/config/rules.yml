@@ -9,7 +9,7 @@ groups:
         
         expr: |
           # 1. HTTPS DNS endpoint for past 15 mins
-          SUM(increase(traefik_router_requests_total{router=~".*jellyfin.*"}[15m]))
+          SUM(increase(traefik_router_requests_total{router=~".*jelly.*"}[15m]))
           +
           # 2. HTTP IP endpoint for past 15 mins
           SUM(increase(traefik_entrypoint_requests_total{entrypoint="jellyfin"}[15m]))

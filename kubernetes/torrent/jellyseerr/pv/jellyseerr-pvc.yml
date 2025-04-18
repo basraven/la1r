@@ -1,0 +1,27 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: jellyseerr-config-claim
+  namespace: torrent
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: jellyseerr-config-data
+  resources:
+    requests:
+      storage: 1Gi
+# ---
+# apiVersion: v1
+# kind: PersistentVolumeClaim
+# metadata:
+#   name: jellyseerr-torrent-data-claim
+#   namespace: torrent
+# spec:
+#   accessModes:
+#     - ReadWriteOnce
+#   storageClassName: jellyseerr-torrent-data
+#   resources:
+#     requests:
+#       storage: 10Gi
+      
