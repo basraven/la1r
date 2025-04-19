@@ -16,10 +16,13 @@ spec:
       type: gpg
   sources:
     - name: "media"
-      path: "/home/basraven/projects/la1r/kubernetes/backup/cloud-backup/media"
-      target: "/home/basraven/projects/la1r/kubernetes/backup/cloud-backup/media-zipped"
+      path: "/home/basraven/Projects/la1r/kubernetes/backup/cloud-backup/media"
+      target: "/home/basraven/Projects/la1r/kubernetes/backup/cloud-backup/media-zipped"
       excludes:
-      - media/top_3/folder_3013/folder_4589_notme
+      - media/top_18845/folder_24764not
+      - media/top_not_14594
+      - media/top_not_existing_folder
+      - media/top_14594/folder_23767/folder_32629/folder_13071_not
     # - name: "stephanie"
     #   path: "/mnt/hdd/media/stephanie"
     #   target: "stephanie/"
