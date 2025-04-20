@@ -78,6 +78,14 @@ read_config() {
   COMPRESSION_ARGS=$(yq '.spec.compression.arguments' "$CONFIG_FILE")
   ENCRYPTION_TYPE=$(yq '.spec.encryption.type' "$CONFIG_FILE")
   
+  # Debug output of parsed config
+  if [ "$DRY_RUN" = true ]; then
+    echo "Parsed config values:"
+    echo "COMPRESSION_TYPE: '$COMPRESSION_TYPE'"
+    echo "COMPRESSION_ARGS: '$COMPRESSION_ARGS'"
+    echo "ENCRYPTION_TYPE: '$ENCRYPTION_TYPE'"
+  fi
+  
   # Count sources
   SOURCE_COUNT=$(yq '.spec.sources | length' "$CONFIG_FILE")
 }
@@ -90,6 +98,10 @@ process_source() {
   local target_path=$(yq ".spec.sources[$source_index].target" "$CONFIG_FILE")
   
   echo "Processing source: $source_name"
+  if [ "$DRY_RUN" = true ]; then
+    echo "[DRY RUN] Would process source: $source_name"
+    echo "[DRY RUN] Would process target: $target_path"
+  fi
   
   # Create target directory if it doesn't exist
   if [ ! -d "$target_path" ]; then
@@ -120,7 +132,7 @@ process_source() {
     for ((j=0; j<excludes_count; j++)); do
       local exclude_pattern=$(yq ".spec.sources[$source_index].excludes[$j]" "$CONFIG_FILE")
       if [ -n "$exclude_pattern" ]; then
-        if [ "$COMPRESSION_TYPE" = "7zip" ]; then
+        if [[ "$COMPRESSION_TYPE" == "7zip" ]]; then
           exclude_args_7z="$exclude_args_7z -xr!$exclude_pattern"
         else
           exclude_args_tar+=("--exclude=$exclude_pattern")
@@ -279,15 +291,16 @@ process_source() {
     local archive_path="$target_path/$archive_name"
     local archive_file=""
     
-    # Compress directory
-    if [ "$COMPRESSION_TYPE" = "7zip" ]; then
+    # Compress directory - use strict string comparison with quotes
+    if [[ "$COMPRESSION_TYPE" == "7zip" ]]; then
       if [ "$DRY_RUN" = false ]; then
         echo "Compressing $dir to $archive_path.7z with 7zip"
-        # For 7zip, we can pass the compression arguments directly
-        7z a $COMPRESSION_ARGS "$archive_path.7z" "$dir/"* $exclude_args_7z
+        # For 7zip, we can pass the compression arguments directly, write stdout to /dev/null, stderr is not redirected
+        7z a $COMPRESSION_ARGS "$archive_path.7z" "$dir/"* $exclude_args_7z > /dev/null
         archive_file="$archive_path.7z"
       else
-        echo "[DRY RUN] Would compress $dir to $archive_path.7z with args: $COMPRESSION_ARGS $exclude_args_7z"
+        echo "[DRY RUN] Would compress $dir to $archive_path.7z with 7zip"
+        # echo "[DRY RUN] Using args: 7z a $COMPRESSION_ARGS \"$archive_path.7z\" \"$dir/\"* $exclude_args_7z"
         archive_file="$archive_path.7z"
       fi
     else
@@ -334,6 +347,9 @@ main() {
   echo "Config file: $CONFIG_FILE"
   echo "Dry run: $DRY_RUN"
   echo "Compression type: $COMPRESSION_TYPE"
+  if [ -n "$COMPRESSION_ARGS" ] && [ "$COMPRESSION_ARGS" != "null" ]; then
+    echo "Compression args: $COMPRESSION_ARGS"
+  fi
   echo "Encryption type: $ENCRYPTION_TYPE"
   echo "Sources to process: $SOURCE_COUNT"
   echo "-------------------"
