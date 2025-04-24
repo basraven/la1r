@@ -133,7 +133,7 @@ process_source() {
       local exclude_pattern=$(yq ".spec.sources[$source_index].excludes[$j]" "$CONFIG_FILE")
       if [ -n "$exclude_pattern" ]; then
         if [[ "$COMPRESSION_TYPE" == "7zip" ]]; then
-          exclude_args_7z="$exclude_args_7z -xr!$exclude_pattern"
+          exclude_args_7z="$exclude_args_7z -xr!\"$exclude_pattern\""
         else
           exclude_args_tar+=("--exclude=$exclude_pattern")
         fi
@@ -151,7 +151,7 @@ process_source() {
   cd "$source_path" || exit 1
   
   # Find all directories that contain files but exclude deepest level directories
-  find . -type f -not -path "*/\.*" | while read -r file; do
+  find . -type f -not -path "*/\.*" -print0 | while IFS= read -r -d '' file; do
     # Get parent directory (deepest level - 1)
     dir=$(dirname "$file")
     parent_dir=$(dirname "$dir")
@@ -173,7 +173,7 @@ process_source() {
       local file_hash=$(md5sum "$file" | awk '{print $1}')
       # Add to new hashes
       if [ "$DRY_RUN" = false ]; then
-        echo "$parent_dir,$file,$file_hash" >> "$temp_hash_file"
+        printf "%s,%s,%s\n" "$parent_dir" "$file" "$file_hash" >> "$temp_hash_file"
       else
         echo "[DRY RUN] Would hash file: $file"
       fi
@@ -206,7 +206,7 @@ process_source() {
     done < "$temp_hash_file"
   else
     # If no previous hash file, count all files as changed
-    find "$source_path" -type f -not -path "*/\.*" | while read -r file; do
+    find "$source_path" -type f -not -path "*/\.*" -print0 | while IFS= read -r -d '' file; do
       local exclude_match=false
       if [ "$excludes_count" != "0" ]; then
         for ((j=0; j<excludes_count; j++)); do
@@ -254,9 +254,13 @@ process_source() {
   
   # Find all directories that contain files but exclude deepest level directories
   # We need to get unique parent directories (deepest level - 1)
-  local unique_dirs=$(find . -type f -not -path "*/\.*" | sed 's|/[^/]*$||' | sort | uniq)
+  local temp_dirs_file=$(mktemp)
+  find . -type f -not -path "*/\.*" -print0 | xargs -0 -I{} dirname "{}" | sort -u | while IFS= read -r file_dir; do
+    dirname "$file_dir" >> "$temp_dirs_file"
+  done
+  sort -u "$temp_dirs_file" > "${temp_dirs_file}.sorted"
   
-  for dir in $unique_dirs; do
+  while IFS= read -r dir; do
     # Skip if it's the root directory
     if [ "$dir" = "." ]; then
       continue
@@ -279,28 +283,37 @@ process_source() {
       continue
     fi
     
-    # Create archive name from directory
+    # Create archive name from directory, preserving folder structure
     local archive_name=$(basename "$dir")
     local parent_dir=$(dirname "$dir")
-    if [ "$parent_dir" = "." ]; then
-      parent_dir=""
+    
+    # Create target directory structure if it doesn't exist
+    local target_subdir="$target_path/$parent_dir"
+    if [ "$parent_dir" != "." ]; then
+      if [ "$DRY_RUN" = false ]; then
+        mkdir -p "$target_subdir"
+      else
+        echo "[DRY RUN] Would create directory structure: $target_subdir"
+      fi
     else
-      parent_dir="/$parent_dir"
+      target_subdir="$target_path"
     fi
     
-    local archive_path="$target_path/$archive_name"
+    local archive_path="$target_subdir/$archive_name"
     local archive_file=""
+    
+    # Get all subdirectories of current directory for compression
+    local dir_pattern="$dir/*"
     
     # Compress directory - use strict string comparison with quotes
     if [[ "$COMPRESSION_TYPE" == "7zip" ]]; then
       if [ "$DRY_RUN" = false ]; then
         echo "Compressing $dir to $archive_path.7z with 7zip"
         # For 7zip, we can pass the compression arguments directly, write stdout to /dev/null, stderr is not redirected
-        7z a $COMPRESSION_ARGS "$archive_path.7z" "$dir/"* $exclude_args_7z > /dev/null
+        7z a $COMPRESSION_ARGS "$archive_path.7z" "$dir_pattern" $exclude_args_7z > /dev/null
         archive_file="$archive_path.7z"
       else
         echo "[DRY RUN] Would compress $dir to $archive_path.7z with 7zip"
-        # echo "[DRY RUN] Using args: 7z a $COMPRESSION_ARGS \"$archive_path.7z\" \"$dir/\"* $exclude_args_7z"
         archive_file="$archive_path.7z"
       fi
     else
@@ -331,7 +344,10 @@ process_source() {
     elif [ "$ENCRYPTION_TYPE" = "gpg" ] && [ "$DRY_RUN" = true ]; then
       echo "[DRY RUN] Would encrypt $archive_file with GPG"
     fi
-  done
+  done < "${temp_dirs_file}.sorted"
+  
+  # Clean up temporary files
+  rm -f "$temp_dirs_file" "${temp_dirs_file}.sorted"
   
   cd "$original_dir" || exit 1
 }
