@@ -252,21 +252,22 @@ process_source() {
   # Process directories and zip/encrypt
   cd "$source_path" || exit 1
   
-  # Find all directories that contain files but exclude deepest level directories
-  # We need to get unique parent directories (deepest level - 1)
+  # Fix: Find directories that contain files directly (not just subdirectories)
   local temp_dirs_file=$(mktemp)
-  find . -type f -not -path "*/\.*" -print0 | xargs -0 -I{} dirname "{}" | sort -u | while IFS= read -r file_dir; do
-    dirname "$file_dir" >> "$temp_dirs_file"
-  done
-  sort -u "$temp_dirs_file" > "${temp_dirs_file}.sorted"
+  # Get all directories first
+  find . -type d -not -path "*/\.*" | sort > "$temp_dirs_file"
   
+  # Create a temporary file to record processed directories
+  local processed_dirs=$(mktemp)
+  
+  # Process each directory to determine if it should be archived
   while IFS= read -r dir; do
     # Skip if it's the root directory
     if [ "$dir" = "." ]; then
       continue
     fi
     
-    # Check if directory matches any exclude pattern
+    # Skip if directory matches any exclude pattern
     local exclude_match=false
     if [ "$excludes_count" != "0" ]; then
       for ((j=0; j<excludes_count; j++)); do
@@ -283,71 +284,90 @@ process_source() {
       continue
     fi
     
-    # Create archive name from directory, preserving folder structure
-    local archive_name=$(basename "$dir")
-    local parent_dir=$(dirname "$dir")
-    
-    # Create target directory structure if it doesn't exist
-    local target_subdir="$target_path/$parent_dir"
-    if [ "$parent_dir" != "." ]; then
-      if [ "$DRY_RUN" = false ]; then
-        mkdir -p "$target_subdir"
-      else
-        echo "[DRY RUN] Would create directory structure: $target_subdir"
+    # Fix: Check if this directory contains files directly
+    if [ -n "$(find "$dir" -maxdepth 1 -type f -not -path "*/\.*" 2>/dev/null)" ]; then
+      # Check if any parent directory of this one has already been processed
+      local parent_processed=false
+      local current_dir="$dir"
+      local dir_depth=$(echo "$dir" | tr -cd '/' | wc -c)
+      
+      while [ "$current_dir" != "." ] && [ "$current_dir" != "./" ]; do
+        current_dir=$(dirname "$current_dir")
+        if grep -q "^$current_dir$" "$processed_dirs"; then
+          parent_processed=true
+          break
+        fi
+      done
+      
+      # Skip if any parent has been processed to avoid double-inclusion
+      if [ "$parent_processed" = true ]; then
+        echo "Skipping $dir as a parent directory has already been processed"
+        continue
       fi
-    else
-      target_subdir="$target_path"
-    fi
-    
-    local archive_path="$target_subdir/$archive_name"
-    local archive_file=""
-    
-    # Get all subdirectories of current directory for compression
-    local dir_pattern="$dir/*"
-    
-    # Compress directory - use strict string comparison with quotes
-    if [[ "$COMPRESSION_TYPE" == "7zip" ]]; then
+      
+      echo "$dir" >> "$processed_dirs"
+      
+      # Create the same directory structure in the target
+      local rel_dir="${dir#./}"
+      local dir_name=$(basename "$rel_dir")
+      local parent_path=$(dirname "$rel_dir")
+      local target_dir="$target_path/$parent_path"
+      
+      # Create target directory structure if it doesn't exist
       if [ "$DRY_RUN" = false ]; then
-        echo "Compressing $dir to $archive_path.7z with 7zip"
-        # For 7zip, we can pass the compression arguments directly, write stdout to /dev/null, stderr is not redirected
-        7z a $COMPRESSION_ARGS "$archive_path.7z" "$dir_pattern" $exclude_args_7z > /dev/null
-        archive_file="$archive_path.7z"
+        mkdir -p "$target_dir"
       else
-        echo "[DRY RUN] Would compress $dir to $archive_path.7z with 7zip"
-        archive_file="$archive_path.7z"
+        echo "[DRY RUN] Would create directory structure: $target_dir"
       fi
-    else
-      if [ "$DRY_RUN" = false ]; then
-        echo "Compressing $dir to $archive_path.tar.gz with tar"
-        # For tar, place exclude options before other arguments
-        if [ ${#exclude_args_tar[@]} -gt 0 ]; then
-          tar "${exclude_args_tar[@]}" -czf "$archive_path.tar.gz" -C "$dir" .
+      
+      # Now we place the archive in the correct nested location
+      local archive_path="$target_dir/$dir_name"
+      local archive_file=""
+      
+      # Compress directory - use strict string comparison with quotes
+      if [[ "$COMPRESSION_TYPE" == "7zip" ]]; then
+        if [ "$DRY_RUN" = false ]; then
+          echo "Compressing $dir to $archive_path.7z with 7zip"
+          # For 7zip, we can pass the compression arguments directly
+          7z a $COMPRESSION_ARGS "$archive_path.7z" "$dir/"* $exclude_args_7z > /dev/null
+          archive_file="$archive_path.7z"
         else
-          tar -czf "$archive_path.tar.gz" -C "$dir" .
+          echo "[DRY RUN] Would compress $dir to $archive_path.7z with 7zip"
+          archive_file="$archive_path.7z"
         fi
-        archive_file="$archive_path.tar.gz"
       else
-        echo "[DRY RUN] Would compress $dir to $archive_path.tar.gz with tar"
-        if [ ${#exclude_args_tar[@]} -gt 0 ]; then
-          echo "[DRY RUN] Using excludes: ${exclude_args_tar[*]}"
+        if [ "$DRY_RUN" = false ]; then
+          echo "Compressing $dir to $archive_path.tar.gz with tar"
+          # For tar, place exclude options before other arguments
+          if [ ${#exclude_args_tar[@]} -gt 0 ]; then
+            tar "${exclude_args_tar[@]}" -czf "$archive_path.tar.gz" -C "$dir" .
+          else
+            tar -czf "$archive_path.tar.gz" -C "$dir" .
+          fi
+          archive_file="$archive_path.tar.gz"
+        else
+          echo "[DRY RUN] Would compress $dir to $archive_path.tar.gz with tar"
+          if [ ${#exclude_args_tar[@]} -gt 0 ]; then
+            echo "[DRY RUN] Using excludes: ${exclude_args_tar[*]}"
+          fi
+          archive_file="$archive_path.tar.gz"
         fi
-        archive_file="$archive_path.tar.gz"
+      fi
+      
+      # Encrypt archive if specified
+      if [ "$ENCRYPTION_TYPE" = "gpg" ] && [ "$DRY_RUN" = false ]; then
+        echo "Encrypting $archive_file"
+        gpg --symmetric --cipher-algo AES256 --batch --passphrase-file ~/.backup-passphrase "$archive_file"
+        rm -f "$archive_file"
+        echo "Encrypted file saved to $archive_file.gpg"
+      elif [ "$ENCRYPTION_TYPE" = "gpg" ] && [ "$DRY_RUN" = true ]; then
+        echo "[DRY RUN] Would encrypt $archive_file with GPG"
       fi
     fi
-    
-    # Encrypt archive if specified
-    if [ "$ENCRYPTION_TYPE" = "gpg" ] && [ "$DRY_RUN" = false ]; then
-      echo "Encrypting $archive_file"
-      gpg --symmetric --cipher-algo AES256 --batch --passphrase-file ~/.backup-passphrase "$archive_file"
-      rm -f "$archive_file"
-      echo "Encrypted file saved to $archive_file.gpg"
-    elif [ "$ENCRYPTION_TYPE" = "gpg" ] && [ "$DRY_RUN" = true ]; then
-      echo "[DRY RUN] Would encrypt $archive_file with GPG"
-    fi
-  done < "${temp_dirs_file}.sorted"
+  done < "$temp_dirs_file"
   
   # Clean up temporary files
-  rm -f "$temp_dirs_file" "${temp_dirs_file}.sorted"
+  rm -f "$temp_dirs_file" "$processed_dirs"
   
   cd "$original_dir" || exit 1
 }

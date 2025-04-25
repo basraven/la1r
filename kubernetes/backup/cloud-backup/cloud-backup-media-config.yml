@@ -9,11 +9,11 @@ spec:
     bucket: la1r-cloud-backup
     region: us-east-1
     prefix: media/
-    compression: 
-      type: 7zip
-      arguments: -m0=lzma2 -mx=9
-    encryption:
-      type: gpg
+  # compression: 
+  #   type: 7zip
+  #   arguments: -m0=lzma2 -mx=9
+  # encryption:
+  #   type: gpg
   sources:
     - name: "media"
       path: "/home/basraven/Projects/la1r/kubernetes/backup/cloud-backup/media"
