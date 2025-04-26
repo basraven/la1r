@@ -29,6 +29,11 @@ check_dependencies() {
     missing_deps+=("md5sum (install with 'apt-get install coreutils' or equivalent)")
   fi
   
+  # Check for jq
+  if ! command -v jq &> /dev/null; then
+    missing_deps+=("jq (install with 'apt-get install jq' or equivalent)")
+  fi
+  
   if [ ${#missing_deps[@]} -gt 0 ]; then
     echo "Error: Missing required dependencies:"
     for dep in "${missing_deps[@]}"; do
@@ -145,10 +150,24 @@ process_source() {
   local temp_hash_file=$(mktemp)
   local original_dir=$(pwd)
   local json_file="$original_dir/backup-hashes.json"
+  local prev_json_file="$original_dir/prev-backup-hashes.json"
+  
+  # Initialize the JSON structure for backup-hashes.json if it doesn't exist
+  if [ ! -f "$json_file" ]; then
+    echo '{"folders": {}, "deleted_folders": []}' > "$json_file"
+  elif ! jq -e '.folders' "$json_file" > /dev/null 2>&1 || ! jq -e '.deleted_folders' "$json_file" > /dev/null 2>&1; then
+    # Convert old format to new format if needed
+    local old_content=$(cat "$json_file")
+    echo "{\"folders\": $old_content, \"deleted_folders\": []}" > "$json_file"
+  fi
   
   # Build new hash file
   echo "Building file hashes for $source_path"
   cd "$source_path" || exit 1
+  
+  # Create a temporary directories map
+  local temp_dirs_map=$(mktemp)
+  echo "{}" > "$temp_dirs_map"
   
   # Find all directories that contain files but exclude deepest level directories
   find . -type f -not -path "*/\.*" -print0 | while IFS= read -r -d '' file; do
@@ -171,9 +190,26 @@ process_source() {
     if [ "$exclude_match" = false ]; then
       # Compute hash for the file
       local file_hash=$(md5sum "$file" | awk '{print $1}')
+      # Append to accumulated hash for the directory
+      local dir_name=$(basename "$dir")
+      # Update the directory hash in the map
+      local dir_path="${dir#./}"
+      if [ "$dir_path" = "" ]; then
+        dir_path="."
+      fi
+      
+      # Update the directory hash by combining all file hashes
+      if jq -e ".\"$dir_path\"" "$temp_dirs_map" > /dev/null 2>&1; then
+        local current_hash=$(jq -r ".\"$dir_path\"" "$temp_dirs_map")
+        local new_hash=$(echo -n "$current_hash$file_hash" | md5sum | awk '{print $1}')
+        jq --arg path "$dir_path" --arg hash "$new_hash" '.[$path] = $hash' "$temp_dirs_map" > "${temp_dirs_map}.tmp" && mv "${temp_dirs_map}.tmp" "$temp_dirs_map"
+      else
+        jq --arg path "$dir_path" --arg hash "$file_hash" '.[$path] = $hash' "$temp_dirs_map" > "${temp_dirs_map}.tmp" && mv "${temp_dirs_map}.tmp" "$temp_dirs_map"
+      fi
+      
       # Add to new hashes
       if [ "$DRY_RUN" = false ]; then
-        printf "%s,%s,%s\n" "$parent_dir" "$file" "$file_hash" >> "$temp_hash_file"
+        printf "%s,%s,%s\n" "$dir_path" "$file" "$file_hash" >> "$temp_hash_file"
       else
         echo "[DRY RUN] Would hash file: $file"
       fi
@@ -183,71 +219,89 @@ process_source() {
   # Return to original directory
   cd "$original_dir" || exit 1
   
-  # Read old hashes if they exist
-  local changed_bytes=0
+  # Get the list of all new folders that we found in this run
+  local new_folders=$(jq -r 'keys[]' "$temp_dirs_map" 2>/dev/null || echo "")
   
-  if [ -f "$json_file" ]; then
-    local old_hashes=$(cat "$json_file")
+  # Get the existing deleted folders list from backup-hashes.json
+  local existing_deleted_folders=$(jq -r '.deleted_folders[]' "$json_file" 2>/dev/null || echo "")
+  local deleted_folders_array=()
+  
+  # Add existing deleted folders to our array
+  while IFS= read -r folder; do
+    if [ -n "$folder" ]; then
+      deleted_folders_array+=("$folder")
+    fi
+  done <<< "$existing_deleted_folders"
+  
+  # Create a temporary file to store prev folders
+  local temp_prev_folders=$(mktemp)
+  
+  # Read previous hash file if it exists
+  if [ -f "$prev_json_file" ]; then
+    # Check if prev file has the new structure
+    if jq -e '.folders' "$prev_json_file" > /dev/null 2>&1; then
+      # New structure
+      jq -r '.folders | keys[]' "$prev_json_file" > "$temp_prev_folders" 2>/dev/null
+    else
+      # Old structure
+      jq -r 'keys[]' "$prev_json_file" > "$temp_prev_folders" 2>/dev/null
+    fi
     
-    # Compare hashes and calculate changed bytes
-    while IFS=, read -r dir file hash; do
-      if [ -n "$dir" ] && [ -n "$file" ] && [ -n "$hash" ]; then
-        local full_path="$source_path/$file"
-        # Use grep to find the old hash (if exists) for this file
-        local old_hash=$(echo "$old_hashes" | grep -o "\"$file\":\"[^\"]*\"" | cut -d '"' -f 4)
-        
-        if [ "$old_hash" != "$hash" ]; then
-          if [ -f "$full_path" ]; then
-            local file_size=$(stat -c %s "$full_path")
-            changed_bytes=$((changed_bytes + file_size))
+    # Find folders that existed in previous backup but not in current backup
+    while IFS= read -r prev_folder; do
+      if [ -n "$prev_folder" ]; then
+        # Check if the folder exists in the new hash map
+        if ! jq -e "has(\"$prev_folder\")" "$temp_dirs_map" > /dev/null 2>&1; then
+          # Check if it's not already in our deleted folders array
+          local already_deleted=false
+          for deleted in "${deleted_folders_array[@]}"; do
+            if [ "$deleted" = "$prev_folder" ]; then
+              already_deleted=true
+              break
+            fi
+          done
+          
+          if [ "$already_deleted" = false ]; then
+            echo "Adding $prev_folder to deleted_folders as it's no longer present"
+            deleted_folders_array+=("$prev_folder")
           fi
         fi
       fi
-    done < "$temp_hash_file"
-  else
-    # If no previous hash file, count all files as changed
-    find "$source_path" -type f -not -path "*/\.*" -print0 | while IFS= read -r -d '' file; do
-      local exclude_match=false
-      if [ "$excludes_count" != "0" ]; then
-        for ((j=0; j<excludes_count; j++)); do
-          local exclude_pattern=$(yq ".spec.sources[$source_index].excludes[$j]" "$CONFIG_FILE")
-          if [[ "$file" == *"$exclude_pattern"* ]]; then
-            exclude_match=true
-            break
-          fi
-        done
-      fi
-      
-      if [ "$exclude_match" = false ]; then
-        if [ -f "$file" ]; then
-          local file_size=$(stat -c %s "$file")
-          changed_bytes=$((changed_bytes + file_size))
-        fi
-      fi
-    done
+    done < "$temp_prev_folders"
   fi
   
-  echo "Total changed bytes: $changed_bytes"
+  # Clean up temp file
+  rm -f "$temp_prev_folders"
   
-  # Create new JSON hash file
+  # Create a new backup-hashes.json structure
+  local new_json=""
+  
+  # Create folders object with updated hashes
+  local folders_json="{}"
+  while IFS= read -r dir_path; do
+    if [ -n "$dir_path" ]; then
+      local dir_hash=$(jq -r ".\"$dir_path\"" "$temp_dirs_map")
+      folders_json=$(echo "$folders_json" | jq --arg path "$dir_path" --arg hash "$dir_hash" '.[$path] = $hash')
+    fi
+  done <<< "$new_folders"
+  
+  # Create deleted_folders array
+  local deleted_json="[]"
+  if [ ${#deleted_folders_array[@]} -gt 0 ]; then
+    deleted_json=$(printf '%s\n' "${deleted_folders_array[@]}" | jq -R . | jq -s .)
+  fi
+  
+  # Combine into final json
+  new_json=$(jq -n --argjson folders "$folders_json" --argjson deleted "$deleted_json" '{folders: $folders, deleted_folders: $deleted}')
+  
+  # Save updated JSON
   if [ "$DRY_RUN" = false ]; then
-    # Convert temp file to JSON format
-    local new_hashes="{"
-    while IFS=, read -r dir file hash; do
-      if [ -n "$dir" ] && [ -n "$file" ] && [ -n "$hash" ]; then
-        new_hashes="$new_hashes\"$file\":\"$hash\","
-      fi
-    done < "$temp_hash_file"
-    # Remove trailing comma and close JSON
-    new_hashes="${new_hashes%,}}"
-    
-    echo "$new_hashes" > "$json_file"
-    echo "New hash file saved to $json_file"
+    echo "$new_json" > "$json_file"
+    echo "Updated hash file saved to $json_file"
   else
-    echo "[DRY RUN] Would save new hash file to $json_file"
+    echo "[DRY RUN] Would save updated hash file to $json_file"
+    echo "[DRY RUN] Deleted folders count: ${#deleted_folders_array[@]}"
   fi
-  
-  rm -f "$temp_hash_file"
   
   # Process directories and zip/encrypt
   cd "$source_path" || exit 1
@@ -324,50 +378,84 @@ process_source() {
       local archive_path="$target_dir/$dir_name"
       local archive_file=""
       
-      # Compress directory - use strict string comparison with quotes
-      if [[ "$COMPRESSION_TYPE" == "7zip" ]]; then
-        if [ "$DRY_RUN" = false ]; then
-          echo "Compressing $dir to $archive_path.7z with 7zip"
-          # For 7zip, we can pass the compression arguments directly
-          7z a $COMPRESSION_ARGS "$archive_path.7z" "$dir/"* $exclude_args_7z > /dev/null
-          archive_file="$archive_path.7z"
+      # Check if we need to create the archive by comparing hashes
+      local should_create_archive=true
+      local dir_path="${dir#./}"
+      
+      # Check if the directory hash exists in both current and previous backups
+      local current_hash=""
+      local prev_hash=""
+      
+      current_hash=$(jq -r ".\"$dir_path\"" "$temp_dirs_map" 2>/dev/null || echo "")
+      
+      if [ -f "$prev_json_file" ]; then
+        if jq -e '.folders' "$prev_json_file" > /dev/null 2>&1; then
+          # New structure
+          prev_hash=$(jq -r ".folders[\"$dir_path\"]" "$prev_json_file" 2>/dev/null || echo "")
         else
-          echo "[DRY RUN] Would compress $dir to $archive_path.7z with 7zip"
-          archive_file="$archive_path.7z"
-        fi
-      else
-        if [ "$DRY_RUN" = false ]; then
-          echo "Compressing $dir to $archive_path.tar.gz with tar"
-          # For tar, place exclude options before other arguments
-          if [ ${#exclude_args_tar[@]} -gt 0 ]; then
-            tar "${exclude_args_tar[@]}" -czf "$archive_path.tar.gz" -C "$dir" .
-          else
-            tar -czf "$archive_path.tar.gz" -C "$dir" .
-          fi
-          archive_file="$archive_path.tar.gz"
-        else
-          echo "[DRY RUN] Would compress $dir to $archive_path.tar.gz with tar"
-          if [ ${#exclude_args_tar[@]} -gt 0 ]; then
-            echo "[DRY RUN] Using excludes: ${exclude_args_tar[*]}"
-          fi
-          archive_file="$archive_path.tar.gz"
+          # Old structure
+          prev_hash=$(jq -r ".[\"$dir_path\"]" "$prev_json_file" 2>/dev/null || echo "")
         fi
       fi
       
-      # Encrypt archive if specified
-      if [ "$ENCRYPTION_TYPE" = "gpg" ] && [ "$DRY_RUN" = false ]; then
-        echo "Encrypting $archive_file"
-        gpg --symmetric --cipher-algo AES256 --batch --passphrase-file ~/.backup-passphrase "$archive_file"
-        rm -f "$archive_file"
-        echo "Encrypted file saved to $archive_file.gpg"
-      elif [ "$ENCRYPTION_TYPE" = "gpg" ] && [ "$DRY_RUN" = true ]; then
-        echo "[DRY RUN] Would encrypt $archive_file with GPG"
+      # Compare current and previous hash to determine if archive is needed
+      if [ -n "$prev_hash" ] && [ -n "$current_hash" ] && [ "$prev_hash" = "$current_hash" ]; then
+        should_create_archive=false
+        echo "Skipping archive for $dir_path - hashes match between current and previous backup"
+      elif [ -z "$prev_hash" ]; then
+        # No previous hash, follow standard behavior
+        should_create_archive=true
+        echo "Creating archive for $dir_path - no previous hash found"
+      else
+        echo "Creating archive for $dir_path - hashes differ between current and previous backup"
+      fi
+      
+      # Compress directory if needed - use strict string comparison with quotes
+      if [ "$should_create_archive" = true ]; then
+        if [[ "$COMPRESSION_TYPE" == "7zip" ]]; then
+          if [ "$DRY_RUN" = false ]; then
+            echo "Compressing $dir to $archive_path.7z with 7zip"
+            # For 7zip, we can pass the compression arguments directly
+            7z a $COMPRESSION_ARGS "$archive_path.7z" "$dir/"* $exclude_args_7z > /dev/null
+            archive_file="$archive_path.7z"
+          else
+            echo "[DRY RUN] Would compress $dir to $archive_path.7z with 7zip"
+            archive_file="$archive_path.7z"
+          fi
+        else
+          if [ "$DRY_RUN" = false ]; then
+            echo "Compressing $dir to $archive_path.tar.gz with tar"
+            # For tar, place exclude options before other arguments
+            if [ ${#exclude_args_tar[@]} -gt 0 ]; then
+              tar "${exclude_args_tar[@]}" -czf "$archive_path.tar.gz" -C "$dir" .
+            else
+              tar -czf "$archive_path.tar.gz" -C "$dir" .
+            fi
+            archive_file="$archive_path.tar.gz"
+          else
+            echo "[DRY RUN] Would compress $dir to $archive_path.tar.gz with tar"
+            if [ ${#exclude_args_tar[@]} -gt 0 ]; then
+              echo "[DRY RUN] Using excludes: ${exclude_args_tar[*]}"
+            fi
+            archive_file="$archive_path.tar.gz"
+          fi
+        fi
+        
+        # Encrypt archive if specified
+        if [ "$ENCRYPTION_TYPE" = "gpg" ] && [ "$DRY_RUN" = false ]; then
+          echo "Encrypting $archive_file"
+          gpg --symmetric --cipher-algo AES256 --batch --passphrase-file ~/.backup-passphrase "$archive_file"
+          rm -f "$archive_file"
+          echo "Encrypted file saved to $archive_file.gpg"
+        elif [ "$ENCRYPTION_TYPE" = "gpg" ] && [ "$DRY_RUN" = true ]; then
+          echo "[DRY RUN] Would encrypt $archive_file with GPG"
+        fi
       fi
     fi
   done < "$temp_dirs_file"
   
   # Clean up temporary files
-  rm -f "$temp_dirs_file" "$processed_dirs"
+  rm -f "$temp_dirs_file" "$processed_dirs" "$temp_dirs_map" "$temp_hash_file"
   
   cd "$original_dir" || exit 1
 }
