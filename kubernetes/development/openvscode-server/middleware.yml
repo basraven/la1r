@@ -1,0 +1,18 @@
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: sablier-openvscode-server
+spec:
+  plugin:
+    sablier:
+      group: openvscode-server
+      # blocking:
+      #   defaultTimeout: 10s
+      dynamic:
+        displayName: Open VSCode Server
+        refreshFrequency: 5s
+        showDetails: "true"
+        theme: shuffle
+      sablierUrl: http://sablier:10000 # Sends: /api/strategies/dynamic?display_name=Immich&group=jellyfin&refresh_frequency=5s&session_duration=180m&show_details=true&theme=shuffle
+      sessionDuration: 10m

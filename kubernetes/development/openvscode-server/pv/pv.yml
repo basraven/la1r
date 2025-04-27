@@ -1,0 +1,32 @@
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: openvscode-server-data-pv
+  labels:
+    contenttype: "openvscode-server-data"
+spec:
+  capacity:
+    storage: 5Gi
+  storageClassName: openvscode-server-data
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/mnt/ssd/ha/openvscode-server/data"
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: openvscode-server-home-pv
+  labels:
+    contenttype: "openvscode-server-home"
+spec:
+  capacity:
+    storage: 5Gi
+  storageClassName: openvscode-server-home
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/mnt/ssd/ha/openvscode-server/home"

@@ -1,0 +1,138 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: openvscode-server-init
+data:
+  init.sh: |-
+    #!/bin/bash
+    # rename the user
+    usermod -l basraven -d /home/basraven -m $(id -un 1000)
+
+    # Set passwordless sudo for the user
+    echo "basraven ALL=(ALL) NOPASSWD:ALL" | tee /etc/sudoers.d/basraven
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openvscode-server
+  namespace: development
+  labels:
+    app: openvscode-server
+    sablier.enable: "true"
+    sablier.group: openvscode-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: openvscode-server
+  template:
+    metadata:
+      labels:
+        task: development
+        app: openvscode-server
+    spec:
+      
+      # Essential
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            preference:
+              matchExpressions:
+              - key: la1r.workload/essential
+                operator: In
+                values:
+                - "true"
+      priorityClassName: essential
+
+      containers:
+      - name: openvscode-server
+        ports:
+        - containerPort: 3000
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
+          privileged: true
+        image: gitpod/openvscode-server:latest
+        command: ["/bin/sh", "-c"]
+        args:
+        - ulimit -n 1048576 && /seb/init.sh && su basraven -c "/home/basraven/code.bas.install.sh" && su basraven -c "/home/.openvscode-server/bin/openvscode-server --host=0.0.0.0"
+        env:
+        - name: PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: openvscode-server-credentials
+              key: PASSWORD
+        volumeMounts:
+          - name: openvscode-server-data-volume
+            mountPath: /home/workspace
+          - name: openvscode-server-home-volume
+            mountPath: /home/basraven
+          - name: openvscode-server-init
+            mountPath: /seb/init.sh
+            subPath: init.sh
+      volumes:
+        - name: openvscode-server-data-volume
+          persistentVolumeClaim:
+            claimName: openvscode-server-data-claim
+        - name: openvscode-server-home-volume
+          persistentVolumeClaim:
+            claimName: openvscode-server-home-claim
+        - name: openvscode-server-init
+          configMap:
+            name: openvscode-server-init
+            items:
+            - key: init.sh
+              path: init.sh
+            defaultMode: 0755
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: openvscode-server
+spec:
+  ports:
+  - port: 80
+    targetPort: 3000
+  selector:
+    app: openvscode-server
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: openvscode-server-bas
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: openvscode-server-bas-tls
+  commonName: code.bas
+  dnsNames:
+  - code.bas
+  - www.code.bas
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: openvscode-server-https
+  annotations:
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"    
+    traefik.ingress.kubernetes.io/router.middlewares: "development-sablier-openvscode-server@kubernetescrd"
+spec:
+  tls:
+  - secretName: openvscode-server-bas-tls
+  rules:
+  - host: code.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: openvscode-server
+            port:
+              number: 80
