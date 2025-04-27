@@ -1,0 +1,80 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: s3-backup
+  namespace: backup
+  labels:
+    app: s3-backup
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      
+      # NonEssential
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: la1r.workload/nonessential
+                operator: In
+                values:
+                - "true"
+      
+      initContainers:
+      - name: grab-state
+        image: amazon/aws-cli:latest
+        command: ["sh", "-c"]
+        args:
+          - |
+            aws s3 cp s3://la1r-backup-backup-states/media_prev-backup-hashes.json /state/media_prev-backup-hashes.json
+        volumeMounts:
+          - name: aws-credentials-volume
+            mountPath: /root/.aws/credentials
+            subPath: credentials
+            readOnly: true
+          - name: aws-config-volume
+            mountPath: /root/.aws/config
+            subPath: config
+            readOnly: true
+          - name: cloud-backup-tmp-state-volume
+            mountPath: /state
+      containers:
+      - name: prep-backup-data
+        image: amazon/aws-cli:latest # can be any image with bash
+        command: ["sh", "-c"]
+        args:
+          - |
+            sleep infinity
+        volumeMounts:
+          - name: cloud-backup-tmp-state-volume
+            mountPath: /state
+      
+      # containers:
+      # - name: uploader
+      #   image: amazon/aws-cli:latest
+      #   command: ["sh", "-c"]
+      #   args:
+      #     - |
+      #       sleep infinity # aws s3 cp /data/ s3://your-bucket-name/your-path/ --recursive
+     
+      restartPolicy: Never
+      volumes:
+      - name: aws-credentials-volume
+        secret:
+          secretName: aws-config-backup-uploader
+          items:
+          - key: credentials
+            path: credentials
+      - name: aws-config-volume
+        secret:
+          secretName: aws-config-backup-uploader
+          items:
+          - key: config
+            path: config
+      - name: cloud-backup-tmp-state-volume
+        emptyDir: {}
+      - name: cloud-backup-tmp-data-volume
+        persistentVolumeClaim:
+          claimName: cloud-backup-tmp-data-claim
