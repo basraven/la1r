@@ -6,5 +6,6 @@ resources:
   - traefik-crd1.yml
   - traefik.yml
   - traefik-rbac.yml
+  - auth-middleware.yml
   - sablier
   # - scaleto0
