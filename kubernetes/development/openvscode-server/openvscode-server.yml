@@ -65,20 +65,20 @@ spec:
               name: openvscode-server-credentials
               key: PASSWORD
         volumeMounts:
-          - name: openvscode-server-data-volume
-            mountPath: /home/workspace
+          # - name: openvscode-server-data-volume
+          #   mountPath: /home/workspace
           - name: openvscode-server-home-volume
-            mountPath: /home/basraven
+            mountPath: /home
           - name: openvscode-server-init
             mountPath: /seb/init.sh
             subPath: init.sh
       volumes:
-        - name: openvscode-server-data-volume
-          persistentVolumeClaim:
-            claimName: openvscode-server-data-claim
+        # - name: openvscode-server-data-volume
+        #   persistentVolumeClaim:
+        #     claimName: openvscode-server-data-claim
         - name: openvscode-server-home-volume
           persistentVolumeClaim:
-            claimName: openvscode-server-home-claim
+            claimName: openvscode-server-home2-claim
         - name: openvscode-server-init
           configMap:
             name: openvscode-server-init

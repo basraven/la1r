@@ -30,3 +30,19 @@ spec:
   - ReadWriteOnce
   hostPath:
     path: "/mnt/ssd/ha/openvscode-server/home"
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: openvscode-server-home2-pv
+  labels:
+    contenttype: "openvscode-server-home2"
+spec:
+  capacity:
+    storage: 5Gi
+  storageClassName: openvscode-server-home2
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/mnt/ssd/ha/openvscode-server/home2"
