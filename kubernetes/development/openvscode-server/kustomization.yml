@@ -4,4 +4,5 @@ namespace: development
 resources:
   - pv
   - middleware.yml
+  - auth-middleware.yml
   - openvscode-server.yml

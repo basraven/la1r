@@ -121,7 +121,7 @@ metadata:
   annotations:
     traefik.ingress.kubernetes.io/router.tls: "true"
     traefik.ingress.kubernetes.io/router.entrypoints: "websecure"    
-    traefik.ingress.kubernetes.io/router.middlewares: "development-sablier-openvscode-server@kubernetescrd"
+    traefik.ingress.kubernetes.io/router.middlewares: "development-sablier-openvscode-server@kubernetescrd,development-auth-openvscode-server@kubernetescrd"
 spec:
   tls:
   - secretName: openvscode-server-bas-tls
