@@ -28,7 +28,7 @@ spec:
           command: ["/bin/sh", "-c"]
           args:
             - |
-              # Import credentials
+              # Import GPG credentials
               mkdir -p /home/runner/.gnupg/ && \
               chmod 600 /home/runner/.gnupg/ && \
               gpg --batch --import /home/runner/.gnupg/imported_keys/automation-gpg-private.asc && \

@@ -14,3 +14,19 @@ spec:
   - ReadWriteOnce
   hostPath:
     path: "/mnt/hdd/tmp/cloud-backup-tmp"
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: cloud-backup-media-data-pv
+  labels:
+    contenttype: "cloud-backup-media-data"
+spec:
+  capacity:
+    storage: 10Gi
+  storageClassName: cloud-backup-media-data
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/mnt/hdd/tmp/cloud-backup-media"

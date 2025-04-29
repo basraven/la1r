@@ -47,6 +47,8 @@ check_dependencies() {
 parse_args() {
   DRY_RUN=false
   CONFIG_FILE="cloud-backup-media-config.yml"
+  json_file="backup-hashes.json"
+  prev_json_file="prev-backup-hashes.json"
   
   while [[ $# -gt 0 ]]; do
     case $1 in
@@ -58,9 +60,17 @@ parse_args() {
         CONFIG_FILE="$2"
         shift 2
         ;;
+      --json-file)
+        json_file="$2"
+        shift 2
+        ;;
+      --prev-json-file)
+        prev_json_file="$2"
+        shift 2
+        ;;
       *)
         echo "Unknown option: $1"
-        echo "Usage: $0 [--dry-run] [--config CONFIG_FILE]"
+        echo "Usage: $0 [--dry-run] [--config CONFIG_FILE] [--json-file JSON_FILE] [--prev-json-file PREV_JSON_FILE]"
         exit 1
         ;;
     esac
@@ -74,6 +84,14 @@ parse_args() {
   if [ ! -f "$CONFIG_FILE" ]; then
     echo "Error: Config file '$CONFIG_FILE' not found!"
     exit 1
+  fi
+  
+  if [[ "$json_file" != /* ]]; then
+    json_file="$(pwd)/$json_file"
+  fi
+  
+  if [[ "$prev_json_file" != /* ]]; then
+    prev_json_file="$(pwd)/$prev_json_file"
   fi
 }
 
@@ -149,8 +167,6 @@ process_source() {
   # Find all files and build file hashes
   local temp_hash_file=$(mktemp)
   local original_dir=$(pwd)
-  local json_file="$original_dir/backup-hashes.json"
-  local prev_json_file="$original_dir/prev-backup-hashes.json"
   
   # Initialize the JSON structure for backup-hashes.json if it doesn't exist
   if [ ! -f "$json_file" ]; then
@@ -444,7 +460,7 @@ process_source() {
         # Encrypt archive if specified
         if [ "$ENCRYPTION_TYPE" = "gpg" ] && [ "$DRY_RUN" = false ]; then
           echo "Encrypting $archive_file"
-          gpg --symmetric --cipher-algo AES256 --batch --passphrase-file ~/.backup-passphrase "$archive_file"
+          gpg --encrypt --sign --yes --cipher-algo AES256 --armor --compress-algo none -r automation@la1r.com "$archive_file"
           rm -f "$archive_file"
           echo "Encrypted file saved to $archive_file.gpg"
         elif [ "$ENCRYPTION_TYPE" = "gpg" ] && [ "$DRY_RUN" = true ]; then

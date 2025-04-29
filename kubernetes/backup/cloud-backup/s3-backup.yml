@@ -28,7 +28,7 @@ spec:
         command: ["sh", "-c"]
         args:
           - |
-            aws s3 cp s3://la1r-backup-backup-states/media_prev-backup-hashes.json /state/media_prev-backup-hashes.json
+            aws s3 cp s3://la1r-backup-backup-states/media_prev-backup-hashes.json /s3-backup/state/media_prev-backup-hashes.json
         volumeMounts:
           - name: aws-credentials-volume
             mountPath: /root/.aws/credentials
@@ -39,28 +39,80 @@ spec:
             subPath: config
             readOnly: true
           - name: cloud-backup-tmp-state-volume
-            mountPath: /state
-      containers:
+            mountPath: /s3-backup/state
       - name: prep-backup-data
-        image: amazon/aws-cli:latest # can be any image with bash
+        image: debian:bullseye-slim # can be any image with bash
         command: ["sh", "-c"]
         args:
           - |
-            sleep infinity
+            rm -rf /s3-backup/tmp/*
+            
+            cd s3-backup && \
+            apt update && apt install wget jq p7zip-full gnupg -y && \
+            wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O yq && chmod +x yq && mv yq /usr/local/bin/ && \
+            
+            mkdir -p /root/.gnupg/ && \
+            chmod 600 /root/.gnupg/ && \
+            gpg --batch --import /root/.gnupg/imported_keys/automation-gpg-private.asc && \
+            gpg --batch --import /root/.gnupg/imported_keys/automation-gpg-public.asc && \
+            gpg --batch --with-colons --fingerprint | \
+            awk -F: '/^fpr:/ {print $10":6:"; exit}' | \
+            gpg --batch --import-ownertrust && \
+
+            /s3-backup/scripts/1-prepare-backup-files.sh --config /s3-backup/config/cloud-backup-media-config.yml --json-file media_current-backup-hashes.json --prev-json-file media_prev-backup-hashes.json
+            
+        env:
+          - name: DEBIAN_FRONTEND
+            value: noninteractive
         volumeMounts:
+          - name: gpg-automated-keys
+            mountPath: /root/.gnupg/imported_keys
+            readOnly: true
           - name: cloud-backup-tmp-state-volume
-            mountPath: /state
+            mountPath: /s3-backup/state
+          - name: cloud-backup-tmp-data-volume
+            mountPath: /s3-backup/tmp
+          - name: cloud-backup-media-data-volume
+            mountPath: /s3-backup/media
+            readOnly: true
+          - name: cloud-backup-1-prepare-backup-files-volume
+            mountPath: /s3-backup/scripts/1-prepare-backup-files.sh
+            subPath: 1-prepare-backup-files.sh
+            readOnly: true
+          - name: cloud-backup-media-config-volume
+            mountPath: /s3-backup/config/cloud-backup-media-config.yml
+            subPath: cloud-backup-media-config.yml
+            readOnly: true
       
-      # containers:
-      # - name: uploader
-      #   image: amazon/aws-cli:latest
-      #   command: ["sh", "-c"]
-      #   args:
-      #     - |
-      #       sleep infinity # aws s3 cp /data/ s3://your-bucket-name/your-path/ --recursive
+      containers:
+      - name: uploader
+        image: amazon/aws-cli:latest
+        command: ["sh", "-c"]
+        args:
+          - |
+            /s3-backup/scripts/2-upload-backup-files.sh /s3-backup/tmp/media 200M s3://my-bucket
+        volumeMounts:
+          - name: cloud-backup-tmp-data-volume
+            mountPath: /s3-backup/tmp
+          - name: cloud-backup-media-data-volume
+            mountPath: /s3-backup/media
+            readOnly: true
+          - name: cloud-backup-2-upload-backup-files-volume
+            mountPath: /s3-backup/scripts/2-upload-backup-files.sh
+            subPath: 2-upload-backup-files.sh
+            readOnly: true
+          # - name: cloud-backup-tmp-state-volume
+          #   mountPath: /s3-backup/state
+          # - name: cloud-backup-media-config-volume
+          #   mountPath: /s3-backup/config/cloud-backup-media-config.yml
+          #   subPath: cloud-backup-media-config.yml
+          #   readOnly: true
      
       restartPolicy: Never
+      # aws s3 cp /data/ s3://your-bucket-name/your-path/ --recursive
       volumes:
+      
+      # AWS credentials
       - name: aws-credentials-volume
         secret:
           secretName: aws-config-backup-uploader
@@ -73,8 +125,43 @@ spec:
           items:
           - key: config
             path: config
+      
+      # GPG credentials
+      - name: gpg-automated-keys
+        secret:
+          secretName: gpg-automated-keys
+      
+      # Working folders
       - name: cloud-backup-tmp-state-volume
         emptyDir: {}
       - name: cloud-backup-tmp-data-volume
         persistentVolumeClaim:
           claimName: cloud-backup-tmp-data-claim
+      
+      # Scripts & config
+      - name: cloud-backup-1-prepare-backup-files-volume
+        configMap:
+          name: 1-prepare-backup-files-script
+          defaultMode: 0755
+          items:
+          - key: 1-prepare-backup-files.sh
+            path: 1-prepare-backup-files.sh
+      - name: cloud-backup-2-upload-backup-files-volume
+        configMap:
+          name: 2-upload-backup-files-script
+          defaultMode: 0755
+          items:
+          - key: 2-upload-backup-files.sh
+            path: 2-upload-backup-files.sh
+      - name: cloud-backup-media-config-volume
+        configMap:
+          name: cloud-backup-media-config
+          defaultMode: 0755
+          items:
+          - key: cloud-backup-media-config.yml
+            path: cloud-backup-media-config.yml
+      
+      # Backup sources
+      - name: cloud-backup-media-data-volume
+        persistentVolumeClaim:
+          claimName: cloud-backup-media-data-claim

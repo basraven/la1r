@@ -2,11 +2,11 @@
 
 # Configurable global file size limit
 MAX_TOTAL_SIZE_GB=5                      # Total max file size allowed (in GB)
-MAX_TOTAL_SIZE_BYTES=$((MAX_TOTAL_SIZE_GB * 1024 * 1024 * 1024))
+MAX_TOTAL_SIZE_BYTES=$((128 * 1024 * 1024))
 CURRENT_TOTAL_SIZE=0
 TOTAL_FILES_CREATED=0
 
-MAX_DEPTH=8
+MAX_DEPTH=5
 ROOT="media"
 mkdir -p "$ROOT"
 

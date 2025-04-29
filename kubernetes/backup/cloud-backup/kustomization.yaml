@@ -4,3 +4,17 @@ namespace: backup
 resources:
 - pv
 - s3-backup.yml
+
+# Load 1-prepare-backup-files.sh into configmap
+configMapGenerator:
+- name: 1-prepare-backup-files-script
+  files:
+  - 1-prepare-backup-files.sh
+- name: 2-upload-backup-files-script
+  files:
+  - 2-upload-backup-files.sh
+- name: cloud-backup-media-config
+  files:
+  - cloud-backup-media-config.yml
+generatorOptions:
+  disableNameSuffixHash: true
