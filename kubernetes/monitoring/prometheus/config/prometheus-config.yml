@@ -13,6 +13,9 @@ scrape_configs:
   - files:
     - '/etc/prometheus/targets.json'
 
+- job_name: 'pushgateway'
+  static_configs:
+    - targets: ['prometheus-push-gateway:80']
 # - job_name: "kubernetes-nodes"
 #   scrape_interval: 120s
 #   kubernetes_sd_configs:

@@ -1,0 +1,16 @@
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: prometheus-push-gateway-data-pv
+  labels:
+    contenttype: "prometheus-push-gateway-data"
+spec:
+  capacity:
+    storage: 1Gi
+  storageClassName: prometheus-push-gateway-data
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/mnt/ssd/na/prometheus-push-gateway/data"
