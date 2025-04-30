@@ -431,6 +431,13 @@ process_source() {
         if [[ "$COMPRESSION_TYPE" == "7zip" ]]; then
           if [ "$DRY_RUN" = false ]; then
             echo "Compressing $dir to $archive_path.7z with 7zip"
+
+            # If $COMPRESSION_ARGS is empty, fill it with "-czf"
+            if [ -z "$COMPRESSION_ARGS" ] || [ "$COMPRESSION_ARGS" = "null" ]; then
+                COMPRESSION_ARGS=""
+                # COMPRESSION_ARGS="-m0=lzma2 -mx=9"
+            fi
+
             # For 7zip, we can pass the compression arguments directly
             7z a $COMPRESSION_ARGS "$archive_path.7z" "$dir/"* $exclude_args_7z > /dev/null
             archive_file="$archive_path.7z"
@@ -440,12 +447,18 @@ process_source() {
           fi
         else
           if [ "$DRY_RUN" = false ]; then
-            echo "Compressing $dir to $archive_path.tar.gz with tar"
+            echo "Compressing $dir to $archive_path.tar.gz with tar with $COMPRESSION_ARGS"
             # For tar, place exclude options before other arguments
+            
+            # If $COMPRESSION_ARGS is empty, fill it with "-czf"
+            if [ -z "$COMPRESSION_ARGS" ] || [ "$COMPRESSION_ARGS" = "null" ]; then
+                COMPRESSION_ARGS="-czf"
+            fi
+            
             if [ ${#exclude_args_tar[@]} -gt 0 ]; then
-              tar "${exclude_args_tar[@]}" -czf "$archive_path.tar.gz" -C "$dir" .
+              tar "${exclude_args_tar[@]}" $COMPRESSION_ARGS "$archive_path.tar.gz" -C "$dir" .
             else
-              tar -czf "$archive_path.tar.gz" -C "$dir" .
+              tar $COMPRESSION_ARGS "$archive_path.tar.gz" -C "$dir" .
             fi
             archive_file="$archive_path.tar.gz"
           else
