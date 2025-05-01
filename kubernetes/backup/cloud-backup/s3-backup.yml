@@ -7,9 +7,13 @@ metadata:
   labels:
     app: s3-backup
 spec:
-  backoffLimit: 0
+  ttlSecondsAfterFinished: 300  # auto-delete job+pod after 1 min
+  backoffLimit: 1  # Only retry once
+  completions: 1
+  parallelism: 1
   template:
     spec:
+      restartPolicy: Never
       
       # NonEssential
       affinity:
@@ -29,6 +33,13 @@ spec:
         args:
           - |
             mkdir -p /s3-backup/tmp/state && \
+            # Start uptime heartbeat
+            (
+              while true; do
+                curl -S "http://prometheus-push-gateway.monitoring:8080/lease?job=lease&metric=lease_jayc_cloud-backup&value=700"
+                sleep 300  # 5 minutes
+              done
+            ) &
             aws s3 cp s3://la1r-backup-backup-states/media_prev-backup-hashes.json /s3-backup/tmp/state/media_prev-backup-hashes.json
         volumeMounts:
           - name: aws-credentials-volume
@@ -41,15 +52,24 @@ spec:
             readOnly: true
           - name: cloud-backup-tmp-data-volume
             mountPath: /s3-backup/tmp
+      
       - name: prep-backup-data
         image: debian:bullseye-slim # can be any image with bash
         command: ["sh", "-c"]
         args:
           - |
             cd s3-backup && \
-            apt update && apt install wget jq p7zip-full gnupg -y && \
-            wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O yq && chmod +x yq && mv yq /usr/local/bin/ && \
+            apt update && apt install wget jq p7zip-full gnupg curl -y && \
+            wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O yq && chmod +x yq && mv yq /usr/local/bin/ 
             
+            # Start uptime heartbeat
+            (
+              while true; do
+                curl -S "http://prometheus-push-gateway.monitoring:8080/lease?job=lease&metric=lease_jayc_cloud-backup&value=700"
+                sleep 300  # 5 minutes
+              done
+            ) &
+
             mkdir -p /root/.gnupg/ && \
             chmod 600 /root/.gnupg/ && \
             gpg --batch --import /root/.gnupg/imported_keys/automation-gpg-private.asc && \
@@ -87,6 +107,13 @@ spec:
         command: ["sh", "-c"]
         args:
           - |
+            # Start uptime heartbeat
+            (
+              while true; do
+                curl -S "http://prometheus-push-gateway.monitoring:8080/lease?job=lease&metric=lease_jayc_cloud-backup&value=700"
+                sleep 300  # 5 minutes
+              done
+            ) &
             /s3-backup/scripts/2-upload-backup-files.sh /s3-backup/tmp/media 200M s3://my-bucket
         volumeMounts:
           - name: cloud-backup-tmp-data-volume
@@ -98,15 +125,6 @@ spec:
             mountPath: /s3-backup/scripts/2-upload-backup-files.sh
             subPath: 2-upload-backup-files.sh
             readOnly: true
-          # - name: cloud-backup-tmp-state-volume
-          #   mountPath: /s3-backup/state
-          # - name: cloud-backup-media-config-volume
-          #   mountPath: /s3-backup/config/cloud-backup-media-config.yml
-          #   subPath: cloud-backup-media-config.yml
-          #   readOnly: true
-     
-      restartPolicy: Never
-      # aws s3 cp /data/ s3://your-bucket-name/your-path/ --recursive
       volumes:
       
       # AWS credentials

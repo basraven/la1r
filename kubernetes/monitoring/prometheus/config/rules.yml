@@ -10,19 +10,20 @@ groups:
         expr: |
           # 1. HTTPS DNS endpoint for past 15 mins
           SUM(increase(traefik_router_requests_total{router=~".*jelly.*"}[15m]))
-          or
+          +
           # 2. HTTP IP endpoint for past 15 mins
           SUM(increase(traefik_entrypoint_requests_total{entrypoint="jellyfin"}[15m]))
           # +
           # # 3. Samba open sessions for past 15 mins
           # SUM(max_over_time(haproxy_frontend_current_sessions{proxy="samba_jayc_fe"}[15m]) )
-          or
+          +
           # # 4. Jay-C Server is already online for past 15 mins
           # SUM(1 - max_over_time(probe_success{nodeName="jay-c"}[15m]))
-          # or
+          # +
           # 5. if manual lease is active
-          SUM(clamp_max(clamp_min(max({__name__=~"lease_jayc_.*"}) - time(), 0), 1))
-      
+          # SUM(clamp_max(clamp_min(max({__name__=~"lease_jayc_.*"}) - time(), 0), 1))
+          clamp_min(SUM(max({__name__=~"lease_jayc_.*"}) - time()), 0)
+          
       - alert: Jay-C Server should be online
         expr: server:target:state > 0
         # for: 2m
