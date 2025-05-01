@@ -6,8 +6,6 @@ metadata:
   namespace: torrent
   labels:
     app: qbittorrent
-    # sablier.enable: "true"
-    # sablier.group: qbittorrent
 spec:
   replicas: 1
   selector:
@@ -18,17 +16,19 @@ spec:
       labels:
         app: qbittorrent
     spec:
-      # NonEssential
+      # Essential
       affinity:
         nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-            - matchExpressions:
-              - key: la1r.workload/nonessential
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            preference:
+              matchExpressions:
+              - key: la1r.workload/essential
                 operator: In
                 values:
                 - "true"
-      # hostNetwork: true
+      priorityClassName: essential
+
       volumes:
       - name: torrent-config-volume
         persistentVolumeClaim:
@@ -43,12 +43,12 @@ spec:
       containers:
       - name: qbitvpn
         resources: 
-          requests:
-            memory: "128Mi"
-            cpu: "50m"
-          limits:
-            memory: "512Mi"
-            cpu: "200m"
+          # requests:
+          #   memory: "128Mi"
+          #   cpu: "50m"
+          # limits:
+          #   memory: "512Mi"
+          #   cpu: "200m"
         image: dyonr/qbittorrentvpn:latest
         
         # image: ubuntu:latest
@@ -67,8 +67,8 @@ spec:
           httpGet:
             path: /
             port: 8080
-          initialDelaySeconds: 60
-          periodSeconds: 10
+          initialDelaySeconds: 180
+          periodSeconds: 30
           timeoutSeconds: 5
           failureThreshold: 3
         ports:
@@ -188,7 +188,6 @@ metadata:
   annotations:
     traefik.ingress.kubernetes.io/router.tls: "true"
     traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
-    # traefik.ingress.kubernetes.io/router.middlewares: "torrent-sablier-qbittorrent@kubernetescrd"
 spec:
   tls:
   - secretName: qbittorrent-bas-tls
