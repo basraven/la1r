@@ -28,7 +28,8 @@ spec:
         command: ["sh", "-c"]
         args:
           - |
-            aws s3 cp s3://la1r-backup-backup-states/media_prev-backup-hashes.json /s3-backup/state/media_prev-backup-hashes.json
+            mkdir -p /s3-backup/tmp/state && \
+            aws s3 cp s3://la1r-backup-backup-states/media_prev-backup-hashes.json /s3-backup/tmp/state/media_prev-backup-hashes.json
         volumeMounts:
           - name: aws-credentials-volume
             mountPath: /root/.aws/credentials
@@ -38,15 +39,13 @@ spec:
             mountPath: /root/.aws/config
             subPath: config
             readOnly: true
-          - name: cloud-backup-tmp-state-volume
-            mountPath: /s3-backup/state
+          - name: cloud-backup-tmp-data-volume
+            mountPath: /s3-backup/tmp
       - name: prep-backup-data
         image: debian:bullseye-slim # can be any image with bash
         command: ["sh", "-c"]
         args:
           - |
-            rm -rf /s3-backup/tmp/*
-            
             cd s3-backup && \
             apt update && apt install wget jq p7zip-full gnupg -y && \
             wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O yq && chmod +x yq && mv yq /usr/local/bin/ && \
@@ -59,7 +58,7 @@ spec:
             awk -F: '/^fpr:/ {print $10":6:"; exit}' | \
             gpg --batch --import-ownertrust && \
 
-            /s3-backup/scripts/1-prepare-backup-files.sh --config /s3-backup/config/cloud-backup-media-config.yml --json-file media_current-backup-hashes.json --prev-json-file media_prev-backup-hashes.json
+            /s3-backup/scripts/1-prepare-backup-files.sh --config /s3-backup/config/cloud-backup-media-config.yml --json-file /s3-backup/tmp/state/media_current-backup-hashes.json --prev-json-file /s3-backup/tmp/state/media_prev-backup-hashes.json
             
         env:
           - name: DEBIAN_FRONTEND
@@ -68,8 +67,6 @@ spec:
           - name: gpg-automated-keys
             mountPath: /root/.gnupg/imported_keys
             readOnly: true
-          - name: cloud-backup-tmp-state-volume
-            mountPath: /s3-backup/state
           - name: cloud-backup-tmp-data-volume
             mountPath: /s3-backup/tmp
           - name: cloud-backup-media-data-volume

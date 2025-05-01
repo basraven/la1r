@@ -70,6 +70,6 @@ echo "Folder size ($FOLDER_SIZE_HUMAN) is within limit ($MAX_SIZE_HUMAN)"
 cd "$FOLDER_PATH"
 
 
-# aws s3 cp . "$S3_BUCKET" --recursive
+# aws s3 cp . "$S3_BUCKET" --recursive --storage-class DEEP_ARCHIVE
 
 echo "✅ Upload complete to $S3_BUCKET"
