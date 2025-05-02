@@ -74,8 +74,7 @@ func main() {
 		defer resp.Body.Close()
 
 		w.WriteHeader(resp.StatusCode)
-		fmt.Fprintf(w, "Pushed %s=%d to job=%s at timestamp=%d\n", metric, timestamp, job, timestamp)
-	})
+		fmt.Fprintf(w, "Pushed %s=%d to job=%s at timestamp=%d (lease duration: %s)\n", metric, timestamp, job, timestamp, time.Duration(value)*time.Second)	})
 
 	log.Println("Listening on :8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))

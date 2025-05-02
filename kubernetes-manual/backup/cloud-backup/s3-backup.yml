@@ -7,7 +7,7 @@ metadata:
   labels:
     app: s3-backup
 spec:
-  ttlSecondsAfterFinished: 300  # auto-delete job+pod after 1 min
+  # ttlSecondsAfterFinished: 300  # auto-delete job+pod after 1 min
   backoffLimit: 1  # Only retry once
   completions: 1
   parallelism: 1
@@ -36,7 +36,7 @@ spec:
             # Start uptime heartbeat
             (
               while true; do
-                curl -S "http://prometheus-push-gateway.monitoring:8080/lease?job=lease&metric=lease_jayc_cloud-backup&value=700"
+                curl -sS "http://prometheus-push-gateway.monitoring:8080/lease?job=lease&metric=lease_jayc_cloud-backup&value=700"
                 sleep 300  # 5 minutes
               done
             ) &
@@ -65,8 +65,8 @@ spec:
             # Start uptime heartbeat
             (
               while true; do
-                curl -S "http://prometheus-push-gateway.monitoring:8080/lease?job=lease&metric=lease_jayc_cloud-backup&value=700"
-                sleep 300  # 5 minutes
+                curl -sS "http://prometheus-push-gateway.monitoring:8080/lease?job=lease&metric=lease_jayc_cloud-backup&value=7000"
+                sleep 30  # 5 minutes
               done
             ) &
 
@@ -110,7 +110,7 @@ spec:
             # Start uptime heartbeat
             (
               while true; do
-                curl -S "http://prometheus-push-gateway.monitoring:8080/lease?job=lease&metric=lease_jayc_cloud-backup&value=700"
+                curl -sS "http://prometheus-push-gateway.monitoring:8080/lease?job=lease&metric=lease_jayc_cloud-backup&value=700"
                 sleep 300  # 5 minutes
               done
             ) &
