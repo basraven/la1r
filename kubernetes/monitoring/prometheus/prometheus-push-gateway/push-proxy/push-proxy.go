@@ -48,8 +48,16 @@ func main() {
 		metric := r.URL.Query().Get("metric")
 		valueStr := r.URL.Query().Get("value")
 
-		if job == "" || metric == "" || valueStr == "" {
-			http.Error(w, "Missing job, metric, or value", 400)
+		if job == "" {
+			http.Error(w, "Missing job parameter", 400)
+			return
+		}
+		if metric == "" {
+			http.Error(w, "Missing metric parameter", 400)
+			return
+		}
+		if valueStr == "" {
+			http.Error(w, "Missing value parameter", 400)
 			return
 		}
 
@@ -66,6 +74,8 @@ func main() {
 		url := fmt.Sprintf("%s/metrics/job/%s", pushgatewayURL, job)
 		payload := fmt.Sprintf("%s %d\n", metric, timestamp)
 
+		fmt.Printf("Pushing to %s: %s\n", url, payload)
+
 		resp, err := http.Post(url, "text/plain", io.NopCloser(strings.NewReader(payload)))
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Failed to push: %v", err), 500)
@@ -74,7 +84,8 @@ func main() {
 		defer resp.Body.Close()
 
 		w.WriteHeader(resp.StatusCode)
-		fmt.Fprintf(w, "Pushed %s=%d to job=%s at timestamp=%d (lease duration: %s)\n", metric, timestamp, job, timestamp, time.Duration(value)*time.Second)	})
+		fmt.Fprintf(w, "Pushed %s=%d to job=%s at timestamp=%d (lease duration: %s)\n", metric, timestamp, job, timestamp, time.Duration(value)*time.Second)
+	})
 
 	log.Println("Listening on :8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))

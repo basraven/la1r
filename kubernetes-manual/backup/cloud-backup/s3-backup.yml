@@ -36,7 +36,7 @@ spec:
             # Start uptime heartbeat
             (
               while true; do
-                curl -sS "http://prometheus-push-gateway.monitoring:8080/lease?job=lease&metric=lease_jayc_cloud-backup&value=700"
+                curl -sS "http://prometheus-push-gateway.monitoring:8080/lease?job=lease&metric=lease_jayc_cloud_backup&value=700"
                 sleep 300  # 5 minutes
               done
             ) &
@@ -65,7 +65,7 @@ spec:
             # Start uptime heartbeat
             (
               while true; do
-                curl -sS "http://prometheus-push-gateway.monitoring:8080/lease?job=lease&metric=lease_jayc_cloud-backup&value=7000"
+                curl -sS "http://prometheus-push-gateway.monitoring:8080/lease?job=lease&metric=lease_jayc_cloud_backup&value=7000"
                 sleep 30  # 5 minutes
               done
             ) &
@@ -110,7 +110,7 @@ spec:
             # Start uptime heartbeat
             (
               while true; do
-                curl -sS "http://prometheus-push-gateway.monitoring:8080/lease?job=lease&metric=lease_jayc_cloud-backup&value=700"
+                curl -sS "http://prometheus-push-gateway.monitoring:8080/lease?job=lease&metric=lease_jayc_cloud_backup&value=700"
                 sleep 300  # 5 minutes
               done
             ) &
