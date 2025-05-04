@@ -17,15 +17,13 @@ spec:
       # Essential
       affinity:
         nodeAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 1
-            preference:
-              matchExpressions:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
               - key: la1r.workload/essential
                 operator: In
                 values:
                 - "true"
-      priorityClassName: essential
                 
       volumes:
       - name: seleniumbase-volume

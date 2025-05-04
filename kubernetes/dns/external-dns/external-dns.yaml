@@ -70,10 +70,9 @@ spec:
           defaultMode: 0744
       affinity:
         nodeAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 1
-            preference:
-              matchExpressions:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
               - key: la1r.workload/essential
                 operator: In
                 values:

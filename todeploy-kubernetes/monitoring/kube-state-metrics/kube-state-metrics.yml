@@ -181,10 +181,9 @@ spec:
       automountServiceAccountToken: true
       affinity:
         nodeAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 2
-            preference:
-              matchExpressions:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
               - key: la1r.workload/essential
                 operator: In
                 values:
