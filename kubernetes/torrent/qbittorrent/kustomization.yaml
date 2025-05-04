@@ -3,6 +3,7 @@ kind: Kustomization
 namespace: torrent
 resources:
 - pv
+- middleware.yml
 - qbittorrent.yml
 
 # configmap based on config/start.sh

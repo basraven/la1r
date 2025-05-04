@@ -23,10 +23,10 @@ metadata:
     contenttype: "qbit-torrent-data"
 spec:
   capacity:
-    storage: 100Gi
+    storage: 2000Gi
   storageClassName: qbit-torrent-data
   persistentVolumeReclaimPolicy: Retain
   accessModes:
   - ReadWriteOnce
   hostPath:
-    path: "/mnt/ssd/na/torrent-pickup" # path to directory
+    path: "/mnt/hdd/torrent" # path to directory

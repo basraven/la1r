@@ -27,5 +27,5 @@ spec:
       contenttype: "qbit-torrent-data"
   resources:
     requests:
-      storage: 100Gi
+      storage: 2000Gi
       
