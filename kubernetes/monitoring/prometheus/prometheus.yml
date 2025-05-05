@@ -48,6 +48,8 @@ spec:
         - name: http
           containerPort: 9090
         volumeMounts:
+        - name: localtime
+          mountPath: /etc/localtime
         - name: prometheus-volume
           mountPath: /prometheus
         - name: prometheus-config
@@ -60,6 +62,10 @@ spec:
           mountPath: /etc/prometheus/rules.yml
           subPath: rules.yml
       volumes:
+      - name: localtime
+        hostPath:
+          path: /etc/localtime
+          type: File
       - name: prometheus-volume
         persistentVolumeClaim:
           claimName: prometheus-data-claim

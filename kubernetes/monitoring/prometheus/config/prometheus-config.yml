@@ -73,5 +73,22 @@ scrape_configs:
       regex: "true"  # Drop any deleted pods
       action: drop
 
+- job_name: 'node-exporter'
+  kubernetes_sd_configs:
+    - role: pod
+  relabel_configs:
+    - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+      action: keep
+      regex: "true"
+    - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_port, __meta_kubernetes_pod_ip]
+      action: replace
+      regex: (.+);(.+)
+      replacement: ${2}:${1}
+      target_label: __address__
+    - source_labels: [__meta_kubernetes_pod_node_name]
+      target_label: hostname
+
+
+
 rule_files:
   - /etc/prometheus/rules.yml 

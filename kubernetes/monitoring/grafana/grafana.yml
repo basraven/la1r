@@ -74,14 +74,28 @@ spec:
         - name: GF_USERS_ALLOW_SIGN_UP
           value: "false"
         
-        # - name: GF_SMTP_ENABLED
-        #   value: "true"
-        # - name: GF_SMTP_SKIP_VERIFY
-        #   value: "true"
-        # - name: GF_SMTP_HOST
-        #   value: "email.network:25"
+        # Enabling sending emails through my own gmail account
+        - name: GF_SMTP_ENABLED
+          value: "true"
+        - name: GF_SMTP_HOST
+          value: "smtp.gmail.com:587"
+        - name: GF_SMTP_FROM_NAME
+          value: la1r-grafana
         # - name: GF_SMTP_FROM_ADDRESS
-        #   value: "admin@basraven.nl"
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: vaultwarden-gmail-appid
+        #       key: SENDER_EMAIL
+        - name: GF_SMTP_USER
+          valueFrom:
+            secretKeyRef:
+              name: vaultwarden-gmail-appid
+              key: SENDER_EMAIL
+        - name: GF_SMTP_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: vaultwarden-gmail-appid
+              key: APP_ID_TOKEN
         
         - name: REQUESTS_CA_BUNDLE 
           value: "false"
