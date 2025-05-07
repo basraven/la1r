@@ -2,21 +2,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: qbittorrent
+  name: qbittorrent-series
   namespace: torrent
   labels:
-    app: qbittorrent
+    app: qbittorrent-series
     # sablier.enable: "true"
     # sablier.group: qbittorrent
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: qbittorrent
+      app: qbittorrent-series
   template:
     metadata:
       labels:
-        app: qbittorrent
+        app: qbittorrent-series
     spec:
       # NonEssential
       affinity:
@@ -28,29 +28,6 @@ spec:
                 operator: In
                 values:
                 - "true"
-      # hostNetwork: true
-      volumes:
-      - name: goose-ovpn-files-volume
-        secret:
-          secretName: goose-ovpn-files
-          defaultMode: 0744
-          items:
-          - key: qbitorrent.ovpn
-            path: qbitorrent.ovpn
-      - name: goose-loginconf-volume
-        secret:
-          secretName: goose-loginconf
-          defaultMode: 0744
-      - name: qbit-torrent-data-volume
-        persistentVolumeClaim:
-          claimName: qbit-torrent-data-claim
-      - name: torrent-config-volume
-        persistentVolumeClaim:
-          claimName: torrent-config-claim
-      - name: qbittorent-openvpn-start-volume
-        configMap:
-          name: qbittorrent-openvpn-start
-          defaultMode: 0744
       containers:
       - name: qbitvpn
         # resources: 
@@ -116,13 +93,41 @@ spec:
             mountPath: /config/login.conf
             subPath: login.conf
             readOnly: true
-          - name: torrent-config-volume
+          - name: torrent-series-data-volume
             mountPath: /config/qBittorrent
+          # - name: torrent-config-volume # Doens't work
+          #   mountPath: /config/qBittorrent/config/qBittorrent.conf
+          #   subPath: qBittorrent.conf
           - name: qbit-torrent-data-volume
             mountPath: /downloads
           - name: qbittorent-openvpn-start-volume
             mountPath: /etc/openvpn/start.sh
             subPath: start.sh
+      volumes:
+      - name: goose-ovpn-files-volume
+        secret:
+          secretName: goose-ovpn-files
+          defaultMode: 0744
+          items:
+          - key: qbitorrent-series.ovpn
+            path: qbitorrent-series.ovpn
+      - name: goose-loginconf-volume
+        secret:
+          secretName: goose-loginconf
+          defaultMode: 0744
+      - name: qbit-torrent-data-volume
+        persistentVolumeClaim:
+          claimName: qbit-torrent-data-claim
+      - name: torrent-series-data-volume
+        persistentVolumeClaim:
+          claimName: torrent-series-data-claim
+      # - name: torrent-config-volume # Doens't work
+      #   persistentVolumeClaim:
+      #     claimName: torrent-config-claim
+      - name: qbittorent-openvpn-start-volume
+        configMap:
+          name: qbittorrent-openvpn-start
+          defaultMode: 0744
         
 # ---
 # apiVersion: v1
@@ -155,9 +160,9 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
+  name: qbittorrent-series-service
   labels:
-    app: qbittorrent
-  name: qbittorrent-service
+    app: qbittorrent-series
   namespace: torrent
 spec:
   ports:
@@ -174,24 +179,24 @@ spec:
     targetPort: 8999
     protocol: UDP
   selector:
-    app: qbittorrent
+    app: qbittorrent-series
 
 
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: qbittorrent-bas
+  name: qbittorrent-series-bas
   namespace: torrent
 spec:
   issuerRef:
     name: la1r
     kind: ClusterIssuer
-  secretName: qbittorrent-bas-tls
-  commonName: torrent.bas
+  secretName: qbittorrent-series-bas-tls
+  commonName: torrent-series.bas
   dnsNames:
-  - torrent.bas
-  - www.torrent.bas
+  - torrent-series.bas
+  - www.torrent-series.bas
   ipAddresses:
   - 192.168.6.2
 
@@ -200,7 +205,7 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: qbittorrent-https
+  name: qbittorrent-series-https
   namespace: torrent
   annotations:
     traefik.ingress.kubernetes.io/router.tls: "true"
@@ -208,15 +213,15 @@ metadata:
     # traefik.ingress.kubernetes.io/router.middlewares: "torrent-sablier-qbittorrent@kubernetescrd"
 spec:
   tls:
-  - secretName: qbittorrent-bas-tls
+  - secretName: qbittorrent-series-bas-tls
   rules:
-  - host: torrent.bas
+  - host: torrent-series.bas
     http:
       paths:
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: qbittorrent-service
+            name: qbittorrent-series-service
             port:
               number: 80

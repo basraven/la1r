@@ -4,7 +4,9 @@ namespace: torrent
 resources:
 - pv
 - middleware.yml
-- qbittorrent.yml
+- qbittorrent-standard.yml
+- qbittorrent-series.yml
+- qbittorrent-uhd.yml
 
 # configmap based on config/start.sh
 configMapGenerator:

@@ -1,11 +1,50 @@
+# ---
+# apiVersion: v1
+# kind: PersistentVolumeClaim
+# metadata:
+#   name: torrent-config-claim
+#   namespace: torrent
+# spec:
+#   storageClassName: torrent-config
+#   accessModes:
+#     - ReadWriteMany
+#   resources:
+#     requests:
+#       storage: 1Gi
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: torrent-config-claim
+  name: torrent-standard-data-claim
   namespace: torrent
 spec:
-  storageClassName: torrent-config
+  storageClassName: torrent-standard-data
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: torrent-series-data-claim
+  namespace: torrent
+spec:
+  storageClassName: torrent-series-data
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: torrent-uhd-data-claim
+  namespace: torrent
+spec:
+  storageClassName: torrent-uhd-data
   accessModes:
     - ReadWriteOnce
   resources:
@@ -20,7 +59,7 @@ metadata:
   namespace: torrent
 spec:
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany
   storageClassName: qbit-torrent-data
   selector:
     matchLabels:
