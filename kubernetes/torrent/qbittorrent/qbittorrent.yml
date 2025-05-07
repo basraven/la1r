@@ -30,25 +30,36 @@ spec:
                 - "true"
       # hostNetwork: true
       volumes:
-      - name: torrent-config-volume
-        persistentVolumeClaim:
-          claimName: torrent-config-claim
+      - name: goose-ovpn-files-volume
+        secret:
+          secretName: goose-ovpn-files
+          defaultMode: 0744
+          items:
+          - key: qbitorrent.ovpn
+            path: qbitorrent.ovpn
+      - name: goose-loginconf-volume
+        secret:
+          secretName: goose-loginconf
+          defaultMode: 0744
       - name: qbit-torrent-data-volume
         persistentVolumeClaim:
           claimName: qbit-torrent-data-claim
+      - name: torrent-config-volume
+        persistentVolumeClaim:
+          claimName: torrent-config-claim
       - name: qbittorent-openvpn-start-volume
         configMap:
           name: qbittorrent-openvpn-start
           defaultMode: 0744
       containers:
       - name: qbitvpn
-        resources: 
-          requests:
-            memory: "128Mi"
-            cpu: "50m"
-          limits:
-            memory: "1Gi"
-            cpu: "500m"
+        # resources: 
+        #   requests:
+        #     memory: "128Mi"
+        #     cpu: "50m"
+        #   limits:
+        #     memory: "1Gi"
+        #     cpu: "500m"
         image: dyonr/qbittorrentvpn:latest
         
         # image: ubuntu:latest
@@ -99,8 +110,14 @@ spec:
         - name: LAN_NETWORK
           value: "192.168.0.0/16,10.244.0.0/16"
         volumeMounts:
+          - name: goose-ovpn-files-volume
+            mountPath: /config/openvpn
+          - name: goose-loginconf-volume
+            mountPath: /config/login.conf
+            subPath: login.conf
+            readOnly: true
           - name: torrent-config-volume
-            mountPath: /config
+            mountPath: /config/qBittorrent
           - name: qbit-torrent-data-volume
             mountPath: /downloads
           - name: qbittorent-openvpn-start-volume
@@ -111,7 +128,7 @@ spec:
 # apiVersion: v1
 # kind: Service
 # metadata:
-#   name: qbittorrent-lb-service
+#   name: qbittorrent-service
 #   namespace: torrent
 # spec:
 #   ports:
@@ -140,7 +157,7 @@ kind: Service
 metadata:
   labels:
     app: qbittorrent
-  name: qbittorrent-lb-service
+  name: qbittorrent-service
   namespace: torrent
 spec:
   ports:
@@ -171,7 +188,7 @@ spec:
     name: la1r
     kind: ClusterIssuer
   secretName: qbittorrent-bas-tls
-  commonName: qbittorrent.bas
+  commonName: torrent.bas
   dnsNames:
   - torrent.bas
   - www.torrent.bas
@@ -200,6 +217,6 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: qbittorrent-lb-service
+            name: qbittorrent-service
             port:
               number: 80

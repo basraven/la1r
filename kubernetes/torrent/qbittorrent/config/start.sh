@@ -113,7 +113,7 @@ if [[ $VPN_ENABLED == "1" || $VPN_ENABLED == "true" || $VPN_ENABLED == "yes" ]];
 	fi
 	
 	# convert CRLF (windows) to LF (unix) for ovpn
-	dos2unix "${VPN_CONFIG}" 1> /dev/null
+	# dos2unix "${VPN_CONFIG}" 1> /dev/null
 	
 	# parse values from the ovpn or conf file
 	if [[ "${VPN_TYPE}" == "openvpn" ]]; then

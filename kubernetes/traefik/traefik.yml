@@ -54,12 +54,16 @@ spec:
                 count=$(grep -o "configuration: invalid middleware type or middleware does not exist" /tmp/traefik.log | wc -l)
                 if [ "$count" -ge 3 ]; then
                   exit 1 # Fail the probe if 3 or more errors are found
-                else
-                  exit 0 # Pass the probe if the error occurs less than 3 times
                 fi
-          initialDelaySeconds: 5
+                # Count occurrences kubernetes api-server connection lost: "ended with: an error on the server"
+                count=$(grep -o "ended with: an error on the server" /tmp/traefik.log | wc -l)
+                if [ "$count" -ge 2 ]; then
+                  exit 1 # Fail the probe if 1 or more errors are found
+                fi
+                exit 0 # Pass the probe if the error occurs less than 3 times
+          initialDelaySeconds: 10
           periodSeconds: 10
-          failureThreshold: 2
+          failureThreshold: 1
         args:
           - --api.dashboard=true
           - --api.insecure=true
