@@ -8,7 +8,7 @@ metadata:
     app: s3-backup
 spec:
   # ttlSecondsAfterFinished: 300  # auto-delete job+pod after 1 min
-  backoffLimit: 1  # Only retry once
+  backoffLimit: 0  # Don't retry
   completions: 1
   parallelism: 1
   template:

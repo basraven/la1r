@@ -27,6 +27,6 @@ spec:
   storageClassName: cloud-backup-media-data
   persistentVolumeReclaimPolicy: Retain
   accessModes:
-  - ReadWriteOnce
+  - ReadOnlyMany
   hostPath:
-    path: "/mnt/hdd/tmp/cloud-backup-media"
+    path: "/mnt/hdd/media"

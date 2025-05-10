@@ -10,6 +10,8 @@ spec:
     region: us-east-1
     prefix: media/
   compression: 
+    # type: tar
+    # arguments: -cf
     type: 7zip
     arguments: -m0=lzma2 -mx=9
   encryption:
@@ -19,7 +21,7 @@ spec:
       path: "/s3-backup/media"
       target: "/s3-backup/tmp/media"
       excludes:
-      - vroeger/2013
+      - skipme
     # - name: "stephanie"
     #   path: "/mnt/hdd/media/stephanie"
     #   target: "stephanie/"
