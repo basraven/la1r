@@ -1,0 +1,107 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: monica
+  namespace: crm
+  labels:
+    app: monica
+    sablier.enable: "true"
+    sablier.group: monica
+spec:
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: monica
+  template:
+    metadata:
+      labels:
+        task: crm
+        app: monica
+    spec:
+      # Essential
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: la1r.workload/essential
+                operator: In
+                values:
+                - "true"
+      containers:
+      - name: monica
+        resources:
+          # requests:
+          #   cpu: 50m
+          #   memory: 56Mi
+          # limits:
+          #   cpu: 200m
+          #   memory: 256Mi
+        image: monica:latest
+        ports:
+        - containerPort: 80
+          protocol: TCP
+        volumeMounts:
+        - name: monica-data
+          mountPath: /var/www/html/storage
+
+      volumes:
+      - name: monica-data
+        persistentVolumeClaim:
+          claimName: monica-data-claim
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: monica
+  namespace: crm
+spec:
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    app: monica
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: monica-bas
+  namespace: crm
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: monica-bas-tls
+  commonName: monica.bas
+  dnsNames:
+  - monica.bas
+  - www.monica.bas
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: monica-https
+  namespace: crm
+  annotations:
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+    traefik.ingress.kubernetes.io/router.middlewares: "crm-sablier-monica@kubernetescrd"
+spec:
+  tls:
+  - secretName: monica-bas-tls
+  rules:
+  - host: monica.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: monica
+            port:
+              number: 80

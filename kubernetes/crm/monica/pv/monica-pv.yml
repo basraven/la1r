@@ -1,0 +1,16 @@
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: monica-data-pv
+  labels:
+    contenttype: "monica-data"
+spec:
+  capacity:
+    storage: 5Gi
+  storageClassName: monica-data
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/mnt/ssd/na/monica/data"
