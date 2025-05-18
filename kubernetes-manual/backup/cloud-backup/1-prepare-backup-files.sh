@@ -473,7 +473,8 @@ process_source() {
         # Encrypt archive if specified
         if [ "$ENCRYPTION_TYPE" = "gpg" ] && [ "$DRY_RUN" = false ]; then
           echo "Encrypting $archive_file"
-          gpg --encrypt --sign --yes --cipher-algo AES256 --armor --compress-algo none -r automation@la1r.com "$archive_file"
+          # Avoid using --armor (making it into ascii) because that add 33% approx
+          gpg --encrypt --sign --yes --cipher-algo AES256 --compress-level 0 --compress-algo none -r automation@la1r.com "$archive_file"
           rm -f "$archive_file"
           echo "Encrypted file saved to $archive_file.gpg"
         elif [ "$ENCRYPTION_TYPE" = "gpg" ] && [ "$DRY_RUN" = true ]; then
