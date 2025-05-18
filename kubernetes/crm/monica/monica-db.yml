@@ -1,0 +1,81 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: monica-db
+  namespace: crm
+  labels:
+    app: monica-db
+    sablier.enable: "true"
+    sablier.group: monica
+spec:
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: monica-db
+  template:
+    metadata:
+      labels:
+        task: crm
+        app: monica-db
+    spec:
+      # Essential
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: la1r.workload/essential
+                operator: In
+                values:
+                - "true"
+      containers:
+      - name: database
+        resources:
+          # requests:
+          #   cpu: 50m
+          #   memory: 56Mi
+          # limits:
+          #   cpu: 200m
+          #   memory: 256Mi
+        image: mariadb:11
+        ports:
+        - containerPort: 3306
+        env:
+        - name: MYSQL_RANDOM_ROOT_PASSWORD
+          value: "true"
+        - name: MYSQL_DATABASE
+          value: monica
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              name: monica-db-credentials
+              key: MYSQL_USER
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: monica-db-credentials
+              key: MYSQL_PASSWORD
+        volumeMounts:
+        - name: monica-database
+          mountPath: /var/lib/mysql
+
+      volumes:
+      - name: monica-database
+        persistentVolumeClaim:
+          claimName: monica-database-claim
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: monica-db
+  namespace: crm
+spec:
+  ports:
+  - name: db
+    port: 3306
+    targetPort: 3306
+  selector:
+    app: monica-db

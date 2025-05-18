@@ -39,13 +39,38 @@ spec:
           # limits:
           #   cpu: 200m
           #   memory: 256Mi
-        image: monica:latest
+        image: monica:apache
         ports:
         - containerPort: 80
-          protocol: TCP
+        env:
+        # - name: APP_KEY
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: monica-db-credentials
+        #       key: APP_KEY
+        - name: APP_ENV
+          value: "production"
+        - name: APP_FORCE_URL
+          value: "true"
+        - name: APP_URL
+          value: "https://monica.bas"
+        - name: DB_HOST
+          value: monica-db
+        - name: DB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: monica-db-credentials
+              key: MYSQL_USER
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: monica-db-credentials
+              key: MYSQL_PASSWORD
+        
         volumeMounts:
         - name: monica-data
           mountPath: /var/www/html/storage
+    
 
       volumes:
       - name: monica-data
@@ -60,7 +85,8 @@ metadata:
   namespace: crm
 spec:
   ports:
-  - port: 80
+  - name: web
+    port: 80
     targetPort: 80
   selector:
     app: monica

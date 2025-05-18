@@ -14,3 +14,19 @@ spec:
   - ReadWriteOnce
   hostPath:
     path: "/mnt/ssd/na/monica/data"
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: monica-database-pv
+  labels:
+    contenttype: "monica-database"
+spec:
+  capacity:
+    storage: 5Gi
+  storageClassName: monica-database
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/mnt/ssd/na/monica/database"

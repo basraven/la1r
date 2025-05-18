@@ -3,5 +3,6 @@ kind: Kustomization
 namespace: crm
 resources:
   - pv
+  - monica-db.yml
   - monica.yml
   - middleware.yml
