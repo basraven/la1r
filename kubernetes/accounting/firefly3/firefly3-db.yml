@@ -1,0 +1,103 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: firefly3-db
+  namespace: accounting
+  labels:
+    app: firefly3-db
+    # sablier.enable: "true"
+    # sablier.group: firefly3
+spec:
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: firefly3-db
+  template:
+    metadata:
+      labels:
+        task: accounting
+        app: firefly3-db
+    spec:
+      # Essential
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: la1r.workload/essential
+                operator: In
+                values:
+                - "true"
+      containers:
+      - name: database
+        resources:
+          requests:
+            memory: "2Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        image: mariadb:11
+        ports:
+        - containerPort: 3306
+        env:
+        - name: MYSQL_RANDOM_ROOT_PASSWORD
+          value: "true"
+        - name: MYSQL_DATABASE
+          value: firefly3
+        - name: MYSQL_USER
+          valueFrom:
+            secretKeyRef:
+              name: firefly3-db-credentials
+              key: MYSQL_USER
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: firefly3-db-credentials
+              key: MYSQL_PASSWORD
+        
+        # Performance tuning for 2Gi RAM
+        - name: MARIADB_INNODB_BUFFER_POOL_SIZE
+          value: "1536M"         # ~75% of total RAM
+        - name: MARIADB_INNODB_LOG_FILE_SIZE
+          value: "512M"          # Large log file for fewer flushes
+        - name: MARIADB_MAX_CONNECTIONS
+          value: "250"
+        - name: MARIADB_INNODB_FLUSH_LOG_AT_TRX_COMMIT
+          value: "2"            # Improves performance with some durability tradeoff
+        - name: MARIADB_QUERY_CACHE_SIZE
+          value: "64M"
+        - name: MARIADB_THREAD_CACHE_SIZE
+          value: "32"
+        - name: MARIADB_TABLE_OPEN_CACHE
+          value: "2048"
+        - name: MARIADB_TMP_TABLE_SIZE
+          value: "128M"
+        - name: MARIADB_MAX_ALLOWED_PACKET
+          value: "64M"
+
+
+        volumeMounts:
+        - name: firefly3-database
+          mountPath: /var/lib/mysql
+
+      volumes:
+      - name: firefly3-database
+        persistentVolumeClaim:
+          claimName: firefly3-database-claim
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: firefly3-db
+  namespace: accounting
+spec:
+  ports:
+  - name: db
+    port: 3306
+    targetPort: 3306
+  selector:
+    app: firefly3-db

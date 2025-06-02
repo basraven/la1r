@@ -1,0 +1,32 @@
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: firefly3-data-pv
+  labels:
+    contenttype: "firefly3-data"
+spec:
+  capacity:
+    storage: 5Gi
+  storageClassName: firefly3-data
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/mnt/ssd/na/firefly3/data"
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: firefly3-database-pv
+  labels:
+    contenttype: "firefly3-database"
+spec:
+  capacity:
+    storage: 5Gi
+  storageClassName: firefly3-database
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/mnt/ssd/na/firefly3/database"

@@ -1,0 +1,167 @@
+---
+# Based on: https://github.com/firefly-iii/kubernetes/blob/main/kustomize/firefly-iii.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: firefly3
+  namespace: accounting
+  labels:
+    app: firefly3
+    # sablier.enable: "true"
+    # sablier.group: firefly3
+spec:
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: firefly3
+  template:
+    metadata:
+      labels:
+        task: accounting
+        app: firefly3
+    spec:
+      # Essential
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: la1r.workload/essential
+                operator: In
+                values:
+                - "true"
+      containers:
+      - name: firefly3
+        resources:
+          # requests:
+          #   cpu: 50m
+          #   memory: 56Mi
+          # limits:
+          #   cpu: 200m
+          #   memory: 256Mi
+        image: fireflyiii/core:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: ALLOW_ADVANCED_OPTIONS
+          value: "true"
+        - name: TRUSTED_PROXIES
+          value: "**"
+        - name: LOG_LEVEL
+          value: "warning"
+        - name: APP_LOG_LEVEL
+          value: "warning"
+        - name: APP_KEY
+          valueFrom:
+            secretKeyRef:
+              name: firefly3-db-credentials
+              key: APP_KEY
+        - name: DB_HOST
+          value: firefly3-db
+        - name: DB_PORT
+          value: "3306"
+        - name: DB_CONNECTION
+          value: "mysql"
+        - name: DB_DATABASE
+          value: "firefly3"
+        - name: DB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: firefly3-db-credentials
+              key: MYSQL_USER
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: firefly3-db-credentials
+              key: MYSQL_PASSWORD
+        - name: MAIL_MAILER
+          value: "log"
+        - name: MAIL_HOST
+          value: "smtp.gmail.com"
+        - name: MAIL_PORT
+          value: "587"
+        - name: MAIL_FROM
+          value: "user@gmail.tld"
+        - name: MAIL_ENCRYPTION
+          value: "tls"
+        - name: SITE_OWNER
+          valueFrom:
+            secretKeyRef:
+              name: vaultwarden-gmail-appid
+              key: SENDER_EMAIL
+        - name: MAIL_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: vaultwarden-gmail-appid
+              key: SENDER_EMAIL
+        - name: MAIL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: vaultwarden-gmail-appid
+              key: APP_ID_TOKEN
+
+        volumeMounts:
+        - name: firefly3-data
+          mountPath: /var/www/html/storage/upload
+    
+
+      volumes:
+      - name: firefly3-data
+        persistentVolumeClaim:
+          claimName: firefly3-data-claim
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: firefly3
+  namespace: accounting
+spec:
+  ports:
+  - name: web
+    port: 80
+    targetPort: 8080
+  selector:
+    app: firefly3
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: firefly3-bas
+  namespace: accounting
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: firefly3-bas-tls
+  commonName: firefly.bas
+  dnsNames:
+  - firefly.bas
+  - www.firefly.bas
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: firefly3-https
+  namespace: accounting
+  annotations:
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+    # traefik.ingress.kubernetes.io/router.middlewares: "accounting-sablier-firefly3@kubernetescrd"
+spec:
+  tls:
+  - secretName: firefly3-bas-tls
+  rules:
+  - host: firefly.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: firefly3
+            port:
+              number: 80

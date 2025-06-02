@@ -1,6 +1,6 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-namespace: crm
+namespace: accounting
 resources:
-  - monica-pv.yml
-  - monica-pvc.yml
+  - firefly3-pv.yml
+  - firefly3-pvc.yml

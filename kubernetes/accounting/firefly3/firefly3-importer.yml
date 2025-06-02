@@ -1,0 +1,119 @@
+---
+# Based on: https://github.com/firefly-iii/kubernetes/blob/main/kustomize/firefly-iii-importer.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: firefly3-importer
+  namespace: accounting
+  labels:
+    app: firefly3
+    # sablier.enable: "true"
+    # sablier.group: firefly3
+spec:
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: firefly3-importer
+  template:
+    metadata:
+      labels:
+        task: accounting
+        app: firefly3-importer
+    spec:
+      # dnsPolicy: "None"
+      # dnsConfig:
+      #   nameservers:
+      #     - 192.168.6.90
+      
+      # Essential
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: la1r.workload/essential
+                operator: In
+                values:
+                - "true"
+      containers:
+      - name: firefly3-importer
+        resources:
+          # requests:
+          #   cpu: 50m
+          #   memory: 56Mi
+          # limits:
+          #   cpu: 200m
+          #   memory: 256Mi
+        image: fireflyiii/data-importer:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: TRUSTED_PROXIES
+          value: "**"
+        - name: LOG_LEVEL
+          value: "warning"
+        - name: APP_LOG_LEVEL
+          value: "warning"
+        - name: FIREFLY_III_ACCESS_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: firefly3-db-credentials
+              key: IMPORTER_PAT
+        - name: FIREFLY_III_URL
+          value: "http://firefly3:80"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: firefly3-importer
+  namespace: accounting
+spec:
+  ports:
+  - name: web
+    port: 80
+    targetPort: 8080
+  selector:
+    app: firefly3-importer
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: firefly3-importer-bas
+  namespace: accounting
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: firefly3-importer-bas-tls
+  commonName: firefly-importer.bas
+  dnsNames:
+  - firefly-importer.bas
+  - www.firefly-importer.bas
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: firefly3-importer-https
+  namespace: accounting
+  annotations:
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+    # traefik.ingress.kubernetes.io/router.middlewares: "accounting-sablier-firefly3@kubernetescrd"
+spec:
+  tls:
+  - secretName: firefly3-importer-bas-tls
+  rules:
+  - host: firefly-importer.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: firefly3-importer
+            port:
+              number: 80

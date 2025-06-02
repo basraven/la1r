@@ -43,11 +43,11 @@ spec:
         ports:
         - containerPort: 80
         env:
-        # - name: APP_KEY
-        #   valueFrom:
-        #     secretKeyRef:
-        #       name: monica-db-credentials
-        #       key: APP_KEY
+        - name: APP_KEY
+          valueFrom:
+            secretKeyRef:
+              name: monica-db-credentials
+              key: APP_KEY
         - name: APP_ENV
           value: "production"
         - name: APP_FORCE_URL
