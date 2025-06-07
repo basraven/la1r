@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: workflow-controller
+  labels:
+    app: workflow-controller
+spec:
+  strategy:
+    type: Recreate
+  replicas: 1
+  selector:
+    matchLabels:
+      app: workflow-controller
+  template:
+    metadata:
+      labels:
+        app: workflow-controller
+    spec:
+      # Essential
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: la1r.workload/essential
+                operator: In
+                values:
+                - "true"
+
+      serviceAccountName: argo-workflow-controller
+      containers:
+        - name: controller
+          image: argoproj/workflow-controller:v3.6.10
+          env:
+          - name: LEADER_ELECTION_IDENTITY
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name

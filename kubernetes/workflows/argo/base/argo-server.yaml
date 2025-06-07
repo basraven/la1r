@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: argo-server
+spec:
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: argo-server
+  template:
+    metadata:
+      labels:
+        app: argo-server
+    spec:
+      
+      # Essential
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: la1r.workload/essential
+                operator: In
+                values:
+                - "true"
+      serviceAccountName: argo-server
+      containers:
+        - name: argo-server
+          image: argoproj/argocli:v3.6.10
+          args: [ "server", "--auth-mode=server", "--secure=false" ]
+          ports:
+            - containerPort: 2746
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: argo-server
+spec:
+  selector:
+    app: argo-server
+  ports:
+    - port: 80
+      targetPort: 2746
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: argo-bas
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: argo-bas-tls
+  commonName: argo.bas
+  dnsNames:
+  - argo.bas
+  - www.argo.bas
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: argo-https
+  annotations:
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+    # traefik.ingress.kubernetes.io/router.middlewares: "workflow-sablier-argo@kubernetescrd"
+spec:
+  tls:
+  - secretName: argo-bas-tls
+  rules:
+  - host: argo.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: argo-server
+            port:
+              number: 80

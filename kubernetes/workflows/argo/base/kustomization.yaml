@@ -1,0 +1,9 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - pv
+  - argo-crds.yaml
+  - workflow-controller.yaml
+  - argo-server.yaml
+  - argo-rbac.yaml
+  - workflow-controller-configmap.yaml
