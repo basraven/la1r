@@ -1,0 +1,10 @@
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata:
+  name: weekly-vaultwarden-cloud-backup
+spec:
+  schedule: "0 11 * * 0" # Every Sunday at 11:00 AM
+  timezone: "Europe/Amsterdam"
+  workflowSpec:
+    workflowTemplateRef:
+      name: vaultwarden-cloud-backup

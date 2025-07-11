@@ -18,8 +18,8 @@ resource "aws_iam_policy" "backup_upload_policy" {
           "s3:PutObjectAcl",
         ]
         Resource = [
-            "${var.backup_states_bucket_arn}/*",
-            "${var.backup_data_bucket_arn}/*"
+            "${var.backup_data_bucket_arn}/*",
+            "${var.backup_versioned_data_bucket_arn}/*"
         ]
       }
     ]
@@ -39,18 +39,16 @@ resource "aws_iam_policy" "backup_list_policy" {
           "s3:ListBucket",
         ]
         Resource = [
-            "${var.backup_states_bucket_arn}",
-            "${var.backup_data_bucket_arn}"
+            "${var.backup_data_bucket_arn}",
+            "${var.backup_versioned_data_bucket_arn}"
         ]
       }
     ]
   })
 }
-
-# Create a policy allowing only download (PutObject) to the specific bucket
-resource "aws_iam_policy" "backup_download_policy" {
-  name        = "backup-download-policy"
-  description = "Allow reading (GetObject), and getting ACL (GetObjectAcl) to backup-states bucket"
+resource "aws_iam_policy" "backup_tag_policy" {
+  name        = "backup-tag-policy"
+  description = "Allow tag (GetObjectTagging, PutObjectTagging) to backup-states and backup-data buckets"
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -58,11 +56,12 @@ resource "aws_iam_policy" "backup_download_policy" {
       {
         Effect = "Allow"
         Action = [
-          "s3:GetObject",
-          "s3:GetObjectAcl"
+          "s3:GetObjectTagging",
+          "s3:PutObjectTagging",
         ]
         Resource = [
-            "${var.backup_states_bucket_arn}/*"
+            "${var.backup_data_bucket_arn}/*",
+            "${var.backup_versioned_data_bucket_arn}/*"
         ]
       }
     ]
@@ -74,16 +73,11 @@ resource "aws_iam_user_policy_attachment" "attach_backup_upload_policy" {
   user       = aws_iam_user.backup_uploader.name
   policy_arn = aws_iam_policy.backup_upload_policy.arn
 }
-
-# Attach the policy to the user
 resource "aws_iam_user_policy_attachment" "backup_list_policy" {
   user       = aws_iam_user.backup_uploader.name
   policy_arn = aws_iam_policy.backup_list_policy.arn
 }
-
-# Attach the policy to the user
-resource "aws_iam_user_policy_attachment" "attach_backup_download_policy" {
+resource "aws_iam_user_policy_attachment" "backup_tag_policy" {
   user       = aws_iam_user.backup_uploader.name
-  policy_arn = aws_iam_policy.backup_download_policy.arn
+  policy_arn = aws_iam_policy.backup_tag_policy.arn
 }
-

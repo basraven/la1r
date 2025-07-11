@@ -1,6 +1,6 @@
 # Define a variable for the S3 backup states bucket ARN
-variable "backup_states_bucket_arn" {
-  description = "The ARN of the backup states bucket"
+variable "backup_versioned_data_bucket_arn" {
+  description = "The ARN of the versioned backup bucket"
   type        = string
 }
 

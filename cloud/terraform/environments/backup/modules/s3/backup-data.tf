@@ -17,7 +17,7 @@ resource "aws_s3_bucket_versioning" "backup_data_versioning" {
   bucket = aws_s3_bucket.backup_data.bucket
 
   versioning_configuration {
-    status = "Enabled"
+    status = "Disabled"
   }
   depends_on = [aws_s3_bucket.backup_data]
 }

@@ -21,7 +21,7 @@ module "s3" {
 
 module "users" {
   source = "../modules/users"
-  backup_states_bucket_arn = module.s3.backup_states_bucket_arn
+  backup_versioned_data_bucket_arn = module.s3.backup_versioned_data_bucket_arn
   backup_data_bucket_arn = module.s3.backup_data_bucket_arn
   depends_on = [ module.s3 ]
 }

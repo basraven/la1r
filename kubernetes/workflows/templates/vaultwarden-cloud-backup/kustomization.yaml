@@ -1,8 +1,6 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-- vaultwarden-ro-pv.yml
-- vaultwarden-ro-pvc.yml
-- vaultwarden-workingdir-pv.yml
-- vaultwarden-workingdir-pvc.yml
-- vaultwarden-cloud-backup.yml
+- pv
+- workflow-vaultwarden-cloud-backup.yml
+- cron-vaultwarden-cloud-backup.yml

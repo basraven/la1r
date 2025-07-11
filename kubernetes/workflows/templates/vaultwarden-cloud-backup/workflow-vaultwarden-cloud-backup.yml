@@ -8,7 +8,7 @@ spec:
   arguments:
     parameters:
       - name: bucket
-        value: "la1r-backup-backup-data"   # default bucket name
+        value: "la1r-backup-versioned-backup-data"   # default bucket name
       - name: bucketpath
         value: "ha/vaultwarden/vaultwarden.gpg"      # default bucketpath
   volumes:
@@ -82,12 +82,28 @@ spec:
         args:
           - |
             echo "Uploading /mnt/work/vaultwarden.gpg to bucket: {{inputs.parameters.bucket}} at: {{inputs.parameters.bucketpath}}"
-            echo "sha256: $(cat /mnt/work/vaultwarden.sha256)"
-            aws s3api put-object \
-            --bucket "{{inputs.parameters.bucket}}" \
-            --key "{{inputs.parameters.bucketpath}}" \
-            --body /mnt/work/vaultwarden.gpg \
-            --metadata sha256="$(cat /mnt/work/vaultwarden.sha256)"
+            NEW_SHA256=$(cat /mnt/work/vaultwarden.sha256 | tr -d '[:space:]')
+
+            # Try to get existing object's sha256 tag
+            S3_SHA256=$(aws s3api get-object-tagging \
+              --bucket "{{inputs.parameters.bucket}}" \
+              --key "{{inputs.parameters.bucketpath}}" \
+              --query "TagSet[?Key=='sha256'].Value | [0]" \
+              --output text 2>/dev/null | tr -d '[:space:]')
+
+            echo "Local sha256: $NEW_SHA256, S3 sha256: $S3_SHA256"
+          
+            if [ "$NEW_SHA256" != "$S3_SHA256" ]; then
+                echo "SHA256 changed or object does not exist. Uploading new version..."
+                 aws s3api put-object \
+                  --bucket "{{inputs.parameters.bucket}}" \
+                  --key "{{inputs.parameters.bucketpath}}" \
+                  --body /mnt/work/vaultwarden.gpg \
+                  --tagging "sha256=$NEW_SHA256" \
+                  --metadata sha256="$NEW_SHA256"
+            else
+                echo "SHA256 matches existing metadata. Skipping upload."
+            fi
 
         volumeMounts:
           - name: work
