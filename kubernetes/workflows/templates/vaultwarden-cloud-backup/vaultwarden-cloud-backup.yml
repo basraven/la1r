@@ -1,0 +1,129 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: vaultwarden-cloud-backup
+  namespace: workflows
+spec:
+  entrypoint: vaultwarden-cloud-backup
+  arguments:
+    parameters:
+      - name: bucket
+        value: "la1r-backup-backup-data"   # default bucket name
+      - name: bucketpath
+        value: "ha/vaultwarden/vaultwarden.gpg"      # default bucketpath
+  volumes:
+    - name: work # working dir
+      persistentVolumeClaim:
+        claimName: vaultwarden-workingdir-claim
+  onExit: clean-workingdir
+  templates:
+    - name: vaultwarden-cloud-backup
+      inputs:
+        parameters:
+          - name: bucket
+          - name: bucketpath
+      dag:
+        tasks:
+          - name: encrypt-backup
+            template: encrypt-backup
+          - name: upload-backup
+            depends: encrypt-backup
+            template: upload-backup
+            arguments:
+              parameters:
+                - name: bucket
+                  value: "{{inputs.parameters.bucket}}"
+                - name: bucketpath
+                  value: "{{inputs.parameters.bucketpath}}"
+      
+
+    - name: encrypt-backup
+      container:
+        image: debian:bullseye-slim # can be any image with bash
+        command: [sh, -c]
+        args:
+          - |
+            apt update && apt install -y gnupg
+            
+            # Make folder checksum
+            find /mnt/vaultwarden -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | awk '{print $1}' > /mnt/work/vaultwarden.sha256
+
+            # Tar folder
+            tar -czf /tmp/vaultwarden.tar.gz /mnt/vaultwarden
+
+            # Encrypt folder
+            gpg --output /mnt/work/vaultwarden.gpg --encrypt --recipient-file /mnt/gpg/automation-gpg-public.asc /tmp/vaultwarden.tar.gz         
+        volumeMounts:
+          - name: work
+            mountPath: /mnt/work
+          - name: vaultwarden-ro
+            mountPath: /mnt/vaultwarden
+            readOnly: true
+          - name: gpg-automated-keys
+            mountPath: /mnt/gpg/
+      volumes:
+      - name: vaultwarden-ro
+        persistentVolumeClaim:
+          claimName: vaultwarden-ro-claim
+          readOnly: true
+      # GPG public key
+      - name: gpg-automated-keys
+        secret:
+          secretName: gpg-automated-keys
+
+    - name: upload-backup
+      inputs:
+        parameters:
+          - name: bucket
+          - name: bucketpath
+      container:
+        image: amazon/aws-cli:latest
+        command: [sh, -c]
+        args:
+          - |
+            echo "Uploading /mnt/work/vaultwarden.gpg to bucket: {{inputs.parameters.bucket}} at: {{inputs.parameters.bucketpath}}"
+            echo "sha256: $(cat /mnt/work/vaultwarden.sha256)"
+            aws s3api put-object \
+            --bucket "{{inputs.parameters.bucket}}" \
+            --key "{{inputs.parameters.bucketpath}}" \
+            --body /mnt/work/vaultwarden.gpg \
+            --metadata sha256="$(cat /mnt/work/vaultwarden.sha256)"
+
+        volumeMounts:
+          - name: work
+            mountPath: /mnt/work
+          - name: aws-credentials-volume
+            mountPath: /root/.aws/credentials
+            subPath: credentials
+            readOnly: true
+          - name: aws-config-volume
+            mountPath: /root/.aws/config
+            subPath: config
+            readOnly: true
+      volumes:
+      # AWS credentials
+      - name: aws-credentials-volume
+        secret:
+          secretName: aws-config-backup-uploader
+          items:
+            - key: credentials
+              path: credentials
+      - name: aws-config-volume
+        secret:
+          secretName: aws-config-backup-uploader
+          items:
+            - key: config
+              path: config
+
+    - name: clean-workingdir
+      container:
+        image: debian:bullseye-slim # can be any image with bash
+        command: [sh, -c]
+        args:
+          - |
+            echo "Cleaning workingdir"
+            rm -rf /mnt/work/*
+        volumeMounts:
+          - name: work
+            mountPath: /mnt/work
+        

@@ -6,4 +6,8 @@ metadata:
 data:
   config: |
     artifactRepository:
-      archiveLogs: true
+      archiveLogs: false
+
+    workflowDefaults:
+      spec:
+        serviceAccountName: argo-workflow-controller

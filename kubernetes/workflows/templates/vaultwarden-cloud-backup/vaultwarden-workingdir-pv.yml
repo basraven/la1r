@@ -1,0 +1,16 @@
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: vaultwarden-workingdir-pv
+  labels:
+    contenttype: "vaultwarden-workingdir"
+spec:
+  capacity:
+    storage: 1Gi
+  storageClassName: vaultwarden-workingdir
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteMany
+  hostPath:
+    path: "/tmp/workflows/vaultwarden/workingdir"
