@@ -4,6 +4,7 @@ metadata:
   name: weekly-jellyseerr-cloud-backup
 spec:
   schedule: "30 13 * * 0" # Every Sunday at 13:30 AM
+  concurrencyPolicy: "Forbid"
   timezone: "Europe/Amsterdam"
   workflowSpec:
     workflowTemplateRef:

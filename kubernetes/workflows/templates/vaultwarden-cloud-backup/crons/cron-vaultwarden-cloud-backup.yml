@@ -4,6 +4,7 @@ metadata:
   name: weekly-vaultwarden-cloud-backup
 spec:
   schedule: "0 11 * * 0" # Every Sunday at 11:00 AM
+  concurrencyPolicy: "Forbid"
   timezone: "Europe/Amsterdam"
   workflowSpec:
     workflowTemplateRef:

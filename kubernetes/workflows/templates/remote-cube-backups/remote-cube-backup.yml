@@ -1,0 +1,111 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: remote-cube-backup
+  namespace: workflows
+spec:
+  entrypoint: remote-cube-backup
+  podSpecPatch: |
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+            - matchExpressions:
+                - key: la1r.workload/essential
+                  operator: In
+                  values:
+                    - "true"
+  arguments:
+    parameters:
+      - name: backupServer
+        value: "basraven@10.8.0.4"
+  templates:
+    - name: remote-cube-backup
+      inputs:
+        parameters:
+          - name: backupServer
+      dag:
+        tasks:
+          - name: make-backup
+            template: make-backup
+            arguments:
+              parameters:
+                - name: backupServer
+                  value: "{{inputs.parameters.backupServer}}"
+                - name: sourceMount
+                  value: "{{item.sourceMount}}"
+                - name: targetMount
+                  value: "{{item.targetMount}}"
+                - name: backupTarget
+                  value: "{{item.backupTarget}}"
+            withParam: |
+              [
+                {"sourceMount": "//192.168.5.1/ssd-na", "targetMount": "/mnt/linux-wayne/ssd/na", "backupTarget": "/mnt/hdd/backup/linux-wayne/ssd/na"},
+                {"sourceMount": "//192.168.5.1/ssd-ha", "targetMount": "/mnt/linux-wayne/ssd/ha", "backupTarget": "/mnt/hdd/backup/linux-wayne/ssd/ha"},
+                {"sourceMount": "//192.168.5.1/hdd-na", "targetMount": "/mnt/linux-wayne/hdd/na", "backupTarget": "/mnt/hdd/backup/linux-wayne/hdd/na"},
+                {"sourceMount": "//192.168.5.1/hdd-ha", "targetMount": "/mnt/linux-wayne/hdd/ha", "backupTarget": "/mnt/hdd/backup/linux-wayne/hdd/ha"},
+                
+                {"sourceMount": "//192.168.5.2/ssd-na", "targetMount": "/mnt/stephanie/ssd/na", "backupTarget": "/mnt/hdd/backup/stephanie/ssd/na"},
+                {"sourceMount": "//192.168.5.2/ssd-ha", "targetMount": "/mnt/stephanie/ssd/ha", "backupTarget": "/mnt/hdd/backup/stephanie/ssd/ha"},
+
+                {"sourceMount": "//192.168.5.3/hdd-media", "targetMount": "/mnt/jay-c/hdd/media", "backupTarget": "/mnt/hdd/backup/jay-c/hdd/media"},
+                {"sourceMount": "//192.168.5.3/hdd-na", "targetMount": "/mnt/jay-c/hdd/na", "backupTarget": "/mnt/hdd/backup/jay-c/hdd/na"},
+                {"sourceMount": "//192.168.5.3/hdd-ha", "targetMount": "/mnt/jay-c/hdd/ha", "backupTarget": "/mnt/hdd/backup/jay-c/hdd/ha"},
+                {"sourceMount": "//192.168.5.3/ssd-ha", "targetMount": "/mnt/jay-c/ssd/ha", "backupTarget": "/mnt/hdd/backup/jay-c/ssd/ha"},
+                {"sourceMount": "//192.168.5.3/hdd-ha", "targetMount": "/mnt/jay-c/hdd/ha", "backupTarget": "/mnt/hdd/backup/jay-c/hdd/ha"}
+              ]    
+
+    - name: make-backup
+      inputs:
+        parameters:
+          - name: backupServer
+          - name: sourceMount
+          - name: targetMount
+          - name: backupTarget
+      container:
+        image: alpine # can be any image with bash
+        command: [sh, -c]
+        args:
+          - |
+            apk add --no-cache openssh
+            ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i /root/.ssh/id_rsa {{inputs.parameters.backupServer}} << 'EOF'
+              echo "Running remotely..."
+              # Mounting remote sourceMount to local targetMount
+              echo "Unmounting {{inputs.parameters.targetMount}} if exist"
+              sudo umount {{inputs.parameters.targetMount}} || true
+              sleep 2
+              echo "Mounting {{inputs.parameters.sourceMount}} to {{inputs.parameters.targetMount}}"
+              sudo mount -t cifs {{inputs.parameters.sourceMount}} {{inputs.parameters.targetMount}} -o credentials=/home/basraven/.samba/credentials,iocharset=utf8,vers=3.0,ro
+              
+              # ls -altr {{inputs.parameters.targetMount}}
+              # Check if the folder at least as 1mb of data, to not delete a backup completely
+              TOTAL_KB=$(du -sk "{{inputs.parameters.targetMount}}" | cut -f1)
+              if [ "$TOTAL_KB" -gt 1024 ]; then
+                echo "Directory has content, proceeding with rsync"
+                sudo rsync -azv --progress --delete "{{inputs.parameters.targetMount}}/" "{{inputs.parameters.backupTarget}}/"                 
+                sudo umount {{inputs.parameters.targetMount}} 
+              else
+                echo "Directory is smaller than or equal to 1MB"
+                sudo umount {{inputs.parameters.targetMount}} 
+                exit 1
+              fi
+            EOF
+
+       
+                 
+        volumeMounts:
+          - name: ssh-key
+            mountPath: /root/.ssh/id_rsa
+            subPath: id_rsa
+          # - name: sebackup-samba-credentials
+          #   mountPath: /root/.samba/
+          #   readOnly: true
+      volumes:
+      - name: ssh-key
+        secret:
+          secretName: ssh-key-remote-cube
+          defaultMode: 0600
+      # - name: sebackup-samba-credentials
+      #   secret:
+      #     secretName: sebackup-samba-credentials
+      #     defaultMode: 0600

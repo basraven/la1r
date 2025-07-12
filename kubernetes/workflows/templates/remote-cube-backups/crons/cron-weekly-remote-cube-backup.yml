@@ -1,15 +1,15 @@
 apiVersion: argoproj.io/v1alpha1
 kind: CronWorkflow
 metadata:
-  name: weekly-jackett-cloud-backup
+  name: weekly-remote-cube-backup
 spec:
-  schedule: "30 13 * * 0" # Every Sunday at 13:30 AM
+  schedule: "40 8 * * 0" # Every Sunday at 12:40 AM
   concurrencyPolicy: "Forbid"
   timezone: "Europe/Amsterdam"
   workflowSpec:
     workflowTemplateRef:
-      name: nonessential-cloud-backup
+      name: remote-cube-backup
     arguments:
       parameters:
-        - name: localpath
-          value: "/mnt/ssd/na/jackett-config"
+        - name: backupServer
+          value: "basraven@10.8.0.4"
