@@ -1,0 +1,26 @@
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: essential-workingdir-pv
+  labels:
+    contenttype: "essential-workingdir"
+spec:
+  capacity:
+    storage: 1Gi
+  storageClassName: essential-workingdir
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteMany
+  hostPath:
+    path: "/tmp/workflows/essential/workingdir"
+
+  # Essential
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: la1r.workload/essential
+              operator: In
+              values:
+                - "true"

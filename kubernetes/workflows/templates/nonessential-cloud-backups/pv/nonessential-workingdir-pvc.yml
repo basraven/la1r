@@ -1,0 +1,12 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nonessential-workingdir-claim
+spec:
+  storageClassName: nonessential-workingdir
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi

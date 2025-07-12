@@ -1,10 +1,10 @@
 apiVersion: argoproj.io/v1alpha1
 kind: WorkflowTemplate
 metadata:
-  name: vaultwarden-cloud-backup
+  name: essential-cloud-backup
   namespace: workflows
 spec:
-  entrypoint: vaultwarden-cloud-backup
+  entrypoint: essential-cloud-backup
   podSpecPatch: |
     affinity:
       nodeAffinity:
@@ -18,27 +18,31 @@ spec:
   arguments:
     parameters:
       - name: bucket
-        value: "la1r-backup-versioned-backup-data"   # default bucket name
-      - name: bucketpath
-        value: "ha/vaultwarden/vaultwarden.gpg"      # default bucketpath
+        value: "la1r-backup-backup-data"   # default bucket name
+      - name: localpath
+        # value: "/mnt/ssd/ha/frigate"
       - name: storageclass
         value: "STANDARD_IA"
   volumes:
     - name: work # working dir
       persistentVolumeClaim:
-        claimName: vaultwarden-workingdir-claim
+        claimName: essential-workingdir-claim
   onExit: clean-workingdir
   templates:
-    - name: vaultwarden-cloud-backup
+    - name: essential-cloud-backup
       inputs:
         parameters:
           - name: bucket
-          - name: bucketpath
+          - name: localpath
           - name: storageclass
       dag:
         tasks:
           - name: encrypt-backup
             template: encrypt-backup
+            arguments:
+              parameters:
+                - name: localpath
+                  value: "{{inputs.parameters.localpath}}"
           - name: upload-backup
             depends: encrypt-backup
             template: upload-backup
@@ -46,13 +50,16 @@ spec:
               parameters:
                 - name: bucket
                   value: "{{inputs.parameters.bucket}}"
-                - name: bucketpath
-                  value: "{{inputs.parameters.bucketpath}}"
+                - name: localpath
+                  value: "{{inputs.parameters.localpath}}"
                 - name: storageclass
                   value: "{{inputs.parameters.storageclass}}"
       
 
     - name: encrypt-backup
+      inputs:
+        parameters:
+          - name: localpath
       container:
         image: debian:bullseye-slim # can be any image with bash
         command: [sh, -c]
@@ -60,26 +67,29 @@ spec:
           - |
             apt update && apt install -y gnupg
             
+            # Create folder
+            mkdir -p /mnt/work{{inputs.parameters.localpath}}
+
             # Make folder checksum
-            find /mnt/vaultwarden -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | awk '{print $1}' > /mnt/work/vaultwarden.sha256
+            find "{{inputs.parameters.localpath}}" -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | awk '{print $1}' > /mnt/work{{inputs.parameters.localpath}}/backup.sha256
 
             # Tar folder
-            tar -czf /tmp/vaultwarden.tar.gz /mnt/vaultwarden
+            tar -czf /tmp/backup.tar.gz "{{inputs.parameters.localpath}}"
 
             # Encrypt folder
-            gpg --output /mnt/work/vaultwarden.gpg --encrypt --recipient-file /mnt/gpg/automation-gpg-public.asc /tmp/vaultwarden.tar.gz         
+            gpg --output /mnt/work{{inputs.parameters.localpath}}/backup.gpg --encrypt --recipient-file /mnt/gpg/automation-gpg-public.asc /tmp/backup.tar.gz     
         volumeMounts:
           - name: work
             mountPath: /mnt/work
-          - name: vaultwarden-ro
-            mountPath: /mnt/vaultwarden
+          - name: ssd-ro-essential
+            mountPath: /mnt/ssd
             readOnly: true
           - name: gpg-automated-keys
             mountPath: /mnt/gpg/
       volumes:
-      - name: vaultwarden-ro
+      - name: ssd-ro-essential
         persistentVolumeClaim:
-          claimName: vaultwarden-ro-claim
+          claimName: ssd-ro-essential-claim
           readOnly: true
       # GPG public key
       - name: gpg-automated-keys
@@ -90,20 +100,20 @@ spec:
       inputs:
         parameters:
           - name: bucket
-          - name: bucketpath
+          - name: localpath
           - name: storageclass
       container:
         image: amazon/aws-cli:latest
         command: [sh, -c]
         args:
           - |
-            echo "Uploading /mnt/work/vaultwarden.gpg to bucket: {{inputs.parameters.bucket}} at: {{inputs.parameters.bucketpath}}"
-            NEW_SHA256=$(cat /mnt/work/vaultwarden.sha256 | tr -d '[:space:]')
+            echo "Uploading /mnt/work{{inputs.parameters.localpath}}/backup.gpg to bucket: {{inputs.parameters.bucket}} at: {{inputs.parameters.localpath}}"
+            NEW_SHA256=$(cat /mnt/work{{inputs.parameters.localpath}}/backup.sha256 | tr -d '[:space:]')
 
             # Try to get existing object's sha256 tag
             S3_SHA256=$(aws s3api get-object-tagging \
               --bucket "{{inputs.parameters.bucket}}" \
-              --key "{{inputs.parameters.bucketpath}}" \
+              --key "{{inputs.parameters.localpath}}.gpg" \
               --query "TagSet[?Key=='sha256'].Value | [0]" \
               --output text 2>/dev/null | tr -d '[:space:]')
 
@@ -113,8 +123,8 @@ spec:
                 echo "SHA256 changed or object does not exist. Uploading new version..."
                  aws s3api put-object \
                   --bucket "{{inputs.parameters.bucket}}" \
-                  --key "{{inputs.parameters.bucketpath}}" \
-                  --body /mnt/work/vaultwarden.gpg \
+                  --key "{{inputs.parameters.localpath}}.gpg" \
+                  --body /mnt/work{{inputs.parameters.localpath}}/backup.gpg \
                   --storage-class {{inputs.parameters.storageclass}} \
                   --tagging "sha256=$NEW_SHA256" \
                   --metadata sha256="$NEW_SHA256"
@@ -155,7 +165,7 @@ spec:
         args:
           - |
             echo "Cleaning workingdir"
-            rm -rf /mnt/work/*
+            rm -rf /mnt/work{{workflow.parameters.localpath}}
         volumeMounts:
           - name: work
             mountPath: /mnt/work

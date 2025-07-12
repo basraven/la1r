@@ -3,4 +3,4 @@ kind: Kustomization
 resources:
 - pv
 - workflow-vaultwarden-cloud-backup.yml
-- cron-vaultwarden-cloud-backup.yml
+- crons/cron-vaultwarden-cloud-backup.yml

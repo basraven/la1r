@@ -1,0 +1,12 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ssd-ro-essential-claim
+spec:
+  storageClassName: ssd-ro-essential
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi

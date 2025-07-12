@@ -1,0 +1,14 @@
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata:
+  name: weekly-jackett-cloud-backup
+spec:
+  schedule: "30 13 * * 0" # Every Sunday at 13:30 AM
+  timezone: "Europe/Amsterdam"
+  workflowSpec:
+    workflowTemplateRef:
+      name: nonessential-cloud-backup
+    arguments:
+      parameters:
+        - name: localpath
+          value: "/mnt/ssd/na/jackett-config"

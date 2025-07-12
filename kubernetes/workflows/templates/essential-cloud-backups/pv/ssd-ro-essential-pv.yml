@@ -1,0 +1,26 @@
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: ssd-ro-essential-pv
+  labels:
+    contenttype: "ssd-ro-essential"
+spec:
+  capacity:
+    storage: 1Gi
+  storageClassName: ssd-ro-essential
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteMany
+  hostPath:
+    path: "/mnt/ssd/"
+
+  # Essential
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: la1r.workload/essential
+              operator: In
+              values:
+                - "true"

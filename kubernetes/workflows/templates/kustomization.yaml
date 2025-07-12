@@ -3,3 +3,5 @@ kind: Kustomization
 namespace: workflows
 resources:
 - vaultwarden-cloud-backup
+- essential-cloud-backups
+- nonessential-cloud-backups

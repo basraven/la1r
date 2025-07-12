@@ -1,0 +1,14 @@
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata:
+  name: weekly-firefly3-cloud-backup
+spec:
+  schedule: "40 12 * * 0" # Every Sunday at 12:40 AM
+  timezone: "Europe/Amsterdam"
+  workflowSpec:
+    workflowTemplateRef:
+      name: essential-cloud-backup
+    arguments:
+      parameters:
+        - name: localpath
+          value: "/mnt/ssd/na/firefly3"
