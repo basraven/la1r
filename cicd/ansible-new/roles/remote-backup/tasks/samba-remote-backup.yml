@@ -28,6 +28,7 @@
 #     var: backup_mount_paths
 
 
+# Deprecated over new argo scripts
 - name: Remote backup / Deploy the backup script
   become: yes
   template:
@@ -95,3 +96,4 @@
 #     day: "7"         # Run on Sundays (day 7 of the week)
 #     job: "/bin/bash /root/seb-backup-script.sh"
 #     state: present
+

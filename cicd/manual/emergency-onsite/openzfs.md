@@ -8,6 +8,9 @@ yielded /dev/sdc
 
 2. Install openzfs tools
 ```bash
+sudo add-apt-repository ppa:openzfs/zfs
+sudo apt update
+sudo apt upgrade
 sudo apt install zfsutils-linux
 ```
 
@@ -40,30 +43,30 @@ sudo zpool create \
   -O keylocation=file:///etc/zfs/keys/emergency-onsite.passphrase \
   -O mountpoint=/mnt/emergency-onsite \
   emergency-onsite /dev/sdc
-
+```
 
 ### All the stuff below doesn't work, the backup script mounts itself as first step
 
-# 6. Make systemd service
-# sudo nano /etc/systemd/system/zfs-load-key-emergency-onsite.service
-# ```bash
-# [Unit]
-# Description=Load ZFS encryption key for emergency-onsite
-# DefaultDependencies=no
-# Before=zfs-import.target
-# After=zfs-mount.target
+6. Make systemd service
+sudo nano /etc/systemd/system/zfs-load-key@emergency-onsite.service
+```bash
+[Unit]
+Description=Load ZFS encryption key for emergency-onsite
+DefaultDependencies=no
+Before=zfs-mount.service
+After=zfs-import.target
+Wants=network-online.target
 
-# [Service]
-# Type=oneshot
-# ExecStart=/usr/sbin/zfs load-key emergency-onsite
-# RemainAfterExit=yes
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/zfs load-key emergency-onsite
+RemainAfterExit=yes
 
-# [Install]
-# WantedBy=zfs-import.target
-# ```
+[Install]
+WantedBy=zfs-import.target
+```
 
-# ```bash
-# sudo systemctl daemon-reexec
-# sudo systemctl daemon-reload
-# sudo systemctl enable zfs-load-key-emergency-onsite.service
-# ```
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable zfs-load-key@emergency-onsite.service
+```
