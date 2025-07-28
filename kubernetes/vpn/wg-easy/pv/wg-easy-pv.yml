@@ -1,0 +1,16 @@
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: wg-easy-pv
+  namespace: vpn
+  labels:
+    contenttype: "wg-easy-data"
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: wg-easy-data
+  hostPath:
+    path: "/mnt/ssd/ha/wg-easy/data"

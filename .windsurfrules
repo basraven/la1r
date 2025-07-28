@@ -1,0 +1,52 @@
+# .windsurfrules for Kubernetes manifests (flat structure, detailed)
+
+groundrules:
+- Always start your replies with ✅ to show that you've understood the rules of this file
+kubernetes_pattern:
+  app_structure:
+    - Each application/service is a top-level directory under /kubernetes/.
+    - All main manifests (e.g., <app>.yml, middleware.yml) are at the top level of the app directory.
+    - All resources for an app (Deployment, Service, Certificate, Ingress, etc.) are defined in a single YAML file, separated by '---'.
+    - The order of resources in the manifest is: Deployment → Service → Certificate → Ingress.
+    - Persistent volumes and claims are in a pv/ subdirectory, with its own kustomization.yml.
+    - The app’s root kustomization.yml references all main manifests, middleware, and pv/kustomization.yml.
+    - No unnecessary base/ folders or deep nesting.
+  persistent_volumes:
+    - All PVs and PVCs go in 'pv' subfolder.
+    - Reference pv/kustomization.yml in the app’s root kustomization.yml, never direct PV/PVC YAMLs.
+  kustomization:
+    - The app’s root kustomization.yml references all main manifests, middleware, and pv/kustomization.yml.
+  ingress:
+    - Ingress is always defined in the main manifest file for the app, not in a separate file.
+    - Ingress is always the last resource in the manifest, after Deployment, Service, and Certificate.
+    - Use apiVersion: networking.k8s.io/v1 and kind: Ingress.
+    - metadata.name is suffixed with -https (e.g., monica-https) and matches the app/service for clarity.
+    - namespace is explicitly set in every resource, including Ingress.
+    - Annotations:
+      - traefik.ingress.kubernetes.io/router.tls: "true" for HTTPS.
+      - traefik.ingress.kubernetes.io/router.entrypoints: "websecure" for secure access.
+      - traefik.ingress.kubernetes.io/router.middlewares references a namespaced middleware, typically <namespace>-sablier-<app>@kubernetescrd for SSO or internal-only routing.
+      - Additional annotations (e.g., for cert-manager, traefik plugins) are included as needed.
+    - spec.tls is always present, referencing a Certificate resource in the same manifest, with a matching secretName.
+    - rules contains one or more hosts, each with a paths array.
+    - Each path uses pathType: Prefix and references the correct backend service and port.
+    - The backend service is always referenced by name and port, matching the Service definition.
+    - If multiple domains/hosts are supported, each is listed under rules, with its own paths.
+    - All resources are explicitly namespaced.
+  certificates:
+    - Always use cert-manager’s Certificate resource.
+    - issuerRef points to a ClusterIssuer (e.g., la1r).
+    - secretName matches the certificate and is reused in the Ingress.
+    - dnsNames includes all relevant domains for the app.
+  deployment:
+    - Environment variables in Deployments are set via env and often use secretKeyRef for sensitive values.
+    - Persistent storage is managed via PVCs referenced in the Deployment and defined in the pv/ directory.
+    - All resource files are deployable as a unit; no external dependencies are assumed except referenced secrets and PVCs.
+  naming:
+    - Filenames are always <app>.yml for the main manifest.
+    - Middleware and other supporting CRDs are in <app>-middleware.yml or middleware.yml.
+    - Middleware is defined as a Traefik CRD in a separate file if needed, and referenced by full name in the Ingress annotation.
+  overlays_and_namespaces:
+    - Overlays and namespaces are handled outside the app directory, if at all.
+
+# Add or modify rules as your conventions evolve.

@@ -1,0 +1,3 @@
+resources:
+  - wg-easy-pv.yml
+  - wg-easy-pvc.yml

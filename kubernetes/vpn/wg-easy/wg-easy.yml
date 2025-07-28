@@ -1,0 +1,120 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wg-easy
+  namespace: vpn
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wg-easy
+  template:
+    metadata:
+      labels:
+        app: wg-easy
+    spec:
+      hostNetwork: true
+      # Essential
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - jay-c
+      containers:
+        - name: wg-easy
+          image: ghcr.io/wg-easy/wg-easy:15
+          securityContext:
+            privileged: true
+            capabilities:
+              add:
+                - NET_ADMIN
+                - NET_RAW
+                - SYS_MODULE
+          env:
+            - name: WG_EASY_HOST
+              value: "wg.bas"
+            - name: WG_EASY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: wg-easy-secret
+                  key: password
+            - name: DISABLE_IPV6
+              value: "true"
+          ports:
+            - containerPort: 51820
+              protocol: UDP
+            - containerPort: 51821
+              protocol: TCP
+          volumeMounts:
+            - name: config
+              mountPath: /etc/wireguard
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: wg-easy-config
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wg-easy
+  namespace: vpn
+spec:
+  selector:
+    app: wg-easy
+  ports:
+    - name: wireguard
+      port: 51820
+      protocol: UDP
+      targetPort: 51820
+    - name: web
+      port: 80
+      protocol: TCP
+      targetPort: 51821
+  type: ClusterIP
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: wg-bas
+  namespace: vpn
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: wg-bas-tls
+  commonName: wg.bas
+  dnsNames:
+  - wg.bas
+  - www.wg.bas
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: wg-easy-https
+  namespace: vpn
+  annotations:
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+    # traefik.ingress.kubernetes.io/router.middlewares: "vpn-sablier-wg-easy@kubernetescrd"
+spec:
+  tls:
+  - secretName: wg-bas-tls
+  rules:
+  - host: wg.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: wg-easy
+            port:
+              number: 80
