@@ -2,6 +2,7 @@
 
 groundrules:
 - Always start your replies with ✅ to show that you've understood the rules of this file
+- Never do any kubectl command yourself
 kubernetes_pattern:
   app_structure:
     - Each application/service is a top-level directory under /kubernetes/.
