@@ -1,0 +1,5 @@
+---
+ufw_app_kerberos-app:
+  title: "Kerberos by Seb"
+  description: "Kerberos authentication"
+  ports: "88"

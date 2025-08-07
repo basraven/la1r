@@ -1,0 +1,5 @@
+---
+ufw_app_openvpn-app:
+  title: "OpenVPN by Seb"
+  description: "Ports required for OpenVPN"
+  ports: "33443|33555"

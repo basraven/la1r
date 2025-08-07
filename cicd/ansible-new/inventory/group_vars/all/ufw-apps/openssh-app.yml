@@ -1,0 +1,6 @@
+---
+# Universal OpenSSH application profile for all hosts
+ufw_app_openssh-app:
+  title: "OpenSSH"
+  description: "Standard SSH service"
+  ports: "22/tcp"

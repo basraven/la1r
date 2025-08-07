@@ -1,0 +1,5 @@
+---
+ufw_app_nfs-app:
+  title: "NFS by Seb"
+  description: "Network File System"
+  ports: "2049"

@@ -10,13 +10,14 @@
 - name: Configure cluster nodes
   hosts: cluster
   roles:
-    - { role: samba, tags: ['samba']}
-    - { role: ubuntu-config, tags: ['ubuntu-config']}
+    # - { role: samba, tags: ['samba']}
+    # - { role: ubuntu-config, tags: ['ubuntu-config']}
+    - { role: ufw, tags: ['ufw'] }
 
-- name: Configure remote nodes
-  hosts: remote
-  roles:
-    - { role: remote-backup, tags: ['remote-backup'], ignore_errors: yes }
+# - name: Configure remote nodes
+#   hosts: remote
+#   roles:
+#     - { role: remote-backup, tags: ['remote-backup'], ignore_errors: yes }
 
     # - { role: haproxy, tags: ['haproxy'], when: "'ha_proxy_settings' in hostvars[inventory_hostname]" }
 #     - { role: kubernetes-install, tags: ['kubernetes'] }

@@ -1,0 +1,21 @@
+---
+# General UFW settings for host: jay-c
+
+# Packages to ensure are present
+ufw_packages:
+  - ufw
+
+# Enable verbose logging (goes to /var/log/ufw.log)
+ufw_enable_logging: true
+
+# Custom UFW rules (passed directly to ansible.posix.ufw)
+ufw_custom_rules:
+  # Allow traffic over the VPN interface
+  - { rule: allow, direction: out, interface: "wg0" }
+  - { rule: allow, direction: in,  interface: "wg0" }
+
+  # Allow outgoing HTTPS traffic from VPN subnet
+  - { rule: allow, from_ip: "10.8.0.0/16", to_ip: "any", port: 443, proto: tcp, direction: out }
+
+  # Allow outgoing DNS traffic from VPN subnet
+  - { rule: allow, from_ip: "10.8.0.0/16", to_ip: "any", port: 53,  proto: udp, direction: out }

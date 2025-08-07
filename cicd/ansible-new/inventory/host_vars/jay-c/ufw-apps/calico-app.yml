@@ -1,0 +1,5 @@
+---
+ufw_app_calico-app:
+  title: "Calico by Seb"
+  description: "Ports required for Calico"
+  ports: '8472/udp|51820/udp'

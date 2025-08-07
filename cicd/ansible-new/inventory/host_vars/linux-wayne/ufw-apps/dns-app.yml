@@ -1,0 +1,5 @@
+---
+ufw_app_dns-app:
+  title: "DNS by Seb"
+  description: "DNS (TCP/UDP port 53)"
+  ports: "53"

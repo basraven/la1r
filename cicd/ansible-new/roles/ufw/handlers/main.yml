@@ -1,0 +1,5 @@
+---
+- name: reload ufw
+  become: yes
+  command: ufw reload
+  check_mode: no

@@ -1,0 +1,5 @@
+---
+ufw_app_prometheus-node-exporter-app:
+  title: "Prometheus Node Exporter by Seb"
+  description: "Prometheus metrics exporter"
+  ports: "9100"
