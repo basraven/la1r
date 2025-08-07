@@ -1,0 +1,99 @@
+#
+# rules.before
+#
+# Rules that are run before the ufw command line interface rules. See
+# /etc/ufw/before.rules for more information.
+#
+
+# Don't delete these required lines, otherwise there will be errors
+*filter
+:ufw-before-input - [0:0]
+:ufw-before-output - [0:0]
+:ufw-before-forward - [0:0]
+:ufw-not-local - [0:0]
+# custom logging chains
+:ufw-logging-input - [0:0]
+:ufw-logging-output - [0:0]
+:ufw-logging-forward - [0:0]
+
+:ufw-logging-deny - [0:0]
+:ufw-logging-allow - [0:0]
+:ufw-logging-not-local - [0:0]
+:ufw-skip-to-policy-input - [0:0]
+:ufw-skip-to-policy-output - [0:0]
+:ufw-skip-to-policy-forward - [0:0]
+:ufw-user-input - [0:0]
+:ufw-user-output - [0:0]
+:ufw-user-forward - [0:0]
+:ufw-user-limit - [0:0]
+:ufw-user-limit-accept - [0:0]
+# End required lines
+
+
+# allow all on loopback
+-A ufw-before-input -i lo -j ACCEPT
+-A ufw-before-output -o lo -j ACCEPT
+
+# quickly process packets for existing connections
+-A ufw-before-input -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+-A ufw-before-output -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+-A ufw-before-forward -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+
+
+# drop INVALID packets
+-A ufw-before-input -m conntrack --ctstate INVALID -j ufw-logging-input
+-A ufw-before-input -m conntrack --ctstate INVALID -j DROP
+
+# ok icmp codes
+-A ufw-before-input -p icmp --icmp-type destination-unreachable -j ACCEPT
+-A ufw-before-input -p icmp --icmp-type source-quench -j ACCEPT
+-A ufw-before-input -p icmp --icmp-type time-exceeded -j ACCEPT
+-A ufw-before-input -p icmp --icmp-type parameter-problem -j ACCEPT
+-A ufw-before-input -p icmp --icmp-type echo-request -j ACCEPT
+
+# allow dhcp client to work
+-A ufw-before-input -p udp --sport 67 --dport 68 -j ACCEPT
+
+#
+# ufw-not-local
+#
+-A ufw-before-input -j ufw-not-local
+
+-A ufw-not-local -m addrtype --dst-type LOCAL -j RETURN
+-A ufw-not-local -m addrtype --dst-type MULTICAST -j RETURN
+-A ufw-not-local -m addrtype --dst-type BROADCAST -j RETURN
+
+-A ufw-not-local -m limit --limit 3/min --limit-burst 10 -j ufw-logging-not-local
+-A ufw-not-local -j DROP
+
+# allow MULTICAST mDNS for service discovery (becoming more common)
+-A ufw-before-input -p udp -d 224.0.0.251 --dport 5353 -j ACCEPT
+-A ufw-before-input -p udp -d 239.255.255.250 --dport 1900 -j ACCEPT
+
+# SEB's CUSTOM FORWARDING RULES
+{% if ufw_before_rules.filter is defined %}
+# rules for filter
+{% for rule in ufw_before_rules.filter %}
+{{ rule }}
+{% endfor %}
+{% endif %}
+# END SEB's CUSTOM FORWARDING RULES
+
+# don't delete the 'COMMIT' line or these rules won't be processed
+COMMIT
+
+*nat
+:ufw-before-prerouting - [0:0]
+:ufw-before-postrouting - [0:0]
+
+# SEB's CUSTOM NAT RULES
+{% if ufw_before_rules.nat is defined %}
+# rules for nat
+{% for rule in ufw_before_rules.nat %}
+{{ rule }}
+{% endfor %}
+{% endif %}
+# END SEB's CUSTOM NAT RULES
+
+# don't delete the 'COMMIT' line or these rules won't be processed
+COMMIT

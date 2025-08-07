@@ -10,6 +10,27 @@ ufw_enable_logging: true
 
 
 # Custom UFW rules (passed directly to ansible.posix.ufw)
+ufw_before_rules:
+  nat:
+    # Forward Samba to jay-c (virtual ip for tracking) coming from remote-cube
+    - "-A ufw-before-prerouting -s 10.8.0.0/24 -p tcp --dport 139 -j DNAT --to-destination 192.168.5.103:139"
+    - "-A ufw-before-prerouting -s 10.8.0.0/24 -p tcp --dport 445 -j DNAT --to-destination 192.168.5.103:445"
+    # Forward traffic on port 52223 on LAN to remote-cube on tun0 and port 22
+    - "-A ufw-before-prerouting -s 192.168.0.0/16 -p tcp --dport 52223 -j DNAT --to-destination 10.8.0.4:22"
+    # Forward to any, make it look like it's coming from this server
+    - "-A ufw-before-postrouting -s 10.8.0.0/16 -o enp3s0 -j MASQUERADE"
+    # Forward traffic on port 52223 on LAN to remote-cube on tun0 and port 22
+    - "-A ufw-before-postrouting -s 192.168.0.0/16 -o tun0 -j MASQUERADE"
+  filter:
+    # Forward Samba to jay-c (virtual ip for tracking) coming from remote-cube
+    - "-A ufw-before-forward -i tun0 -o enp3s0 -p tcp --dport 139 -d 192.168.5.103 -j ACCEPT"
+    - "-A ufw-before-forward -i tun0 -o enp3s0 -p tcp --dport 445 -d 192.168.5.103 -j ACCEPT"
+    # Forward traffic on port 52223 on LAN to remote-cube on tun0 and port 22
+    - "-A ufw-before-forward -i enp3s0 -o tun0 -p tcp --dport 52223 -s 192.168.5.1 -j ACCEPT"
+    # Forward to any
+    - "-A ufw-before-forward -s 10.8.0.0/16 -d 192.168.0.0/16 -i tun0 -o enp3s0 -m conntrack --ctstate NEW -j ACCEPT"
+    - "-A ufw-before-forward -s 192.168.0.0/16 -d 10.8.0.0/16 -i enp3s0 -o tun0 -m conntrack --ctstate NEW -j ACCEPT"
+
 ufw_custom_rules:
   # Allow all traffic on specific interfaces
   - { rule: allow, interface: "tun0", direction: "in" }

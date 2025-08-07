@@ -1,4 +1,19 @@
 ---
+# Custom UFW rules (passed directly to ansible.posix.ufw)
+ufw_before_rules:
+  nat:
+    # Forward traffic on port 52223 on LAN to remote-cube on wg0 and port 22
+    - "-A ufw-before-prerouting -s 192.168.0.0/16 -p tcp --dport 52223 -j DNAT --to-destination 10.8.0.4:22"
+    # Forward to any, make it look like it's coming from this server
+    - "-A ufw-before-postrouting -s 10.8.0.0/24 -o enp4s0 -j MASQUERADE"
+    # Forward traffic on port 52223 on LAN to remote-cube on wg0 and port 22
+    - "-A ufw-before-postrouting -s 192.168.0.0/16 -o wg0 -j MASQUERADE"
+  filter:
+    # Forward traffic on port 52223 on LAN to remote-cube on wg0 and port 22
+    - "-A ufw-before-forward -i enp4s0 -o wg0 -p tcp --dport 52223 -s 192.168.5.1 -j ACCEPT"
+    # Forward to any
+    - "-A ufw-before-forward -s 10.8.0.0/24 -d 192.168.0.0/16 -i wg0 -o enp4s0 -m conntrack --ctstate NEW -j ACCEPT"
+    - "-A ufw-before-forward -s 192.168.0.0/16 -d 10.8.0.0/24 -i enp4s0 -o wg0 -m conntrack --ctstate NEW -j ACCEPT"
 # General UFW settings for host: jay-c
 
 # Packages to ensure are present
@@ -15,7 +30,7 @@ ufw_custom_rules:
   - { rule: allow, direction: in,  interface: "wg0" }
 
   # Allow outgoing HTTPS traffic from VPN subnet
-  - { rule: allow, from_ip: "10.8.0.0/16", to_ip: "any", port: 443, proto: tcp, direction: out }
+  - { rule: allow, from_ip: "10.8.0.0/24", to_ip: "any", port: 443, proto: tcp, direction: out }
 
   # Allow outgoing DNS traffic from VPN subnet
-  - { rule: allow, from_ip: "10.8.0.0/16", to_ip: "any", port: 53,  proto: udp, direction: out }
+  - { rule: allow, from_ip: "10.8.0.0/24", to_ip: "any", port: 53,  proto: udp, direction: out }
