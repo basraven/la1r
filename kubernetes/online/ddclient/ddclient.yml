@@ -23,7 +23,7 @@ spec:
           emptyDir: {}
       containers:
       - name: ddclient-la1r
-        image: linuxserver/ddclient
+        image: linuxserver/ddclient:4.0.0
         command: ["/bin/sh"]
         args:
           - -c
