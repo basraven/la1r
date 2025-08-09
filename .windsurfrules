@@ -3,6 +3,7 @@
 groundrules:
 - Always start your replies with ✅ to show that you've understood the rules of this file
 - Never do any kubectl command yourself except for get and describe
+- You're often stuck waiting on `kubectl logs` commands, write it to file and then look at the file instead
 kubernetes_pattern:
   app_structure:
     - Each application/service is a top-level directory under /kubernetes/.

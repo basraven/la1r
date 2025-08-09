@@ -56,17 +56,15 @@ spec:
       #     matchLabels:
       #       app: coredns
       
-      # Essential
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
             - matchExpressions:
-              - key: la1r.workload/essential
+              - key: kubernetes.io/hostname
                 operator: In
                 values:
-                - "true"
-      priorityClassName: essential
+                - linux-wayne
       
       volumes:
       - name: etcd-pki

@@ -13,7 +13,7 @@ spec:
     # Note: The ipPools section cannot be modified post-install.
     nodeAddressAutodetectionV4:
       # interface: "e.*" # enp or eth
-      skipInterface: "tun.*"
+      skipInterface: "tun.*|wg.*"
     ipPools:
     - name: default-ipv4-ippool
       blockSize: 26 

@@ -23,8 +23,11 @@ spec:
 apiVersion: metallb.io/v1beta1
 kind: L2Advertisement
 metadata:
-  name: example
+  name: main-ip-pool
   namespace: metallb-system
 spec:
   ipAddressPools:
   - first-pool
+  # nodeSelectors:
+  # - matchLabels:
+  #     kubernetes.io/hostname: linux-wayne
