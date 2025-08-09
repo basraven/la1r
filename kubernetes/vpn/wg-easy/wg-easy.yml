@@ -15,7 +15,6 @@ spec:
         app: wg-easy
     spec:
       hostNetwork: true
-      # Essential
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -25,6 +24,7 @@ spec:
                 operator: In
                 values:
                 - jay-c
+                
       containers:
         - name: wg-easy
           image: ghcr.io/wg-easy/wg-easy:15

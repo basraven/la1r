@@ -33,17 +33,15 @@ spec:
         app: openvscode-server
     spec:
       
-      # Essential
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
             - matchExpressions:
-              - key: la1r.workload/essential
+              - key: kubernetes.io/hostname
                 operator: In
                 values:
-                - "true"
-      priorityClassName: essential
+                - jay-c
 
       containers:
       - name: openvscode-server

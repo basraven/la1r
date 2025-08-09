@@ -8,4 +8,3 @@ resources:
   - traefik-rbac.yml
   - auth-middleware.yml
   - sablier
-  # - scaleto0
