@@ -14,16 +14,15 @@ spec:
         app: argo-server
     spec:
       
-      # Essential
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
             - matchExpressions:
-              - key: la1r.workload/essential
+              - key: kubernetes.io/hostname
                 operator: In
                 values:
-                - "true"
+                - jay-c
       serviceAccountName: argo-server
       containers:
         - name: argo-server

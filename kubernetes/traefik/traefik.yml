@@ -32,6 +32,15 @@ spec:
         prometheus.io/path: "/metrics"         # The path for the metrics endpoint
     spec:
       serviceAccountName: traefik-ingress-controller
+      # affinity:
+      #   nodeAffinity:
+      #     requiredDuringSchedulingIgnoredDuringExecution:
+      #       nodeSelectorTerms:
+      #       - matchExpressions:
+      #         - key: kubernetes.io/hostname
+      #           operator: In
+      #           values:
+      #           - jay-c
       containers:
       - name: traefik-ingress-controller
         image: traefik:v2.9

@@ -20,16 +20,15 @@ spec:
         task: crm
         app: monica
     spec:
-      # Essential
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
             - matchExpressions:
-              - key: la1r.workload/essential
+              - key: kubernetes.io/hostname
                 operator: In
                 values:
-                - "true"
+                - jay-c
       containers:
       - name: monica
         resources:

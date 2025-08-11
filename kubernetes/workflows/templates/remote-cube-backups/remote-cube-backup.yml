@@ -10,11 +10,11 @@ spec:
       nodeAffinity:
         requiredDuringSchedulingIgnoredDuringExecution:
           nodeSelectorTerms:
-            - matchExpressions:
-                - key: la1r.workload/essential
-                  operator: In
-                  values:
-                    - "true"
+          - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+              - jay-c
   arguments:
     parameters:
       - name: backupServer
@@ -39,12 +39,7 @@ spec:
                 - name: backupTarget
                   value: "{{item.backupTarget}}"
             withParam: |
-              [
-                {"sourceMount": "//192.168.5.1/ssd-na", "targetMount": "/mnt/linux-wayne/ssd/na", "backupTarget": "/mnt/hdd/backup/linux-wayne/ssd/na"},
-                {"sourceMount": "//192.168.5.1/ssd-ha", "targetMount": "/mnt/linux-wayne/ssd/ha", "backupTarget": "/mnt/hdd/backup/linux-wayne/ssd/ha"},
-                {"sourceMount": "//192.168.5.1/hdd-na", "targetMount": "/mnt/linux-wayne/hdd/na", "backupTarget": "/mnt/hdd/backup/linux-wayne/hdd/na"},
-                {"sourceMount": "//192.168.5.1/hdd-ha", "targetMount": "/mnt/linux-wayne/hdd/ha", "backupTarget": "/mnt/hdd/backup/linux-wayne/hdd/ha"},
-                
+              [                
                 {"sourceMount": "//192.168.5.2/ssd-na", "targetMount": "/mnt/stephanie/ssd/na", "backupTarget": "/mnt/hdd/backup/stephanie/ssd/na"},
                 {"sourceMount": "//192.168.5.2/ssd-ha", "targetMount": "/mnt/stephanie/ssd/ha", "backupTarget": "/mnt/hdd/backup/stephanie/ssd/ha"},
 

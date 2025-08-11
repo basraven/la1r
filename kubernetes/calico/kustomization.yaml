@@ -4,6 +4,7 @@ namespace: tigera-operator
 resources:
 # - https://raw.githubusercontent.com/projectcalico/calico/v3.28.1/manifests/tigera-operator.yaml # use kubectl create -f   for this instead because of file size...
 - calico-installation.yaml
+- calico-bgp-config.yaml
 # - calicoctl.yaml
 # patches:
 #   - target:
