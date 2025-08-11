@@ -47,7 +47,7 @@ rules:
     verbs:
       - update
   - apiGroups:
-      - traefik.containo.us
+      - traefik.io
       - traefik.io
     resources:
       - middlewares

@@ -9,7 +9,7 @@ data:
     bas.:53 {
         etcd {
             path /skydns
-            endpoint https://192.168.5.1:2379
+            endpoint https://192.168.5.3:2379
             tls /etc/kubernetes/pki/etcd/server.crt /etc/kubernetes/pki/etcd/server.key /etc/kubernetes/pki/etcd/ca.crt
         }
         
@@ -64,7 +64,7 @@ spec:
               - key: kubernetes.io/hostname
                 operator: In
                 values:
-                - linux-wayne
+                - jay-c
       
       volumes:
       - name: etcd-pki

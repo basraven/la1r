@@ -9,7 +9,7 @@ spec:
   controller: traefik.io/ingress-controller
 
 ---
-kind: DaemonSet
+kind: Deployment
 apiVersion: apps/v1
 metadata:
   name: traefik-ingress-controller
@@ -32,15 +32,15 @@ spec:
         prometheus.io/path: "/metrics"         # The path for the metrics endpoint
     spec:
       serviceAccountName: traefik-ingress-controller
-      # affinity:
-      #   nodeAffinity:
-      #     requiredDuringSchedulingIgnoredDuringExecution:
-      #       nodeSelectorTerms:
-      #       - matchExpressions:
-      #         - key: kubernetes.io/hostname
-      #           operator: In
-      #           values:
-      #           - jay-c
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - jay-c
       containers:
       - name: traefik-ingress-controller
         image: traefik:v2.9
@@ -153,7 +153,7 @@ spec:
     app: traefik-ingress-controller
 ---
 # Generic Redirect to https
-apiVersion: traefik.containo.us/v1alpha1
+apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
   name: http-redirect-to-https

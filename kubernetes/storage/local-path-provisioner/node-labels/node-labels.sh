@@ -6,8 +6,8 @@ kubectl taint node stephanie la1r.workload/specificonly=true:NoSchedule
 
 
 # Labels
-kubectl label nodes linux-wayne la1r.workload/essential=true
-kubectl label nodes jay-c la1r.workload/nonessential=true
+kubectl label nodes jay-c la1r.workload/essential=true
+kubectl label nodes linux-wayne la1r.workload/nonessential=true
 kubectl label nodes stephanie la1r.workload/specificonly=true
 
 kubectl label nodes jay-c la1r.storage/ssd-ha=true

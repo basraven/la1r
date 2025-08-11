@@ -6,9 +6,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.6.2
   creationTimestamp: null
-  name: ingressroutes.traefik.containo.us
+  name: ingressroutes.traefik.io
 spec:
-  group: traefik.containo.us
+  group: traefik.io
   names:
     kind: IngressRoute
     listKind: IngressRouteList
@@ -274,9 +274,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.6.2
   creationTimestamp: null
-  name: ingressroutetcps.traefik.containo.us
+  name: ingressroutetcps.traefik.io
 spec:
-  group: traefik.containo.us
+  group: traefik.io
   names:
     kind: IngressRouteTCP
     listKind: IngressRouteTCPList
@@ -485,9 +485,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.6.2
   creationTimestamp: null
-  name: ingressrouteudps.traefik.containo.us
+  name: ingressrouteudps.traefik.io
 spec:
-  group: traefik.containo.us
+  group: traefik.io
   names:
     kind: IngressRouteUDP
     listKind: IngressRouteUDPList
@@ -583,9 +583,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.6.2
   creationTimestamp: null
-  name: middlewares.traefik.containo.us
+  name: middlewares.traefik.io
 spec:
-  group: traefik.containo.us
+  group: traefik.io
   names:
     kind: Middleware
     listKind: MiddlewareList
@@ -1500,9 +1500,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.6.2
   creationTimestamp: null
-  name: middlewaretcps.traefik.containo.us
+  name: middlewaretcps.traefik.io
 spec:
-  group: traefik.containo.us
+  group: traefik.io
   names:
     kind: MiddlewareTCP
     listKind: MiddlewareTCPList
@@ -1572,9 +1572,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.6.2
   creationTimestamp: null
-  name: serverstransports.traefik.containo.us
+  name: serverstransports.traefik.io
 spec:
-  group: traefik.containo.us
+  group: traefik.io
   names:
     kind: ServersTransport
     listKind: ServersTransportList
@@ -1700,9 +1700,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.6.2
   creationTimestamp: null
-  name: tlsoptions.traefik.containo.us
+  name: tlsoptions.traefik.io
 spec:
-  group: traefik.containo.us
+  group: traefik.io
   names:
     kind: TLSOption
     listKind: TLSOptionList
@@ -1813,9 +1813,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.6.2
   creationTimestamp: null
-  name: tlsstores.traefik.containo.us
+  name: tlsstores.traefik.io
 spec:
-  group: traefik.containo.us
+  group: traefik.io
   names:
     kind: TLSStore
     listKind: TLSStoreList
@@ -1912,9 +1912,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.6.2
   creationTimestamp: null
-  name: traefikservices.traefik.containo.us
+  name: traefikservices.traefik.io
 spec:
-  group: traefik.containo.us
+  group: traefik.io
   names:
     kind: TraefikService
     listKind: TraefikServiceList
