@@ -3,4 +3,4 @@ kind: BGPConfiguration
 metadata:
   name: default
 spec:
-  nodeToNodeMeshEnabled: true
+  nodeToNodeMeshEnabled: false
