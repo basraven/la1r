@@ -4,27 +4,34 @@ kind: ClusterRole
 metadata:
   name: external-dns
 rules:
-  - apiGroups: [""]
-    resources: ["services"]
-    verbs: ["get","watch","list"]
-  - apiGroups: [""]
-    resources: ["pods"]
-    verbs: ["get","watch","list"]
-  - apiGroups: ["networking","networking.k8s.io"]
-    resources: ["ingresses"]
-    verbs: ["get","watch","list"]
-  - apiGroups: [""]
-    resources: ["nodes"]
-    verbs: ["get","watch","list"]
-  - apiGroups: [""]
-    resources: ["endpoints"]
-    verbs: ["get","watch","list"]
-  - apiGroups: ["externaldns.k8s.io"]
-    resources: ["dnsendpoints"]
-    verbs: ["get","watch","list"]
-  - apiGroups: ["externaldns.k8s.io"]
-    resources: ["dnsendpoints/status"]
-    verbs: ["*"]
+- apiGroups: [""]
+  resources:
+  - services
+  - pods
+  - ingresses
+  - endpoints
+  - nodes
+  verbs:
+  - get
+  - watch
+  - list
+- apiGroups: ["extensions", "networking.k8s.io"]
+  resources: ["ingresses"]
+  verbs:
+  - get
+  - watch
+  - list
+- apiGroups: ["externaldns.k8s.io"]
+  resources:
+  - dnsendpoints
+  verbs:
+  - get
+  - watch
+  - list
+  - create
+  - update
+  - patch
+  - delete
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -75,31 +82,18 @@ spec:
       - name: etcd-pki
         secret:
           secretName: hostetcd
-          defaultMode: 0744
       containers:
       - name: external-dns
         resources:
         image: k8s.gcr.io/external-dns/external-dns:v0.13.1
-        # command: ["sleep", "10000000"]
-        command: ["/bin/sh"]
         args:
-        - -c
-        - >
-          ETCD_URLS=https://$(HOST_IP):2379
-          /bin/external-dns
-          --source=ingress
-          --source=service
-          --always-publish-not-ready-addresses
-          --provider=coredns
-          --log-level=debug
-        # - --dry-run # debug only
+        - --source=service
+        - --source=ingress
+        - --provider=coredns
+        - --log-level=debug
         env:
-        - name: HOST_IP
-          valueFrom:
-            fieldRef:
-              fieldPath: status.hostIP
-        # - name: ETCD_URLS
-        #   value: "https://192.168.5.3:2379"
+        - name: ETCD_URLS
+          value: "https://192.168.5.3:2379"
         - name: ETCD_CA_FILE
           value: "/etc/kubernetes/pki/etcd/ca.crt"
         - name: ETCD_CERT_FILE
@@ -107,5 +101,10 @@ spec:
         - name: ETCD_KEY_FILE
           value: "/etc/kubernetes/pki/etcd/server.key"
         volumeMounts:
-          - name: etcd-pki
-            mountPath: "/etc/kubernetes/pki/etcd"
+        - name: etcd-pki
+          mountPath: /etc/kubernetes/pki/etcd
+          readOnly: true
+      volumes:
+      - name: etcd-pki
+        secret:
+          secretName: hostetcd

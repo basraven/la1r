@@ -1,0 +1,24 @@
+---
+- name: Install wireguard and dependencies
+  become: true
+  apt:
+    name:
+      - wireguard
+      - resolvconf
+    state: present
+
+# - name: Copy wireguard config
+#   become: true
+#   copy:
+#     src: remote-cube.conf
+#     dest: /etc/wireguard/wg0.conf
+#     owner: root
+#     group: root
+#     mode: '0600'
+#   notify: restart wireguard
+
+- name: Enable wireguard service to start on boot
+  become: true
+  systemd:
+    name: wg-quick@wg0
+    enabled: yes

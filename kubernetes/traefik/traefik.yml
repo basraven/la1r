@@ -89,8 +89,9 @@ spec:
           - --providers.kubernetesIngress.ingressClass=lan
           - --providers.kubernetesingress.ingressendpoint.ip=192.168.6.2
           - --providers.kubernetesIngress.allowEmptyServices=true
+          - --providers.kubernetesCRD
           - --providers.kubernetesCRD.allowCrossNamespace=true
-          - --providers.kubernetescrd
+          - --providers.kubernetescrd.allowexternalnameservices=true
           - --experimental.plugins.sablier.modulename=github.com/sablierapp/sablier
           - --experimental.plugins.sablier.version=v1.8.5
           - --log.filePath=/tmp/traefik.log
@@ -129,6 +130,8 @@ kind: Service
 metadata:
   name: traefik-loadbalancer-service
   namespace: traefik
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: traefik.bas
 spec:
   loadBalancerIP: 192.168.6.2
   type: LoadBalancer
