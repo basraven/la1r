@@ -7,18 +7,18 @@
 #     - { role: hostname, tags: ['hostname'] }
 #     - { role: security, tags: ['security'] }
 
-# - name: Configure cluster nodes
-#   hosts: cluster
-#   roles:
+- name: Configure cluster nodes
+  hosts: cluster
+  roles:
     # - { role: samba, tags: ['samba']}
     # - { role: ubuntu-config, tags: ['ubuntu-config']}
-    # - { role: ufw, tags: ['ufw'] }
+    - { role: ufw, tags: ['ufw'] }
 
 - name: Configure remote nodes
   hosts: remote
   roles:
     - { role: remote-wg, tags: ['remote-wg'], ignore_errors: yes }
-    # - { role: remote-backup, tags: ['remote-backup'], ignore_errors: yes }
+    # FIXME: to update or remove# - { role: remote-backup, tags: ['remote-backup'], ignore_errors: yes }
 
     # - { role: haproxy, tags: ['haproxy'], when: "'ha_proxy_settings' in hostvars[inventory_hostname]" }
 #     - { role: kubernetes-install, tags: ['kubernetes'] }
