@@ -94,7 +94,7 @@ spec:
           - --providers.kubernetescrd.allowexternalnameservices=true
           - --experimental.plugins.sablier.modulename=github.com/sablierapp/sablier
           - --experimental.plugins.sablier.version=v1.8.5
-          - --log.filePath=/tmp/traefik.log
+          # - --log.filePath=/tmp/traefik.log
           - --log.level=INFO
           # - --accesslog
           # - --serverstransport.insecureskipverify

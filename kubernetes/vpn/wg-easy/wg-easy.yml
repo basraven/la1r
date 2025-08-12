@@ -47,6 +47,8 @@ spec:
                   key: password
             - name: DISABLE_IPV6
               value: "true"
+            - name: WG_ALLOWED_IPS
+              value: "0.0.0.0/0"
           ports:
             - containerPort: 51820
               protocol: UDP

@@ -45,6 +45,10 @@ spec:
           value: "1000"
         - name: PUID
           value: "1000"
+        - name: DOTNET_SYSTEM_NET_DISABLEIPV6
+          value: "1"
+        - name: CLI_ARGS
+          value: "--ListenPublic 0.0.0.0:9117"
         volumeMounts:
           - name: jackett-config-volume
             mountPath: /config
@@ -88,7 +92,9 @@ metadata:
   annotations:
     traefik.ingress.kubernetes.io/router.tls: "true"
     traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
-    traefik.ingress.kubernetes.io/router.middlewares: "torrent-sablier-jackett@kubernetescrd"
+    # traefik.ingress.kubernetes.io/router.middlewares: "torrent-sablier-jackett@kubernetescrd"
+    traefik.ingress.kubernetes.io/forwarded-headers-trustedips: "10.244.0.0/16"
+    traefik.ingress.kubernetes.io/preserve-host: "true"
 spec:
   tls:
   - secretName: jackett-bas-tls
