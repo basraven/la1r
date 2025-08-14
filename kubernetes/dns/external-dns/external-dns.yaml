@@ -104,7 +104,3 @@ spec:
         - name: etcd-pki
           mountPath: /etc/kubernetes/pki/etcd
           readOnly: true
-      volumes:
-      - name: etcd-pki
-        secret:
-          secretName: hostetcd

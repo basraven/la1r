@@ -1,7 +1,7 @@
 # .windsurfrules for Kubernetes manifests (flat structure, detailed)
 
 groundrules:
-- Always start your replies with ✅ to show that you've understood the rules of this file
+- Always start your replies with ✅ (can be multiple icons for multiple rules) to show that you've understood the rules of this file
 - You're often stuck waiting on `kubectl logs` commands, write it to file and then look at the file instead
 - You will never look in these folders: .deprecated, .git, .windsurfrules, credentials
 

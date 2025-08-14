@@ -7,26 +7,12 @@ metadata:
 spec:
   # Configures Calico networking.
   calicoNetwork:
-    mtu: 1370
-    nodeAddressAutodetectionV4:
-      skipInterface: "tun.*|wg.*"
     ipPools:
-    - name: default-ipv4-ippool
-      blockSize: 26
-      cidr: 10.244.0.0/16
-      encapsulation: VXLANCrossSubnet
-      natOutgoing: Enabled
-      nodeSelector: all()
+      - cidr: 10.244.0.0/16
+        encapsulation: VXLANCrossSubnet
+        natOutgoing: Enabled
+        nodeSelector: all()
 
----
-
-# This section configures the Calico API server.
-# For more information, see: https://docs.tigera.io/calico/latest/reference/installation/api#operator.tigera.io/v1.APIServer
-apiVersion: operator.tigera.io/v1
-kind: APIServer
-metadata:
-  name: default
-spec: {}
 
 # ---
 
@@ -35,11 +21,3 @@ spec: {}
 # kind: Goldmane
 # metadata:
 #   name: default
-
----
-
-# Configures the Calico Whisker observability UI.
-apiVersion: operator.tigera.io/v1
-kind: Whisker
-metadata:
-  name: default

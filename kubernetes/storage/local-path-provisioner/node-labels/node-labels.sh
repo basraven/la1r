@@ -1,28 +1,29 @@
 #!/bin/bash
 
 # Taints
-kubectl taint node linux-wayne node-role.kubernetes.io/control-plane:NoSchedule-
-kubectl taint node stephanie la1r.workload/specificonly=true:NoSchedule
+# kubectl taint node linux-wayne node-role.kubernetes.io/control-plane:NoSchedule-
+kubectl taint node jay-c node-role.kubernetes.io/worker:NoSchedule-
+# kubectl taint node stephanie la1r.workload/specificonly=true:NoSchedule
 
 
 # Labels
 kubectl label nodes jay-c la1r.workload/essential=true
 kubectl label nodes jay-c la1r.workload/nonessential=true
-kubectl label nodes linux-wayne la1r.workload/nonessential=true
-kubectl label nodes stephanie la1r.workload/specificonly=true
+# kubectl label nodes linux-wayne la1r.workload/nonessential=true
+# kubectl label nodes stephanie la1r.workload/specificonly=true
 
 kubectl label nodes jay-c la1r.storage/ssd-ha=true
 kubectl label nodes jay-c la1r.storage/ssd-na=true
 kubectl label nodes jay-c la1r.storage/hdd-ha=true
 kubectl label nodes jay-c la1r.storage/hdd-na=true
 
-kubectl label nodes linux-wayne la1r.storage/ssd-ha=true
-kubectl label nodes linux-wayne la1r.storage/ssd-na=true
-kubectl label nodes linux-wayne la1r.storage/hdd-ha=true
-kubectl label nodes linux-wayne la1r.storage/hdd-na=true
+# kubectl label nodes linux-wayne la1r.storage/ssd-ha=true
+# kubectl label nodes linux-wayne la1r.storage/ssd-na=true
+# kubectl label nodes linux-wayne la1r.storage/hdd-ha=true
+# kubectl label nodes linux-wayne la1r.storage/hdd-na=true
 
 # for metallb
-kubectl label node linux-wayne node.kubernetes.io/exclude-from-external-load-balancers-
+# kubectl label node linux-wayne node.kubernetes.io/exclude-from-external-load-balancers-
 kubectl label node jay-c node.kubernetes.io/exclude-from-external-load-balancers-
 
 
