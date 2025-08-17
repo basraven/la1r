@@ -1,0 +1,29 @@
+---
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: ClusterConfiguration
+networking:
+  podSubnet: 10.244.0.0/16
+kubernetesVersion: stable
+controlPlaneEndpoint: 192.168.5.3:6443
+certificatesDir: /etc/kubernetes/pki
+apiServer:
+  certSANs:
+    - jay-c
+    - 192.168.5.3
+    - 192.168.5.100
+controllerManager: {}
+scheduler: {}
+---
+apiVersion: kubeproxy.config.k8s.io/v1alpha1
+kind: KubeProxyConfiguration
+mode: iptables
+---
+apiVersion: kubeadm.k8s.io/v1beta3
+kind: InitConfiguration
+localAPIEndpoint:
+  advertiseAddress: 192.168.5.3
+  bindPort: 6443
+nodeRegistration:
+  # kubeadm will auto-detect the CRI socket when possible
+  kubeletExtraArgs:
+    node-ip: "192.168.5.3"
