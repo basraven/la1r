@@ -20,10 +20,6 @@ metadata:
     sablier.enable: "true"
     sablier.group: nextcloud
 spec:
-  autoscaler:
-    enabled: true
-    minReplicas: 0
-    maxReplicas: 1
   selector:
     matchLabels:
       app: email-sender
@@ -55,10 +51,6 @@ metadata:
     sablier.enable: "true"
     sablier.group: nextcloud
 spec:
-  autoscaler:
-    enabled: true
-    minReplicas: 0
-    maxReplicas: 1
   selector:
     matchLabels:
       app: nextcloud-email
@@ -111,6 +103,34 @@ spec:
             subPath: "config.json"
           # - name: email-volume
           #   mountPath: "/email"
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: email-sender
+  namespace: nextcloud
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: email-sender
+  minReplicas: 1
+  maxReplicas: 1
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: nextcloud-email
+  namespace: nextcloud
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: nextcloud-email
+  minReplicas: 1
+  maxReplicas: 1
+
 ---
 apiVersion: v1
 kind: Service

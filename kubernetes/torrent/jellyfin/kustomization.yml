@@ -5,4 +5,4 @@ resources:
   - pv
   - middleware.yml
   - jellyfin.yml
-  - traefik-watcher
+  # - traefik-watcher

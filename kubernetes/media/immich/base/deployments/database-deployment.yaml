@@ -7,10 +7,6 @@ metadata:
     sablier.enable: "true"
     sablier.group: immich
 spec:
-  autoscaler:
-    enabled: true
-    minReplicas: 0
-    maxReplicas: 1
   selector:
     matchLabels:
       app: database
@@ -81,3 +77,16 @@ spec:
       - name: immich-db-data
         persistentVolumeClaim:
           claimName: immich-db-claim
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: database
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: database
+  minReplicas: 1
+  maxReplicas: 1

@@ -50,10 +50,6 @@ metadata:
     sablier.enable: "true"
     sablier.group: nextcloud
 spec:
-  autoscaler:
-    enabled: true
-    minReplicas: 0
-    maxReplicas: 1
   strategy:
     type: Recreate
   selector:
@@ -121,6 +117,20 @@ spec:
             subPath: custom.cnf
           - name: mariadb
             mountPath: "/var/lib/mysql/"
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: mariadb
+  namespace: nextcloud
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: mariadb
+  minReplicas: 1
+  maxReplicas: 1
+
 ---
 apiVersion: v1
 kind: Service

@@ -9,10 +9,6 @@ metadata:
     sablier.enable: "true"
     sablier.group: nextcloud
 spec:
-  autoscaler:
-    enabled: true
-    minReplicas: 0
-    maxReplicas: 1
   selector:
     matchLabels:
       app: redis
@@ -44,6 +40,19 @@ spec:
         volumeMounts:
           - name: redis
             mountPath: "/data"
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: redis
+  namespace: nextcloud
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: redis
+  minReplicas: 1
+  maxReplicas: 1
 ---
 apiVersion: v1
 kind: Service

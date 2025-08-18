@@ -7,10 +7,6 @@ metadata:
     sablier.enable: "true"
     sablier.group: immich
 spec:
-  autoscaler:
-    enabled: true
-    minReplicas: 0
-    maxReplicas: 1
   selector:
     matchLabels:
       app: immich-machine-learning
@@ -43,3 +39,16 @@ spec:
       volumes:
       - name: model-cache
         emptyDir: {}
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: immich-machine-learning
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: immich-machine-learning
+  minReplicas: 1
+  maxReplicas: 1

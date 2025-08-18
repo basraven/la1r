@@ -7,10 +7,6 @@ metadata:
     sablier.enable: "true"
     sablier.group: immich
 spec:
-  autoscaler:
-    enabled: true
-    minReplicas: 0
-    maxReplicas: 1
   selector:
     matchLabels:
       app: redis
@@ -39,3 +35,16 @@ spec:
             - ping
           initialDelaySeconds: 30
           periodSeconds: 30
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: redis
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: redis
+  minReplicas: 1
+  maxReplicas: 1

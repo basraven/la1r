@@ -9,3 +9,7 @@ resources:
   - storage
   - torrent
   - vpn
+  - media
+  - nextcloud
+  - security
+  - workflows
