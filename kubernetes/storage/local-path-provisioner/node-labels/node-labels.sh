@@ -2,7 +2,7 @@
 
 # Taints
 # kubectl taint node linux-wayne node-role.kubernetes.io/control-plane:NoSchedule-
-kubectl taint node jay-c node-role.kubernetes.io/worker:NoSchedule-
+kubectl taint node jay-c node-role.kubernetes.io/control-plane:NoSchedule-
 # kubectl taint node stephanie la1r.workload/specificonly=true:NoSchedule
 
 
