@@ -6,7 +6,6 @@ metadata:
     name: tigera-operator
 
 ---
----
 # Source: tigera-operator/templates/tigera-operator/02-serviceaccount-tigera-operator.yaml
 apiVersion: v1
 kind: ServiceAccount
@@ -16,7 +15,6 @@ metadata:
 imagePullSecrets:
   []
 
----
 ---
 # Source: tigera-operator/templates/tigera-operator/02-role-tigera-operator.yaml
 # Permissions required when running the operator for a Calico cluster.
@@ -246,7 +244,6 @@ rules:
       - watch
 
 ---
----
 # Source: tigera-operator/templates/tigera-operator/02-rolebinding-tigera-operator.yaml
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
@@ -261,7 +258,6 @@ roleRef:
   name: tigera-operator
   apiGroup: rbac.authorization.k8s.io
 
----
 ---
 # Source: tigera-operator/templates/tigera-operator/02-tigera-operator.yaml
 apiVersion: apps/v1
@@ -314,6 +310,8 @@ spec:
               value: "tigera-operator"
             - name: TIGERA_OPERATOR_INIT_IMAGE_VERSION
               value: v1.30.9
+            - name: CLUSTER_TYPE
+              value: "standalone"
           envFrom:
             - configMapRef:
                 name: kubernetes-services-endpoint
