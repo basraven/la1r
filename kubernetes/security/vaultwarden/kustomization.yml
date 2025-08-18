@@ -4,3 +4,4 @@ namespace: security
 resources:
   - pv
   - vaultwarden.yml
+  - middleware.yml

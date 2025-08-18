@@ -1,5 +1,5 @@
 ---
-apiVersion: traefik.io/v1alpha1
+apiVersion: traefik.containo.us/v1alpha1
 kind: Middleware
 metadata:
   name: sablier-openvscode-server
@@ -15,4 +15,4 @@ spec:
         showDetails: "true"
         theme: shuffle
       sablierUrl: http://sablier:10000 # Sends: /api/strategies/dynamic?display_name=Immich&group=jellyfin&refresh_frequency=5s&session_duration=180m&show_details=true&theme=shuffle
-      sessionDuration: 300m
+      sessionDuration: 60m

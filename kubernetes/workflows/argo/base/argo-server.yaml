@@ -65,7 +65,7 @@ metadata:
   annotations:
     traefik.ingress.kubernetes.io/router.tls: "true"
     traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
-    traefik.ingress.kubernetes.io/router.middlewares: "traefik-auth-traefik@kubernetescrd"
+    traefik.ingress.kubernetes.io/router.middlewares: "traefik-traefik-auth-traefik@kubernetescrd"
     # traefik.ingress.kubernetes.io/router.middlewares: "workflow-sablier-argo@kubernetescrd"
 spec:
   tls:

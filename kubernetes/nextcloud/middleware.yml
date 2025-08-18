@@ -16,4 +16,4 @@ spec:
         showDetails: "true"
         theme: shuffle
       sablierUrl: http://sablier:10000
-      sessionDuration: 10m
+      sessionDuration: 30m

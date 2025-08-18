@@ -83,6 +83,7 @@ spec:
           - --entrypoints.metrics.Address=:8082
           - --entrypoints.web.Address=:80
           - --entrypoints.websecure.Address=:443
+          - --entrypoints.traefik.Address=:8080
           - --entrypoints.jellyfin.Address=:8096
           - --entrypoints.websecure.http.tls
           - --providers.kubernetesingress
@@ -96,7 +97,7 @@ spec:
           - --experimental.plugins.sablier.version=v1.8.5
           # - --log.filePath=/tmp/traefik.log
           - --log.level=INFO
-          # - --accesslog
+          - --accesslog
           # - --serverstransport.insecureskipverify
 ---
 kind: Service
@@ -166,6 +167,17 @@ spec:
     scheme: https  
 
 ---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: rewrite-root-to-dashboard
+  namespace: traefik
+spec:
+  replacePathRegex:
+    regex: ^/$
+    replacement: /dashboard/
+
+---
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
@@ -181,52 +193,96 @@ spec:
   - traefik.bas
   - www.traefik.bas
 
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: traefik-https
-  namespace: traefik
-  annotations:
-    traefik.ingress.kubernetes.io/router.tls: "true"
-    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
-    traefik.ingress.kubernetes.io/router.middlewares: "traefik-auth-traefik@kubernetescrd"
-spec:
-  ingressClassName: lan
-  tls:
-  - secretName: traefik-bas-tls
-  rules:
-  - host: traefik.bas
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: traefik-ingress-service
-            port:
-              number: 8080
+# ---
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: traefik-https
+#   namespace: traefik
+#   annotations:
+#     traefik.ingress.kubernetes.io/router.tls: "true"
+#     traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+#     traefik.ingress.kubernetes.io/router.middlewares: "rewrite-root-to-dashboard@kubernetescrd"
+# spec:
+#   tls:
+#   - secretName: traefik-bas-tls
+#   rules:
+#   - host: traefik.bas
+#     http:
+#       paths:
+#       - path: /
+#         pathType: Prefix
+#         backend:
+#           service:
+#             name: traefik-ingress-service
+#             port:
+#               name: admin
+#       - path: /dashboard/
+#         pathType: Prefix
+#         backend:
+#           service:
+#             name: traefik-ingress-service
+#             port:
+#               name: admin
+#       - path: /api
+#         pathType: Prefix
+#         backend:
+#           service:
+#             name: traefik-ingress-service
+#             port:
+#               name: admin
+
+# ---
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: traefik-http
+#   namespace: traefik
+#   annotations:
+#     traefik.ingress.kubernetes.io/router.tls: "false"
+#     traefik.ingress.kubernetes.io/router.entrypoints: "web"
+#     traefik.ingress.kubernetes.io/router.middlewares: "traefik-http-redirect-to-https@kubernetescrd"
+# spec:
+#   rules:
+#   - host: traefik.bas
+#     http:
+#       paths:
+#       - path: /
+#         pathType: Prefix
+#         backend:
+#           service:
+#             name: traefik-ingress-service
+#             port:
+#               number: 8080
+
 
 ---
-apiVersion: networking.k8s.io/v1
-kind: Ingress
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
 metadata:
-  name: traefik-http
+  name: traefik-dashboard
   namespace: traefik
-  annotations:
-    traefik.ingress.kubernetes.io/router.tls: "false"
-    traefik.ingress.kubernetes.io/router.entrypoints: "web"
-    traefik.ingress.kubernetes.io/router.middlewares: "traefik-http-redirect-to-https@kubernetescrd"
 spec:
-  ingressClassName: lan
-  rules:
-  - host: traefik.bas
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: traefik-ingress-service
-            port:
-              number: 8080
+  entryPoints:
+    - websecure
+  routes:
+    - kind: Rule
+      match: (Host(`traefik.bas`) || Host(`www.traefik.bas`)) && (PathPrefix(`/dashboard`) || PathPrefix(`/api`))
+      services:
+        - kind: TraefikService
+          name: api@internal
+      middlewares:
+        - name: traefik-auth-traefik
+          namespace: traefik
+    - kind: Rule
+      match: (Host(`traefik.bas`) || Host(`www.traefik.bas`)) && PathPrefix(`/`)
+      middlewares:
+        - name: rewrite-root-to-dashboard
+          namespace: traefik
+        - name: traefik-auth-traefik
+          namespace: traefik
+      services:
+        - kind: TraefikService
+          name: api@internal
+  tls:
+    secretName: traefik-bas-tls

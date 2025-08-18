@@ -7,9 +7,16 @@ resources:
   - dns
   - traefik
   - storage
+  - online
+  # - flux-system
+  # - homeautomation
+  # - kubernetes-dashboard
+  # - monitoring
   - torrent
   - vpn
   - media
   - nextcloud
   - security
   - workflows
+  - development
+  - crm
