@@ -2,4 +2,4 @@
 ufw_app_wireguard-app:
   title: "Wireguard by Seb"
   description: "Ports required for Wireguard"
-  ports: "51820/udp"
+  ports: "51820/udp|51821/tcp"

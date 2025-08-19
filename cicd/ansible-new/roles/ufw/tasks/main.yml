@@ -61,6 +61,15 @@
     mode: '0644'
     backup: yes
     
+- name: Apply required sysctls for forwarding/NAT (host-specific)
+  become: yes
+  ansible.posix.sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    state: present
+    reload: true
+  loop: "{{ ufw_sysctl_settings | default([]) }}"
+    
 - name: Gather UFW application definitions from variables (ufw_app_*)
   set_fact:
     _ufw_app_defs: "{{ _ufw_app_defs | default({}) | combine({ (item.key | regex_replace('^ufw_app_','')): item.value }) }}"

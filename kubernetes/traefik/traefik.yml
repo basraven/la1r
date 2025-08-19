@@ -96,8 +96,8 @@ spec:
           - --experimental.plugins.sablier.modulename=github.com/sablierapp/sablier
           - --experimental.plugins.sablier.version=v1.8.5
           # - --log.filePath=/tmp/traefik.log
-          - --log.level=INFO
-          - --accesslog
+          # - --log.level=INFO
+          # - --accesslog
           # - --serverstransport.insecureskipverify
 ---
 kind: Service
@@ -256,6 +256,23 @@ spec:
 #               number: 8080
 
 
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: traefik-dashboard-http-redirect
+  namespace: traefik
+spec:
+  entryPoints:
+    - web
+  routes:
+    - kind: Rule
+      match: Host(`traefik.bas`) || Host(`www.traefik.bas`)
+      middlewares:
+        - name: traefik-http-redirect-to-https@kubernetescrd
+      services:
+        - name: api@internal # Service is required by Traefik but won't be used.
+          kind: TraefikService
 ---
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute

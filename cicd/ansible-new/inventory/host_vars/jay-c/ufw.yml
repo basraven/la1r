@@ -39,3 +39,10 @@ ufw_custom_rules:
 
   # Allow outgoing DNS traffic from VPN subnet
   - { rule: allow, from_ip: "10.8.0.0/24", to_ip: "any", port: 53,  proto: udp, direction: out }
+
+# Host-specific sysctls for forwarding/NAT
+ufw_sysctl_settings:
+  - { name: 'net.ipv4.ip_forward', value: '1' }
+  - { name: 'net.ipv4.conf.all.src_valid_mark', value: '1' }
+  # Optional: if asymmetric routing checks impact wg0, uncomment the next line
+  # - { name: 'net.ipv4.conf.wg0.rp_filter', value: '0' }
