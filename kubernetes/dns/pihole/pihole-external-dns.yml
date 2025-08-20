@@ -1,0 +1,91 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: pihole-external-dns
+  namespace: dns
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: pihole-external-dns
+rules:
+- apiGroups: [""]
+  resources: ["services","pods", "endpoints"]
+  verbs: ["get","watch","list"]
+- apiGroups: ["discovery.k8s.io"]
+  resources: ["endpointslices"]
+  verbs: ["get","watch","list"]
+- apiGroups: ["extensions","networking.k8s.io"]
+  resources: ["ingresses"]
+  verbs: ["get","watch","list"]
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["list","watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: pihole-external-dns-viewer
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: pihole-external-dns
+subjects:
+- kind: ServiceAccount
+  name: pihole-external-dns
+  namespace: dns
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pihole-external-dns
+  namespace: dns
+spec:
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: pihole-external-dns
+  template:
+    metadata:
+      labels:
+        app: pihole-external-dns
+    spec:
+      serviceAccountName: pihole-external-dns
+      securityContext:
+        fsGroup: 65534
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - jay-c
+      containers:
+      - name: external-dns
+        image: registry.k8s.io/external-dns/external-dns:v0.14.2
+        args:
+        - --source=service
+        - --source=ingress
+        - --policy=upsert-only
+        - --registry=noop
+        - --provider=pihole
+        - --pihole-server=http://pihole:80
+        - --domain-filter=bas
+        - --pihole-password=$(PIHOLE_PASSWORD)
+        env:
+        - name: PIHOLE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: pihole-credentials
+              key: PIHOLE_PASSWORD
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"

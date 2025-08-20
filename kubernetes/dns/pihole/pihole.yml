@@ -1,0 +1,229 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pihole-config
+  namespace: dns
+data:
+  custom.list: |-
+    # Custom DNS entries for Kubernetes services
+    # This will be populated with your cluster services
+  setupVars.conf: |-
+    PIHOLE_INTERFACE=eth0
+    IPV4_ADDRESS=0.0.0.0/0
+    IPV6_ADDRESS=
+    PIHOLE_DNS_1=8.8.8.8
+    PIHOLE_DNS_2=8.8.4.4
+    QUERY_LOGGING=true
+    INSTALL_WEB_SERVER=true
+    INSTALL_WEB_INTERFACE=true
+    LIGHTTPD_ENABLED=true
+    CACHE_SIZE=10000
+    DNS_FQDN_REQUIRED=true
+    DNS_BOGUS_PRIV=true
+    DNSMASQ_LISTENING=single
+    WEBPASSWORD=
+    WEBTHEME=default-light
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pihole
+  namespace: dns
+  labels:
+    app: pihole
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pihole
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: pihole
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - jay-c
+      containers:
+      - name: pihole
+        image: pihole/pihole:2024.07.0
+        ports:
+        - containerPort: 53
+          protocol: TCP
+          name: dns-tcp
+        - containerPort: 53
+          protocol: UDP
+          name: dns-udp
+        - containerPort: 80
+          name: web
+        - containerPort: 443
+          name: web-ssl
+        env:
+        - name: TZ
+          value: "Europe/Amsterdam"
+        - name: PIHOLE_SKIP_OS_CHECK
+          value: "true"
+        - name: FTLCONF_LOCAL_IPV4
+          value: "192.168.6.91"
+        - name: VIRTUAL_HOST
+          value: "pihole.bas,dns.bas"
+        - name: WEB_PORT
+          value: "80"
+        - name: CORS_HOSTS
+          value: "pihole.bas,dns.bas"
+        - name: ServerName
+          value: "pihole.bas"
+        - name: DNS_FQDN_REQUIRED
+          value: "true"
+        - name: DNS_BOGUS_PRIV
+          value: "true"
+        - name: DNSMASQ_LISTENING
+          value: "all"
+        - name: WEBTHEME
+          value: "default-light"
+        - name: WEBPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: pihole-credentials
+              key: PIHOLE_PASSWORD
+        volumeMounts:
+        - name: pihole-data
+          mountPath: /etc/pihole
+        - name: pihole-dnsmasq
+          mountPath: /etc/dnsmasq.d
+        securityContext:
+          capabilities:
+            add:
+            - NET_ADMIN
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /admin/
+            port: 80
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /admin/
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 10
+      volumes:
+      - name: pihole-config-volume
+        configMap:
+          name: pihole-config
+          defaultMode: 0644
+      - name: pihole-data
+        emptyDir: {}
+        # persistentVolumeClaim:
+        #   claimName: pihole-data-claim
+      - name: pihole-dnsmasq
+        emptyDir: {}
+        # persistentVolumeClaim:
+        #   claimName: pihole-dnsmasq-claim
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pihole
+  namespace: dns
+spec:
+  selector:
+    app: pihole
+  type: ClusterIP
+  ports:
+  - name: web
+    port: 80
+    targetPort: 80
+  - name: web-ssl
+    port: 443
+    targetPort: 443
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pihole-loadbalancer-service
+  namespace: dns
+spec:
+  loadBalancerIP: 192.168.6.91
+  type: LoadBalancer
+  ports:
+  - name: dns-udp
+    protocol: UDP
+    targetPort: dns-udp
+    port: 53
+  - name: dns-tcp
+    protocol: TCP
+    targetPort: dns-tcp
+    port: 53
+  selector:
+    app: pihole
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: pihole-dns
+  namespace: dns
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: pihole-dns-tls
+  commonName: dns.bas
+  dnsNames:
+  - dns.bas
+  - pihole.bas
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pihole-https
+  namespace: dns
+  annotations:
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+    # traefik.ingress.kubernetes.io/router.middlewares: "dns-pihole-redirect-to-admin@kubernetescrd"
+spec:
+  ingressClassName: lan
+  tls:
+  - secretName: pihole-dns-tls
+    hosts:
+    - dns.bas
+    - pihole.bas
+  rules:
+  - host: dns.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: pihole
+            port:
+              number: 80
+  - host: pihole.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: pihole
+            port:
+              number: 80

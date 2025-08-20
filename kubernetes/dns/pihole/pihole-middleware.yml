@@ -1,0 +1,10 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: pihole-redirect-to-admin
+  namespace: dns
+spec:
+  redirectRegex:
+    regex: "^https://(pihole.bas|dns.bas)/$"
+    replacement: "https://${1}/admin/"
+    permanent: true

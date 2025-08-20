@@ -4,3 +4,4 @@ resources:
   - namespace.yml
   - coredns/coredns.yaml
   - external-dns/external-dns.yaml
+  - pihole/kustomization.yml
