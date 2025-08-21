@@ -1,0 +1,5 @@
+---
+ufw_app_samba-app:
+  title: "Samba by Seb"
+  description: "Samba file sharing"
+  ports: "139|445/tcp"
