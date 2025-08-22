@@ -37,6 +37,14 @@ spec:
           capabilities:
             add:
               - NET_ADMIN
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
         ports:
         - name: webui
           containerPort: 8080
