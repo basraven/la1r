@@ -1,0 +1,24 @@
+# 2025-08-24, fix for single node cluster by adding "create" to verbs for leases
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: kube-system
+  name: kube-controller-manager-leader-election
+rules:
+- apiGroups: ["coordination.k8s.io"]
+  resources: ["leases"]
+  verbs: ["get", "watch", "list", "delete", "update", "create", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  namespace: kube-system
+  name: kube-controller-manager-leader-election
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: kube-controller-manager-leader-election
+subjects:
+- kind: ServiceAccount
+  name: kube-controller-manager
+  namespace: kube-system

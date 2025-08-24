@@ -173,9 +173,10 @@ metadata:
   name: rewrite-root-to-dashboard
   namespace: traefik
 spec:
-  replacePathRegex:
+  redirectRegex:
     regex: ^/$
     replacement: /dashboard/
+    permanent: true
 
 ---
 apiVersion: cert-manager.io/v1
