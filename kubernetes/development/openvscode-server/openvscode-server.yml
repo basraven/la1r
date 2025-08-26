@@ -100,6 +100,7 @@ apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
   name: openvscode-server-bas
+  namespace: development
 spec:
   issuerRef:
     name: la1r
@@ -115,6 +116,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: openvscode-server-https
+  namespace: development
   annotations:
     traefik.ingress.kubernetes.io/router.tls: "true"
     traefik.ingress.kubernetes.io/router.entrypoints: "websecure"    

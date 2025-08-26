@@ -21,3 +21,4 @@ resources:
   - development
   # - crm
   - cluster
+  - ai

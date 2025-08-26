@@ -95,6 +95,8 @@ spec:
             secretKeyRef:
               name: pihole-credentials
               key: PIHOLE_PASSWORD
+        - name: RATE_LIMIT
+          value: "0/0"
         volumeMounts:
         - name: pihole-data
           mountPath: /etc/pihole
