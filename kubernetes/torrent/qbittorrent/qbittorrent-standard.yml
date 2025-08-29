@@ -26,6 +26,46 @@ spec:
                 operator: In
                 values:
                 - "true"
+      initContainers:
+      - name: config-cycler
+        image: alpine:latest
+        command:
+          - /bin/sh
+          - -c
+          - |
+            set -e
+            mkdir -p /data/openvpn-ovpn-state
+            mkdir -p /data/vpn_state
+            STATE_FILE="/data/vpn_state/last_index.txt"
+
+            if ! ls /config/openvpn-all/*.ovpn >/dev/null 2>&1; then
+              echo "No .ovpn files found in /config/openvpn-all"
+              exit 1
+            fi
+
+            FILE_COUNT=$(ls -1 /config/openvpn-all/*.ovpn | wc -l)
+
+            if [ -f "$STATE_FILE" ]; then
+              LAST_INDEX=$(cat "$STATE_FILE")
+            else
+              LAST_INDEX=-1
+            fi
+
+            NEXT_INDEX=$(( (LAST_INDEX + 1) % FILE_COUNT ))
+
+            NEXT_FILE=$(ls -1 /config/openvpn-all/*.ovpn | sed -n "$((NEXT_INDEX + 1))p")
+
+            rm -f /data/openvpn-ovpn-state/*.ovpn
+            cp "$NEXT_FILE" /data/openvpn-ovpn-state/
+
+            echo "$NEXT_INDEX" > "$STATE_FILE"
+            echo "Selected VPN config: $(basename "$NEXT_FILE")"
+        volumeMounts:
+        - name: goose-ovpn-files-volume
+          mountPath: /config/openvpn-all
+          readOnly: true
+        - name: torrent-standard-data-volume
+          mountPath: /data
       containers:
       - name: qbitvpn
         image: dyonr/qbittorrentvpn:latest
@@ -74,13 +114,17 @@ spec:
           value: "192.168.0.0/16,10.244.0.0/16"
         volumeMounts:
           - name: goose-ovpn-files-volume
-            mountPath: /config/openvpn
+            mountPath: /config/openvpn-all
           - name: goose-loginconf-volume
             mountPath: /goose/login.conf
             subPath: login.conf
             readOnly: true
           - name: torrent-standard-data-volume
             mountPath: /config/qBittorrent
+            subPath: qBittorrent
+          - name: torrent-standard-data-volume
+            mountPath: /config/openvpn
+            subPath: openvpn-ovpn-state
           - name: qbit-torrent-data-volume
             mountPath: /downloads
       volumes:
@@ -88,9 +132,9 @@ spec:
         secret:
           secretName: goose-credentials
           defaultMode: 0744
-          items:
-          - key: ovpn1.ovpn
-            path: ovpn1.ovpn
+          # items:
+          # - key: ovpn1.ovpn
+          #   path: ovpn1.ovpn
       - name: goose-loginconf-volume
         secret:
           secretName: goose-credentials
