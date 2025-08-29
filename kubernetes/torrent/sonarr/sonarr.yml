@@ -6,8 +6,6 @@ metadata:
   namespace: torrent
   labels:
     app: sonarr
-    sablier.enable: "true"
-    sablier.group: jellyfin
 spec:
   replicas: 1
   selector:
@@ -96,7 +94,6 @@ metadata:
   annotations:
     traefik.ingress.kubernetes.io/router.tls: "true"
     traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
-    traefik.ingress.kubernetes.io/router.middlewares: "torrent-sablier-sonarr@kubernetescrd"
 spec:
   tls:
   - secretName: sonarr-bas-tls

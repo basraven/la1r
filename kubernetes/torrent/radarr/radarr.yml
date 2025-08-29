@@ -6,8 +6,6 @@ metadata:
   namespace: torrent
   labels:
     app: radarr
-    sablier.enable: "true"
-    sablier.group: jellyfin
 spec:
   replicas: 1
   strategy:
@@ -23,16 +21,6 @@ spec:
       labels:
         app: radarr
     spec:
-      # NonEssential
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-            - matchExpressions:
-              - key: la1r.workload/nonessential
-                operator: In
-                values:
-                - "true"
       volumes:
         - name: radarr-config-volume
           persistentVolumeClaim:
@@ -101,7 +89,6 @@ metadata:
   annotations:
     traefik.ingress.kubernetes.io/router.tls: "true"
     traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
-    traefik.ingress.kubernetes.io/router.middlewares: "torrent-sablier-radarr@kubernetescrd"
 spec:
   tls:
   - secretName: radarr-bas-tls

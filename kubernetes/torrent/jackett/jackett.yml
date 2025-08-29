@@ -6,8 +6,6 @@ metadata:
   namespace: torrent
   labels:
     app: jackett
-    sablier.enable: "true"
-    sablier.group: qbittorrent
 spec:
   replicas: 1
   selector:
