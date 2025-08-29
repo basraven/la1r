@@ -1,0 +1,102 @@
+---
+# Install and configure a single-node k3s cluster
+
+- name: Ensure required packages are present (Debian/Ubuntu)
+  become: yes
+  apt:
+    name:
+      - curl
+      - ca-certificates
+    state: present
+    update_cache: yes
+  when: ansible_facts.os_family == 'Debian'
+
+- name: Disable swap immediately (required by Kubernetes)
+  become: yes
+  command: swapoff -a
+  when: k3s_disable_swap | default(true)
+  changed_when: false
+
+- name: Comment out swap entries in /etc/fstab to keep swap disabled after reboot
+  become: yes
+  replace:
+    path: /etc/fstab
+    regexp: '^(?!#)(.*\s+swap\s+.*)$'
+    replace: '# \1'
+  when: k3s_disable_swap | default(true)
+
+- name: Determine if k3s is already installed
+  stat:
+    path: /usr/local/bin/k3s
+  register: k3s_bin
+
+- name: Build k3s server arguments
+  set_fact:
+    k3s_server_args: >-
+      server
+      --write-kubeconfig-mode {{ k3s_write_kubeconfig_mode }}
+      {% if k3s_node_name %} --node-name {{ k3s_node_name }} {% endif %}
+      {% for c in k3s_disable_components %} --disable {{ c }} {% endfor %}
+      {% for s in k3s_tls_sans %} --tls-san {{ s }} {% endfor %}
+
+- name: Download k3s install script
+  become: yes
+  get_url:
+    url: https://get.k3s.io
+    dest: /tmp/get-k3s.sh
+    mode: '0755'
+  when: not k3s_bin.stat.exists
+
+- name: Install k3s server
+  become: yes
+  environment:
+    INSTALL_K3S_EXEC: "{{ k3s_server_args }}"
+  command:
+    cmd: sh /tmp/get-k3s.sh
+    creates: /usr/local/bin/k3s
+  when: not k3s_bin.stat.exists
+  notify: restart k3s
+
+- name: Ensure k3s service is enabled and started
+  become: yes
+  systemd:
+    name: k3s
+    enabled: yes
+    state: started
+
+- name: Wait for kubeconfig to be created
+  become: yes
+  wait_for:
+    path: /etc/rancher/k3s/k3s.yaml
+    state: present
+    delay: 2
+    timeout: 180
+
+- name: Ensure kubeconfig directory exists for user {{ k3s_user }}
+  become: yes
+  file:
+    path: "{{ k3s_home }}/.kube"
+    state: directory
+    owner: "{{ k3s_user }}"
+    group: "{{ k3s_user }}"
+    mode: '0755'
+
+- name: Link kubeconfig for user {{ k3s_user }}
+  become: yes
+  file:
+    src: /etc/rancher/k3s/k3s.yaml
+    dest: "{{ k3s_home }}/.kube/config"
+    state: link
+    owner: "{{ k3s_user }}"
+    group: "{{ k3s_user }}"
+  when: k3s_symlink_kubeconfig | default(true)
+
+- name: Optionally set kubeconfig server to this node's IP for remote access
+  become: yes
+  lineinfile:
+    path: /etc/rancher/k3s/k3s.yaml
+    regexp: '^\s*server:\s*'
+    line: "    server: https://{{ hostvars[inventory_hostname].ansible_host | default(ansible_default_ipv4.address) }}:6443"
+    backrefs: false
+  when: k3s_set_kubeconfig_server | default(true)
+

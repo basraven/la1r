@@ -1,0 +1,12 @@
+---
+# k3s settings for stephanie (single-node cluster)
+# Ensure API cert matches the advertised address and hostname
+k3s_tls_sans:
+  - 192.168.5.2
+  - stephanie
+
+# Explicitly set kubeconfig server to stephanie's IP
+k3s_set_kubeconfig_server: true
+
+# Use the standard Linux account for kubeconfig symlink/ownership
+k3s_user: basraven

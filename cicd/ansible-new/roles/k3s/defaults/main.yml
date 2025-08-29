@@ -1,0 +1,29 @@
+---
+# Default variables for the k3s role
+
+# Components to disable in k3s (we deploy our own Traefik and LB)
+k3s_disable_components:
+  - traefik
+  - servicelb
+
+# Initialize a new single-node cluster on this server
+k3s_cluster_init: true
+
+# Make kubeconfig world-readable for convenience (adjust if desired)
+k3s_write_kubeconfig_mode: "0644"
+
+# Name the node after the inventory hostname by default
+k3s_node_name: "{{ inventory_hostname }}"
+
+# Optional TLS Subject Alt Names for the API server
+k3s_tls_sans: []
+
+# Create a ~/.kube/config symlink for the Ansible SSH user
+k3s_symlink_kubeconfig: true
+
+# Target local user to receive kubeconfig symlink
+# Uses inventory/group vars 'ansible_user' (set to 'basraven')
+k3s_user: "{{ ansible_user }}"
+
+# Home directory for the target user
+k3s_home: "{{ (k3s_user == 'root') | ternary('/root', '/home/' ~ k3s_user) }}"

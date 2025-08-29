@@ -27,7 +27,7 @@ spec:
     - name: work # working dir
       persistentVolumeClaim:
         claimName: vaultwarden-workingdir-claim
-  onExit: clean-workingdir
+  onExit: exit-handler
   templates:
     - name: vaultwarden-cloud-backup
       inputs:
@@ -160,3 +160,41 @@ spec:
           - name: work
             mountPath: /mnt/work
         
+    - name: exit-handler
+      dag:
+        tasks:
+          - name: notify-success
+            template: notify
+            when: "{{workflow.status}} == Succeeded"
+            arguments:
+              parameters:
+                - name: status
+                  value: "Succeeded"
+          - name: notify-failure
+            template: notify
+            when: "{{workflow.status}} != Succeeded"
+            arguments:
+              parameters:
+                - name: status
+                  value: "Failed"
+          - name: cleanup
+            depends: "notify-success.Succeeded || notify-success.Failed || notify-success.Skipped || notify-failure.Succeeded || notify-failure.Failed || notify-failure.Skipped"
+            template: clean-workingdir
+
+    - name: notify
+      inputs:
+        parameters:
+          - name: status
+      container:
+        image: curlimages/curl:8.7.1
+        command: [sh, -c]
+        args:
+          - |
+            set -euo pipefail
+            URL="http://ntfy.monitoring.svc.cluster.local/backup"
+            MSG="Vaultwarden backup {{inputs.parameters.status}} for workflow {{workflow.name}} in ns {{workflow.namespace}}. Bucket: {{workflow.parameters.bucket}} Path: {{workflow.parameters.bucketpath}}"
+            echo "Sending ntfy notification to $URL"
+            curl -fsS -X POST \
+              -H "Title: Vaultwarden backup {{inputs.parameters.status}}" \
+              --data "$MSG" \
+              "$URL"
