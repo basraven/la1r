@@ -1,0 +1,106 @@
+---
+# Load host-specific fail2ban settings and jails, mirroring the UFW structure.
+# 1. inventory/host_vars/<host>/fail2ban.yml (global/default settings)
+# 2. inventory/host_vars/<host>/fail2ban-jails/*.yml (per-jail definitions)
+
+- name: Include vars from main fail2ban.yml if present
+  include_vars:
+    file: "{{ inventory_dir }}/host_vars/{{ inventory_hostname }}/fail2ban.yml"
+  when: "(inventory_dir + '/host_vars/' + inventory_hostname + '/fail2ban.yml') is file"
+
+- name: Include vars from fail2ban-jails/ if present
+  include_vars:
+    dir: "{{ inventory_dir }}/host_vars/{{ inventory_hostname }}/fail2ban-jails"
+    extensions: ["yml", "yaml"]
+  when: "(inventory_dir + '/host_vars/' + inventory_hostname + '/fail2ban-jails') is directory"
+
+# Install and configure fail2ban
+- name: Install fail2ban packages
+  become: yes
+  apt:
+    name: "{{ fail2ban_packages | default(['fail2ban']) }}"
+    state: present
+    update_cache: yes
+  when: ansible_facts.os_family == 'Debian'
+
+- name: Ensure fail2ban directories exist
+  become: yes
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  loop:
+    - /etc/fail2ban/jail.d
+    - /etc/fail2ban/filter.d
+
+- name: Render custom filter.d files (if any)
+  become: yes
+  ansible.builtin.template:
+    src: filter.conf.j2
+    dest: "/etc/fail2ban/filter.d/{{ item.key }}.conf"
+    owner: root
+    group: root
+    mode: '0644'
+  loop: "{{ (fail2ban_filters | default({})) | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}.conf"
+  notify: restart fail2ban
+
+- name: Render /etc/fail2ban/jail.local defaults
+  become: yes
+  ansible.builtin.template:
+    src: jail.local.j2
+    dest: /etc/fail2ban/jail.local
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart fail2ban
+
+# Gather jail definitions from variables: any var named fail2ban_jail_<name>
+- name: Collect Fail2Ban jail definitions from variables (fail2ban_jail_*)
+  set_fact:
+    _f2b_jails: "{{ _f2b_jails | default({}) | combine({ (item.key | regex_replace('^fail2ban_jail_','')): item.value }) }}"
+  loop: "{{ vars | dict2items | selectattr('key','match','^fail2ban_jail_') }}"
+  loop_control:
+    label: "{{ item.key }}"
+
+# Clean up only jail files created by this role (role-*.local), keep distro defaults
+- name: Find existing role-managed jail files
+  become: yes
+  find:
+    paths: /etc/fail2ban/jail.d
+    patterns: "role-*.local"
+    file_type: file
+  register: _existing_role_jails
+
+- name: Delete unmanaged role-created jail files
+  become: yes
+  file:
+    path: "{{ item.path }}"
+    state: absent
+  loop: "{{ _existing_role_jails.files }}"
+  loop_control:
+    label: "{{ item.path | basename }}"
+  when: "(item.path | basename | regex_replace('^role-(.*)\\.local$','\\1')) not in (_f2b_jails.keys() | list)"
+
+- name: Create jail.d files for each managed jail
+  become: yes
+  ansible.builtin.template:
+    src: jail.d.j2
+    dest: "/etc/fail2ban/jail.d/role-{{ item.key }}.local"
+    owner: root
+    group: root
+    mode: '0644'
+  loop: "{{ _f2b_jails | default({}) | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
+  notify: restart fail2ban
+
+- name: Ensure fail2ban service is enabled and started
+  become: yes
+  ansible.builtin.service:
+    name: fail2ban
+    state: started
+    enabled: true

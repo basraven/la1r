@@ -1,0 +1,12 @@
+---
+# WireGuard jail using UFW log blocks on UDP/51820
+# NOTE: This only triggers if UFW blocks 51820. If 51820 is allowed, this jail will not see failures.
+fail2ban_jail_wireguard:
+  enabled: true
+  port: 51820
+  filter: ufw-wireguard
+  logpath: /var/log/ufw.log
+  backend: auto
+  maxretry: 6
+  findtime: 10m
+  bantime: 1h

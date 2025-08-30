@@ -1,0 +1,24 @@
+---
+# Global Fail2Ban defaults for jay-c
+fail2ban_packages:
+  - fail2ban
+
+# Defaults applied to /etc/fail2ban/jail.local
+fail2ban_bantime: 1h
+fail2ban_findtime: 10m
+fail2ban_maxretry: 5
+fail2ban_backend: systemd
+fail2ban_banaction: ufw
+fail2ban_banaction_allports: ufw
+fail2ban_usedns: warn
+# Keep ignoreip minimal to avoid masking issues during testing
+fail2ban_ignoreip:
+  - 127.0.0.1/8
+  - ::1
+
+# Custom filters rendered to /etc/fail2ban/filter.d/
+fail2ban_filters:
+  ufw-wireguard:
+    failregex:
+      - ".*UFW BLOCK.*SRC=<HOST>.*DPT=51820"
+    ignoreregex: []

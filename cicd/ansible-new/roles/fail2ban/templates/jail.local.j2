@@ -1,0 +1,12 @@
+[DEFAULT]
+# Global fail2ban settings
+bantime = {{ fail2ban_bantime | default('1h') }}
+findtime = {{ fail2ban_findtime | default('10m') }}
+maxretry = {{ fail2ban_maxretry | default(5) }}
+backend = {{ fail2ban_backend | default('systemd') }}
+ignoreip = {{ (fail2ban_ignoreip | default(['127.0.0.1/8','::1'])) | join(' ') }}
+banaction = {{ fail2ban_banaction | default('ufw') }}
+banaction_allports = {{ fail2ban_banaction_allports | default('ufw') }}
+usedns = {{ fail2ban_usedns | default('warn') }}
+
+# No jails are defined here; they are managed via jail.d generated from inventory vars.

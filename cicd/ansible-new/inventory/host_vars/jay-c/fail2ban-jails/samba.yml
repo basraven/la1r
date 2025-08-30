@@ -1,0 +1,11 @@
+---
+# Samba (smbd) jail, reading Samba log files
+fail2ban_jail_samba:
+  enabled: true
+  port: 137,138,139,445
+  filter: samba
+  logpath: /var/log/samba/log.*
+  backend: auto
+  maxretry: 5
+  findtime: 10m
+  bantime: 1h

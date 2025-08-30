@@ -1,0 +1,9 @@
+[Definition]
+# Managed by Ansible (roles/fail2ban)
+# Custom filter for {{ item.key }}
+failregex =
+{% for line in (item.value.failregex | default([])) %}    {{ line }}
+{% endfor %}
+ignoreregex =
+{% for line in (item.value.ignoreregex | default([])) %}    {{ line }}
+{% endfor %}

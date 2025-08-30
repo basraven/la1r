@@ -13,6 +13,7 @@
     # - { role: samba, tags: ['samba']}
     # - { role: ubuntu-config, tags: ['ubuntu-config']}
     - { role: ufw, tags: ['ufw'] }
+    - { role: fail2ban, tags: ['fail2ban'] }
 
 - name: Install k3s (single-node) on stephanie
   hosts: stephanie

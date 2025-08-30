@@ -1,0 +1,11 @@
+---
+# SSHD jail using systemd backend (journald)
+fail2ban_jail_sshd:
+  enabled: true
+  port: ssh
+  filter: sshd
+  backend: systemd
+  journalmatch: SYSLOG_IDENTIFIER=sshd
+  maxretry: 5
+  findtime: 10m
+  bantime: 1h
