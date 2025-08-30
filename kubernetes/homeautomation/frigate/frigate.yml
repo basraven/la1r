@@ -45,6 +45,14 @@ spec:
         - name: frigate-config-file
           configMap:
             name: frigate-config-file
+        - name: frigate-tls
+          secret:
+            secretName: frigate-bas-tls
+            items:
+            - key: tls.crt
+              path: fullchain.pem
+            - key: tls.key
+              path: privkey.pem
       containers:
       - name: frigate
         image: ghcr.io/blakeblackshear/frigate:stable
@@ -53,6 +61,8 @@ spec:
         ports:
         - name: http
           containerPort: 5000
+        - name: https
+          containerPort: 8971
         # env:
         # - name: LIBVA_DRIVER_NAME
         #   value: i965
@@ -77,6 +87,9 @@ spec:
           subPath: config.yml
         - name: frigate-data-volume
           mountPath: /media/frigate
+        - name: frigate-tls
+          mountPath: /etc/letsencrypt/live/frigate
+          readOnly: true
 # ---
 # apiVersion: v1
 # kind: Service
@@ -105,28 +118,33 @@ metadata:
   namespace: homeautomation
 spec:
   ports:
-  - name: http
-    targetPort: 5000
-    port: 80
+  # - name: http # http exposes without password login
+  #   targetPort: 5000
+  #   port: 80
+  - name: https
+    targetPort: 8971
+    port: 443
   selector:
     app: frigate
   loadBalancerIP: 192.168.6.75
   type: LoadBalancer
-# ---
-# apiVersion: cert-manager.io/v1
-# kind: Certificate
-# metadata:
-#   name: frigate-bas
-#   namespace: homeautomation
-# spec:
-#   issuerRef:
-#     name: la1r
-#     kind: ClusterIssuer
-#   secretName: frigate-bas-tls
-#   commonName: frigate.bas
-#   dnsNames:
-#   - frigate.bas
-#   - www.frigate.bas
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: frigate-bas
+  namespace: homeautomation
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: frigate-bas-tls
+  commonName: frigate.bas
+  dnsNames:
+  - frigate.bas
+  - www.frigate.bas
+  ipAddresses:
+  - 192.168.6.75
 # ---
 # apiVersion: networking.k8s.io/v1
 # kind: Ingress

@@ -33,6 +33,15 @@ mqtt:
   # Optional: interval in seconds for publishing stats (default: shown below)
   stats_interval: 120
 
+# Enable TLS on port 8971 for HTTPS access via the integrated NGINX
+tls:
+  enabled: True
+
+# Ensure UI cookies are marked secure when using HTTPS
+auth:
+  enabled: True
+  cookie_secure: True
+
 
 # Optional: Detectors configuration. Defaults to a single CPU detector
 detectors:
@@ -247,7 +256,8 @@ cameras:
   voortuin: # <------ Name the camera
     enabled: True
     motion:
-      mask: []
+      mask: "0.466,0.372,0.511,0.299,0.759,0.243,0.991,0.59,0.612,0.964,0.482,0.995,0.104,0.986,0.194,0.37,0.323,0.337,0.346,0.43,0.352,0.476"
+        # - "0.466,0.372,0.511,0.299,0.759,0.243,0.991,0.59,0.612,0.964,0.482,0.995,0.104,0.986,0.194,0.37,0.323,0.337,0.346,0.43,0.352,0.476"
     
     ffmpeg:
       inputs:
