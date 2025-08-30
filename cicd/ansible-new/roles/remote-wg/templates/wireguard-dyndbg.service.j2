@@ -1,0 +1,11 @@
+[Unit]
+Description=Enable WireGuard dynamic debug logging
+ConditionPathExists=/sys/kernel/debug/dynamic_debug/control
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c "echo 'module wireguard +p' > /sys/kernel/debug/dynamic_debug/control"
+
+[Install]
+WantedBy=multi-user.target

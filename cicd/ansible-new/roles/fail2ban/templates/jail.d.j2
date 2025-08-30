@@ -10,6 +10,12 @@ filter = {{ item.value.filter | default(item.key) }}
 {% endif %}
 {% if item.value.journalmatch is defined %}journalmatch = {{ item.value.journalmatch }}
 {% endif %}
+{% if item.value.banaction is defined %}banaction = {{ item.value.banaction }}
+{% endif %}
+{% if item.value.action is defined %}action = {{ item.value.action }}
+{% endif %}
+{% if item.value.protocol is defined %}protocol = {{ item.value.protocol }}
+{% endif %}
 {% if item.value.maxretry is defined %}maxretry = {{ item.value.maxretry }}
 {% endif %}
 {% if item.value.findtime is defined %}findtime = {{ item.value.findtime }}

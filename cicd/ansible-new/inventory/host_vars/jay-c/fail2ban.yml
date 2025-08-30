@@ -22,3 +22,11 @@ fail2ban_filters:
     failregex:
       - ".*UFW BLOCK.*SRC=<HOST>.*DPT=51820"
     ignoreregex: []
+
+  # Match kernel journal messages for WireGuard handshake/auth failures
+  kernel-wireguard:
+    failregex:
+      - '.*wg[0-9A-Za-z_-]*: Handshake for peer .* \((<HOST>):\d+\) failed.*'
+      - '.*wg[0-9A-Za-z_-]*: Invalid (?:handshake initiation|handshake|initiation) from (<HOST>):\d+.*'
+      - '.*wg[0-9A-Za-z_-]*: Invalid MAC of handshake, dropping packet from (<HOST>):\d+.*'
+    ignoreregex: []

@@ -1,12 +1,14 @@
 ---
-# WireGuard jail using UFW log blocks on UDP/51820
-# NOTE: This only triggers if UFW blocks 51820. If 51820 is allowed, this jail will not see failures.
+# WireGuard jail parsing /var/log/syslog for kernel messages
+# Triggers on handshake/auth failures regardless of UFW policy
 fail2ban_jail_wireguard:
   enabled: true
   port: 51820
-  filter: ufw-wireguard
-  logpath: /var/log/ufw.log
+  filter: kernel-wireguard
   backend: auto
+  logpath: /var/log/syslog
+  banaction: iptables-allports
+  protocol: udp
   maxretry: 6
   findtime: 10m
   bantime: 1h
