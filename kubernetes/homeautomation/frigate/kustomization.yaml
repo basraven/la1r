@@ -6,6 +6,8 @@ resources:
 - pv/frigate-pvc.yml
 - frigate.yml
 
+generatorOptions:
+  disableNameSuffixHash: true
 
 configMapGenerator:
 - name: frigate-config-file

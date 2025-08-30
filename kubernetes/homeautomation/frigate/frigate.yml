@@ -17,24 +17,7 @@ spec:
         app: frigate
     spec:
       
-      # specificonly only workloads
-      tolerations:
-        - key: "la1r.workload/specificonly"
-          operator: "Equal"
-          value: "true"
-          effect: "NoSchedule"
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-            - matchExpressions:
-              - key: "la1r.workload/specificonly"
-                operator: "In"
-                values:
-                - "true"
-
-      volumes:
-        
+      volumes:  
         # START RASPI specific config
         - name: dshm
           emptyDir:
@@ -94,22 +77,22 @@ spec:
           subPath: config.yml
         - name: frigate-data-volume
           mountPath: /media/frigate
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    app: frigate
-  name: frigate
-  namespace: homeautomation
-spec:
-  ports:
-  - name: http
-    targetPort: 5000
-    port: 80
-  selector:
-    app: frigate
-  type: ClusterIP
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   labels:
+#     app: frigate
+#   name: frigate
+#   namespace: homeautomation
+# spec:
+#   ports:
+#   - name: http
+#     targetPort: 5000
+#     port: 80
+#   selector:
+#     app: frigate
+#   type: ClusterIP
 
 
 ---
@@ -129,41 +112,41 @@ spec:
     app: frigate
   loadBalancerIP: 192.168.6.75
   type: LoadBalancer
----
-apiVersion: cert-manager.io/v1
-kind: Certificate
-metadata:
-  name: frigate-bas
-  namespace: homeautomation
-spec:
-  issuerRef:
-    name: la1r
-    kind: ClusterIssuer
-  secretName: frigate-bas-tls
-  commonName: frigate.bas
-  dnsNames:
-  - frigate.bas
-  - www.frigate.bas
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: frigate-https
-  namespace: homeautomation
-  annotations:
-    traefik.ingress.kubernetes.io/router.tls: "true"
-    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
-spec:
-  tls:
-  - secretName: frigate-bas-tls
-  rules:
-  - host: frigate.bas
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: frigate
-            port:
-              number: 80
+# ---
+# apiVersion: cert-manager.io/v1
+# kind: Certificate
+# metadata:
+#   name: frigate-bas
+#   namespace: homeautomation
+# spec:
+#   issuerRef:
+#     name: la1r
+#     kind: ClusterIssuer
+#   secretName: frigate-bas-tls
+#   commonName: frigate.bas
+#   dnsNames:
+#   - frigate.bas
+#   - www.frigate.bas
+# ---
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: frigate-https
+#   namespace: homeautomation
+#   annotations:
+#     traefik.ingress.kubernetes.io/router.tls: "true"
+#     traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+# spec:
+#   tls:
+#   - secretName: frigate-bas-tls
+#   rules:
+#   - host: frigate.bas
+#     http:
+#       paths:
+#       - path: /
+#         pathType: Prefix
+#         backend:
+#           service:
+#             name: frigate
+#             port:
+#               number: 80
