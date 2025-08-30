@@ -20,3 +20,9 @@ metadata:
   annotations:
     kubernetes.io/service-account.name: kubernetes-dashboard
 type: kubernetes.io/service-account-token
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kubernetes-dashboard
+  namespace: kubernetes-dashboard
