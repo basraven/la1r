@@ -1,0 +1,33 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: authentik-postgres-data
+  namespace: security
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: authentik-postgres-data
+  selector:
+    matchLabels:
+      contenttype: "authentik-postgres-data"
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: authentik-media
+  namespace: security
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: authentik-media
+  selector:
+    matchLabels:
+      contenttype: "authentik-media"
+  resources:
+    requests:
+      storage: 1Gi
+

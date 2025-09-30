@@ -1,0 +1,33 @@
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: authentik-postgres-data-pv
+  labels:
+    contenttype: "authentik-postgres-data"
+spec:
+  capacity:
+    storage: 1Gi
+  storageClassName: authentik-postgres-data
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/mnt/ssd/ha/authentik/postgres"
+
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: authentik-media-pv
+  labels:
+    contenttype: "authentik-media"
+spec:
+  capacity:
+    storage: 1Gi
+  storageClassName: authentik-media
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/mnt/ssd/ha/authentik/media"

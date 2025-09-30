@@ -5,4 +5,5 @@ resources:
 # - middleware.yml
 - kubernetes-dashboard-ingress.yml
 - kubernetes-dashboard-admin.yml
-# - oauth2-proxy
+- dashboard-sso.yml
+- dashboard-sso-token.yml # use this to extract token: kubectl -n kubernetes-dashboard get secret dashboard-sso-token -o jsonpath='{.data.token}' | base64 -d; echo

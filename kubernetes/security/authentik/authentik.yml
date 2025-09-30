@@ -1,0 +1,329 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: authentik-postgres
+  namespace: security
+  labels:
+    app: authentik
+    component: postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: authentik
+      component: postgres
+  template:
+    metadata:
+      labels:
+        app: authentik
+        component: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:16
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: POSTGRES_DB
+          value: authentik
+        - name: POSTGRES_USER
+          value: authentik
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: authentik-secrets
+              key: POSTGRES_PASSWORD
+        ports:
+        - name: postgres
+          containerPort: 5432
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/postgresql/data
+        resources: {}
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: authentik-postgres-data
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: authentik-redis
+  namespace: security
+  labels:
+    app: authentik
+    component: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: authentik
+      component: redis
+  template:
+    metadata:
+      labels:
+        app: authentik
+        component: redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:7
+        imagePullPolicy: IfNotPresent
+        args: ["--save", "", "--appendonly", "no"]
+        ports:
+        - name: redis
+          containerPort: 6379
+        resources: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: authentik-server
+  namespace: security
+  labels:
+    app: authentik
+    component: server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: authentik
+      component: server
+  template:
+    metadata:
+      labels:
+        app: authentik
+        component: server
+    spec:
+      containers:
+      - name: server
+        image: ghcr.io/goauthentik/server:2024.8.1
+        imagePullPolicy: IfNotPresent
+        args: ["server"]
+        env:
+        - name: AUTHENTIK_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: authentik-secrets
+              key: AUTHENTIK_SECRET_KEY
+        - name: AUTHENTIK_BOOTSTRAP_EMAIL
+          valueFrom:
+            secretKeyRef:
+              name: authentik-secrets
+              key: AUTHENTIK_BOOTSTRAP_EMAIL
+        - name: AUTHENTIK_BOOTSTRAP_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: authentik-secrets
+              key: AUTHENTIK_BOOTSTRAP_PASSWORD
+        - name: AUTHENTIK_POSTGRESQL__HOST
+          value: authentik-postgres
+        - name: AUTHENTIK_POSTGRESQL__PORT
+          value: "5432"
+        - name: AUTHENTIK_POSTGRESQL__USER
+          value: authentik
+        - name: AUTHENTIK_POSTGRESQL__NAME
+          value: authentik
+        - name: AUTHENTIK_POSTGRESQL__PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: authentik-secrets
+              key: POSTGRES_PASSWORD
+        - name: AUTHENTIK_REDIS__HOST
+          value: authentik-redis
+        - name: AUTHENTIK_REDIS__PORT
+          value: "6379"
+        - name: AUTHENTIK_ERROR_REPORTING__ENABLED
+          value: "false"
+        - name: AUTHENTIK_LOG_LEVEL
+          value: info
+        - name: AUTHENTIK_WEB__WORKERS
+          value: "2"
+        - name: TZ
+          value: Europe/Amsterdam
+        ports:
+        - name: http
+          containerPort: 9000
+        volumeMounts:
+        - name: media
+          mountPath: /media
+        - name: tmp
+          mountPath: /tmp
+        resources: {}
+      volumes:
+      - name: media
+        persistentVolumeClaim:
+          claimName: authentik-media
+      - name: tmp
+        emptyDir: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: authentik-worker
+  namespace: security
+  labels:
+    app: authentik
+    component: worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: authentik
+      component: worker
+  template:
+    metadata:
+      labels:
+        app: authentik
+        component: worker
+    spec:
+      containers:
+      - name: worker
+        image: ghcr.io/goauthentik/server:2024.8.1
+        imagePullPolicy: IfNotPresent
+        args: ["worker"]
+        env:
+        - name: AUTHENTIK_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: authentik-secrets
+              key: AUTHENTIK_SECRET_KEY
+        - name: AUTHENTIK_POSTGRESQL__HOST
+          value: authentik-postgres
+        - name: AUTHENTIK_POSTGRESQL__PORT
+          value: "5432"
+        - name: AUTHENTIK_POSTGRESQL__USER
+          value: authentik
+        - name: AUTHENTIK_POSTGRESQL__NAME
+          value: authentik
+        - name: AUTHENTIK_POSTGRESQL__PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: authentik-secrets
+              key: POSTGRES_PASSWORD
+        - name: AUTHENTIK_REDIS__HOST
+          value: authentik-redis
+        - name: AUTHENTIK_REDIS__PORT
+          value: "6379"
+        - name: AUTHENTIK_ERROR_REPORTING__ENABLED
+          value: "false"
+        - name: AUTHENTIK_LOG_LEVEL
+          value: info
+        - name: TZ
+          value: Europe/Amsterdam
+        volumeMounts:
+        - name: media
+          mountPath: /media
+        - name: tmp
+          mountPath: /tmp
+        resources: {}
+      volumes:
+      - name: media
+        persistentVolumeClaim:
+          claimName: authentik-media
+      - name: tmp
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: authentik-postgres
+  namespace: security
+  labels:
+    app: authentik
+    component: postgres
+spec:
+  selector:
+    app: authentik
+    component: postgres
+  ports:
+  - name: postgres
+    port: 5432
+    targetPort: 5432
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: authentik-redis
+  namespace: security
+  labels:
+    app: authentik
+    component: redis
+spec:
+  selector:
+    app: authentik
+    component: redis
+  ports:
+  - name: redis
+    port: 6379
+    targetPort: 6379
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: authentik
+  namespace: security
+  labels:
+    app: authentik
+    component: server
+spec:
+  selector:
+    app: authentik
+    component: server
+  ports:
+  - name: http
+    port: 9000
+    targetPort: 9000
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: authentik-bas
+  namespace: security
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: authentik-bas-tls
+  commonName: authentik.bas
+  dnsNames:
+  - authentik.bas
+  - www.authentik.bas
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: authentik-https
+  namespace: security
+  annotations:
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+    # traefik.ingress.kubernetes.io/router.middlewares: "security-sablier-authentik@kubernetescrd"
+spec:
+  ingressClassName: lan
+  tls:
+  - secretName: authentik-bas-tls
+    hosts:
+    - authentik.bas
+    - www.authentik.bas
+  rules:
+  - host: authentik.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: authentik
+            port:
+              number: 9000
+  - host: kubernetes.bas
+    http:
+      paths:
+      - path: /outpost.goauthentik.io
+        pathType: Prefix
+        backend:
+          service:
+            name: authentik
+            port:
+              number: 9000

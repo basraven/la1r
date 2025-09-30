@@ -1,5 +1,5 @@
 ---
-apiVersion: traefik.io/v1alpha1
+apiVersion: traefik.containo.us/v1alpha1
 kind: Middleware
 metadata:
   name: sablier-kubernetes-dashboard
@@ -17,3 +17,28 @@ spec:
         theme: shuffle
       sablierUrl: http://sablier:10000
       sessionDuration: 10m
+
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: authentik-kubernetes-dashboard
+  namespace: kubernetes-dashboard
+spec:
+  forwardAuth:
+    address: http://authentik.security.svc.cluster.local:9000/outpost.goauthentik.io/auth/traefik
+    trustForwardHeader: true
+    authResponseHeaders:
+      - X-Forwarded-User
+      - X-authentik-username
+      - X-authentik-email
+      - X-authentik-groups
+      - X-authentik-uid
+      - X-authentik-name
+      - Authorization
+    authRequestHeaders:
+      - X-Forwarded-Method
+      - X-Forwarded-Proto
+      - X-Forwarded-Host
+      - X-Forwarded-Uri
+      - Cookie
