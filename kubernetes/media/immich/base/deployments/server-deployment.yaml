@@ -27,24 +27,26 @@ spec:
                 - "true"
       containers:
       - name: immich-server
-        image: ghcr.io/immich-app/immich-server:v1.123.0
+        image: ghcr.io/immich-app/immich-server:v2.0.0
         ports:
         - containerPort: 2283
         env:
         - name: DB_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: mariadbsecret
-              key: MYSQL_PASSWORD
+              name: immich-dbsecret
+              key: POSTGRES_PASSWORD
         - name: DB_USERNAME
           valueFrom:
             secretKeyRef:
-              name: mariadbsecret
-              key: MYSQL_USER
+              name: immich-dbsecret
+              key: POSTGRES_USER
         - name: DB_DATABASE_NAME
           value: immich
         - name: REDIS_PORT
           value: "6379"
+        - name: IMMICH_MACHINE_LEARNING_URL
+          value: "http://immich-machine-learning:3003"
         - name: UPLOAD_LOCATION
           value: "/usr/src/app/upload"
         - name: IMMICH_PORT

@@ -49,13 +49,13 @@ spec:
         - name: POSTGRES_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: mariadbsecret
-              key: MYSQL_PASSWORD
+              name: immich-dbsecret
+              key: POSTGRES_PASSWORD
         - name: POSTGRES_USER
           valueFrom:
             secretKeyRef:
-              name: mariadbsecret
-              key: MYSQL_USER
+              name: immich-dbsecret
+              key: POSTGRES_USER
         - name: POSTGRES_DB
           value: immich
         volumeMounts:
