@@ -67,7 +67,7 @@ spec:
     spec:
       containers:
       - name: redis
-        image: redis:7
+        image: redis:8
         imagePullPolicy: IfNotPresent
         args: ["--save", "", "--appendonly", "no"]
         ports:
@@ -97,7 +97,7 @@ spec:
     spec:
       containers:
       - name: server
-        image: ghcr.io/goauthentik/server:2024.8.1
+        image: ghcr.io/goauthentik/server:2025.8.4
         imagePullPolicy: IfNotPresent
         args: ["server"]
         env:
@@ -179,7 +179,7 @@ spec:
     spec:
       containers:
       - name: worker
-        image: ghcr.io/goauthentik/server:2024.8.1
+        image: ghcr.io/goauthentik/server:2025.8.4
         imagePullPolicy: IfNotPresent
         args: ["worker"]
         env:
