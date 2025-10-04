@@ -3,3 +3,4 @@ kind: Kustomization
 
 resources:
 - pihole-pv.yml
+- pihole-pvc.yml

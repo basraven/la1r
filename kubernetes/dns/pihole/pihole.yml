@@ -106,13 +106,13 @@ spec:
           capabilities:
             add:
             - NET_ADMIN
-        resources:
-          requests:
-            memory: "128Mi"
-            cpu: "100m"
-          limits:
-            memory: "512Mi"
-            cpu: "500m"
+        # resources:
+        #   requests:
+        #     memory: "128Mi"
+        #     cpu: "100m"
+        #   limits:
+        #     memory: "512Mi"
+        #     cpu: "500m"
         livenessProbe:
           httpGet:
             path: /admin/
@@ -131,13 +131,11 @@ spec:
           name: pihole-config
           defaultMode: 0644
       - name: pihole-data
-        emptyDir: {}
-        # persistentVolumeClaim:
-        #   claimName: pihole-data-claim
+        persistentVolumeClaim:
+          claimName: pihole-data-claim
       - name: pihole-dnsmasq
-        emptyDir: {}
-        # persistentVolumeClaim:
-        #   claimName: pihole-dnsmasq-claim
+        persistentVolumeClaim:
+          claimName: pihole-dnsmasq-claim
 
 ---
 apiVersion: v1

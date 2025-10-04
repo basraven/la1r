@@ -28,7 +28,6 @@ spec:
   commonName: kubernetes.bas
   dnsNames:
   - kubernetes.bas
-  - www.kubernetes.bas
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
