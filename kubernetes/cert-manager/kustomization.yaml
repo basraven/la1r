@@ -3,4 +3,6 @@ kind: Kustomization
 resources:
 - namespace.yml
 - cert-manager.yml
+- dns-lexicon-webhook.yml
 - cluster-issuer-la1r.yml
+- cluster-issuer-letsencrypt-la1r.yml

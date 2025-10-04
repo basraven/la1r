@@ -274,26 +274,77 @@ spec:
   - name: http
     port: 9000
     targetPort: 9000
+# ---
+# apiVersion: cert-manager.io/v1
+# kind: Certificate
+# metadata:
+#   name: authentik-bas
+#   namespace: security
+# spec:
+#   issuerRef:
+#     name: la1r
+#     kind: ClusterIssuer
+#   secretName: authentik-bas-tls
+#   commonName: authentik.bas
+#   dnsNames:
+#   - authentik.bas
+# ---
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: authentik-https
+#   namespace: security
+#   annotations:
+#     traefik.ingress.kubernetes.io/router.tls: "true"
+#     traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+#     # traefik.ingress.kubernetes.io/router.middlewares: "security-sablier-authentik@kubernetescrd"
+# spec:
+#   ingressClassName: lan
+#   tls:
+#   - secretName: authentik-bas-tls
+#     hosts:
+#     - authentik.bas
+#   rules:
+#   - host: authentik.bas
+#     http:
+#       paths:
+#       - path: /
+#         pathType: Prefix
+#         backend:
+#           service:
+#             name: authentik
+#             port:
+#               number: 9000
+#   - host: kubernetes.bas
+#     http:
+#       paths:
+#       - path: /outpost.goauthentik.io
+#         pathType: Prefix
+#         backend:
+#           service:
+#             name: authentik
+#             port:
+#               number: 9000
+
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: authentik-bas
+  name: letsencrypt-authentik-bas
   namespace: security
 spec:
   issuerRef:
-    name: la1r
+    name: letsencrypt-la1r
     kind: ClusterIssuer
-  secretName: authentik-bas-tls
-  commonName: authentik.bas
+  secretName: letsencrypt-authentik-bas-tls
+  commonName: auth.la1r.com
   dnsNames:
-  - authentik.bas
-  - www.authentik.bas
+  - auth.la1r.com
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: authentik-https
+  name: letsencrypt-authentik-https
   namespace: security
   annotations:
     traefik.ingress.kubernetes.io/router.tls: "true"
@@ -302,25 +353,14 @@ metadata:
 spec:
   ingressClassName: lan
   tls:
-  - secretName: authentik-bas-tls
+  - secretName: letsencrypt-authentik-bas-tls
     hosts:
-    - authentik.bas
-    - www.authentik.bas
+    - auth.la1r.com
   rules:
-  - host: authentik.bas
+  - host: auth.la1r.com
     http:
       paths:
       - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: authentik
-            port:
-              number: 9000
-  - host: kubernetes.bas
-    http:
-      paths:
-      - path: /outpost.goauthentik.io
         pathType: Prefix
         backend:
           service:

@@ -1,0 +1,68 @@
+# ---
+# apiVersion: cert-manager.io/v1
+# kind: ClusterIssuer
+# metadata:
+#   name: letsencrypt-la1r-staging
+# spec:
+#   acme:
+#     # Update to your email for Let's Encrypt account notifications
+#     email: admin@la1r.com
+#     privateKeySecretRef:
+#       name: letsencrypt-la1r-staging
+#     server: https://acme-staging-v02.api.letsencrypt.org/directory
+#     solvers:
+#     - selector:
+#         dnsZones:
+#         - "la1r.com"
+#       dns01:
+#         cnameStrategy: Follow
+#         webhook:
+#           # MUST match the groupName you install the Lexicon webhook with
+#           groupName: dns-lexicon.la1r.com
+#           solverName: lexicon
+#           config:
+#             provider: namecheap
+#             # If your provider needs password instead of token, set to true
+#             usePassword: false
+#             # Set to false for staging requests
+#             production: false
+#             ttl: 600
+#             apiKeyRef:
+#               name: namecheap-api-key
+#               key: key
+#             apiSecretRef:
+#               name: namecheap-api-key
+#               key: secret
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-la1r
+spec:
+  acme:
+    # Update to your email for Let's Encrypt account notifications
+    email: admin@la1r.com
+    privateKeySecretRef:
+      name: letsencrypt-la1r
+    server: https://acme-v02.api.letsencrypt.org/directory
+    solvers:
+    - selector:
+        dnsZones:
+        - "la1r.com"
+      dns01:
+        cnameStrategy: Follow
+        webhook:
+          # MUST match the groupName you install the Lexicon webhook with
+          groupName: dns-lexicon.la1r.com
+          solverName: lexicon
+          config:
+            provider: namecheap
+            usePassword: false
+            production: true
+            ttl: 600
+            apiKeyRef:
+              name: namecheap-api-key
+              key: key
+            apiSecretRef:
+              name: namecheap-api-key
+              key: secret

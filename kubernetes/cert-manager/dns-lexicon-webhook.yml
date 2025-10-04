@@ -1,0 +1,256 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: dns-lexicon-webhook
+  namespace: cert-manager
+  labels:
+    app: dns-lexicon-webhook
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: dns-lexicon-webhook
+  labels:
+    app: dns-lexicon-webhook
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - "secrets"
+      - "configmaps"
+    verbs:
+      - "get"
+      - "list"
+      - "watch"
+  - apiGroups:
+      - "flowcontrol.apiserver.k8s.io"
+    resources:
+      - 'prioritylevelconfigurations'
+      - 'flowschemas'
+    verbs:
+      - 'list'
+      - 'watch'
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: dns-lexicon-webhook
+  labels:
+    app: dns-lexicon-webhook
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: dns-lexicon-webhook
+subjects:
+  - kind: ServiceAccount
+    name: dns-lexicon-webhook
+    namespace: cert-manager
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: dns-lexicon-webhook:webhook-authentication-reader
+  namespace: kube-system
+  labels:
+    app: dns-lexicon-webhook
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: extension-apiserver-authentication-reader
+subjects:
+  - apiGroup: ""
+    kind: ServiceAccount
+    name: dns-lexicon-webhook
+    namespace: cert-manager
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: dns-lexicon-webhook:auth-delegator
+  labels:
+    app: dns-lexicon-webhook
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:auth-delegator
+subjects:
+  - apiGroup: ""
+    kind: ServiceAccount
+    name: dns-lexicon-webhook
+    namespace: cert-manager
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: dns-lexicon-webhook:domain-solver
+  labels:
+    app: dns-lexicon-webhook
+rules:
+  - apiGroups:
+      - dns-lexicon.la1r.com
+    resources:
+      - '*'
+    verbs:
+      - 'create'
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: dns-lexicon-webhook:domain-solver
+  labels:
+    app: dns-lexicon-webhook
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: dns-lexicon-webhook:domain-solver
+subjects:
+  - apiGroup: ""
+    kind: ServiceAccount
+    name: cert-manager
+    namespace: cert-manager
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: dns-lexicon-webhook-selfsigned-issuer
+  namespace: cert-manager
+  labels:
+    app: dns-lexicon-webhook
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: dns-lexicon-webhook-ca
+  namespace: cert-manager
+  labels:
+    app: dns-lexicon-webhook
+spec:
+  secretName: dns-lexicon-webhook-ca
+  duration: 43800h # 5y
+  issuerRef:
+    name: dns-lexicon-webhook-selfsigned-issuer
+  commonName: "ca.dns-lexicon-webhook.cert-manager"
+  isCA: true
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: dns-lexicon-webhook-ca-issuer
+  namespace: cert-manager
+  labels:
+    app: dns-lexicon-webhook
+spec:
+  ca:
+    secretName: dns-lexicon-webhook-ca
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: dns-lexicon-webhook-webhook-tls
+  namespace: cert-manager
+  labels:
+    app: dns-lexicon-webhook
+spec:
+  secretName: dns-lexicon-webhook-webhook-tls
+  duration: 8760h # 1y
+  issuerRef:
+    name: dns-lexicon-webhook-ca-issuer
+  dnsNames:
+  - dns-lexicon-webhook
+  - dns-lexicon-webhook.cert-manager
+  - dns-lexicon-webhook.cert-manager.svc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dns-lexicon-webhook
+  namespace: cert-manager
+  labels:
+    app: dns-lexicon-webhook
+spec:
+  type: ClusterIP
+  ports:
+    - port: 443
+      targetPort: https
+      protocol: TCP
+      name: https
+  selector:
+    app: dns-lexicon-webhook
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dns-lexicon-webhook
+  namespace: cert-manager
+  labels:
+    app: dns-lexicon-webhook
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dns-lexicon-webhook
+  template:
+    metadata:
+      labels:
+        app: dns-lexicon-webhook
+    spec:
+      serviceAccountName: dns-lexicon-webhook
+      containers:
+        - name: dns-lexicon-webhook
+          image: "taxilian/cert-manager-dns-lexicon-webhook:latest"
+          imagePullPolicy: IfNotPresent
+          args:
+            - --tls-cert-file=/tls/tls.crt
+            - --tls-private-key-file=/tls/tls.key
+          env:
+            - name: GROUP_NAME
+              value: "dns-lexicon.la1r.com"
+          ports:
+            - name: https
+              containerPort: 443
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              scheme: HTTPS
+              path: /healthz
+              port: https
+          readinessProbe:
+            httpGet:
+              scheme: HTTPS
+              path: /healthz
+              port: https
+          volumeMounts:
+            - name: certs
+              mountPath: /tls
+              readOnly: true
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 50m
+              memory: 64Mi
+      volumes:
+        - name: certs
+          secret:
+            secretName: dns-lexicon-webhook-webhook-tls
+---
+apiVersion: apiregistration.k8s.io/v1
+kind: APIService
+metadata:
+  name: v1alpha1.dns-lexicon.la1r.com
+  labels:
+    app: dns-lexicon-webhook
+  annotations:
+    cert-manager.io/inject-ca-from: "cert-manager/dns-lexicon-webhook-webhook-tls"
+spec:
+  group: dns-lexicon.la1r.com
+  groupPriorityMinimum: 1000
+  versionPriority: 15
+  service:
+    name: dns-lexicon-webhook
+    namespace: cert-manager
+  version: v1alpha1

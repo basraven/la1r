@@ -8,6 +8,12 @@ data:
         forward . 192.168.6.91
     }
     
+    auth.la1r.com:53 {
+        errors
+        cache 30
+        forward . 192.168.6.91
+    }
+    
     .:53 {
         errors
         health {
