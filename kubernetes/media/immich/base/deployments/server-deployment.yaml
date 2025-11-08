@@ -25,9 +25,13 @@ spec:
                 operator: In
                 values:
                 - "true"
+      runtimeClassName: nvidia
       containers:
       - name: immich-server
         image: ghcr.io/immich-app/immich-server:v2.0.1
+        resources:
+          limits:
+            nvidia.com/gpu: 1
         ports:
         - containerPort: 2283
         env:
@@ -51,6 +55,8 @@ spec:
           value: "/usr/src/app/upload"
         - name: IMMICH_PORT
           value: "2283"
+        - name: NVIDIA_DRIVER_CAPABILITIES
+          value: "compute,video,utility"
         # - name: IMMICH_MACHINE_LEARNING_SERVICE_HOST
         #   value: "192.168.6.182"
         volumeMounts:

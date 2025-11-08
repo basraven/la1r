@@ -12,7 +12,7 @@ spec:
       containers:
       - name: nvidia-smi
         image: nvidia/cuda:12.2.0-base-ubuntu22.04
-        command: ["bash","-lc","nvidia-smi -L && nvidia-smi --query-gpu=power.draw,pstate,clocks.gr,clocks.sm,clocks.mem --format=csv,noheader"]
+        command: ["bash","-lc","nvidia-smi -L; nvidia-smi --query-gpu=power.draw,pstate,clocks.gr,clocks.sm,clocks.mem --format=csv,noheader; sleep 60"]
         resources:
           limits:
             nvidia.com/gpu: 1

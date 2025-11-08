@@ -35,6 +35,8 @@ spec:
       - name: nvidia-device-plugin-ctr
         image: nvcr.io/nvidia/k8s-device-plugin:v0.14.5
         imagePullPolicy: IfNotPresent
+        args:
+        - --config-file=/etc/nvidia/config/config.yaml
         env:
         - name: NVIDIA_VISIBLE_DEVICES
           value: "all"
@@ -52,6 +54,9 @@ spec:
         - name: rootfs
           mountPath: /driver-root
           readOnly: true
+        - name: dp-config
+          mountPath: /etc/nvidia/config
+          readOnly: true
       volumes:
       - name: device-plugin
         hostPath:
@@ -59,9 +64,32 @@ spec:
       - name: rootfs
         hostPath:
           path: /
+      - name: dp-config
+        configMap:
+          name: nvidia-device-plugin-config
+          items:
+          - key: config.yaml
+            path: config.yaml
 ---
 apiVersion: node.k8s.io/v1
 kind: RuntimeClass
 metadata:
   name: nvidia
 handler: nvidia
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nvidia-device-plugin-config
+  namespace: kube-system
+data:
+  config.yaml: |
+    version: v1
+    flags:
+      migStrategy: none
+    sharing:
+      timeSlicing:
+        resources:
+          - name: nvidia.com/gpu
+            replicas: 3

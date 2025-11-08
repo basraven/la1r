@@ -25,9 +25,13 @@ spec:
                 operator: In
                 values:
                 - "true"
+      runtimeClassName: nvidia
       containers:
       - name: immich-machine-learning
-        image: ghcr.io/immich-app/immich-machine-learning:release
+        image: ghcr.io/immich-app/immich-machine-learning:main-cuda
+        resources:
+          limits:
+            nvidia.com/gpu: 1
         ports:
           - containerPort: 3003
         volumeMounts:
