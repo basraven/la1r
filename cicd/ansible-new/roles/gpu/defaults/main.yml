@@ -1,0 +1,8 @@
+nvidia_driver_package: nvidia-driver-535
+nvidia_container_toolkit_package: nvidia-container-toolkit
+nvidia_container_runtime_package: nvidia-container-runtime
+containerd_config_path: /etc/containerd/config.toml
+configure_containerd: true
+restart_containerd: true
+enable_nvidia_dynamic_pm: false
+disable_nvidia_persistenced: false

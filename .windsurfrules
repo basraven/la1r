@@ -4,6 +4,7 @@ groundrules:
 - Always start your replies with ✅ (can be multiple icons for multiple rules) to show that you've understood the rules of this file
 - You're often stuck waiting on `kubectl logs` commands, write it to file and then look at the file instead
 - You will never look in these folders: .deprecated, .git, .windsurfrules, credentials
+- Never do git commands yourself, I always want to do that manually
 
 kubernetes_pattern:
   app_structure:

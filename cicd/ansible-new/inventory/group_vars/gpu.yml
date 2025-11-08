@@ -1,0 +1,4 @@
+---
+# GPU node settings
+enable_nvidia_dynamic_pm: true
+disable_nvidia_persistenced: true

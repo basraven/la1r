@@ -1,0 +1,19 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: nvidia-smi-test
+  namespace: kube-system
+spec:
+  template:
+    spec:
+      runtimeClassName: nvidia
+      restartPolicy: Never
+      containers:
+      - name: nvidia-smi
+        image: nvidia/cuda:12.2.0-base-ubuntu22.04
+        command: ["bash","-lc","nvidia-smi -L && nvidia-smi --query-gpu=power.draw,pstate,clocks.gr,clocks.sm,clocks.mem --format=csv,noheader"]
+        resources:
+          limits:
+            nvidia.com/gpu: 1
+  backoffLimit: 0

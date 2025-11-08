@@ -29,10 +29,13 @@ spec:
                 operator: In
                 values:
                 - "true"
+      runtimeClassName: nvidia
       containers:
       - name: jellyfin
         image: jellyfin/jellyfin
         resources:
+          limits:
+            nvidia.com/gpu: 1
         #   requests:
         #     memory: "1024Mi"
         #     cpu: "300m"
@@ -47,6 +50,8 @@ spec:
           value: "Europe//Amsterdam"
         - name: JELLYFIN_PublishedServerUrl
           value: "http://192.168.6.2:8096/"
+        - name: NVIDIA_DRIVER_CAPABILITIES
+          value: "compute,video,utility"
         volumeMounts:
           - name: jellyfin-torrent-volume
             mountPath: /torrent

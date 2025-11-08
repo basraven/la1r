@@ -1,0 +1,89 @@
+---
+- name: Install prerequisites for repo and key
+  ansible.builtin.apt:
+    name:
+      - curl
+      - gnupg
+      - ca-certificates
+    state: present
+    update_cache: yes
+
+- name: Ensure NVIDIA container toolkit apt key is installed (optional)
+  ansible.builtin.shell: |
+    set -euo pipefail
+    curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey \
+      | gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
+  args:
+    creates: /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
+    executable: /bin/bash
+  when: install_nvidia_container_toolkit_repo | default(true)
+
+- name: Ensure NVIDIA container toolkit apt repo is configured (optional)
+  ansible.builtin.shell: |
+    set -euo pipefail
+    curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list \
+      | sed -e 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' \
+      > /etc/apt/sources.list.d/nvidia-container-toolkit.list
+  args:
+    creates: /etc/apt/sources.list.d/nvidia-container-toolkit.list
+    executable: /bin/bash
+  when: install_nvidia_container_toolkit_repo | default(true)
+
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: yes
+
+- name: Install NVIDIA driver and container toolkit
+  ansible.builtin.apt:
+    name:
+      - "{{ nvidia_driver_package }}"
+      - "{{ nvidia_container_toolkit_package }}"
+      - "{{ nvidia_container_runtime_package }}"
+      - linux-headers-generic
+    state: present
+    update_cache: yes
+
+- name: Ensure containerd config exists
+  ansible.builtin.command: bash -lc 'containerd config default > {{ containerd_config_path }}'
+  args:
+    creates: "{{ containerd_config_path }}"
+
+- name: Configure NVIDIA runtime in containerd
+  ansible.builtin.blockinfile:
+    path: "{{ containerd_config_path }}"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK nvidia-runtime"
+    insertafter: '^\[plugins\."io.containerd.grpc.v1.cri"\.containerd\]$'
+    block: |
+      [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia]
+        runtime_type = "io.containerd.runc.v2"
+        privileged_without_host_devices = false
+        [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.nvidia.options]
+          BinaryName = "/usr/bin/nvidia-container-runtime"
+  when: configure_containerd
+
+- name: Restart containerd
+  ansible.builtin.service:
+    name: containerd
+    state: restarted
+  when: restart_containerd
+
+- name: Enable dynamic power management for NVIDIA (optional)
+  ansible.builtin.copy:
+    dest: /etc/modprobe.d/nvidia-pm.conf
+    content: |
+      options nvidia NVreg_DynamicPowerManagement=0x02
+    owner: root
+    group: root
+    mode: '0644'
+  when: enable_nvidia_dynamic_pm | default(false)
+
+- name: Update initramfs after PM change (optional)
+  ansible.builtin.command: update-initramfs -u
+  when: enable_nvidia_dynamic_pm | default(false)
+
+- name: Disable nvidia-persistenced service (optional)
+  ansible.builtin.service:
+    name: nvidia-persistenced
+    state: stopped
+    enabled: no
+  when: disable_nvidia_persistenced | default(false)

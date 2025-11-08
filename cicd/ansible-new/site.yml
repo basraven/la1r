@@ -29,3 +29,9 @@
     # - { role: haproxy, tags: ['haproxy'], when: "'ha_proxy_settings' in hostvars[inventory_hostname]" }
 #     - { role: kubernetes-install, tags: ['kubernetes'] }
 #     - { role: kubernetes-join, tags: ['kubernetes'] }
+
+- name: Configure GPU nodes
+  hosts: gpu
+  become: true
+  roles:
+    - { role: gpu, tags: ['gpu'] }
