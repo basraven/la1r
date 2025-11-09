@@ -1,0 +1,17 @@
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata:
+  name: weekly-sonarr-cloud-backup
+spec:
+  schedule: "30 11 * * 0" # Every Sunday at 11:30 AM
+  concurrencyPolicy: "Forbid"
+  timezone: "Europe/Amsterdam"
+  workflowSpec:
+    workflowTemplateRef:
+      name: nonessential-cloud-backup
+    arguments:
+      parameters:
+        - name: appname
+          value: "sonarr"
+        - name: localpath
+          value: "/mnt/ssd/na/sonarr-config"

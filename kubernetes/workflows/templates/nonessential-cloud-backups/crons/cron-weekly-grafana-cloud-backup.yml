@@ -1,0 +1,17 @@
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata:
+  name: weekly-grafana-cloud-backup
+spec:
+  schedule: "13 12 * * 0" # Every Sunday at 12:13 AM
+  concurrencyPolicy: "Forbid"
+  timezone: "Europe/Amsterdam"
+  workflowSpec:
+    workflowTemplateRef:
+      name: nonessential-cloud-backup
+    arguments:
+      parameters:
+        - name: appname
+          value: "grafana"
+        - name: localpath
+          value: "/mnt/ssd/na/grafana"

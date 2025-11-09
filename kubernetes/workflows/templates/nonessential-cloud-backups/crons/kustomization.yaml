@@ -3,3 +3,8 @@ kind: Kustomization
 resources:
 - cron-weekly-jackett-cloud-backup.yml
 - cron-weekly-jellyseerr-cloud-backup.yml
+- cron-weekly-radarr-cloud-backup.yml
+- cron-weekly-sonarr-cloud-backup.yml
+- cron-weekly-grafana-cloud-backup.yml
+- cron-weekly-prometheus-cloud-backup.yml
+- cron-weekly-monica-cloud-backup.yml

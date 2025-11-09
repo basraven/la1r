@@ -1,0 +1,17 @@
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata:
+  name: weekly-radarr-cloud-backup
+spec:
+  schedule: "22 13 * * 0" # Every Sunday at 13:22 AM
+  concurrencyPolicy: "Forbid"
+  timezone: "Europe/Amsterdam"
+  workflowSpec:
+    workflowTemplateRef:
+      name: nonessential-cloud-backup
+    arguments:
+      parameters:
+        - name: appname
+          value: "radarr"
+        - name: localpath
+          value: "/mnt/ssd/na/radarr-config"
