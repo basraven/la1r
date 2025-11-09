@@ -11,5 +11,7 @@ spec:
       name: nonessential-cloud-backup
     arguments:
       parameters:
+        - name: appname
+          value: "jackett"
         - name: localpath
           value: "/mnt/ssd/na/jackett-config"

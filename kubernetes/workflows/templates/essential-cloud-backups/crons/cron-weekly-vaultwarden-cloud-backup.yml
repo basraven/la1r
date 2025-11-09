@@ -8,4 +8,10 @@ spec:
   timezone: "Europe/Amsterdam"
   workflowSpec:
     workflowTemplateRef:
-      name: vaultwarden-cloud-backup
+      name: essential-cloud-backup
+    arguments:
+      parameters:
+        - name: appname
+          value: "vaultwarden"
+        - name: localpath
+          value: "/mnt/ssd/ha/vaultwarden"

@@ -19,20 +19,22 @@ spec:
     parameters:
       - name: bucket
         value: "la1r-backup-backup-data"   # default bucket name
+      - name: appname
       - name: localpath
-        # value: "/mnt/ssd/ha/frigate"
+        # value: "/mnt/ssd/na/frigate"
       - name: storageclass
         value: "STANDARD_IA"
   volumes:
     - name: work # working dir
       persistentVolumeClaim:
         claimName: nonessential-workingdir-claim
-  onExit: clean-workingdir
+  onExit: exit-handler
   templates:
     - name: nonessential-cloud-backup
       inputs:
         parameters:
           - name: bucket
+          - name: appname
           - name: localpath
           - name: storageclass
       dag:
@@ -50,6 +52,8 @@ spec:
               parameters:
                 - name: bucket
                   value: "{{inputs.parameters.bucket}}"
+                - name: bucketpath
+                  value: "na/{{inputs.parameters.appname}}/{{inputs.parameters.appname}}.gpg"
                 - name: localpath
                   value: "{{inputs.parameters.localpath}}"
                 - name: storageclass
@@ -107,6 +111,7 @@ spec:
       inputs:
         parameters:
           - name: bucket
+          - name: bucketpath
           - name: localpath
           - name: storageclass
       container:
@@ -114,13 +119,13 @@ spec:
         command: [sh, -c]
         args:
           - |
-            echo "Uploading /mnt/work{{inputs.parameters.localpath}}/backup.gpg to bucket: {{inputs.parameters.bucket}} at: {{inputs.parameters.localpath}}"
+            echo "Uploading /mnt/work{{inputs.parameters.localpath}}/backup.gpg to bucket: {{inputs.parameters.bucket}} at: {{inputs.parameters.bucketpath}}"
             NEW_SHA256=$(cat /mnt/work{{inputs.parameters.localpath}}/backup.sha256 | tr -d '[:space:]')
 
             # Try to get existing object's sha256 tag
             S3_SHA256=$(aws s3api get-object-tagging \
               --bucket "{{inputs.parameters.bucket}}" \
-              --key "{{inputs.parameters.localpath}}.gpg" \
+              --key "{{inputs.parameters.bucketpath}}" \
               --query "TagSet[?Key=='sha256'].Value | [0]" \
               --output text 2>/dev/null | tr -d '[:space:]')
 
@@ -130,7 +135,7 @@ spec:
                 echo "SHA256 changed or object does not exist. Uploading new version..."
                  aws s3api put-object \
                   --bucket "{{inputs.parameters.bucket}}" \
-                  --key "{{inputs.parameters.localpath}}.gpg" \
+                  --key "{{inputs.parameters.bucketpath}}" \
                   --body /mnt/work{{inputs.parameters.localpath}}/backup.gpg \
                   --storage-class {{inputs.parameters.storageclass}} \
                   --tagging "sha256=$NEW_SHA256" \
@@ -177,3 +182,41 @@ spec:
           - name: work
             mountPath: /mnt/work
         
+    - name: exit-handler
+      dag:
+        tasks:
+          - name: notify-success
+            template: notify
+            when: "{{workflow.status}} == Succeeded"
+            arguments:
+              parameters:
+                - name: status
+                  value: "Succeeded"
+          - name: notify-failure
+            template: notify
+            when: "{{workflow.status}} != Succeeded"
+            arguments:
+              parameters:
+                - name: status
+                  value: "Failed"
+          - name: cleanup
+            depends: "notify-success.Succeeded || notify-success.Failed || notify-success.Skipped || notify-failure.Succeeded || notify-failure.Failed || notify-failure.Skipped"
+            template: clean-workingdir
+
+    - name: notify
+      inputs:
+        parameters:
+          - name: status
+      container:
+        image: curlimages/curl:8.7.1
+        command: [sh, -c]
+        args:
+          - |
+            set -euo pipefail
+            URL="http://ntfy.monitoring.svc.cluster.local/backup"
+            MSG="{{workflow.parameters.appname}} backup {{inputs.parameters.status}} for workflow {{workflow.name}} in ns {{workflow.namespace}}. Bucket: {{workflow.parameters.bucket}} Path: na/{{workflow.parameters.appname}}/{{workflow.parameters.appname}}.gpg"
+            echo "Sending ntfy notification to $URL"
+            curl -fsS -X POST \
+              -H "Title: {{workflow.parameters.appname}} backup {{inputs.parameters.status}}" \
+              --data "$MSG" \
+              "$URL"

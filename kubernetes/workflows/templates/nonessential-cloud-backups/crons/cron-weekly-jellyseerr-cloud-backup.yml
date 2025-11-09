@@ -11,5 +11,7 @@ spec:
       name: nonessential-cloud-backup
     arguments:
       parameters:
+        - name: appname
+          value: "jellyseerr"
         - name: localpath
           value: "/mnt/ssd/na/jellyseerr-config"
