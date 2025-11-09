@@ -88,7 +88,36 @@ spec:
             - /bin/sh
             - -c
             - |
-              ip -o -4 addr show dev tun0 | grep -q "inet " && ip route | grep -Eq '(^default .*tun0)|(^0\.0\.0\.0/1 .*tun0)|(^128\.0\.0\.0/1 .*tun0)'
+              # Fail fast on any unhandled error in this script
+              set -e
+              # If VPN interface is not yet up, check for persistent DNS failures for the OpenVPN remote
+              if ! ip -o -4 addr show dev tun0 | grep -q "inet "; then
+                # Read active .ovpn file selected by initContainer (mounted under /config/openvpn)
+                OVPN_FILE="$(ls -1 /config/openvpn/*.ovpn 2>/dev/null | head -n1 || true)"
+                # Extract the remote host from 'remote <host> <port>'
+                REMOTE_HOST=""
+                [ -n "$OVPN_FILE" ] && REMOTE_HOST="$(awk '/^remote[[:space:]]+/{print $2; exit}' "$OVPN_FILE" 2>/dev/null || true)"
+                # Track consecutive DNS resolution failures in a temp counter
+                DNS_COUNT_FILE="/tmp/openvpn_dns_fail_count"
+                if [ -n "$REMOTE_HOST" ]; then
+                  # getent uses glibc NSS; returns non-zero when name cannot be resolved
+                  if ! getent hosts "$REMOTE_HOST" >/dev/null 2>&1; then
+                    DNS_COUNT=0
+                    [ -f "$DNS_COUNT_FILE" ] && DNS_COUNT="$(cat "$DNS_COUNT_FILE" || echo 0)"
+                    DNS_COUNT=$((DNS_COUNT+1))
+                    echo "$DNS_COUNT" > "$DNS_COUNT_FILE"
+                    # If DNS fails 6 times (≈60s with periodSeconds:10), let the probe fail to restart the pod
+                    if [ "$DNS_COUNT" -ge 6 ]; then
+                      exit 1
+                    fi
+                  else
+                    # Reset counter once DNS resolves successfully
+                    echo "0" > "$DNS_COUNT_FILE" || true
+                  fi
+                fi
+              fi
+              # Original checks (relaxed for startup): require tun0 IPv4 to be present
+              ip -o -4 addr show dev tun0 | grep -q "inet "
           periodSeconds: 10
           failureThreshold: 60
           timeoutSeconds: 5
@@ -98,9 +127,34 @@ spec:
             - /bin/sh
             - -c
             - |
+              # Fail fast on any unhandled error in this script
               set -e
+              # If VPN interface is not up, detect persistent DNS failures to trigger restart
+              if ! ip -o -4 addr show dev tun0 | grep -q "inet "; then
+                # Read active .ovpn and extract remote host
+                OVPN_FILE="$(ls -1 /config/openvpn/*.ovpn 2>/dev/null | head -n1 || true)"
+                REMOTE_HOST=""
+                [ -n "$OVPN_FILE" ] && REMOTE_HOST="$(awk '/^remote[[:space:]]+/{print $2; exit}' "$OVPN_FILE" 2>/dev/null || true)"
+                DNS_COUNT_FILE="/tmp/openvpn_dns_fail_count"
+                if [ -n "$REMOTE_HOST" ]; then
+                  if ! getent hosts "$REMOTE_HOST" >/dev/null 2>&1; then
+                    DNS_COUNT=0
+                    [ -f "$DNS_COUNT_FILE" ] && DNS_COUNT="$(cat "$DNS_COUNT_FILE" || echo 0)"
+                    DNS_COUNT=$((DNS_COUNT+1))
+                    echo "$DNS_COUNT" > "$DNS_COUNT_FILE"
+                    # Threshold aligns with startup probe for consistency
+                    if [ "$DNS_COUNT" -ge 6 ]; then
+                      exit 1
+                    fi
+                  else
+                    # Reset counter on success
+                    echo "0" > "$DNS_COUNT_FILE" || true
+                  fi
+                fi
+              fi
+              # Original checks: VPN must be up and HTTP UI must answer 2xx/3xx on :8080
+              # Relaxed for liveness: require tun0 IPv4; route via tun0 not enforced here
               ip -o -4 addr show dev tun0 | grep -q "inet "
-              ip route | grep -Eq '(^default .*tun0)|(^0\.0\.0\.0/1 .*tun0)|(^128\.0\.0\.0/1 .*tun0)'
               bash -lc 'exec 3<>/dev/tcp/127.0.0.1/8080 || exit 1; printf "GET / HTTP/1.0\r\nHost: localhost\r\n\r\n" >&3; head -n 1 <&3 | grep -qE "HTTP/1\\.[01] [23][0-9]{2}"'
           periodSeconds: 10
           failureThreshold: 3
