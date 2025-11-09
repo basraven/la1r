@@ -3,7 +3,7 @@ kind: CronWorkflow
 metadata:
   name: weekly-prometheus-cloud-backup
 spec:
-  schedule: "13 12 * * 0" # Every Sunday at 12:13 AM
+  schedule: "30 12 * * 0" # Every Sunday at 12:30 AM
   concurrencyPolicy: "Forbid"
   timezone: "Europe/Amsterdam"
   workflowSpec:
