@@ -15,6 +15,8 @@ spec:
               operator: In
               values:
               - jay-c
+    hostNetwork: true
+    dnsPolicy: ClusterFirstWithHostNet
   arguments:
     parameters:
       - name: backupServer
@@ -38,16 +40,17 @@ spec:
                   value: "{{item.targetMount}}"
                 - name: backupTarget
                   value: "{{item.backupTarget}}"
+                
+                # {"sourceMount": "//192.168.5.2/ssd-na", "targetMount": "/mnt/stephanie/ssd/na", "backupTarget": "/mnt/hdd/backup/stephanie/ssd/na"},
+                # {"sourceMount": "//192.168.5.2/ssd-ha", "targetMount": "/mnt/stephanie/ssd/ha", "backupTarget": "/mnt/hdd/backup/stephanie/ssd/ha"},
+
+                # {"sourceMount": "//192.168.5.3/hdd-media", "targetMount": "/mnt/jay-c/hdd/media", "backupTarget": "/mnt/hdd/backup/jay-c/hdd/media"},
+                # {"sourceMount": "//192.168.5.3/hdd-na", "targetMount": "/mnt/jay-c/hdd/na", "backupTarget": "/mnt/hdd/backup/jay-c/hdd/na"},
+                # {"sourceMount": "//192.168.5.3/hdd-ha", "targetMount": "/mnt/jay-c/hdd/ha", "backupTarget": "/mnt/hdd/backup/jay-c/hdd/ha"},
+                # {"sourceMount": "//192.168.5.3/ssd-ha", "targetMount": "/mnt/jay-c/ssd/ha", "backupTarget": "/mnt/hdd/backup/jay-c/ssd/ha"},
             withParam: |
               [                
-                {"sourceMount": "//192.168.5.2/ssd-na", "targetMount": "/mnt/stephanie/ssd/na", "backupTarget": "/mnt/hdd/backup/stephanie/ssd/na"},
-                {"sourceMount": "//192.168.5.2/ssd-ha", "targetMount": "/mnt/stephanie/ssd/ha", "backupTarget": "/mnt/hdd/backup/stephanie/ssd/ha"},
-
-                {"sourceMount": "//192.168.5.3/hdd-media", "targetMount": "/mnt/jay-c/hdd/media", "backupTarget": "/mnt/hdd/backup/jay-c/hdd/media"},
-                {"sourceMount": "//192.168.5.3/hdd-na", "targetMount": "/mnt/jay-c/hdd/na", "backupTarget": "/mnt/hdd/backup/jay-c/hdd/na"},
-                {"sourceMount": "//192.168.5.3/hdd-ha", "targetMount": "/mnt/jay-c/hdd/ha", "backupTarget": "/mnt/hdd/backup/jay-c/hdd/ha"},
-                {"sourceMount": "//192.168.5.3/ssd-ha", "targetMount": "/mnt/jay-c/ssd/ha", "backupTarget": "/mnt/hdd/backup/jay-c/ssd/ha"},
-                {"sourceMount": "//192.168.5.3/hdd-ha", "targetMount": "/mnt/jay-c/hdd/ha", "backupTarget": "/mnt/hdd/backup/jay-c/hdd/ha"}
+                {"sourceMount": "//192.168.5.3/ssd-na", "targetMount": "/mnt/jay-c/ssd/na", "backupTarget": "/mnt/hdd/backup/jay-c/ssd/na.borg"}
               ]    
 
     - name: make-backup
@@ -63,8 +66,18 @@ spec:
         args:
           - |
             apk add --no-cache openssh
-            ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i /root/.ssh/id_rsa {{inputs.parameters.backupServer}} << 'EOF'
+            
+            # Copy over the borg keys
+            ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i /root/.ssh/id_rsa {{inputs.parameters.backupServer}} 'mkdir -p ~/.config/borg/keys && chmod 700 ~/.config/borg/keys'
+            scp -i /root/.ssh/id_rsa -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null /etc/borg/keys/* {{inputs.parameters.backupServer}}:~/.config/borg/keys/
+            ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i /root/.ssh/id_rsa {{inputs.parameters.backupServer}} 'chmod 600 ~/.config/borg/keys/*'
+            
+            # Run the backup script
+            ssh -T -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i /root/.ssh/id_rsa {{inputs.parameters.backupServer}} 'bash --noprofile --norc -seu -o pipefail' << 'EOF'
               echo "Running remotely..."
+              
+              # Install BorgBackup if not installed
+              sudo apt install borgbackup -y  
               # Mounting remote sourceMount to local targetMount
               echo "Unmounting {{inputs.parameters.targetMount}} if exist"
               sudo umount {{inputs.parameters.targetMount}} || true
@@ -77,14 +90,58 @@ spec:
               TOTAL_KB=$(du -sk "{{inputs.parameters.targetMount}}" | cut -f1)
               if [ "$TOTAL_KB" -gt 1024 ]; then
                 echo "Directory has content, proceeding with rsync"
-                sudo rsync -azv --progress --delete "{{inputs.parameters.targetMount}}/" "{{inputs.parameters.backupTarget}}/"                 
+                # sudo rsync -azv --progress --delete "{{inputs.parameters.targetMount}}/" "{{inputs.parameters.backupTarget}}/"                 
+                
+                # Run borg create (non-interactive). If any source missing, borg will error; adjust as needed.
+                echo "Starting borg create -> {{inputs.parameters.backupTarget}}"
+                sudo borg create --stats --list \
+                  --compression=zstd,15 \
+                  --progress \
+                  --show-rc \
+                  --exclude-caches \
+                  --exclude-if-present .nobackup \
+                  "{{inputs.parameters.backupTarget}}::$(hostname)-$(date +%Y-%m-%d_%H-%M)" \
+                  "{{inputs.parameters.targetMount}}"
+
+                CREATE_RC=$?
+                echo "borg create exit code: $CREATE_RC"
+
+                # Prune old archives (non-interactive)
+                echo "Pruning old archives"
+                sudo borg prune --list --show-rc --prefix "$(hostname)-" \
+                  --keep-daily 14 \
+                  --keep-weekly 2 \
+                  --keep-monthly 1 \
+                  --keep-within "14d" \
+                  {{inputs.parameters.backupTarget}}
+
+                PRUNE_RC=$?
+                echo "borg prune exit code: $PRUNE_RC"
+
+                # Exit with non-zero if create failed
+                if [ $CREATE_RC -ne 0 ]; then
+                  echo "Backup failed (create RC $CREATE_RC)" >&2
+                  exit $CREATE_RC
+                fi
+
+                if [ $PRUNE_RC -ne 0 ]; then
+                  echo "Prune returned non-zero (RC $PRUNE_RC). Continuing but check logs." >&2
+                fi
+
+                echo "Backup + prune completed successfully."                
                 sudo umount {{inputs.parameters.targetMount}} 
+                exit 0
               else
                 echo "Directory is smaller than or equal to 1MB"
                 sudo umount {{inputs.parameters.targetMount}} 
                 exit 1
               fi
             EOF
+            SSH_RC=$?
+            if [ "$SSH_RC" -ne 0 ]; then
+              echo "can't connect to remote-cube host (ssh exit code $SSH_RC)" >&2
+              exit "$SSH_RC"
+            fi
 
        
                  
@@ -92,6 +149,9 @@ spec:
           - name: ssh-key
             mountPath: /root/.ssh/id_rsa
             subPath: id_rsa
+          - name: remote-cube-borg-keys
+            mountPath: /etc/borg/keys/
+            readOnly: true
           # - name: sebackup-samba-credentials
           #   mountPath: /root/.samba/
           #   readOnly: true
@@ -100,6 +160,9 @@ spec:
         secret:
           secretName: ssh-key-remote-cube
           defaultMode: 0600
+      - name: remote-cube-borg-keys
+        secret:
+          secretName: remote-cube-borg-keys
       # - name: sebackup-samba-credentials
       #   secret:
       #     secretName: sebackup-samba-credentials
