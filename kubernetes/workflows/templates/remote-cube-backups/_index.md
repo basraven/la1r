@@ -13,8 +13,8 @@ This directory contains manifests for the remote-cube backup and uses Borg backu
 sudo borg init --encryption=keyfile-blake2 /mnt/hdd/backup/jay-c/ssd/na.borg
 
 # Get the repo private key
-sudo borg key export /mnt/hdd/backup/jay-c/ssd/na.borg /tmp/borg-repo-key-na
-sudo cat /tmp/borg-repo-key-na | base64 -w0
+sudo borg key export /mnt/hdd/backup/jay-c/ssd/na.borg /tmp/borg-repo-key
+sudo cat /tmp/borg-repo-key | base64 -w0
 # Copy the output above and store it in a secret
 
 # Get the repo ID for the backup job (to be used as target file name)

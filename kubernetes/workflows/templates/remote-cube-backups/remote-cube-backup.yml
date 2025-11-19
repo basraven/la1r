@@ -44,12 +44,12 @@ spec:
                 # {"sourceMount": "//192.168.5.2/ssd-na", "targetMount": "/mnt/stephanie/ssd/na", "backupTarget": "/mnt/hdd/backup/stephanie/ssd/na"},
                 # {"sourceMount": "//192.168.5.2/ssd-ha", "targetMount": "/mnt/stephanie/ssd/ha", "backupTarget": "/mnt/hdd/backup/stephanie/ssd/ha"},
 
-                # {"sourceMount": "//192.168.5.3/hdd-media", "targetMount": "/mnt/jay-c/hdd/media", "backupTarget": "/mnt/hdd/backup/jay-c/hdd/media"},
-                # {"sourceMount": "//192.168.5.3/hdd-na", "targetMount": "/mnt/jay-c/hdd/na", "backupTarget": "/mnt/hdd/backup/jay-c/hdd/na"},
-                # {"sourceMount": "//192.168.5.3/hdd-ha", "targetMount": "/mnt/jay-c/hdd/ha", "backupTarget": "/mnt/hdd/backup/jay-c/hdd/ha"},
-                # {"sourceMount": "//192.168.5.3/ssd-ha", "targetMount": "/mnt/jay-c/ssd/ha", "backupTarget": "/mnt/hdd/backup/jay-c/ssd/ha"},
             withParam: |
               [                
+                {"sourceMount": "//192.168.5.3/hdd-media", "targetMount": "/mnt/jay-c/hdd/media", "backupTarget": "/mnt/hdd/backup/jay-c/hdd/media.borg"},
+                {"sourceMount": "//192.168.5.3/hdd-na", "targetMount": "/mnt/jay-c/hdd/na", "backupTarget": "/mnt/hdd/backup/jay-c/hdd/na.borg"},
+                {"sourceMount": "//192.168.5.3/hdd-ha", "targetMount": "/mnt/jay-c/hdd/ha", "backupTarget": "/mnt/hdd/backup/jay-c/hdd/ha.borg"},
+                {"sourceMount": "//192.168.5.3/ssd-ha", "targetMount": "/mnt/jay-c/ssd/ha", "backupTarget": "/mnt/hdd/backup/jay-c/ssd/ha.borg"},
                 {"sourceMount": "//192.168.5.3/ssd-na", "targetMount": "/mnt/jay-c/ssd/na", "backupTarget": "/mnt/hdd/backup/jay-c/ssd/na.borg"}
               ]    
 
@@ -73,7 +73,7 @@ spec:
             ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i /root/.ssh/id_rsa {{inputs.parameters.backupServer}} 'chmod 600 ~/.config/borg/keys/*'
             
             # Run the backup script
-            ssh -T -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i /root/.ssh/id_rsa {{inputs.parameters.backupServer}} 'bash --noprofile --norc -seu -o pipefail' << 'EOF'
+            ssh -T -o LogLevel=ERROR -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i /root/.ssh/id_rsa {{inputs.parameters.backupServer}} 'bash --noprofile --norc -s' << 'EOF'
               echo "Running remotely..."
               
               # Install BorgBackup if not installed
@@ -118,8 +118,13 @@ spec:
                 PRUNE_RC=$?
                 echo "borg prune exit code: $PRUNE_RC"
 
-                # Exit with non-zero if create failed
-                if [ $CREATE_RC -ne 0 ]; then
+                if [ $PRUNE_RC -ge 2 ]; then
+                  sudo umount {{inputs.parameters.targetMount}}
+                  exit $PRUNE_RC
+                fi
+
+                # Exit with non-zero if create failed (treat rc=1 as warnings)
+                if [ $CREATE_RC -ge 2 ]; then
                   echo "Backup failed (create RC $CREATE_RC)" >&2
                   exit $CREATE_RC
                 fi
@@ -139,7 +144,7 @@ spec:
             EOF
             SSH_RC=$?
             if [ "$SSH_RC" -ne 0 ]; then
-              echo "can't connect to remote-cube host (ssh exit code $SSH_RC)" >&2
+              echo "remote backup failed (exit code $SSH_RC)" >&2
               exit "$SSH_RC"
             fi
 
