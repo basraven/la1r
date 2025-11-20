@@ -48,23 +48,42 @@ spec:
               exit 1
             fi
 
-            FILE_COUNT=$(ls -1 /config/openvpn-all/*.ovpn | wc -l)
-
+            FILES=$(ls -1 /config/openvpn-all/*.ovpn)
+            FILE_COUNT=$(printf "%s\n" $FILES | wc -l)
             if [ -f "$STATE_FILE" ]; then
-              LAST_INDEX=$(cat "$STATE_FILE")
+              LAST_INDEX=$(cat "$STATE_FILE" 2>/dev/null || echo -1)
             else
               LAST_INDEX=-1
             fi
-
-            NEXT_INDEX=$(( (LAST_INDEX + 1) % FILE_COUNT ))
-
-            NEXT_FILE=$(ls -1 /config/openvpn-all/*.ovpn | sed -n "$((NEXT_INDEX + 1))p")
-
-            rm -f /data/openvpn-ovpn-state/*.ovpn
-            cp "$NEXT_FILE" /data/openvpn-ovpn-state/
-
-            echo "$NEXT_INDEX" > "$STATE_FILE"
-            echo "Selected VPN config: $(basename "$NEXT_FILE")"
+            START_INDEX=$(( (LAST_INDEX + 1) % FILE_COUNT ))
+            echo "Starting selection from index: $START_INDEX (last=$LAST_INDEX, count=$FILE_COUNT)"
+            SELECTED_FILE=""
+            SELECTED_INDEX="$START_INDEX"
+            i=0
+            while [ "$i" -lt "$FILE_COUNT" ]; do
+              IDX=$(( (START_INDEX + i) % FILE_COUNT ))
+              CANDIDATE=$(printf "%s\n" $FILES | sed -n "$((IDX + 1))p")
+              REMOTE_HOST=$(awk '/^remote[[:space:]]+/{print $2; exit}' "$CANDIDATE" 2>/dev/null || true)
+              if [ -n "$REMOTE_HOST" ] && getent hosts "$REMOTE_HOST" >/dev/null 2>&1; then
+                SELECTED_FILE="$CANDIDATE"
+                SELECTED_INDEX="$IDX"
+                echo "Candidate $(basename "$CANDIDATE") resolves ($REMOTE_HOST) — selecting"
+                break
+              else
+                echo "Candidate $(basename "$CANDIDATE") does not resolve ($REMOTE_HOST) — skipping"
+              fi
+              i=$((i+1))
+            done
+            if [ -z "$SELECTED_FILE" ]; then
+              # Fallback to next file even if resolution fails
+              SELECTED_FILE=$(printf "%s\n" $FILES | sed -n "$((START_INDEX + 1))p")
+              SELECTED_INDEX="$START_INDEX"
+              echo "No resolvable candidate found; falling back to $(basename "$SELECTED_FILE")"
+            fi
+            rm -f /data/openvpn-ovpn-state/*.ovpn || true
+            cp "$SELECTED_FILE" /data/openvpn-ovpn-state/
+            echo "$SELECTED_INDEX" > "$STATE_FILE"
+            echo "Selected VPN config: $(basename "$SELECTED_FILE") (index=$SELECTED_INDEX)"
         volumeMounts:
         - name: goose-ovpn-files-volume
           mountPath: /config/openvpn-all
@@ -261,10 +280,14 @@ spec:
           failureThreshold: 3
           timeoutSeconds: 5
         readinessProbe:
-          httpGet:
-            path: /
-            port: 8080
-          initialDelaySeconds: 60
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - |
+              # Ready when WebUI is accepting TCP connections on 8080
+              bash -lc 'exec 3<>/dev/tcp/127.0.0.1/8080'
+          initialDelaySeconds: 15
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 3
