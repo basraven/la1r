@@ -90,6 +90,40 @@ spec:
             - |
               # Fail fast on any unhandled error in this script
               set -e
+              rotate_ovpn_if_needed() {
+                STATE_DIR="/data/vpn_state"
+                STATE_FILE="$STATE_DIR/last_index.txt"
+                mkdir -p "$STATE_DIR"
+                # Only rotate when there are multiple configs
+                if ! ls /config/openvpn-all/*.ovpn >/dev/null 2>&1; then
+                  return 0
+                fi
+                FILE_COUNT=$(ls -1 /config/openvpn-all/*.ovpn | wc -l | tr -d ' ')
+                if [ "$FILE_COUNT" -le 1 ]; then
+                  return 0
+                fi
+                # Determine current and next index
+                CUR_FILE=$(ls -1 /config/openvpn/*.ovpn 2>/dev/null | head -n1 || true)
+                CUR_INDEX=-1
+                if [ -n "$CUR_FILE" ]; then
+                  CUR_BASE=$(basename "$CUR_FILE")
+                  i=0
+                  for f in /config/openvpn-all/*.ovpn; do
+                    if [ "$(basename "$f")" = "$CUR_BASE" ]; then CUR_INDEX=$i; break; fi
+                    i=$((i+1))
+                  done
+                fi
+                if [ "$CUR_INDEX" -lt 0 ] && [ -f "$STATE_FILE" ]; then
+                  CUR_INDEX=$(cat "$STATE_FILE" 2>/dev/null || echo -1)
+                fi
+                NEXT_INDEX=$(( (CUR_INDEX + 1) % FILE_COUNT ))
+                NEXT_FILE=$(ls -1 /config/openvpn-all/*.ovpn | sed -n "$((NEXT_INDEX + 1))p")
+                # Swap active config
+                rm -f /config/openvpn/*.ovpn || true
+                cp "$NEXT_FILE" /config/openvpn/
+                echo "$NEXT_INDEX" > "$STATE_FILE"
+                echo "Rotated VPN config to: $(basename "$NEXT_FILE")"
+              }
               # If VPN interface is not yet up, check for persistent DNS failures for the OpenVPN remote
               if ! ip -o -4 addr show dev tun0 | grep -q "inet "; then
                 # Read active .ovpn file selected by initContainer (mounted under /config/openvpn)
@@ -98,7 +132,8 @@ spec:
                 REMOTE_HOST=""
                 [ -n "$OVPN_FILE" ] && REMOTE_HOST="$(awk '/^remote[[:space:]]+/{print $2; exit}' "$OVPN_FILE" 2>/dev/null || true)"
                 # Track consecutive DNS resolution failures in a temp counter
-                DNS_COUNT_FILE="/tmp/openvpn_dns_fail_count"
+                DNS_COUNT_FILE="/data/vpn_state/openvpn_dns_fail_count"
+                mkdir -p "$(dirname "$DNS_COUNT_FILE")"
                 if [ -n "$REMOTE_HOST" ]; then
                   # getent uses glibc NSS; returns non-zero when name cannot be resolved
                   if ! getent hosts "$REMOTE_HOST" >/dev/null 2>&1; then
@@ -108,6 +143,7 @@ spec:
                     echo "$DNS_COUNT" > "$DNS_COUNT_FILE"
                     # If DNS fails 6 times (≈60s with periodSeconds:10), let the probe fail to restart the pod
                     if [ "$DNS_COUNT" -ge 6 ]; then
+                      rotate_ovpn_if_needed
                       exit 1
                     fi
                   else
@@ -115,11 +151,23 @@ spec:
                     echo "0" > "$DNS_COUNT_FILE" || true
                   fi
                 fi
+                # Track general tun0 bring-up failures to rotate even if DNS is fine
+                TUN_COUNT_FILE="/data/vpn_state/openvpn_tun_fail_count"
+                mkdir -p "$(dirname "$TUN_COUNT_FILE")"
+                TUN_COUNT=0
+                [ -f "$TUN_COUNT_FILE" ] && TUN_COUNT="$(cat "$TUN_COUNT_FILE" || echo 0)"
+                TUN_COUNT=$((TUN_COUNT+1))
+                echo "$TUN_COUNT" > "$TUN_COUNT_FILE"
+                if [ "$TUN_COUNT" -ge 6 ]; then
+                  rotate_ovpn_if_needed
+                  # reset counter so next round counts anew
+                  echo "0" > "$TUN_COUNT_FILE" || true
+                fi
               fi
               # Original checks (relaxed for startup): require tun0 IPv4 to be present
               ip -o -4 addr show dev tun0 | grep -q "inet "
           periodSeconds: 10
-          failureThreshold: 60
+          failureThreshold: 6
           timeoutSeconds: 5
         livenessProbe:
           exec:
@@ -129,13 +177,45 @@ spec:
             - |
               # Fail fast on any unhandled error in this script
               set -e
+              rotate_ovpn_if_needed() {
+                STATE_DIR="/data/vpn_state"
+                STATE_FILE="$STATE_DIR/last_index.txt"
+                mkdir -p "$STATE_DIR"
+                if ! ls /config/openvpn-all/*.ovpn >/dev/null 2>&1; then
+                  return 0
+                fi
+                FILE_COUNT=$(ls -1 /config/openvpn-all/*.ovpn | wc -l | tr -d ' ')
+                if [ "$FILE_COUNT" -le 1 ]; then
+                  return 0
+                fi
+                CUR_FILE=$(ls -1 /config/openvpn/*.ovpn 2>/dev/null | head -n1 || true)
+                CUR_INDEX=-1
+                if [ -n "$CUR_FILE" ]; then
+                  CUR_BASE=$(basename "$CUR_FILE")
+                  i=0
+                  for f in /config/openvpn-all/*.ovpn; do
+                    if [ "$(basename "$f")" = "$CUR_BASE" ]; then CUR_INDEX=$i; break; fi
+                    i=$((i+1))
+                  done
+                fi
+                if [ "$CUR_INDEX" -lt 0 ] && [ -f "$STATE_FILE" ]; then
+                  CUR_INDEX=$(cat "$STATE_FILE" 2>/dev/null || echo -1)
+                fi
+                NEXT_INDEX=$(( (CUR_INDEX + 1) % FILE_COUNT ))
+                NEXT_FILE=$(ls -1 /config/openvpn-all/*.ovpn | sed -n "$((NEXT_INDEX + 1))p")
+                rm -f /config/openvpn/*.ovpn || true
+                cp "$NEXT_FILE" /config/openvpn/
+                echo "$NEXT_INDEX" > "$STATE_FILE"
+                echo "Rotated VPN config to: $(basename "$NEXT_FILE")"
+              }
               # If VPN interface is not up, detect persistent DNS failures to trigger restart
               if ! ip -o -4 addr show dev tun0 | grep -q "inet "; then
                 # Read active .ovpn and extract remote host
                 OVPN_FILE="$(ls -1 /config/openvpn/*.ovpn 2>/dev/null | head -n1 || true)"
                 REMOTE_HOST=""
                 [ -n "$OVPN_FILE" ] && REMOTE_HOST="$(awk '/^remote[[:space:]]+/{print $2; exit}' "$OVPN_FILE" 2>/dev/null || true)"
-                DNS_COUNT_FILE="/tmp/openvpn_dns_fail_count"
+                DNS_COUNT_FILE="/data/vpn_state/openvpn_dns_fail_count"
+                mkdir -p "$(dirname "$DNS_COUNT_FILE")"
                 if [ -n "$REMOTE_HOST" ]; then
                   if ! getent hosts "$REMOTE_HOST" >/dev/null 2>&1; then
                     DNS_COUNT=0
@@ -144,6 +224,7 @@ spec:
                     echo "$DNS_COUNT" > "$DNS_COUNT_FILE"
                     # Threshold aligns with startup probe for consistency
                     if [ "$DNS_COUNT" -ge 6 ]; then
+                      rotate_ovpn_if_needed
                       exit 1
                     fi
                   else
@@ -154,8 +235,28 @@ spec:
               fi
               # Original checks: VPN must be up and HTTP UI must answer 2xx/3xx on :8080
               # Relaxed for liveness: require tun0 IPv4; route via tun0 not enforced here
-              ip -o -4 addr show dev tun0 | grep -q "inet "
-              bash -lc 'exec 3<>/dev/tcp/127.0.0.1/8080 || exit 1; printf "GET / HTTP/1.0\r\nHost: localhost\r\n\r\n" >&3; head -n 1 <&3 | grep -qE "HTTP/1\\.[01] [23][0-9]{2}"'
+              HEALTH_FAIL_FILE="/data/vpn_state/openvpn_health_fail_count"
+              mkdir -p "$(dirname "$HEALTH_FAIL_FILE")"
+              if ip -o -4 addr show dev tun0 | grep -q "inet "; then
+                if bash -lc 'exec 3<>/dev/tcp/127.0.0.1/8080 || exit 1; printf "GET / HTTP/1.0\r\nHost: localhost\r\n\r\n" >&3; head -n 1 <&3 | grep -qE "HTTP/1\\.[01] [23][0-9]{2}"'; then
+                  echo "0" > "$HEALTH_FAIL_FILE" || true
+                  exit 0
+                else
+                  FAILS=0; [ -f "$HEALTH_FAIL_FILE" ] && FAILS="$(cat "$HEALTH_FAIL_FILE" || echo 0)"; FAILS=$((FAILS+1)); echo "$FAILS" > "$HEALTH_FAIL_FILE"
+                  if [ "$FAILS" -ge 6 ]; then
+                    rotate_ovpn_if_needed; exit 1
+                  else
+                    exit 1
+                  fi
+                fi
+              else
+                FAILS=0; [ -f "$HEALTH_FAIL_FILE" ] && FAILS="$(cat "$HEALTH_FAIL_FILE" || echo 0)"; FAILS=$((FAILS+1)); echo "$FAILS" > "$HEALTH_FAIL_FILE"
+                if [ "$FAILS" -ge 6 ]; then
+                  rotate_ovpn_if_needed; exit 1
+                else
+                  exit 1
+                fi
+              fi
           periodSeconds: 10
           failureThreshold: 3
           timeoutSeconds: 5
@@ -209,6 +310,9 @@ spec:
           - name: torrent-standard-data-volume
             mountPath: /config/openvpn
             subPath: openvpn-ovpn-state
+          - name: torrent-standard-data-volume
+            mountPath: /data/vpn_state
+            subPath: vpn_state
           - name: qbit-torrent-data-volume
             mountPath: /downloads
       volumes:
