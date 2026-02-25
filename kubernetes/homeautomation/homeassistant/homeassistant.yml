@@ -1,0 +1,120 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: homeassistant
+  namespace: homeautomation
+  labels:
+    app: homeassistant
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: homeassistant
+  template:
+    metadata:
+      labels:
+        app: homeassistant
+    spec:
+      volumes:
+        - name: localtime
+          hostPath:
+            path: /etc/localtime
+            type: File
+        - name: homeassistant-config-volume
+          persistentVolumeClaim:
+            claimName: homeassistant-config-claim
+      
+      # Start new config
+      # initContainers:
+      # - name: init-config
+      #   image: busybox:1.36
+      #   command:
+      #   - sh
+      #   - -c
+      #   - |
+      #     if [ ! -f /config/configuration.yaml ]; then
+      #       echo "default_config:" > /config/configuration.yaml
+      #       echo "" >> /config/configuration.yaml
+      #       echo "http:" >> /config/configuration.yaml
+      #       echo "  use_x_forwarded_for: true" >> /config/configuration.yaml
+      #       echo "  trusted_proxies:" >> /config/configuration.yaml
+      #       echo "    - 10.0.0.0/8" >> /config/configuration.yaml
+      #       echo "    - 172.16.0.0/12" >> /config/configuration.yaml
+      #       echo "    - 192.168.0.0/16" >> /config/configuration.yaml
+      #     fi
+        volumeMounts:
+        - name: homeassistant-config-volume
+          mountPath: /config
+      containers:
+      - name: homeassistant
+        image: ghcr.io/home-assistant/home-assistant:stable
+        ports:
+        - name: http
+          containerPort: 8123
+        env:
+        - name: TZ
+          value: Europe/Amsterdam
+        volumeMounts:
+        - name: localtime
+          mountPath: /etc/localtime
+          readOnly: true
+        - name: homeassistant-config-volume
+          mountPath: /config
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: homeassistant
+  namespace: homeautomation
+  labels:
+    app: homeassistant
+spec:
+  type: ClusterIP
+  selector:
+    app: homeassistant
+  ports:
+  - name: http
+    port: 8123
+    targetPort: 8123
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: homeassistant-bas
+  namespace: homeautomation
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: homeassistant-bas-tls
+  commonName: homeassistant.bas
+  dnsNames:
+  - homeassistant.bas
+  - www.homeassistant.bas
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: homeassistant-https
+  namespace: homeautomation
+  annotations:
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+spec:
+  tls:
+  - secretName: homeassistant-bas-tls
+  rules:
+  - host: homeassistant.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: homeassistant
+            port:
+              number: 8123

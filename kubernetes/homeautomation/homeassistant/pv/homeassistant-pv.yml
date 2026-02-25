@@ -1,0 +1,16 @@
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: homeassistant-config-pv
+  labels:
+    contenttype: "homeassistant-config"
+spec:
+  capacity:
+    storage: 5Gi
+  storageClassName: homeassistant-config
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/mnt/ssd/na/homeassistant/config"

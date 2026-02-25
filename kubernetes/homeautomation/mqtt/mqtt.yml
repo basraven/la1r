@@ -32,23 +32,6 @@ spec:
       labels:
         app: mqtt
     spec:
-      
-      # specificonly only workloads
-      tolerations:
-        - key: "la1r.workload/specificonly"
-          operator: "Equal"
-          value: "true"
-          effect: "NoSchedule"
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-            - matchExpressions:
-              - key: "la1r.workload/specificonly"
-                operator: "In"
-                values:
-                - "true"
-
       volumes:
         - name: localtime
           hostPath:

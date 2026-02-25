@@ -1,0 +1,16 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: homeassistant-config-claim
+  namespace: homeautomation
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: homeassistant-config
+  selector:
+    matchLabels:
+      contenttype: "homeassistant-config"
+  resources:
+    requests:
+      storage: 5Gi
