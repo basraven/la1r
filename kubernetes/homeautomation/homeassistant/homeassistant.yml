@@ -21,34 +21,18 @@ spec:
           hostPath:
             path: /etc/localtime
             type: File
+        - name: serial-by-id
+          hostPath:
+            path: /dev/serial/by-id
+            type: Directory
         - name: homeassistant-config-volume
           persistentVolumeClaim:
             claimName: homeassistant-config-claim
-      
-      # Start new config
-      # initContainers:
-      # - name: init-config
-      #   image: busybox:1.36
-      #   command:
-      #   - sh
-      #   - -c
-      #   - |
-      #     if [ ! -f /config/configuration.yaml ]; then
-      #       echo "default_config:" > /config/configuration.yaml
-      #       echo "" >> /config/configuration.yaml
-      #       echo "http:" >> /config/configuration.yaml
-      #       echo "  use_x_forwarded_for: true" >> /config/configuration.yaml
-      #       echo "  trusted_proxies:" >> /config/configuration.yaml
-      #       echo "    - 10.0.0.0/8" >> /config/configuration.yaml
-      #       echo "    - 172.16.0.0/12" >> /config/configuration.yaml
-      #       echo "    - 192.168.0.0/16" >> /config/configuration.yaml
-      #     fi
-        volumeMounts:
-        - name: homeassistant-config-volume
-          mountPath: /config
       containers:
       - name: homeassistant
         image: ghcr.io/home-assistant/home-assistant:stable
+        securityContext:
+          privileged: true
         ports:
         - name: http
           containerPort: 8123
@@ -58,6 +42,9 @@ spec:
         volumeMounts:
         - name: localtime
           mountPath: /etc/localtime
+          readOnly: true
+        - name: serial-by-id
+          mountPath: /dev/serial/by-id
           readOnly: true
         - name: homeassistant-config-volume
           mountPath: /config

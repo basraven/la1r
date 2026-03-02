@@ -8,3 +8,4 @@ resources:
 - cron-weekly-grafana-cloud-backup.yml
 - cron-weekly-prometheus-cloud-backup.yml
 - cron-weekly-monica-cloud-backup.yml
+- cron-weekly-homeassistant-cloud-backup.yml
