@@ -30,7 +30,7 @@ spec:
             claimName: homeassistant-config-claim
       containers:
       - name: homeassistant
-        image: ghcr.io/home-assistant/home-assistant:stable
+        image: ghcr.io/home-assistant/home-assistant:2026.3.2
         securityContext:
           privileged: true
         ports:
