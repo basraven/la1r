@@ -4,3 +4,5 @@ namespace: homeautomation
 resources:
 - pv
 - homeassistant.yml
+- zigbee2mqtt.yml
+

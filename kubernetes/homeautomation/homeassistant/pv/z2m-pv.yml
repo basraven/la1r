@@ -1,0 +1,16 @@
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: z2m-config-pv
+  labels:
+    contenttype: "z2m-config"
+spec:
+  capacity:
+    storage: 1Gi
+  storageClassName: z2m-config
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/mnt/ssd/na/z2m"

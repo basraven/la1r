@@ -3,3 +3,6 @@ kind: Kustomization
 resources:
 - homeassistant-pv.yml
 - homeassistant-pvc.yml
+- z2m-pv.yml
+- z2m-pvc.yml
+
