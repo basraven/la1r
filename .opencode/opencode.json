@@ -1,0 +1,67 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": ["opencode-gemini-auth@latest"],
+  "model": "google/gemini-3.1-pro-low",
+  "small_model": "google/gemini-3-flash",
+  "tools": {
+    "websearch" : true
+  },
+  "permission": {
+    "skill": {
+      "code-stage": "allow"
+    }
+  },
+  "mcp": {
+    "kubernetes": {
+      "type": "remote",
+      "url": "https://mcp-kubernetes.bas/mcp"
+    },
+    "homeassistant": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "@jango-blockchained/homeassistant-mcp"
+      ],
+      "enabled": true
+    }
+  },
+  "provider": {
+    "google": {
+      "name": "Gemini Plus (Subscription)",
+      "options": {
+        "projectId": "opencode-491519",
+        "region": "us-central1"
+      },
+      "models": {
+        "gemini-3.1-pro-preview": {
+          "name": "Gemini 3.1 Pro"
+        },
+        "gemini-3-flash-preview": {
+          "name": "Gemini 3 Flash"
+        },
+        "gemini-2.0-pro-exp": {
+          "name": "Gemini 2.0 Pro Experimental"
+        }
+      }
+    },
+    "ollama": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Ollama (local)",
+      "options": {
+        "baseURL": "http://localhost:11434/v1"
+      },
+      "models": {
+        "qwen3.5:4b": {
+          "name": "qwen3.5:4b"
+        },
+        "qwen2.5-coder:7b": {
+          "name": "qwen2.5-coder:7b"
+        },
+        "deepseek-coder:6.7b": {
+          "name": "deepseek-coder:6.7b"
+        }
+      }
+    }
+  }
+}
