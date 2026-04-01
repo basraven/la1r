@@ -1,0 +1,177 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: enshrouded-traffic-watcher
+  namespace: gaming
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: enshrouded-traffic-watcher
+  template:
+    metadata:
+      labels:
+        app: enshrouded-traffic-watcher
+    spec:
+      # Run on the same node as the enshrouded server for network visibility
+      # affinity:
+      #   nodeAffinity:
+      #     requiredDuringSchedulingIgnoredDuringExecution:
+      #       nodeSelectorTerms:
+      #       - matchExpressions:
+      #         - key: la1r.workload/nonessential
+      #           operator: In
+      #           values:
+      #           - "true"
+      # Need host network to see traffic on the host IP
+      hostNetwork: true
+      serviceAccountName: enshrouded-traffic-watcher
+      containers:
+      - name: traffic-watcher
+        image: alpine:latest
+        securityContext:
+          # Need CAP_NET_RAW to use tcpdump
+          capabilities:
+            add: ["NET_RAW", "NET_ADMIN"]
+          runAsUser: 0  # Run as root for network access
+        command: ["/bin/sh"]
+        args:
+        - -c
+        - |
+          # Install necessary packages
+          apk add --no-cache tcpdump curl jq
+
+          # Set up API server URL and token
+          # When using hostNetwork: true, we need to use the API server IP directly
+          API_SERVER="https://192.168.5.3:6443"
+          TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+          CA_CERT="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+          NAMESPACE=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)
+
+          # Function to check if enshrouded deployment is running
+          check_deployment() {
+            curl -s --cacert "$CA_CERT" --header "Authorization: Bearer $TOKEN" \
+              "$API_SERVER/apis/apps/v1/namespaces/$NAMESPACE/deployments/enshrouded" | \
+              jq -e '.spec.replicas > 0' > /dev/null 2>&1
+          }
+
+          # Function to scale deployment
+          scale_deployment() {
+            local replicas=$1
+            echo "Scaling enshrouded deployment to $replicas replicas"
+
+            # Create patch data
+            PATCH_DATA="{\"spec\":{\"replicas\":$replicas}}"
+
+            # Send patch request
+            curl -s --cacert "$CA_CERT" --header "Authorization: Bearer $TOKEN" \
+              --header "Content-Type: application/strategic-merge-patch+json" \
+              --request PATCH \
+              --data "$PATCH_DATA" \
+              "$API_SERVER/apis/apps/v1/namespaces/$NAMESPACE/deployments/enshrouded" > /dev/null
+          }
+
+          # Test API connection
+          echo "Testing Kubernetes API connection..."
+          if curl -s --cacert "$CA_CERT" --header "Authorization: Bearer $TOKEN" \
+            "$API_SERVER/healthz" | grep -q "ok"; then
+            echo "API connection successful"
+          else
+            echo "API connection failed, retrying in 5 seconds..."
+            sleep 5
+            # Try one more time
+            if curl -s --cacert "$CA_CERT" --header "Authorization: Bearer $TOKEN" \
+              "$API_SERVER/healthz" | grep -q "ok"; then
+              echo "API connection successful on retry"
+            else
+              echo "Failed to connect to Kubernetes API"
+              exit 1
+            fi
+          fi
+
+          echo "Starting traffic monitoring on ports 15637 and 27015 (UDP) for IP 192.168.6.46"
+
+          # Track last traffic time
+          last_traffic_time=$(date +%s)
+          idle_timeout=300  # 5 minutes in seconds
+          check_interval=10  # Check every 10 seconds
+
+          # Create named pipe for tcpdump output
+          PIPE=/tmp/tcpdump.pipe
+          rm -f $PIPE
+          mkfifo $PIPE
+
+          # Start tcpdump in background
+          tcpdump -i any udp and host 192.168.6.46 and \( port 15637 or port 27015 \) -l -n -q > $PIPE 2>/dev/null &
+          TCPDUMP_PID=$!
+
+          # Trap to clean up on exit
+          trap "kill $TCPDUMP_PID 2>/dev/null; rm -f $PIPE; exit" INT TERM
+
+          # Monitor the pipe
+          exec 3< $PIPE
+          while true; do
+            # Try to read from pipe with timeout
+            if read -t $check_interval -u 3 line; then
+              # Traffic detected
+              last_traffic_time=$(date +%s)
+              echo "Traffic detected at $(date): $line"
+
+              # If deployment is scaled to 0, scale it back up
+              if ! check_deployment; then
+                echo "Scaling enshrouded deployment up to 1 replica"
+                scale_deployment 1
+              fi
+            fi
+
+            # Check if we've been idle for too long
+            current_time=$(date +%s)
+            time_since_traffic=$((current_time - last_traffic_time))
+
+            if [ $time_since_traffic -ge $idle_timeout ]; then
+              # Check if deployment is already scaled down
+              if check_deployment; then
+                echo "No traffic for ${idle_timeout} seconds. Scaling enshrouded deployment down to 0"
+                scale_deployment 0
+              fi
+            fi
+          done
+      automountServiceAccountToken: true
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: enshrouded-traffic-watcher
+  namespace: gaming
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: enshrouded-traffic-watcher
+  namespace: gaming
+rules:
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["get", "list", "watch", "update", "patch"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: enshrouded-traffic-watcher
+  namespace: gaming
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: enshrouded-traffic-watcher
+subjects:
+- kind: ServiceAccount
+  name: enshrouded-traffic-watcher
+  namespace: gaming
+

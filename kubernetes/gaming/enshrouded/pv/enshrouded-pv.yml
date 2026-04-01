@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: enshrouded-pv
+  labels:
+    contenttype: enshrouded-savegame
+spec:
+  capacity:
+    storage: 30Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: enshrouded-savegame
+  hostPath:
+    path: /mnt/ssd/na/enshrouded/data
+    type: DirectoryOrCreate
