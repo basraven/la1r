@@ -90,52 +90,172 @@ spec:
             fi
           fi
 
-          echo "Starting traffic monitoring on ports 15637 and 27015 (UDP) for IP 192.168.6.46"
+          echo "Starting rate-based traffic monitoring with false positive filtering"
+          echo "Monitoring UDP ports 15637 and 27015 for IP 192.168.6.46"
+          echo "Filtering out:"
+          echo "  - Known false positive IP: 31.150.234.16"
+          echo "Requiring 5 packets within 60 seconds from new IP to register session"
+          echo "Keeping server open while registered IPs send packets within 5 minutes"
 
-          # Track last traffic time
-          last_traffic_time=$(date +%s)
-          idle_timeout=300  # 5 minutes in seconds
-          check_interval=10  # Check every 10 seconds
+          # IP tracking configuration
+          idle_timeout=1800  # 30 minutes inactivity before removing registration
+          check_interval=10  # Check for packets every 10 seconds
+          traffic_window=40  # 40 seconds window for initial registration
+          required_packets=5  # Need at least 5 packets within 40 seconds to register IP
 
           # Create named pipe for tcpdump output
           PIPE=/tmp/tcpdump.pipe
           rm -f $PIPE
           mkfifo $PIPE
 
-          # Start tcpdump in background
-          tcpdump -i any udp and host 192.168.6.46 and \( port 15637 or port 27015 \) -l -n -q > $PIPE 2>/dev/null &
+          # Start tcpdump in background with IMPROVED FILTERS:
+          # 1. Exclude known false positive IP (31.150.234.16)
+          # 2. Only count traffic that passes this filter
+          tcpdump -i any udp and host 192.168.6.46 and \( port 15637 or port 27015 \) and not src host 31.150.234.16 -l -n > $PIPE 2>/dev/null &
           TCPDUMP_PID=$!
 
           # Trap to clean up on exit
           trap "kill $TCPDUMP_PID 2>/dev/null; rm -f $PIPE; exit" INT TERM
 
+          # Setup directories for IP tracking
+          mkdir -p /tmp/ip_counts
+          mkdir -p /tmp/registered_ips
+
           # Monitor the pipe
           exec 3< $PIPE
+          iteration_count=0
           while true; do
             # Try to read from pipe with timeout
             if read -t $check_interval -u 3 line; then
-              # Traffic detected
-              last_traffic_time=$(date +%s)
-              echo "Traffic detected at $(date): $line"
+              # echo "DEBUG: Got packet: $line"
+              # Extract source IP from tcpdump output
+              # Format: "timestamp interface direction IP src_ip.src_port > dst_ip.dst_port: UDP, length XX"
+              # Example: "23:32:24.873947 enp4s0 In IP 85.144.239.68.61602 > 192.168.6.46.15637: UDP, length 25"
+              src_field=$(echo "$line" | awk '{print $5}')  # Gets "85.144.239.68.61602"
+              src_ip=$(echo "$src_field" | sed 's/\.[0-9]*$//')  # Remove port: "85.144.239.68"
+              # Debug: check if IP extraction failed
+              if [ "$src_ip" = "IP" ]; then
+                echo "ERROR: IP extraction failed for line: $line"
+                continue
+              fi
 
-              # If deployment is scaled to 0, scale it back up
-              if ! check_deployment; then
-                echo "Scaling enshrouded deployment up to 1 replica"
-                scale_deployment 1
+              current_time=$(date +%s)
+              ip_count_file="/tmp/ip_counts/$src_ip"
+              registered_file="/tmp/registered_ips/$src_ip"
+
+              # Check if IP is already registered
+              if [ -f "$registered_file" ]; then
+                # Update timestamp for registered IP
+                echo "$current_time" > "$registered_file"
+                # echo "Traffic from registered IP: $src_ip"
+
+                # Ensure server is running for registered IP
+                if ! check_deployment; then
+                  echo "Starting server for registered IP $src_ip"
+                  scale_deployment 1
+                fi
+              else
+                # IP not registered yet - track for registration
+                if [ -f "$ip_count_file" ]; then
+                  # Read existing count and timestamp
+                  read count first_seen < "$ip_count_file" || count=0 first_seen=$current_time
+                else
+                  count=0
+                  first_seen=$current_time
+                fi
+
+                # Check if window is still valid (60 seconds)
+                time_since_first=$((current_time - first_seen))
+                if [ $time_since_first -ge $traffic_window ]; then
+                  # Window expired, reset count
+                  count=1
+                  first_seen=$current_time
+                  echo "Starting new registration window for IP: $src_ip"
+                else
+                  # Within window, increment count
+                  count=$((count + 1))
+                fi
+
+                # Save updated count
+                echo "$count $first_seen" > "$ip_count_file"
+
+                # Check if reached threshold
+                if [ $count -eq $required_packets ]; then
+                  echo "IP $src_ip registered (5 packets within 60 seconds)"
+                  # Register IP
+                  echo "$current_time" > "$registered_file"
+                  # Remove count file
+                  rm -f "$ip_count_file"
+
+                  # Log all whitelisted IPs
+                  whitelisted_ips=$(ls -1 /tmp/registered_ips/ 2>/dev/null | tr '\n' ' ')
+                  echo "Whitelisted IPs: $whitelisted_ips"
+
+                  # Start server if not running
+                  if ! check_deployment; then
+                    echo "Starting server for newly registered IP $src_ip"
+                    scale_deployment 1
+                  fi
+                else
+                  echo "IP $src_ip: packet $count/$required_packets in registration window"
+                fi
               fi
             fi
 
-            # Check if we've been idle for too long
+            # Clean up stale registrations (5 minutes inactivity)
             current_time=$(date +%s)
-            time_since_traffic=$((current_time - last_traffic_time))
+            for ip_file in /tmp/registered_ips/*; do
+              if [ -f "$ip_file" ]; then
+                read last_seen < "$ip_file" || last_seen=0
+                time_since_active=$((current_time - last_seen))
+                if [ $time_since_active -ge $idle_timeout ]; then
+                  ip=$(basename "$ip_file")
+                  echo "Removing stale registration for IP: $ip (inactive for ${idle_timeout}s)"
+                  rm -f "$ip_file"
+                  # Log updated whitelisted IPs
+                  whitelisted_ips=$(ls -1 /tmp/registered_ips/ 2>/dev/null | tr '\n' ' ')
+                  if [ -n "$whitelisted_ips" ]; then
+                    echo "Updated whitelisted IPs: $whitelisted_ips"
+                  else
+                    echo "No remaining whitelisted IPs"
+                  fi
+                fi
+              fi
+            done
 
-            if [ $time_since_traffic -ge $idle_timeout ]; then
-              # Check if deployment is already scaled down
+            # Clean up expired count files (older than traffic window)
+            for count_file in /tmp/ip_counts/*; do
+              if [ -f "$count_file" ]; then
+                read count first_seen < "$count_file" || count=0 first_seen=0
+                time_since_first=$((current_time - first_seen))
+                if [ $time_since_first -ge $traffic_window ]; then
+                  ip=$(basename "$count_file")
+                  echo "Cleaning expired count for IP: $ip"
+                  rm -f "$count_file"
+                fi
+              fi
+            done
+
+            # Log whitelisted IPs every 60 seconds (60 iterations)
+            if [ $((iteration_count % 60)) -eq 0 ]; then
+              whitelisted_ips=$(ls -1 /tmp/registered_ips/ 2>/dev/null | tr '\n' ' ')
+              if [ -n "$whitelisted_ips" ]; then
+                echo "Currently whitelisted IPs: $whitelisted_ips"
+              fi
+            fi
+
+            # Check if we should scale down (no registered IPs)
+            registered_count=$(ls -1 /tmp/registered_ips/ 2>/dev/null | wc -l)
+            if [ $registered_count -eq 0 ]; then
               if check_deployment; then
-                echo "No traffic for ${idle_timeout} seconds. Scaling enshrouded deployment down to 0"
+                echo "No registered IPs. Scaling enshrouded deployment down to 0"
                 scale_deployment 0
               fi
             fi
+
+            # Small sleep to prevent busy looping
+            iteration_count=$((iteration_count + 1))
+            sleep 1
           done
       automountServiceAccountToken: true
 
