@@ -74,6 +74,7 @@ metadata:
 spec:
   type: LoadBalancer
   loadBalancerIP: 192.168.6.46
+  externalTrafficPolicy: Local # To ensure that external traffic arriving at the LoadBalancer IP 192.168.6.46 stays on the same node where both the enshrouded server pod and traffic watcher are running.
   ports:
   - name: game
     port: 15637
