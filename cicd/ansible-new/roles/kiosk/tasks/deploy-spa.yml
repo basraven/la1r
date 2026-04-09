@@ -1,0 +1,16 @@
+---
+- name: Ensure local build directory exists
+  delegate_to: localhost
+  run_once: yes
+  file:
+    path: "{{ kiosk_spa_build_dir }}"
+    state: directory
+
+- name: Copy SPA build files to remote web root
+  synchronize:
+    src: "{{ kiosk_spa_build_dir }}/"
+    dest: "{{ kiosk_web_root }}"
+    delete: yes
+    rsync_opts:
+      - "--chown=www-data:www-data"
+  become: yes

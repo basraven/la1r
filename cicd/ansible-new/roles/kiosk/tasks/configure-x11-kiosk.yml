@@ -1,0 +1,38 @@
+---
+- name: Deploy .xinitrc for autostart
+  become: yes
+  template:
+    src: xinitrc.j2
+    dest: /home/{{ kiosk_autologin_user }}/.xinitrc
+    owner: "{{ kiosk_autologin_user }}"
+    group: "{{ kiosk_autologin_user }}"
+    mode: '0755'
+
+- name: Ensure .xinitrc is executable
+  become: yes
+  file:
+    path: /home/{{ kiosk_autologin_user }}/.xinitrc
+    mode: '0755'
+
+- name: Add startx to user profile
+  become: yes
+  blockinfile:
+    path: /home/{{ kiosk_autologin_user }}/.profile
+    block: |
+      # Start X11 on tty1 autologin
+      if [[ -z $DISPLAY && $XDG_VTNR -eq 1 ]]; then
+        exec startx
+      fi
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - kiosk startx"
+
+- name: Ensure X11 permissions for user
+  become: yes
+  lineinfile:
+    path: /etc/X11/Xwrapper.config
+    regexp: '^allowed_users='
+    line: 'allowed_users=anybody'
+    create: yes
+
+- name: Disable screen blanking via xinitrc (already in template)
+  debug:
+    msg: "Screen blanking disabled via xinitrc"

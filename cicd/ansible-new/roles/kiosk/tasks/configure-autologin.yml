@@ -1,0 +1,27 @@
+---
+- name: Create autologin configuration directory
+  become: yes
+  file:
+    path: /etc/systemd/system/getty@tty1.service.d
+    state: directory
+    mode: '0755'
+
+- name: Deploy autologin configuration
+  become: yes
+  template:
+    src: autologin.conf.j2
+    dest: /etc/systemd/system/getty@tty1.service.d/autologin.conf
+    mode: '0644'
+
+- name: Enable getty@tty1 service
+  become: yes
+  systemd:
+    name: getty@tty1
+    enabled: yes
+    state: started
+
+- name: Set default target to multi-user (no desktop)
+  become: yes
+  systemd:
+    name: multi-user.target
+    set_default: yes

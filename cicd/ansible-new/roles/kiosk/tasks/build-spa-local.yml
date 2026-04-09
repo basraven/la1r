@@ -1,0 +1,45 @@
+---
+- name: Check if SPA source exists
+  delegate_to: localhost
+  run_once: yes
+  stat:
+    path: "{{ playbook_dir }}/../../src/kiosk/package.json"
+  register: spa_source
+
+- name: Build SPA with Docker (if source exists)
+  delegate_to: localhost
+  run_once: yes
+  command:
+    cmd: >
+      docker run --rm
+      -v {{ playbook_dir }}/../../src/kiosk:/app
+      -w /app
+      node:lts-alpine
+      sh -c "npm install && npm run build"
+  when: spa_source.stat.exists
+  environment:
+    NODE_ENV: production
+
+- name: Create placeholder build if no source
+  delegate_to: localhost
+  run_once: yes
+  file:
+    path: "{{ kiosk_spa_build_dir }}"
+    state: directory
+  when: not spa_source.stat.exists
+
+- name: Create placeholder index.html
+  delegate_to: localhost
+  run_once: yes
+  copy:
+    dest: "{{ kiosk_spa_build_dir }}/index.html"
+    content: |
+      <!DOCTYPE html>
+      <html>
+      <head><title>Kiosk Placeholder</title></head>
+      <body>
+        <h1>SPA not built yet</h1>
+        <p>Run ansible with SPA source present.</p>
+      </body>
+      </html>
+  when: not spa_source.stat.exists

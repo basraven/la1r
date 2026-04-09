@@ -1,0 +1,43 @@
+---
+# Kiosk role default variables
+
+# Browser package to install (ARMv6 compatible)
+kiosk_browser_package: "epiphany-browser"
+# Alternative: "midori" or "firefox-esr"
+
+# Browser executable name (should match package)
+kiosk_browser_executable: "epiphany"
+
+# Browser command line arguments (default for epiphany)
+kiosk_browser_command: "{{ kiosk_browser_executable }} --kiosk {{ kiosk_url }}"
+
+# URL to load in kiosk mode (default to local nginx)
+kiosk_url: "http://localhost"
+
+# X11 packages to install
+kiosk_x11_packages:
+  - xserver-xorg
+  - xinit
+  - x11-xserver-utils
+  - unclutter
+  - xdotool
+
+# Nginx configuration
+kiosk_nginx_site: "kiosk"
+kiosk_web_root: "/var/www/kiosk"
+
+# SPA build source directory (local)
+kiosk_spa_build_dir: "{{ playbook_dir }}/../../src/kiosk/dist"
+
+# Auto-login user
+kiosk_autologin_user: "pi"
+
+# Whether to disable screen blanking
+kiosk_disable_blanking: true
+
+# Whether to hide mouse cursor
+kiosk_hide_cursor: true
+
+# Home Assistant configuration
+kiosk_ha_url: "http://192.168.6.32:8123"
+kiosk_ha_proxy_path: "/ha/"

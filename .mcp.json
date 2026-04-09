@@ -7,10 +7,6 @@
         "@playwright/mcp@latest"
       ],
       "env": {}
-    },
-    "kubernetes": {
-      "type": "http",
-      "url": "https://mcp-kubernetes.bas/mcp"
     }
   }
 }

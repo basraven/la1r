@@ -1,0 +1,17 @@
+---
+# Override kiosk defaults for Raspberry Pi Zero W
+kiosk_browser_package: "midori"
+kiosk_browser_executable: "midori"
+kiosk_browser_command: "midori --fullscreen {{ kiosk_url }}"
+
+# URL should point to local nginx (default)
+kiosk_url: "http://localhost"
+
+# Additional packages needed for midori (if any)
+kiosk_x11_packages:
+  - xserver-xorg
+  - xinit
+  - x11-xserver-utils
+  - unclutter
+  - xdotool
+  - midori
