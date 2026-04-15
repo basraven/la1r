@@ -4,5 +4,5 @@ credentials-backup
 .vscode
 .terraform
 *.tfstate*
-./kubernetes/ai
-./src/kiosk
+kubernetes/ai
+src/kiosk
