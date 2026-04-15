@@ -91,7 +91,7 @@ spec:
           value: "/home/basraven"
 
         - name: WORKSPACES_ROOT
-          value: "/home/basraven/projects/la1r"
+          value: "/home/basraven/projects"
         - name: ANTHROPIC_BASE_URL
           value: "https://api.deepseek.com/anthropic"
         - name: ANTHROPIC_AUTH_TOKEN

@@ -9,5 +9,9 @@
       "WebFetch(domain:api.github.com)",
       "mcp__kubernetes__pods_log"
     ]
-  }
+  },
+  "enabledMcpjsonServers": [
+    "playwright"
+  ],
+  "enableAllProjectMcpServers": true
 }
