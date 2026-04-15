@@ -6,7 +6,7 @@ metadata:
 spec:
   storageClassName: openvscode-server-data
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany
   resources:
     requests:
       storage: 5Gi
@@ -19,7 +19,7 @@ metadata:
 spec:
   storageClassName: openvscode-server-home
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany
   resources:
     requests:
       storage: 5Gi

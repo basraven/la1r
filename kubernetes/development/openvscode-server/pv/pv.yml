@@ -11,7 +11,7 @@ spec:
   storageClassName: openvscode-server-data
   persistentVolumeReclaimPolicy: Retain
   accessModes:
-  - ReadWriteOnce
+  - ReadWriteMany
   hostPath:
     path: "/mnt/ssd/ha/openvscode-server/data"
 
@@ -28,6 +28,6 @@ spec:
   storageClassName: openvscode-server-home
   persistentVolumeReclaimPolicy: Retain
   accessModes:
-  - ReadWriteOnce
+  - ReadWriteMany
   hostPath:
     path: "/mnt/ssd/ha/openvscode-server/home"
