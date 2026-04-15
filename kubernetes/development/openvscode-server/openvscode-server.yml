@@ -75,7 +75,7 @@ spec:
         #     claimName: openvscode-server-data-claim
         - name: openvscode-server-home-volume
           persistentVolumeClaim:
-            claimName: openvscode-server-home2-claim
+            claimName: openvscode-server-home-claim
         - name: openvscode-server-init
           configMap:
             name: openvscode-server-init

@@ -10,25 +10,14 @@ spec:
   resources:
     requests:
       storage: 5Gi
-# ---
-# apiVersion: v1
-# kind: PersistentVolumeClaim
-# metadata:
-#   name: openvscode-server-home-claim
-# spec:
-#   storageClassName: openvscode-server-home
-#   accessModes:
-#     - ReadWriteOnce
-#   resources:
-#     requests:
-#       storage: 5Gi
+
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: openvscode-server-home2-claim
+  name: openvscode-server-home-claim
 spec:
-  storageClassName: openvscode-server-home2
+  storageClassName: openvscode-server-home
   accessModes:
     - ReadWriteOnce
   resources:
