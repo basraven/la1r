@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__kubernetes__namespaces_list",
+      "mcp__kubernetes__pods_list_in_namespace",
+      "mcp__kubernetes__resources_list",
+      "mcp__kubernetes__resources_get",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:api.github.com)",
+      "mcp__kubernetes__pods_log"
+    ]
+  }
+}

@@ -1,0 +1,188 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: claudecodeui-init
+  namespace: development
+data:
+  init.sh: |-
+    #!/bin/bash
+    # Install build dependencies
+    apt-get update && apt-get install -y git python3-dev build-essential g++ make python3-setuptools
+
+    # --- FIX: Mark directories as safe for Git ---
+    git config --global --add safe.directory '*'
+
+    # Check if cloudcli is already installed
+    if ! command -v cloudcli &> /dev/null; then
+      # Install cloudcli package
+      npm install -g @cloudcli-ai/cloudcli --unsafe-perm
+    fi
+
+    # Install Claude Code CLI
+    if ! command -v claude &> /dev/null; then
+      echo "Installing Claude Code CLI..."
+      npm install -g @anthropic-ai/claude-code
+    else
+      echo "Claude Code CLI already installed"
+    fi
+
+    # Start the claudecodeui server
+    # Try to find the correct command - cloudcli might need different arguments
+    # First check what commands are available
+    # echo "Checking cloudcli commands..."
+    # cloudcli --help
+
+    cd /home/basraven/projects/la1r
+
+    # Try various possible commands
+    echo "Trying to start cloudcli..."
+    if cloudcli start --port 3001; then
+      echo "Started with 'cloudcli start --port 3001'"
+    elif cloudcli --port 3001; then
+      echo "Started with 'cloudcli --port 3001'"
+    else
+      # Fallback: start a simple HTTP server if cloudcli doesn't have UI command
+      echo "Starting fallback HTTP server on port 3001"
+      python3 -m http.server 3001
+    fi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: claudecodeui
+  namespace: development
+  labels:
+    app: claudecodeui
+    # sablier.enable: "true"
+    # sablier.group: claudecodeui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: claudecodeui
+  template:
+    metadata:
+      labels:
+        task: development
+        app: claudecodeui
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - jay-c
+      containers:
+      - name: claudecodeui
+        ports:
+        - containerPort: 3001
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
+        image: docker/sandbox-templates:claude-code
+        env:
+        - name: DATABASE_PATH
+          value: "/home/basraven/.claudecodeui"
+        - name: HOME
+          value: "/home/basraven"
+
+        - name: WORKSPACES_ROOT
+          value: "/home/basraven/projects/la1r"
+        - name: ANTHROPIC_BASE_URL
+          value: "https://api.deepseek.com/anthropic"
+        - name: ANTHROPIC_AUTH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: deepseek-apikey
+              key: ANTHROPIC_AUTH_TOKEN
+        - name: API_TIMEOUT_MS
+          value: "600000"
+        - name: ANTHROPIC_MODEL
+          value: "deepseek-reasoner"
+        - name: ANTHROPIC_DEFAULT_HAIKU_MODEL
+          value: "deepseek-chat"
+        - name: ANTHROPIC_SMALL_FAST_MODEL
+          value: "deepseek-chat"
+        - name: CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC
+          value: "1"
+        - name: CLAUDE_AUTOCOMPACT_PCT_OVERRIDE
+          value: "50"
+        - name: CLAUDE_AUTOCOMPACT_CAPACITY_OVERRIDE
+          value: "102400"
+        - name: CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS
+          value: "true"
+        command: ["/bin/sh", "-c"]
+        args:
+        - /init.sh
+        volumeMounts:
+        - name: openvscode-server-home-volume
+          mountPath: /home
+        - name: claudecodeui-init
+          mountPath: /init.sh
+          subPath: init.sh
+      volumes:
+      - name: openvscode-server-home-volume
+        persistentVolumeClaim:
+          claimName: openvscode-server-home-claim
+      - name: claudecodeui-init
+        configMap:
+          name: claudecodeui-init
+          items:
+          - key: init.sh
+            path: init.sh
+          defaultMode: 0755
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: claudecodeui
+  namespace: development
+spec:
+  ports:
+  - port: 80
+    targetPort: 3001
+  selector:
+    app: claudecodeui
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: claudecodeui-bas
+  namespace: development
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: claudecodeui-bas-tls
+  commonName: claude.bas
+  dnsNames:
+  - claude.bas
+  - www.claude.bas
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: claudecodeui-https
+  namespace: development
+  annotations:
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+    # traefik.ingress.kubernetes.io/router.middlewares: "development-sablier-claudecodeui@kubernetescrd"
+spec:
+  tls:
+  - secretName: claudecodeui-bas-tls
+  rules:
+  - host: claude.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: claudecodeui
+            port:
+              number: 80

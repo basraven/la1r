@@ -1,19 +1,19 @@
----
-kind: PersistentVolume
-apiVersion: v1
-metadata:
-  name: openvscode-server-data-pv
-  labels:
-    contenttype: "openvscode-server-data"
-spec:
-  capacity:
-    storage: 10Gi
-  storageClassName: openvscode-server-data
-  persistentVolumeReclaimPolicy: Retain
-  accessModes:
-  - ReadWriteMany
-  hostPath:
-    path: "/mnt/ssd/ha/openvscode-server/data"
+# ---
+# kind: PersistentVolume
+# apiVersion: v1
+# metadata:
+#   name: openvscode-server-data-pv
+#   labels:
+#     contenttype: "openvscode-server-data"
+# spec:
+#   capacity:
+#     storage: 10Gi
+#   storageClassName: openvscode-server-data
+#   persistentVolumeReclaimPolicy: Retain
+#   accessModes:
+#   - ReadWriteMany
+#   hostPath:
+#     path: "/mnt/ssd/ha/openvscode-server/data"
 
 ---
 kind: PersistentVolume

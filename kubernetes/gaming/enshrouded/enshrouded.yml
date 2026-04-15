@@ -50,13 +50,13 @@ spec:
         - containerPort: 27015
           protocol: UDP
           name: steam-query
-        # resources:
-        #   limits:
-        #     cpu: "1"
-        #     memory: "2Gi"
-        #   requests:
-        #     cpu: "500m"
-        #     memory: "1Gi"
+        resources:
+          limits:
+            cpu: "8"
+            memory: "20Gi"
+          requests:
+            cpu: "4"
+            memory: "10Gi"
         volumeMounts:
         - name: savegame
           mountPath: /home/steam/enshrouded/savegame
