@@ -19,10 +19,20 @@ data:
       npm install -g @cloudcli-ai/cloudcli --unsafe-perm
     fi
 
-    # Install Claude Code CLI
+    # Install Claude Code CLI using official bash install script
     if ! command -v claude &> /dev/null; then
-      echo "Installing Claude Code CLI..."
-      npm install -g @anthropic-ai/claude-code
+      echo "Installing Claude Code CLI using official bash install script..."
+      # Ensure curl is available
+      if ! command -v curl &> /dev/null; then
+        apt-get install -y curl
+      fi
+      # Run the official install script
+      curl -fsSL https://claude.ai/install.sh | bash
+      # Add ~/.local/bin to PATH if not already there
+      export PATH="$HOME/.local/bin:$PATH"
+      echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+      # Source bashrc to make claude command available immediately
+      source ~/.bashrc
     else
       echo "Claude Code CLI already installed"
     fi
@@ -54,8 +64,8 @@ metadata:
   namespace: development
   labels:
     app: claudecodeui
-    # sablier.enable: "true"
-    # sablier.group: claudecodeui
+    sablier.enable: "true"
+    sablier.group: claudecodeui
 spec:
   replicas: 1
   selector:
@@ -171,7 +181,7 @@ metadata:
   annotations:
     traefik.ingress.kubernetes.io/router.tls: "true"
     traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
-    # traefik.ingress.kubernetes.io/router.middlewares: "development-sablier-claudecodeui@kubernetescrd"
+    traefik.ingress.kubernetes.io/router.middlewares: "development-sablier-claudecodeui@kubernetescrd"
 spec:
   tls:
   - secretName: claudecodeui-bas-tls
