@@ -36,6 +36,7 @@ sudo zpool create \
   -O acltype=posixacl \
   -O compression=lz4 \
   -O relatime=on \
+  -O atime=off \
   -o ashift=12 \
   -O xattr=sa \
   -O normalization=formD \
