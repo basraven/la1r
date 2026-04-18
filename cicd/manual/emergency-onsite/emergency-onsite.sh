@@ -10,9 +10,9 @@ rm emergency-backup.log
 # Sync for local backup
 mkdir -p /mnt/emergency-onsite/jay-c
 echo "Syncing local backup at $(date)" | tee -a "$LOG_FILE"
-rsync -av /mnt/hdd/media /mnt/emergency-onsite/jay-c/media  | tee -a "$LOG_FILE"
-rsync -av /mnt/hdd/ha /mnt/emergency-onsite/jay-c/ha  | tee -a "$LOG_FILE"
-rsync -av /mnt/hdd/na /mnt/emergency-onsite/jay-c/na  | tee -a "$LOG_FILE"
+rsync -av /mnt/hdd/media /mnt/emergency-onsite/jay-c/hdd/media  | tee -a "$LOG_FILE"
+rsync -av /mnt/hdd/ha /mnt/emergency-onsite/jay-c/hdd/ha  | tee -a "$LOG_FILE"
+rsync -av /mnt/hdd/na /mnt/emergency-onsite/jay-c/hdd/na  | tee -a "$LOG_FILE"
 echo "Done Syncing local backup at $(date)" | tee -a "$LOG_FILE"
 
 
