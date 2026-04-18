@@ -1,0 +1,19 @@
+network:
+  version: 2
+  ethernets:
+    enp4s0:
+      match:
+        macaddress: <MAC Address> # find with: ip link show enp5s0, the part after "link/ether"
+      set-name: enp4s0
+      addresses:
+      - 192.168.5.3/16
+      dhcp4: no
+      dhcp6: no
+      routes:
+        - to: default
+          via: 192.168.4.1
+      nameservers:
+        addresses: [8.8.8.8, 8.8.4.4]
+
+
+# Use sudo netplan apply to apply the changes
