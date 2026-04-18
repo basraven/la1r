@@ -3,6 +3,7 @@
 1. Find the disk you want to use and make sure it is not mounted
 ```bash
 lsblk -f 
+or lsblk -o NAME,SIZE,MODEL,TRAN,SERIAL
 ```
 yielded /dev/sdc
 
@@ -41,33 +42,38 @@ sudo zpool create \
   -O xattr=sa \
   -O normalization=formD \
   -O keyformat=passphrase \
-  -O keylocation=file:///etc/zfs/keys/emergency-onsite.passphrase \
-  -O mountpoint=/mnt/emergency-onsite \
-  emergency-onsite /dev/sdc
+  -O keylocation=file:///etc/zfs/keys/hdd-jayc.passphrase \
+  -O mountpoint=/mnt/hdd \
+  hdd /dev/sda
 ```
 
-### All the stuff below doesn't work, the backup script mounts itself as first step
 
-6. Make systemd service
-sudo nano /etc/systemd/system/zfs-load-key@emergency-onsite.service
+
+############# load all keys:
+
+
+```bash
+sudo nano /etc/systemd/system/zfs-load-keys.service
+```
+
 ```bash
 [Unit]
-Description=Load ZFS encryption key for emergency-onsite
+Description=Load ZFS encryption keys
 DefaultDependencies=no
-Before=zfs-mount.service
 After=zfs-import.target
-Wants=network-online.target
+Before=zfs-mount.service
 
 [Service]
 Type=oneshot
-ExecStart=/usr/sbin/zfs load-key emergency-onsite
 RemainAfterExit=yes
+ExecStart=/usr/sbin/zfs load-key -a
 
 [Install]
-WantedBy=zfs-import.target
+WantedBy=zfs-mount.service
 ```
 
 ```bash
 sudo systemctl daemon-reload
-sudo systemctl enable zfs-load-key@emergency-onsite.service
+sudo systemctl enable zfs-load-keys.service
 ```
+
