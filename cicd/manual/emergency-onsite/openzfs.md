@@ -3,7 +3,7 @@
 1. Find the disk you want to use and make sure it is not mounted
 ```bash
 lsblk -f 
-or lsblk -o NAME,SIZE,MODEL,TRAN,SERIAL
+or lsblk -o NAME,MODEL,SIZE,MOUNTPOINTS,FSTYPE
 ```
 yielded /dev/sdc
 
@@ -42,12 +42,53 @@ sudo zpool create \
   -O xattr=sa \
   -O normalization=formD \
   -O keyformat=passphrase \
+  -O keylocation=file:///etc/zfs/keys/emergency-onsite.passphrase  \
+  -O mountpoint=/mnt/emergency-onsite \
+  emergency-onsite /dev/sdc
+```
+
+
+```bash
+sudo zpool create \
+  -O encryption=on \
+  -O acltype=posixacl \
+  -O compression=lz4 \
+  -O relatime=on \
+  -O atime=off \
+  -o ashift=12 \
+  -O xattr=sa \
+  -O normalization=formD \
+  -O keyformat=passphrase \
   -O keylocation=file:///etc/zfs/keys/hdd-jayc.passphrase \
   -O mountpoint=/mnt/hdd \
   hdd /dev/sda
 ```
 
 
+```bash
+sudo zpool create \
+  -O encryption=on \
+  -O acltype=posixacl \
+  -O compression=lz4 \
+  -O relatime=on \
+  -O atime=off \
+  -o ashift=12 \
+  -O xattr=sa \
+  -O normalization=formD \
+  -O keyformat=passphrase \
+  -O keylocation=file:///etc/zfs/keys/ssd2-jayc.passphrase \
+  -O mountpoint=/mnt/ssd \
+  ssd2 /dev/nvme0n1
+```
+
+
+# Set HA copies to 2
+ONLY WORKS WITH NEW DATA! I need to move existing data to a new dataset first!
+```bash
+zfs list -o name,copies,mountpoint # current copies
+sudo zfs create -o copies=2 ssd2/ha
+zfs list -o name,copies,mountpoint # new copies
+```
 
 ############# load all keys:
 
