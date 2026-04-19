@@ -170,7 +170,7 @@ def main():
         print(f"Failed to create custom HTTP client: {e}, falling back to default")
         client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
 
-    prompt = "You are a professional Linux/Homelab system auditor. Review the following system data and provide a concise, professional markdown report summarizing the health, highlighting any warnings or errors, and recommending actions if necessary.\n\n"
+    prompt = "You are a professional Linux/Homelab system auditor. Review the following system data and provide a concise, professional markdown report. At the start of the report, include a summary table that quickly identifies urgent issues requiring attention. The table should have columns: Check Category, Status (OK/Warning/Error), Urgency (High/Medium/Low), Brief Description. Then provide detailed sections summarizing the health, highlighting any warnings or errors, and recommending actions if necessary.\n\n"
     for key, val in data.items():
         prompt += f"### {key.upper()}\n```\n{val}\n```\n\n"
 
@@ -179,7 +179,7 @@ def main():
         response = client.chat.completions.create(
             model=config.get("ai_model", "deepseek-chat"),
             messages=[
-                {"role": "system", "content": "You are a homelab system auditor. Output only professional markdown."},
+                {"role": "system", "content": "You are a homelab system auditor. Always start your report with a summary table that quickly identifies urgent issues. The table should have columns: Check Category, Status (OK/Warning/Error), Urgency (High/Medium/Low), Brief Description. Then provide detailed sections. Output only professional markdown."},
                 {"role": "user", "content": prompt}
             ],
             max_tokens=4000
