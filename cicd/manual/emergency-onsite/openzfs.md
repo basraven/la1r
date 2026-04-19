@@ -64,6 +64,11 @@ sudo zpool create \
   hdd /dev/sda
 ```
 
+# IF NOT AUTO-BOOTING:
+sudo zfs load-key hdd
+sudo zfs mount hdd
+sudo zpool set cachefile=/etc/zfs/zpool.cache hdd
+
 
 ```bash
 sudo zpool create \
@@ -80,6 +85,11 @@ sudo zpool create \
   -O mountpoint=/mnt/ssd \
   ssd2 /dev/nvme0n1
 ```
+
+# IF NOT AUTO-BOOTING:
+sudo zfs load-key ssd2
+sudo zfs mount ssd2
+sudo zpool set cachefile=/etc/zfs/zpool.cache ssd2
 
 
 # Set HA copies to 2

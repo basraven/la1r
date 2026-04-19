@@ -142,8 +142,8 @@ CPU_SCALING_GOVERNOR_ON_BAT=powersave
 # Default: <none>
 # !!!!!!!!!!!!!!!!!!!!!!!!!!
 
-CPU_ENERGY_PERF_POLICY_ON_AC=power
-CPU_ENERGY_PERF_POLICY_ON_BAT=power
+CPU_ENERGY_PERF_POLICY_ON_AC=balance_power
+CPU_ENERGY_PERF_POLICY_ON_BAT=balance_power
 
 # Set Intel CPU P-state performance: 0..100 (%).
 # Limit the max/min P-state to control the power dissipation of the CPU.
@@ -235,8 +235,9 @@ DISK_DEVICES="nvme0n1 sda sdb sdc"
 # to keep the hardware default for the particular disk.
 # Default: 254 (AC), 128 (BAT)
 
+# Seb: 128 = No spindown, but allows the heads to park (less power, slight delay)
 DISK_APM_LEVEL_ON_AC="254"
-DISK_APM_LEVEL_ON_BAT="254"
+DISK_APM_LEVEL_ON_BAT="128"
 
 # Exclude disk classes from advanced power management (APM):
 #   sata, ata, usb, ieee1394.
@@ -257,9 +258,9 @@ DISK_APM_LEVEL_ON_BAT="254"
 # to keep the hardware default for the particular disk.
 # Default: <none>
 
-# Seb: 12*5 seconds = 1 min
-DISK_SPINDOWN_TIMEOUT_ON_AC="12"
-DISK_SPINDOWN_TIMEOUT_ON_BAT="12"
+# Seb: 0 = Disabled. This prevents the motor from stopping. to reduce mechanical wear
+DISK_SPINDOWN_TIMEOUT_ON_AC="0"
+DISK_SPINDOWN_TIMEOUT_ON_BAT="0"
 
 # Select I/O scheduler for the disk devices.
 # Multi queue (blk-mq) schedulers:
