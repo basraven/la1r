@@ -1,11 +1,17 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
+namespace: monitoring
 resources:
   - pv
   - system-audit.yml
   - middleware.yml
+  - system-audit-rbac.yml
 configMapGenerator:
   - name: system-audit-config
+    options:
+      disableNameSuffixHash: true
+      labels:
+        app: system-audit
     files:
       - config/requirements.txt
       - config/checks.yaml

@@ -16,6 +16,7 @@ spec:
               values:
               - jay-c
     hostPID: true
+    serviceAccountName: system-audit
   volumes:
     - name: config
       configMap:
@@ -26,6 +27,22 @@ spec:
         type: DirectoryOrCreate
     - name: venv
       emptyDir: {}
+    - name: apt-lists
+      hostPath:
+        path: /var/lib/apt/lists
+        type: Directory
+    - name: apt-cache
+      hostPath:
+        path: /var/cache/apt
+        type: Directory
+    - name: systemd-run
+      hostPath:
+        path: /run/systemd
+        type: Directory
+    - name: systemd-etc
+      hostPath:
+        path: /etc/systemd
+        type: Directory
   templates:
     - name: system-audit
       dag:
@@ -68,3 +85,15 @@ spec:
             mountPath: /config
           - name: reports
             mountPath: /reports
+          - name: apt-lists
+            mountPath: /host/apt/lists
+            readOnly: true
+          - name: apt-cache
+            mountPath: /host/apt/cache
+            readOnly: true
+          - name: systemd-run
+            mountPath: /host/run/systemd
+            readOnly: true
+          - name: systemd-etc
+            mountPath: /host/etc/systemd
+            readOnly: true

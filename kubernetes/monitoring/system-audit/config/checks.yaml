@@ -4,3 +4,7 @@ checks:
   zfs_health: true
   smart_attributes: true
   journal_errors: true
+  kubernetes_node_health: true
+  system_updates: true
+  service_status: true
+  system_health: true

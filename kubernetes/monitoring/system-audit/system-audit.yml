@@ -30,6 +30,7 @@ spec:
                 values:
                 - jay-c
       hostPID: true
+      serviceAccountName: system-audit
       initContainers:
       - name: setup-env
         image: python:3.11-slim
@@ -60,6 +61,18 @@ spec:
           mountPath: /config
         - name: reports
           mountPath: /reports
+        - name: apt-lists
+          mountPath: /host/apt/lists
+          readOnly: true
+        - name: apt-cache
+          mountPath: /host/apt/cache
+          readOnly: true
+        - name: systemd-run
+          mountPath: /host/run/systemd
+          readOnly: true
+        - name: systemd-etc
+          mountPath: /host/etc/systemd
+          readOnly: true
       volumes:
       - name: venv
         emptyDir: {}
@@ -69,6 +82,22 @@ spec:
       - name: reports
         persistentVolumeClaim:
           claimName: system-audit-reports-claim
+      - name: apt-lists
+        hostPath:
+          path: /var/lib/apt/lists
+          type: Directory
+      - name: apt-cache
+        hostPath:
+          path: /var/cache/apt
+          type: Directory
+      - name: systemd-run
+        hostPath:
+          path: /run/systemd
+          type: Directory
+      - name: systemd-etc
+        hostPath:
+          path: /etc/systemd
+          type: Directory
 
 ---
 apiVersion: v1

@@ -17,6 +17,10 @@ st.sidebar.markdown("### Configuration")
 st.sidebar.checkbox("ZFS Audit", value=config['checks']['zfs_health'], disabled=True)
 st.sidebar.checkbox("Disk SMART", value=config['checks']['smart_attributes'], disabled=True)
 st.sidebar.checkbox("Journal Errors", value=config['checks']['journal_errors'], disabled=True)
+st.sidebar.checkbox("Kubernetes Node Health", value=config['checks']['kubernetes_node_health'], disabled=True)
+st.sidebar.checkbox("System Updates", value=config['checks']['system_updates'], disabled=True)
+st.sidebar.checkbox("Service Status", value=config['checks']['service_status'], disabled=True)
+st.sidebar.checkbox("System Health", value=config['checks']['system_health'], disabled=True)
 
 st.title("🛡️ System Audit AI Dashboard")
 

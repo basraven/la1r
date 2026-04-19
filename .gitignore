@@ -6,3 +6,4 @@ credentials-backup
 *.tfstate*
 kubernetes/ai
 src/kiosk
+logs
