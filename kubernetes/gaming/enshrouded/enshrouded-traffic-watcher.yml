@@ -141,7 +141,7 @@ spec:
             if ! kill -0 $TCPDUMP_PID 2>/dev/null; then
               log "tcpdump process ($TCPDUMP_PID) not found, restarting..."
               # Restart tcpdump
-              tcpdump -i any udp and host 192.168.6.46 and \( port 15637 or port 27015 \) and not src host 31.150.234.16 -l -n > $PIPE 2>/dev/null &
+              tcpdump -i any udp and \( dst port 15636 or dst port 15637 or dst port 27015 or src host 85.144.239.68 \) and not src host 31.150.234.16 -l -nn > $PIPE 2>/dev/null &
               TCPDUMP_PID=$!
               log "tcpdump restarted with PID $TCPDUMP_PID"
               # Increment restart counter
@@ -178,17 +178,19 @@ spec:
           fi
 
           log "Starting rate-based traffic monitoring with false positive filtering"
-          log "Monitoring UDP ports 15637 and 27015 for IP 192.168.6.46"
+          log "Monitoring UDP ports 15637 (Game) and 27015 (Steam Query) on all node IPs"
           log "Filtering out:"
           log "  - Known false positive IP: 31.150.234.16"
-          log "Requiring 5 packets within 60 seconds from new IP to register session"
-          log "Keeping server open while registered IPs send packets within 5 minutes"
+          log "Registration requirements:"
+          log "  - Game Port (15637): 1 packet (instant wake-up)"
+          log "  - Query Port (27015): 5 packets within 40 seconds"
+          log "Keeping server open while registered IPs send packets within 30 minutes"
 
           # IP tracking configuration
           idle_timeout=1800  # 30 minutes inactivity before removing registration
           check_interval=10  # Check for packets every 10 seconds
-          traffic_window=40  # 40 seconds window for initial registration
-          required_packets=5  # Need at least 5 packets within 40 seconds to register IP
+          traffic_window=60  # 60 seconds window for initial registration
+          required_packets=5  # Need score of 5 to register (Game port gives 5 instantly, Query port gives 1)
 
           # Create named pipe for tcpdump output
           PIPE=/tmp/tcpdump.pipe
@@ -197,8 +199,9 @@ spec:
 
           # Start tcpdump in background with IMPROVED FILTERS:
           # 1. Exclude known false positive IP (31.150.234.16)
-          # 2. Only count traffic that passes this filter
-          tcpdump -i any udp and host 192.168.6.46 and \( port 15637 or port 27015 \) and not src host 31.150.234.16 -l -n > $PIPE 2>/dev/null &
+          # 2. Monitor Game (15636/15637) and Query (27015) ports
+          # 3. Specifically monitor the user's IP to debug what port they hit
+          tcpdump -i any udp and \( dst port 15636 or dst port 15637 or dst port 27015 or src host 85.144.239.68 \) and not src host 31.150.234.16 -l -nn > $PIPE 2>/dev/null &
           TCPDUMP_PID=$!
           # Verify tcpdump started successfully
           sleep 1
@@ -226,21 +229,29 @@ spec:
 
             # Try to read from pipe with timeout
             if read -t $check_interval -u 3 line; then
-              # echo "DEBUG: Got packet: $line"
-              # Extract source IP from tcpdump output
-              # Format: "timestamp interface direction IP src_ip.src_port > dst_ip.dst_port: UDP, length XX"
-              # Example: "23:32:24.873947 enp4s0 In IP 85.144.239.68.61602 > 192.168.6.46.15637: UDP, length 25"
-              src_field=$(echo "$line" | awk '{print $5}')  # Gets "85.144.239.68.61602"
-              src_ip=$(echo "$src_field" | sed 's/\.[0-9]*$//')  # Remove port: "85.144.239.68"
-              # Debug: check if IP extraction failed
-              if [ "$src_ip" = "IP" ] || [ -z "$src_ip" ]; then
-                log "ERROR: IP extraction failed for line: $line"
+              # DEBUG: Print raw tcpdump line to figure out why parsing fails
+              # log "RAW TCPDUMP: $line"
+
+              # Extract source IP from tcpdump output robustly
+              # Example output formats:
+              # "23:32:24.873947 enp4s0 In IP 85.144.239.68.61602 > 192.168.6.46.15637: UDP"
+              # "23:32:24.873947 IP 85.144.239.68.61602 > 192.168.6.46.15637: UDP"
+              # Find the field immediately before ' > ', then extract just the IPv4 part
+              src_field=$(echo "$line" | awk -F' > ' '{print $1}' | awk '{print $NF}')
+              src_ip=$(echo "$src_field" | grep -oE '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+')
+              
+              if [ -z "$src_ip" ]; then
+                log "DEBUG: Ignored non-IP packet or extraction failed: $line"
                 continue
               fi
-              # Validate IP format (basic check)
-              if ! echo "$src_ip" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$'; then
-                log "ERROR: Invalid IP format: $src_ip from line: $line"
-                continue
+
+              # Extract destination port
+              dst_field=$(echo "$line" | awk -F' > ' '{print $2}' | awk '{print $1}')
+              dst_port=$(echo "$dst_field" | awk -F. '{print $NF}' | tr -d ':')
+              
+              packet_weight=1
+              if [ "$dst_port" = "15636" ] || [ "$dst_port" = "15637" ]; then
+                packet_weight=5  # Game port traffic instantly wakes up the server
               fi
 
               current_time=$(date +%s)
@@ -268,24 +279,24 @@ spec:
                   first_seen=$current_time
                 fi
 
-                # Check if window is still valid (60 seconds)
+                # Check if window is still valid
                 time_since_first=$((current_time - first_seen))
                 if [ $time_since_first -ge $traffic_window ]; then
                   # Window expired, reset count
-                  count=1
+                  count=$packet_weight
                   first_seen=$current_time
                   log "Starting new registration window for IP: $src_ip"
                 else
-                  # Within window, increment count
-                  count=$((count + 1))
+                  # Within window, increment count by packet weight
+                  count=$((count + packet_weight))
                 fi
 
                 # Save updated count
                 echo "$count $first_seen" > "$ip_count_file"
 
                 # Check if reached threshold
-                if [ $count -eq $required_packets ]; then
-                  log "IP $src_ip registered (5 packets within 60 seconds)"
+                if [ $count -ge $required_packets ]; then
+                  log "IP $src_ip registered (score $count/$required_packets within $traffic_window seconds)"
                   # Register IP
                   echo "$current_time" > "$registered_file"
                   # Remove count file
