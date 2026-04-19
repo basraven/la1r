@@ -1,0 +1,125 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: system-audit
+  namespace: monitoring
+  labels:
+    app: system-audit
+    sablier.enable: "true"
+    sablier.group: system-audit
+spec:
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: system-audit
+  template:
+    metadata:
+      labels:
+        task: monitoring
+        app: system-audit
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - jay-c
+      hostPID: true
+      initContainers:
+      - name: setup-env
+        image: python:3.11-slim
+        command: ['sh', '-c', 'python -m venv /venv && /venv/bin/pip install -r /config/requirements.txt']
+        volumeMounts:
+        - name: venv
+          mountPath: /venv
+        - name: config
+          mountPath: /config
+      containers:
+      - name: system-audit
+        image: python:3.11-slim
+        command: ['/venv/bin/streamlit', 'run', '/config/app.py', '--server.port=8501', '--server.address=0.0.0.0']
+        ports:
+        - containerPort: 8501
+        securityContext:
+          privileged: true
+        env:
+        - name: ANTHROPIC_AUTH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: deepseek-apikey
+              key: ANTHROPIC_AUTH_TOKEN
+        volumeMounts:
+        - name: venv
+          mountPath: /venv
+        - name: config
+          mountPath: /config
+        - name: reports
+          mountPath: /reports
+      volumes:
+      - name: venv
+        emptyDir: {}
+      - name: config
+        configMap:
+          name: system-audit-config
+      - name: reports
+        persistentVolumeClaim:
+          claimName: system-audit-reports-claim
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: system-audit
+  namespace: monitoring
+spec:
+  ports:
+  - name: web
+    port: 80
+    targetPort: 8501
+  selector:
+    app: system-audit
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: system-audit-bas
+  namespace: monitoring
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: system-audit-bas-tls
+  commonName: audit.bas
+  dnsNames:
+  - audit.bas
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: system-audit-https
+  namespace: monitoring
+  annotations:
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+    traefik.ingress.kubernetes.io/router.middlewares: "monitoring-sablier-system-audit@kubernetescrd"
+spec:
+  tls:
+  - secretName: system-audit-bas-tls
+  rules:
+  - host: audit.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: system-audit
+            port:
+              number: 80

@@ -1,0 +1,70 @@
+apiVersion: argoproj.io/v1alpha1
+kind: WorkflowTemplate
+metadata:
+  name: system-audit
+  namespace: workflows
+spec:
+  entrypoint: system-audit
+  podSpecPatch: |
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+          - matchExpressions:
+            - key: kubernetes.io/hostname
+              operator: In
+              values:
+              - jay-c
+    hostPID: true
+  volumes:
+    - name: config
+      configMap:
+        name: system-audit-config
+    - name: reports
+      hostPath:
+        path: /mnt/sdd/ha/system-audit
+        type: DirectoryOrCreate
+    - name: venv
+      emptyDir: {}
+  templates:
+    - name: system-audit
+      dag:
+        tasks:
+          - name: run-audit
+            template: run-audit
+
+    - name: run-audit
+      initContainers:
+        - name: setup-env
+          image: python:3.11-slim
+          command: [sh, -c]
+          args:
+            - |
+              python -m venv /venv && /venv/bin/pip install -r /config/requirements.txt
+          volumeMounts:
+            - name: venv
+              mountPath: /venv
+            - name: config
+              mountPath: /config
+      container:
+        image: python:3.11-slim
+        command: [sh, -c]
+        args:
+          - |
+            echo "Running System Audit..."
+            /venv/bin/python /config/audit.py
+        securityContext:
+          privileged: true
+        env:
+          - name: ANTHROPIC_AUTH_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: deepseek-apikey
+                key: ANTHROPIC_AUTH_TOKEN
+        volumeMounts:
+          - name: venv
+            mountPath: /venv
+          - name: config
+            mountPath: /config
+          - name: reports
+            mountPath: /reports

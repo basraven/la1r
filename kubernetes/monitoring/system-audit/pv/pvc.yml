@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: system-audit-reports-claim
+  namespace: monitoring
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: system-audit-data
+  resources:
+    requests:
+      storage: 5Gi
+  

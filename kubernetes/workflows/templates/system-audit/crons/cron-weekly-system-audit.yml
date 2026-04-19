@@ -1,0 +1,12 @@
+apiVersion: argoproj.io/v1alpha1
+kind: CronWorkflow
+metadata:
+  name: weekly-system-audit
+  namespace: workflows
+spec:
+  schedule: "0 10 * * 0" # Every Sunday at 10:00 AM
+  concurrencyPolicy: "Forbid"
+  timezone: "Europe/Amsterdam"
+  workflowSpec:
+    workflowTemplateRef:
+      name: system-audit

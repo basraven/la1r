@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: system-audit-reports-pv
+  labels:
+    contenttype: "system-audit-reports"
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+  - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: system-audit-data
+  hostPath:
+    path: /mnt/sdd/ha/system-audit
+
