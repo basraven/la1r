@@ -1,0 +1,6 @@
+audit_schedule: "weekly"
+ai_model: "deepseek-chat"
+checks:
+  zfs_health: true
+  smart_attributes: true
+  journal_errors: true
