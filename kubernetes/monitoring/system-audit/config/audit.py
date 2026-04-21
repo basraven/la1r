@@ -98,6 +98,16 @@ def analyze_host_logs():
 
     result = f"Analyzed {len(files)} recent log files (showing first {min(len(files), 20)}).\n"
     result += f"Total lines: {total_lines}, errors: {total_errors}, warnings: {total_warnings}\n\n"
+
+    # List of files analyzed
+    analyzed_files = files[:20]
+    result += f"Files analyzed ({len(analyzed_files)}):\n"
+    for i, file_path in enumerate(analyzed_files, 1):
+        # Show relative path from /host/logs
+        rel_path = os.path.relpath(file_path, log_path)
+        result += f"  {i}. {rel_path}\n"
+    result += "\n"
+
     result += "Per file summary:\n" + "\n".join(summary) + "\n\n"
     if all_error_messages:
         result += "Top error messages per file:\n" + "\n".join(all_error_messages)
@@ -243,6 +253,20 @@ def main():
 
     with open(CONFIG_PATH, "r") as f:
         config = yaml.safe_load(f)
+
+    # Load user config from writable location if exists
+    user_config_path = "/reports/user_config.yaml"
+    user_config = {}
+    if os.path.exists(user_config_path):
+        try:
+            with open(user_config_path, "r") as f:
+                user_config = yaml.safe_load(f)
+        except Exception as e:
+            print(f"Warning: Error loading user config: {e}")
+
+    # Merge configs: user config overrides default
+    if 'checks' in user_config:
+        config['checks'] = {**config['checks'], **user_config['checks']}
 
     data = gather_data(config)
 
