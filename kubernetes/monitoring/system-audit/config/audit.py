@@ -17,6 +17,93 @@ def run_host_command(cmd):
     except Exception as e:
         return f"Exception: {str(e)}"
 
+def run_local_command(cmd, timeout=30):
+    """Run a command locally in the container."""
+    try:
+        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=timeout)
+        return result.stdout.strip() if result.returncode == 0 else f"Error: {result.stderr}"
+    except Exception as e:
+        return f"Exception: {str(e)}"
+
+
+def analyze_host_logs():
+    """Analyze host log files from /host/logs for past 7 days."""
+    import os
+    from datetime import datetime, timedelta
+
+    log_path = "/host/logs"
+    if not os.path.exists(log_path):
+        return "Host logs directory not mounted."
+
+    # Find log files modified in last 7 days
+    # Use find command to list files (including compressed)
+    cmd = f"find {log_path} -type f \\( -name '*.log' -o -name '*.log.*' -o -name '*log' \\) -mtime -7"
+    result = run_local_command(cmd, timeout=30)
+    if result.startswith("Error:") or result.startswith("Exception:"):
+        return f"Error finding log files: {result}"
+    files = [f.strip() for f in result.splitlines() if f.strip()]
+
+    if not files:
+        return "No recent log files found."
+
+    summary = []
+    total_lines = 0
+    total_errors = 0
+    total_warnings = 0
+    all_error_messages = []
+
+    # Limit to 20 files to avoid overload
+    for file_path in files[:20]:
+        # Determine decompression command
+        if file_path.endswith('.gz'):
+            cat_cmd = f"zcat {file_path}"
+        elif file_path.endswith('.xz'):
+            cat_cmd = f"xzcat {file_path}"
+        elif file_path.endswith('.bz2'):
+            cat_cmd = f"bzcat {file_path}"
+        else:
+            cat_cmd = f"cat {file_path}"
+
+        # Count lines
+        line_out = run_local_command(f"{cat_cmd} | wc -l", timeout=15)
+        line_count = int(line_out.strip() if line_out.strip().isdigit() else 0)
+        total_lines += line_count
+
+        # Count errors (case-insensitive)
+        error_out = run_local_command(f"{cat_cmd} | grep -i -c 'error\\|fail\\|crit\\|alert\\|emerg'", timeout=15)
+        error_count = int(error_out.strip() if error_out.strip().isdigit() else 0)
+        total_errors += error_count
+
+        # Count warnings
+        warn_out = run_local_command(f"{cat_cmd} | grep -i -c 'warn'", timeout=15)
+        warning_count = int(warn_out.strip() if warn_out.strip().isdigit() else 0)
+        total_warnings += warning_count
+
+        # Extract unique error messages (first 100)
+        if error_count > 0:
+            # Get lines containing error/fail etc., strip timestamps, get top 5
+            # Use awk to remove leading timestamp (pattern: month day time)
+            unique_errors = run_local_command(
+                f"{cat_cmd} | grep -i 'error\\|fail\\|crit\\|alert\\|emerg' | head -100 | "
+                "awk '{{$1=$2=$3=\"\"; print $0}}' | sed 's/^   //' | sort | uniq -c | sort -nr | head -5",
+                timeout=20
+            )
+            if unique_errors and not unique_errors.startswith("Error:") and not unique_errors.startswith("Exception:"):
+                all_error_messages.append(f"=== {os.path.basename(file_path)} ===\n{unique_errors}")
+
+        summary.append(f"{os.path.basename(file_path)}: lines={line_count}, errors={error_count}, warnings={warning_count}")
+
+    # Overall top error messages across all files (combined)
+    # Could combine but heavy; skip for now.
+
+    result = f"Analyzed {len(files)} recent log files (showing first {min(len(files), 20)}).\n"
+    result += f"Total lines: {total_lines}, errors: {total_errors}, warnings: {total_warnings}\n\n"
+    result += "Per file summary:\n" + "\n".join(summary) + "\n\n"
+    if all_error_messages:
+        result += "Top error messages per file:\n" + "\n".join(all_error_messages)
+    return result
+
+
 def gather_data(input_config):
     data = {}
     if input_config['checks'].get('zfs_health'):
@@ -142,6 +229,10 @@ def gather_data(input_config):
         # Uptime
         uptime = run_host_command("uptime -p")
         data['system_health'] = f"Uptime: {uptime}\nLoad: {load}\nMemory:\n{memory}\nDisk usage:\n{disk_usage}"
+
+    if input_config['checks'].get('host_log_analysis'):
+        print("Analyzing host logs...")
+        data['host_logs'] = analyze_host_logs()
 
     return data
 

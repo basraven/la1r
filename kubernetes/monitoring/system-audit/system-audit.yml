@@ -34,7 +34,7 @@ spec:
       initContainers:
       - name: setup-env
         image: python:3.11-slim
-        command: ['sh', '-c', 'python -m venv /venv && /venv/bin/pip install -r /config/requirements.txt']
+        command: ['sh', '-c', 'apt-get update && apt-get install -y gzip xz-utils bzip2 && python -m venv /venv && /venv/bin/pip install -r /config/requirements.txt']
         volumeMounts:
         - name: venv
           mountPath: /venv
@@ -73,6 +73,9 @@ spec:
         - name: systemd-etc
           mountPath: /host/etc/systemd
           readOnly: true
+        - name: host-logs
+          mountPath: /host/logs
+          readOnly: true
       volumes:
       - name: venv
         emptyDir: {}
@@ -97,6 +100,10 @@ spec:
       - name: systemd-etc
         hostPath:
           path: /etc/systemd
+          type: Directory
+      - name: host-logs
+        hostPath:
+          path: /var/log
           type: Directory
 
 ---
