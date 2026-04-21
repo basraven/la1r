@@ -8,3 +8,4 @@ checks:
   system_updates: true
   service_status: true
   system_health: true
+  host_log_analysis: true

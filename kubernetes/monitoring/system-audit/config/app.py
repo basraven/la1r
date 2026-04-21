@@ -14,18 +14,74 @@ st.sidebar.title("System Audit AI")
 if "page" not in st.session_state:
     st.session_state.page = "Dashboard"
 
+# Load default config from configMap
 with open("/config/checks.yaml", "r") as f:
-    config = yaml.safe_load(f)
+    default_config = yaml.safe_load(f)
+
+# Load user config from writable location if exists
+user_config_path = "/reports/user_config.yaml"
+user_config = {}
+if os.path.exists(user_config_path):
+    try:
+        with open(user_config_path, "r") as f:
+            user_config = yaml.safe_load(f)
+    except Exception as e:
+        st.sidebar.warning(f"Error loading user config: {e}")
+
+# Merge configs: user config overrides default
+config = default_config.copy()
+if 'checks' in user_config:
+    config['checks'] = {**default_config['checks'], **user_config['checks']}
 
 if st.session_state.page == "Dashboard":
+    # Initialize session state for checkboxes if not present
+    if 'checks_config' not in st.session_state:
+        st.session_state.checks_config = config['checks'].copy()
+
     st.sidebar.markdown("### Configuration")
-    st.sidebar.checkbox("ZFS Audit", value=config['checks']['zfs_health'], disabled=True)
-    st.sidebar.checkbox("Disk SMART", value=config['checks']['smart_attributes'], disabled=True)
-    st.sidebar.checkbox("Journal Errors", value=config['checks']['journal_errors'], disabled=True)
-    st.sidebar.checkbox("Kubernetes Node Health", value=config['checks']['kubernetes_node_health'], disabled=True)
-    st.sidebar.checkbox("System Updates", value=config['checks']['system_updates'], disabled=True)
-    st.sidebar.checkbox("Service Status", value=config['checks']['service_status'], disabled=True)
-    st.sidebar.checkbox("System Health", value=config['checks']['system_health'], disabled=True)
+
+    # Editable checkboxes for each check
+    st.session_state.checks_config['zfs_health'] = st.sidebar.checkbox(
+        "ZFS Audit",
+        value=st.session_state.checks_config['zfs_health']
+    )
+    st.session_state.checks_config['smart_attributes'] = st.sidebar.checkbox(
+        "Disk SMART",
+        value=st.session_state.checks_config['smart_attributes']
+    )
+    st.session_state.checks_config['journal_errors'] = st.sidebar.checkbox(
+        "Journal Errors",
+        value=st.session_state.checks_config['journal_errors']
+    )
+    st.session_state.checks_config['kubernetes_node_health'] = st.sidebar.checkbox(
+        "Kubernetes Node Health",
+        value=st.session_state.checks_config['kubernetes_node_health']
+    )
+    st.session_state.checks_config['system_updates'] = st.sidebar.checkbox(
+        "System Updates",
+        value=st.session_state.checks_config['system_updates']
+    )
+    st.session_state.checks_config['service_status'] = st.sidebar.checkbox(
+        "Service Status",
+        value=st.session_state.checks_config['service_status']
+    )
+    st.session_state.checks_config['system_health'] = st.sidebar.checkbox(
+        "System Health",
+        value=st.session_state.checks_config['system_health']
+    )
+    st.session_state.checks_config['host_log_analysis'] = st.sidebar.checkbox(
+        "Host Log Analysis",
+        value=st.session_state.checks_config.get('host_log_analysis', True)
+    )
+
+    # Save configuration button
+    st.sidebar.markdown("---")
+    if st.sidebar.button("Save Configuration", type="primary"):
+        # Write user config to writable location
+        user_config = {'checks': st.session_state.checks_config}
+        with open("/reports/user_config.yaml", "w") as f:
+            yaml.dump(user_config, f, default_flow_style=False)
+        st.sidebar.success("Configuration saved!")
 
     st.title("🛡️ System Audit AI Dashboard")
 
