@@ -14,3 +14,19 @@ spec:
   - ReadWriteOnce
   hostPath:
     path: "/mnt/hdd/torrent" # path to directory
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: jellyfin-torrent-ssd-data-pv
+  labels:
+    contenttype: "jellyfin-torrent-ssd-data"
+spec:
+  capacity:
+    storage: 200Gi
+  storageClassName: jellyfin-torrent-ssd-data
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/mnt/ssd/torrent-ssd" # path to directory

@@ -15,3 +15,20 @@ spec:
     requests:
       storage: 2000Gi
       
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: jellyfin-torrent-ssd-data-claim
+  namespace: torrent
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: jellyfin-torrent-ssd-data
+  selector:
+    matchLabels:
+      contenttype: "jellyfin-torrent-ssd-data"
+  resources:
+    requests:
+      storage: 200Gi
+      

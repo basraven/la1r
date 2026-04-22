@@ -24,4 +24,17 @@ spec:
   resources:
     requests:
       storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: sonarr-torrent-ssd-data-claim
+  namespace: torrent
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: sonarr-torrent-ssd-data
+  resources:
+    requests:
+      storage: 200Gi
       

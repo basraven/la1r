@@ -34,6 +34,9 @@ spec:
         - name: sonarr-torrent-volume
           persistentVolumeClaim:
             claimName: sonarr-torrent-data-claim
+        - name: sonarr-torrent-ssd-volume
+          persistentVolumeClaim:
+            claimName: sonarr-torrent-ssd-data-claim
       containers:
       - name: sonarr
         resources:
@@ -52,7 +55,9 @@ spec:
           - name: sonarr-config-volume
             mountPath: /config
           - name: sonarr-torrent-volume
-            mountPath: /downloads
+            mountPath: /torrent
+          - name: sonarr-torrent-ssd-volume
+            mountPath: /torrent-ssd
 ---
 apiVersion: v1
 kind: Service

@@ -30,3 +30,19 @@ spec:
   - ReadWriteOnce
   hostPath:
     path: "/mnt/hdd/torrent"
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: sonarr-torrent-ssd-data-pv
+  labels:
+    contenttype: "sonarr-torrent-ssd-data"
+spec:
+  capacity:
+    storage: 200Gi
+  storageClassName: sonarr-torrent-ssd-data
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/mnt/ssd/torrent-ssd"

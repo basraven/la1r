@@ -14,38 +14,6 @@ spec:
   - ReadWriteOnce
   hostPath:
     path: "/mnt/ssd/na/torrent/state/standard"
----
-kind: PersistentVolume
-apiVersion: v1
-metadata:
-  name: torrent-series-data-pv
-  labels:
-    contenttype: "torrent-series-data"
-spec:
-  capacity:
-    storage: 1Gi
-  storageClassName: torrent-series-data
-  persistentVolumeReclaimPolicy: Retain
-  accessModes:
-  - ReadWriteOnce
-  hostPath:
-    path: "/mnt/ssd/na/torrent/state/series"
----
-kind: PersistentVolume
-apiVersion: v1
-metadata:
-  name: torrent-uhd-data-pv
-  labels:
-    contenttype: "torrent-uhd-data"
-spec:
-  capacity:
-    storage: 1Gi
-  storageClassName: torrent-uhd-data
-  persistentVolumeReclaimPolicy: Retain
-  accessModes:
-  - ReadWriteOnce
-  hostPath:
-    path: "/mnt/ssd/na/torrent/state/uhd"
 
 ---
 kind: PersistentVolume
@@ -63,3 +31,20 @@ spec:
   - ReadWriteMany
   hostPath:
     path: "/mnt/hdd/torrent" # path to directory
+
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: qbit-torrent-ssd-data-pv
+  labels:
+    contenttype: "qbit-torrent-ssd-data"
+spec:
+  capacity:
+    storage: 200Gi
+  storageClassName: qbit-torrent-ssd-data
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteMany
+  hostPath:
+    path: "/mnt/ssd/torrent-ssd" # path to directory

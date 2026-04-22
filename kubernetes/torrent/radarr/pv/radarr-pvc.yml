@@ -25,3 +25,17 @@ spec:
     requests:
       storage: 10Gi
       
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: radarr-torrent-ssd-data-claim
+  namespace: torrent
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: radarr-torrent-ssd-data
+  resources:
+    requests:
+      storage: 200Gi
+      

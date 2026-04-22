@@ -28,6 +28,9 @@ spec:
         - name: radarr-torrent-volume
           persistentVolumeClaim:
             claimName: radarr-torrent-data-claim
+        - name: radarr-torrent-ssd-volume
+          persistentVolumeClaim:
+            claimName: radarr-torrent-ssd-data-claim
       containers:
       - name: radarr
         resources:
@@ -46,7 +49,9 @@ spec:
           - name: radarr-config-volume
             mountPath: /config
           - name: radarr-torrent-volume
-            mountPath: /downloads
+            mountPath: /torrent
+          - name: radarr-torrent-ssd-volume
+            mountPath: /torrent-ssd
        
 ---
 apiVersion: v1

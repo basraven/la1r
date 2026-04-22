@@ -11,32 +11,6 @@ spec:
   resources:
     requests:
       storage: 1Gi
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: torrent-series-data-claim
-  namespace: torrent
-spec:
-  storageClassName: torrent-series-data
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: torrent-uhd-data-claim
-  namespace: torrent
-spec:
-  storageClassName: torrent-uhd-data
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
   
 ---
 apiVersion: v1
@@ -54,4 +28,21 @@ spec:
   resources:
     requests:
       storage: 2000Gi
+      
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: qbit-torrent-ssd-data-claim
+  namespace: torrent
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: qbit-torrent-ssd-data
+  selector:
+    matchLabels:
+      contenttype: "qbit-torrent-ssd-data"
+  resources:
+    requests:
+      storage: 200Gi
       

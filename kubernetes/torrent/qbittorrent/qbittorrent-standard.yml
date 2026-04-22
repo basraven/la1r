@@ -291,6 +291,13 @@ spec:
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 3
+        resources:
+          limits:
+            cpu: "4"
+            memory: "6Gi"
+          requests:
+            cpu: "2"
+            memory: "3Gi"
         ports:
         - name: webui
           containerPort: 8080
@@ -337,7 +344,9 @@ spec:
             mountPath: /data/vpn_state
             subPath: vpn_state
           - name: qbit-torrent-data-volume
-            mountPath: /downloads
+            mountPath: /torrent
+          - name: qbit-torrent-ssd-data-volume
+            mountPath: /torrent-ssd
       volumes:
       - name: goose-ovpn-files-volume
         secret:
@@ -356,6 +365,9 @@ spec:
       - name: qbit-torrent-data-volume
         persistentVolumeClaim:
           claimName: qbit-torrent-data-claim
+      - name: qbit-torrent-ssd-data-volume
+        persistentVolumeClaim:
+          claimName: qbit-torrent-ssd-data-claim
       - name: torrent-standard-data-volume
         persistentVolumeClaim:
           claimName: torrent-standard-data-claim
