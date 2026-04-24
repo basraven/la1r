@@ -382,7 +382,7 @@ def main():
     print("Sending data to DeepSeek API...")
     try:
         response = client.chat.completions.create(
-            model=config.get("ai_model", "deepseek-chat"),
+            model=config.get("ai_model", "deepseek-v4-flash"),
             messages=[
                 {"role": "system", "content": system_content},
                 {"role": "user", "content": prompt}

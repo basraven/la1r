@@ -1,5 +1,5 @@
 audit_schedule: "weekly"
-ai_model: "deepseek-chat"
+ai_model: "deepseek-v4-flash"
 checks:
   zfs_health: true
   smart_attributes: true
