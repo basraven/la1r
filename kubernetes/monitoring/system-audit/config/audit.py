@@ -317,7 +317,7 @@ def gather_data(input_config):
 
     if input_config['checks'].get('inode_usage'):
         print("Checking inode usage...")
-        data['inode_usage'] = run_host_command("df -i / /home /var /mnt 2>/dev/null | grep -v '^Filesystem' | head -20")
+        data['inode_usage'] = run_host_command("df -i / /home /var /mnt /mnt/hdd /mnt/ssd 2>/dev/null | grep -v '^Filesystem' | head -20")
 
     if input_config['checks'].get('host_log_analysis'):
         print("Analyzing host logs...")

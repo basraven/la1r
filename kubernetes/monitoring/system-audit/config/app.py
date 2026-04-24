@@ -40,39 +40,48 @@ if st.session_state.page == "Dashboard":
 
     st.sidebar.markdown("### Configuration")
 
-    # Editable checkboxes for each check
-    st.session_state.checks_config['zfs_health'] = st.sidebar.checkbox(
-        "ZFS Audit",
-        value=st.session_state.checks_config['zfs_health']
-    )
-    st.session_state.checks_config['smart_attributes'] = st.sidebar.checkbox(
-        "Disk SMART",
-        value=st.session_state.checks_config['smart_attributes']
-    )
-    st.session_state.checks_config['journal_errors'] = st.sidebar.checkbox(
-        "Journal Errors",
-        value=st.session_state.checks_config['journal_errors']
-    )
-    st.session_state.checks_config['kubernetes_node_health'] = st.sidebar.checkbox(
-        "Kubernetes Node Health",
-        value=st.session_state.checks_config['kubernetes_node_health']
-    )
-    st.session_state.checks_config['system_updates'] = st.sidebar.checkbox(
-        "System Updates",
-        value=st.session_state.checks_config['system_updates']
-    )
-    st.session_state.checks_config['service_status'] = st.sidebar.checkbox(
-        "Service Status",
-        value=st.session_state.checks_config['service_status']
-    )
-    st.session_state.checks_config['system_health'] = st.sidebar.checkbox(
-        "System Health",
-        value=st.session_state.checks_config['system_health']
-    )
-    st.session_state.checks_config['host_log_analysis'] = st.sidebar.checkbox(
-        "Host Log Analysis",
-        value=st.session_state.checks_config.get('host_log_analysis', True)
-    )
+    # Select all / deselect all
+    all_checks = list(st.session_state.checks_config.keys())
+    all_enabled = all(st.session_state.checks_config.values())
+    if st.sidebar.button("Deselect All" if all_enabled else "Select All"):
+        new_value = not all_enabled
+        for key in all_checks:
+            st.session_state.checks_config[key] = new_value
+        st.rerun()
+
+    # Checks organised by category
+    check_definitions = {
+        "System": [
+            ("system_health", "System Health"),
+            ("system_updates", "System Updates"),
+            ("service_status", "Service Status"),
+            ("failed_units", "Failed Systemd Units"),
+            ("inode_usage", "Inode Usage"),
+        ],
+        "Storage": [
+            ("zfs_health", "ZFS Audit"),
+            ("smart_attributes", "Disk SMART"),
+        ],
+        "Logs & Events": [
+            ("journal_errors", "Journal Errors"),
+            ("oom_events", "OOM Events"),
+            ("dmesg_anomalies", "Dmesg Anomalies"),
+            ("host_log_analysis", "Host Log Analysis"),
+        ],
+        "Kubernetes": [
+            ("kubernetes_node_health", "Node Health"),
+            ("node_resource_pressure", "Node Resource Pressure"),
+            ("certificate_expiry", "Certificate Expiry"),
+        ],
+    }
+
+    for category, checks in check_definitions.items():
+        with st.sidebar.expander(category, expanded=True):
+            for key, label in checks:
+                st.session_state.checks_config[key] = st.checkbox(
+                    label,
+                    value=st.session_state.checks_config.get(key, True)
+                )
 
     # Save configuration button
     st.sidebar.markdown("---")
