@@ -1,0 +1,11 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: service-toggle-token-auth
+  namespace: online
+spec:
+  forwardAuth:
+    address: http://service-toggle.online.svc.cluster.local/api/verify-token
+    trustForwardHeader: true
+    authRequestHeaders:
+      - Authorization

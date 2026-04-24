@@ -154,6 +154,24 @@
 <script>
 var container = document.getElementById("container");
 
+// Extract token from URL query param, store in session for API calls
+var AUTH_TOKEN = (function() {
+  var t = new URLSearchParams(window.location.search).get("token");
+  if (t) {
+    sessionStorage.setItem("st_token", t);
+  }
+  return t || "";
+})();
+
+function authFetch(url, opts) {
+  opts = opts || {};
+  if (AUTH_TOKEN) {
+    opts.headers = opts.headers || {};
+    opts.headers["Authorization"] = "Bearer " + AUTH_TOKEN;
+  }
+  return fetch(url, opts);
+}
+
 function fmt(seconds) {
   var h = Math.floor(seconds / 3600);
   var m = Math.floor((seconds % 3600) / 60);
@@ -330,7 +348,7 @@ function setLoading(ns, name) {
 
 async function refresh() {
   try {
-    var r = await fetch("/api/status");
+    var r = await authFetch("/api/status");
     if (!r.ok) throw new Error(await r.text());
     var data = await r.json();
     data.forEach(setUI);
@@ -342,7 +360,7 @@ async function toggle(ns, name, hours) {
   try {
     var opts = { method: "POST" };
     if (hours) { opts.headers = { "Content-Type": "application/json" }; opts.body = JSON.stringify({ hours: hours }); }
-    var r = await fetch("/api/toggle/" + ns + "/" + name, opts);
+    var r = await authFetch("/api/toggle/" + ns + "/" + name, opts);
     if (!r.ok) throw new Error(await r.text());
     setUI(await r.json());
   } catch (e) {
@@ -354,7 +372,7 @@ async function toggle(ns, name, hours) {
 
 async function init() {
   try {
-    var r = await fetch("/api/status");
+    var r = await authFetch("/api/status");
     if (!r.ok) throw new Error(await r.text());
     var data = await r.json();
     container.innerHTML = data.map(cardHTML).join("");

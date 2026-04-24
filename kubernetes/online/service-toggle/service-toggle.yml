@@ -116,6 +116,11 @@ spec:
           value: /deps
         - name: TOGGLE_DEPLOYMENTS
           value: '[{"name":"enshrouded","namespace":"gaming","mode":"timed","options":[1,2,4]},{"name":"system-audit","namespace":"monitoring"}]'
+        - name: TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: service-toggle-auth
+              key: token
         securityContext:
           runAsUser: 1000
           runAsGroup: 1000
@@ -157,25 +162,27 @@ spec:
   dnsNames:
   - toggle.bas
 ---
-apiVersion: networking.k8s.io/v1
-kind: Ingress
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
 metadata:
   name: service-toggle-https
   namespace: online
-  annotations:
-    traefik.ingress.kubernetes.io/router.tls: "true"
-    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
 spec:
+  entryPoints:
+    - websecure
+  routes:
+    - kind: Rule
+      match: Host(`toggle.bas`) && PathPrefix(`/api`)
+      middlewares:
+        - name: service-toggle-token-auth
+          namespace: online
+      services:
+        - name: service-toggle
+          port: 80
+    - kind: Rule
+      match: Host(`toggle.bas`)
+      services:
+        - name: service-toggle
+          port: 80
   tls:
-  - secretName: service-toggle-bas-tls
-  rules:
-  - host: toggle.bas
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: service-toggle
-            port:
-              number: 80
+    secretName: service-toggle-bas-tls

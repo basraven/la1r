@@ -8,5 +8,11 @@ configMapGenerator:
   files:
   - app.py
   - index.html
+secretGenerator:
+- name: service-toggle-auth
+  namespace: online
+  literals:
+  - token=30QXXVsh5U4FVDEmpqcu64ONa1Y0StbShVskv7BEzXo=
 resources:
 - service-toggle.yml
+- auth-middleware.yml

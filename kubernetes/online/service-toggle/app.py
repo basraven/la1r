@@ -4,7 +4,7 @@ import time
 import threading
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, Body
+from fastapi import FastAPI, HTTPException, Body, Request, Depends
 from fastapi.responses import HTMLResponse
 from kubernetes import client, config
 from kubernetes.client.rest import ApiException
@@ -23,6 +23,7 @@ for dep in json.loads(_raw):
     })
 
 HTML = Path("/app/index.html").read_text()
+TOKEN = os.getenv("TOKEN") or ""
 
 # --- Timer & uptime tracking ---
 _timers = {}       # "ns/name" -> expiry timestamp
@@ -107,9 +108,29 @@ except Exception:
     pass
 
 
+# --- Token auth ---
+
+def verify_token(request: Request):
+    """Dependency: validates token from Authorization header or ?token= query param."""
+    if not TOKEN:
+        return
+    auth = request.headers.get("Authorization", "")
+    token_from_header = auth[7:] if auth.startswith("Bearer ") else ""
+    token_from_query = request.query_params.get("token", "")
+    if token_from_header != TOKEN and token_from_query != TOKEN:
+        raise HTTPException(status_code=401, detail="Invalid or missing token")
+
+
+@app.get("/api/verify-token")
+def verify_token_endpoint(request: Request):
+    """Auth endpoint used by Traefik forwardAuth middleware."""
+    verify_token(request)
+    return {"status": "ok"}
+
+
 # --- API ---
 
-@app.get("/api/status")
+@app.get("/api/status", dependencies=[Depends(verify_token)])
 def get_status():
     results = []
     api = _get_api()
@@ -147,7 +168,7 @@ def get_status():
     return results
 
 
-@app.post("/api/toggle/{namespace}/{name}")
+@app.post("/api/toggle/{namespace}/{name}", dependencies=[Depends(verify_token)])
 def toggle(name: str, namespace: str, body: dict = Body({})):
     key = f"{namespace}/{name}"
     try:
@@ -209,6 +230,6 @@ def toggle(name: str, namespace: str, body: dict = Body({})):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/", response_class=HTMLResponse)
+@app.get("/", response_class=HTMLResponse, dependencies=[Depends(verify_token)])
 def index():
     return HTMLResponse(HTML)
