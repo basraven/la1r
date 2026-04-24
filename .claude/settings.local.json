@@ -7,11 +7,12 @@
       "mcp__kubernetes__resources_get",
       "WebFetch(domain:raw.githubusercontent.com)",
       "WebFetch(domain:api.github.com)",
-      "mcp__kubernetes__pods_log"
+      "mcp__kubernetes__pods_log",
+      "Bash(kubectl kustomize:*)"
     ]
   },
+  "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "playwright"
-  ],
-  "enableAllProjectMcpServers": true
+  ]
 }

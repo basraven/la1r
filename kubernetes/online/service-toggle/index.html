@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Service Toggle</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #1a1a2e;
+    color: #eee;
+    display: flex;
+    justify-content: center;
+    padding: 1rem;
+    min-height: 100vh;
+  }
+  .container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+    max-width: 360px;
+  }
+  .card {
+    background: #16213e;
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+  }
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+  }
+  .service-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #c0c0d0;
+  }
+  .service-ns {
+    font-size: 0.7rem;
+    color: #555;
+    margin-top: 1px;
+  }
+  .status-tag {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .dot.online { background: #4ade80; box-shadow: 0 0 8px #4ade80; }
+  .dot.offline { background: #f87171; box-shadow: 0 0 8px #f87171; }
+  .dot.timed { background: #60a5fa; box-shadow: 0 0 8px #60a5fa; }
+  .dot.error { background: #fbbf24; box-shadow: 0 0 8px #fbbf24; }
+  .dot.loading { background: #fbbf24; box-shadow: 0 0 8px #fbbf24; animation: pulse 0.8s infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .status-tag.online { color: #4ade80; }
+  .status-tag.offline { color: #f87171; }
+  .status-tag.timed { color: #60a5fa; }
+  .status-tag.error { color: #fbbf24; }
+  .countdown {
+    text-align: center;
+    padding: 0.3rem 0 0.2rem;
+  }
+  .uptime {
+    font-size: 0.8rem;
+    color: #4ade80;
+    font-weight: 500;
+  }
+  .timer {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #60a5fa;
+    font-variant-numeric: tabular-nums;
+  }
+  .timer-row {
+    display: flex;
+    gap: 0.35rem;
+    justify-content: center;
+    padding: 0.25rem 0;
+  }
+  .timer-btn {
+    flex: 1;
+    max-width: 80px;
+    padding: 0.35rem 0;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border: 1.5px solid;
+    border-radius: 6px;
+    cursor: pointer;
+    background: transparent;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .timer-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+  .timer-btn.add {
+    border-color: #60a5fa;
+    color: #60a5fa;
+  }
+  .timer-btn.add:hover:not(:disabled) {
+    background: #60a5fa;
+    color: #1a1a2e;
+  }
+  .timer-btn.sub {
+    border-color: #f87171;
+    color: #f87171;
+  }
+  .timer-btn.sub:hover:not(:disabled) {
+    background: #f87171;
+    color: #1a1a2e;
+  }
+  .main-btn {
+    display: block;
+    width: 100%;
+    padding: 0.5rem;
+    margin-top: 0.35rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 7px;
+    cursor: pointer;
+    color: #fff;
+    transition: transform 0.1s;
+    text-align: center;
+  }
+  .main-btn:active { transform: scale(0.98); }
+  .main-btn.stop { background: #f87171; }
+  .main-btn.start { background: #4ade80; color: #1a1a2e; }
+  .main-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .error-msg {
+    color: #f87171;
+    font-size: 0.8rem;
+    display: none;
+    text-align: center;
+    margin-top: 0.4rem;
+  }
+</style>
+</head>
+<body>
+<div class="container" id="container"></div>
+<script>
+var container = document.getElementById("container");
+
+function fmt(seconds) {
+  var h = Math.floor(seconds / 3600);
+  var m = Math.floor((seconds % 3600) / 60);
+  var s = seconds % 60;
+  if (h > 0) return h + "h " + m + "m " + s + "s";
+  if (m > 0) return m + "m " + s + "s";
+  return s + "s";
+}
+
+function cardHTML(dep) {
+  var id = dep.namespace + "-" + dep.name;
+  return (
+    '<div class="card" id="card-' + id + '">' +
+      '<div class="card-header">' +
+        '<div>' +
+          '<div class="service-name">' + dep.name + '</div>' +
+          '<div class="service-ns">' + dep.namespace + '</div>' +
+        '</div>' +
+        '<div class="status-tag" id="tag-' + id + '">' +
+          '<span class="dot loading" id="dot-' + id + '"></span>' +
+          '<span id="label-' + id + '">...</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="countdown">' +
+        '<div class="uptime" id="up-' + id + '"></div>' +
+        '<div class="timer" id="cd-' + id + '"></div>' +
+      '</div>' +
+      '<div class="timer-row" id="ar-' + id + '"></div>' +
+      '<div class="timer-row" id="sr-' + id + '"></div>' +
+      '<button class="main-btn" id="btn-' + id + '" disabled>...</button>' +
+      '<div class="error-msg" id="err-' + id + '"></div>' +
+    '</div>'
+  );
+}
+
+function buildRow(containerId, opts, prefix, cls, ns, name) {
+  var row = document.getElementById(containerId);
+  if (!row) return;
+  row.innerHTML = "";
+  (opts || [1, 2, 4]).forEach(function(h) {
+    var b = document.createElement("button");
+    b.className = "timer-btn " + cls;
+    b.textContent = prefix + h + "h";
+    b.onclick = function() { toggle(ns, name, h * (prefix === "\u2212" ? -1 : 1)); };
+    row.appendChild(b);
+  });
+}
+
+function build(dep) {
+  var id = dep.namespace + "-" + dep.name;
+  var addRow = document.getElementById("ar-" + id);
+  var subRow = document.getElementById("sr-" + id);
+  if (!addRow) return;
+  addRow.innerHTML = "";
+  subRow.innerHTML = "";
+  subRow.style.display = "none";
+
+  if (dep.mode === "timed") {
+    var opts = dep.options || [1, 2, 4];
+    buildRow("ar-" + id, opts, "+", "add", dep.namespace, dep.name);
+    if (dep.status === "online") {
+      subRow.style.display = "";
+      buildRow("sr-" + id, opts, "\u2212", "sub", dep.namespace, dep.name);
+    }
+  }
+}
+
+function setUI(dep) {
+  var id = dep.namespace + "-" + dep.name;
+  var dot = document.getElementById("dot-" + id);
+  var label = document.getElementById("label-" + id);
+  var cd = document.getElementById("cd-" + id);
+  var btn = document.getElementById("btn-" + id);
+  var err = document.getElementById("err-" + id);
+
+  // Clear old interval
+  if (window["intv_" + id]) { clearInterval(window["intv_" + id]); delete window["intv_" + id]; }
+
+  dot.className = "dot " + dep.status;
+  label.textContent = dep.error ? "ERROR" : dep.status;
+  document.getElementById("tag-" + id).className = "status-tag " + dep.status;
+
+  err.textContent = dep.error || "";
+  err.style.display = dep.error ? "block" : "none";
+
+  build(dep);
+
+  if (dep.mode === "timed" && dep.status !== "online") {
+    btn.style.display = "none";
+  } else {
+    btn.style.display = "block";
+    btn.textContent = dep.status === "online" ? "Stop" : "Start";
+    btn.className = "main-btn " + (dep.status === "online" ? "stop" : "start");
+    btn.onclick = function() { toggle(dep.name, dep.namespace); };
+  }
+  btn.disabled = false;
+
+  var upEl = document.getElementById("up-" + id);
+  if (!upEl) return;
+
+  var isOnline = dep.status === "online";
+
+  // Uptime display (snapshot from API, then count locally)
+  if (isOnline && dep.uptime_seconds > 0) {
+    upEl.textContent = "Running for " + fmt(dep.uptime_seconds);
+  } else {
+    upEl.textContent = "";
+  }
+
+  // Timer countdown display
+  if (dep.remaining_seconds > 0) {
+    cd.textContent = "Auto-stops in " + fmt(dep.remaining_seconds);
+  } else {
+    cd.textContent = "";
+  }
+
+  // Live tick: always runs when online (uptime) or when timer active
+  var needsTick = isOnline || dep.remaining_seconds > 0;
+  if (needsTick) {
+    window["intv_" + id] = setInterval(function() {
+      var cdEl = document.getElementById("cd-" + id);
+      var upEl = document.getElementById("up-" + id);
+
+      // Decrement timer countdown
+      if (cdEl && cdEl.textContent) {
+        var t = cdEl.textContent;
+        var p = t.match(/(\d+)/g);
+        if (p && p.length > 0) {
+          var s = 0;
+          if (t.indexOf("h") > -1) s = parseInt(p[0])*3600 + parseInt(p[1])*60 + parseInt(p[2]);
+          else if (t.indexOf("m") > -1) s = parseInt(p[0])*60 + parseInt(p[1]);
+          else s = parseInt(p[0]);
+          s--;
+          if (s <= 0) {
+            cdEl.textContent = "";
+            clearInterval(window["intv_" + id]);
+            refresh();
+          } else {
+            cdEl.textContent = "Auto-stops in " + fmt(s);
+          }
+        }
+      }
+
+      // Increment uptime
+      if (upEl && upEl.textContent) {
+        var up = upEl.textContent.match(/(\d+)/g);
+        if (up && up.length > 0) {
+          var ut = upEl.textContent;
+          var total = 0;
+          if (ut.indexOf("h") > -1) total = parseInt(up[0])*3600 + parseInt(up[1])*60 + parseInt(up[2]);
+          else if (ut.indexOf("m") > -1) total = parseInt(up[0])*60 + parseInt(up[1]);
+          else total = parseInt(up[0]);
+          upEl.textContent = "Running for " + fmt(total + 1);
+        }
+      }
+    }, 1000);
+  }
+}
+
+function setLoading(ns, name) {
+  var id = ns + "-" + name;
+  var dot = document.getElementById("dot-" + id);
+  var label = document.getElementById("label-" + id);
+  if (dot) dot.className = "dot loading";
+  if (label) label.textContent = "...";
+  var btn = document.getElementById("btn-" + id);
+  if (btn) btn.disabled = true;
+  document.getElementById("err-" + id).style.display = "none";
+  ["ar-", "sr-"].forEach(function(pfx) {
+    var r = document.getElementById(pfx + id);
+    if (r) r.querySelectorAll("button").forEach(function(b) { b.disabled = true; });
+  });
+}
+
+async function refresh() {
+  try {
+    var r = await fetch("/api/status");
+    if (!r.ok) throw new Error(await r.text());
+    var data = await r.json();
+    data.forEach(setUI);
+  } catch (e) { console.error("Refresh:", e); }
+}
+
+async function toggle(ns, name, hours) {
+  setLoading(ns, name);
+  try {
+    var opts = { method: "POST" };
+    if (hours) { opts.headers = { "Content-Type": "application/json" }; opts.body = JSON.stringify({ hours: hours }); }
+    var r = await fetch("/api/toggle/" + ns + "/" + name, opts);
+    if (!r.ok) throw new Error(await r.text());
+    setUI(await r.json());
+  } catch (e) {
+    var el = document.getElementById("err-" + ns + "-" + name);
+    if (el) { el.textContent = e.message; el.style.display = "block"; }
+    refresh();
+  }
+}
+
+async function init() {
+  try {
+    var r = await fetch("/api/status");
+    if (!r.ok) throw new Error(await r.text());
+    var data = await r.json();
+    container.innerHTML = data.map(cardHTML).join("");
+    data.forEach(setUI);
+  } catch (e) {
+    container.innerHTML = '<div class="card" style="color:#f87171;text-align:center">Failed to load: ' + e.message + '</div>';
+  }
+}
+
+init();
+setInterval(refresh, 15000);
+</script>
+</body>
+</html>

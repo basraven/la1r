@@ -1,0 +1,181 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: service-toggle
+  namespace: online
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: service-toggle
+  namespace: gaming
+rules:
+- apiGroups: ["apps"]
+  resources: ["deployments", "deployments/scale"]
+  resourceNames: ["enshrouded"]
+  verbs: ["get", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: service-toggle
+  namespace: gaming
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: service-toggle
+subjects:
+- kind: ServiceAccount
+  name: service-toggle
+  namespace: online
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: service-toggle
+  namespace: monitoring
+rules:
+- apiGroups: ["apps"]
+  resources: ["deployments", "deployments/scale"]
+  resourceNames: ["system-audit"]
+  verbs: ["get", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: service-toggle
+  namespace: monitoring
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: service-toggle
+subjects:
+- kind: ServiceAccount
+  name: service-toggle
+  namespace: online
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: service-toggle
+  namespace: online
+  labels:
+    app: service-toggle
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: service-toggle
+  template:
+    metadata:
+      labels:
+        app: service-toggle
+    spec:
+      serviceAccountName: service-toggle
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - jay-c
+      initContainers:
+      - name: install-deps
+        image: python:3.12-slim
+        command:
+        - pip
+        - install
+        - --target=/deps
+        - --no-cache-dir
+        - fastapi
+        - uvicorn
+        - kubernetes
+        volumeMounts:
+        - name: deps
+          mountPath: /deps
+      containers:
+      - name: service-toggle
+        image: python:3.12-slim
+        command:
+        - python
+        - -m
+        - uvicorn
+        - app:app
+        - --host
+        - "0.0.0.0"
+        - --port
+        - "8000"
+        workingDir: /app
+        ports:
+        - containerPort: 8000
+        env:
+        - name: PYTHONPATH
+          value: /deps
+        - name: TOGGLE_DEPLOYMENTS
+          value: '[{"name":"enshrouded","namespace":"gaming","mode":"timed","options":[1,2,4]},{"name":"system-audit","namespace":"monitoring"}]'
+        securityContext:
+          runAsUser: 1000
+          runAsGroup: 1000
+        volumeMounts:
+        - name: deps
+          mountPath: /deps
+        - name: app
+          mountPath: /app
+      volumes:
+      - name: deps
+        emptyDir: {}
+      - name: app
+        configMap:
+          name: service-toggle-app
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-toggle
+  namespace: online
+spec:
+  ports:
+  - port: 80
+    targetPort: 8000
+  selector:
+    app: service-toggle
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: service-toggle-bas
+  namespace: online
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: service-toggle-bas-tls
+  commonName: toggle.bas
+  dnsNames:
+  - toggle.bas
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: service-toggle-https
+  namespace: online
+  annotations:
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+spec:
+  tls:
+  - secretName: service-toggle-bas-tls
+  rules:
+  - host: toggle.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: service-toggle
+            port:
+              number: 80

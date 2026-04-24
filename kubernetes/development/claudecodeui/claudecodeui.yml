@@ -120,15 +120,15 @@ spec:
         - name: API_TIMEOUT_MS
           value: "600000"
         - name: ANTHROPIC_MODEL
-          value: "deepseek-v4-pro[1m]"
+          value: "deepseek-v4-flash"
         - name: ANTHROPIC_DEFAULT_HAIKU_MODEL
           value: "deepseek-v4-flash"
         - name: ANTHROPIC_DEFAULT_SONNET_MODEL
-          value: "deepseek-v4-pro"
+          value: "deepseek-v4-flash"
         - name: ANTHROPIC_DEFAULT_OPUS_MODEL
-          value: "deepseek-v4-pro"
+          value: "deepseek-v4-flash"
         - name: CLAUDE_CODE_SUBAGENT_MODEL
-          value: "deepseek-v4-pro"
+          value: "deepseek-v4-flash"
         - name: CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC
           value: "1"
         - name: CLAUDE_CODE_DISABLE_NONSTREAMING_FALLBACK
