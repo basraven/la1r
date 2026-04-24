@@ -75,13 +75,8 @@ spec:
         - --provider=pihole
         - --pihole-server=http://pihole:80
         - --domain-filter=bas
-        - --pihole-password=$(PIHOLE_PASSWORD)
-        env:
-        - name: PIHOLE_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: pihole-credentials
-              key: PIHOLE_PASSWORD
+        - --pihole-password=""
+        # Password flag removed as Pi-hole admin password is disabled
         resources:
           requests:
             memory: "64Mi"

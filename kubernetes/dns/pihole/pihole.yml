@@ -91,10 +91,11 @@ spec:
         - name: WEBTHEME
           value: "default-light"
         - name: WEBPASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: pihole-credentials
-              key: PIHOLE_PASSWORD
+          value: ""
+          # valueFrom:
+          #   secretKeyRef:
+          #     name: pihole-credentials
+          #     key: PIHOLE_PASSWORD
         - name: RATE_LIMIT
           value: "0/0"
         volumeMounts:
@@ -198,7 +199,7 @@ metadata:
   annotations:
     traefik.ingress.kubernetes.io/router.tls: "true"
     traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
-    traefik.ingress.kubernetes.io/router.middlewares: "dns-pihole-redirect-to-admin@kubernetescrd"
+    traefik.ingress.kubernetes.io/router.middlewares: "dns-pihole-redirect-to-admin@kubernetescrd,dns-authentik-pihole@kubernetescrd"
 spec:
   ingressClassName: lan
   tls:
