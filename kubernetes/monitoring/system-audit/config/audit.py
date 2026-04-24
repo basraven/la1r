@@ -137,6 +137,16 @@ def gather_data(input_config):
         print("Gathering journal errors...")
         data['journal'] = run_host_command("journalctl --since '7 days ago' -p err..emerg --no-pager | tail -n 100")
 
+    if input_config['checks'].get('oom_events'):
+        print("Checking OOM events...")
+        dmesg_oom = run_host_command("dmesg -T 2>/dev/null | grep -i 'oom\\|out of memory\\|killed process' | tail -20")
+        journal_oom = run_host_command("journalctl --since '7 days ago' --no-pager 2>/dev/null | grep -i 'oom\\|out of memory\\|killed process' | tail -20")
+        data['oom_events'] = f"=== DMESG OOM ===\n{dmesg_oom or 'None found'}\n\n=== JOURNAL OOM ===\n{journal_oom or 'None found'}"
+
+    if input_config['checks'].get('dmesg_anomalies'):
+        print("Checking dmesg anomalies...")
+        data['dmesg_anomalies'] = run_host_command("dmesg -T --level=err,warn 2>/dev/null | tail -50")
+
     if input_config['checks'].get('kubernetes_node_health'):
         print("Checking Kubernetes node health...")
         try:
@@ -190,7 +200,68 @@ def gather_data(input_config):
             for ns in namespaces.items:
                 namespace_status.append(f"{ns.metadata.name}: {ns.status.phase}")
 
-            data['kubernetes_health'] = f"=== NODES ===\n{''.join(node_info)}\n=== POD STATUS ===\n{', '.join(pod_summary)}\n\n=== RECENT EVENTS (last hour) ===\n{chr(10).join(recent_events) if recent_events else 'No recent warning/error events'}\n\n=== NAMESPACES ===\n{chr(10).join(namespace_status)}"
+            # Certificate expiry (cert-manager)
+            cert_expiry_data = "cert-manager Certificate check not enabled"
+            if input_config['checks'].get('certificate_expiry'):
+                try:
+                    custom_api = client.CustomObjectsApi()
+                    certs = custom_api.list_cluster_custom_object(
+                        group="cert-manager.io", version="v1", plural="certificates"
+                    )
+                    cert_info = []
+                    now = datetime.utcnow()
+                    for c in certs.get('items', []):
+                        name = c['metadata']['name']
+                        ns_name = c['metadata']['namespace']
+                        not_after = c.get('status', {}).get('notAfter', 'Unknown')
+                        if not_after != 'Unknown':
+                            expiry = datetime.fromisoformat(not_after.replace('Z', '+00:00')).replace(tzinfo=None)
+                            days_left = (expiry - now).days
+                        else:
+                            days_left = 'N/A'
+                        conditions = c.get('status', {}).get('conditions', [])
+                        ready_cond = next((cond for cond in conditions if cond.get('type') == 'Ready'), {})
+                        ready_status = ready_cond.get('status', 'Unknown')
+                        cert_info.append(f"{ns_name}/{name}: expires={not_after} ({days_left}d remaining), ready={ready_status}")
+                    cert_expiry_data = "\n".join(cert_info) if cert_info else "No certificates found"
+                except Exception as e:
+                    cert_expiry_data = f"Error querying certificates: {str(e)}"
+
+            # Node resource pressure (metrics-server)
+            node_metrics_data = "Node metrics check not enabled"
+            if input_config['checks'].get('node_resource_pressure'):
+                try:
+                    custom_api = client.CustomObjectsApi()
+                    metrics = custom_api.list_cluster_custom_object(
+                        group="metrics.k8s.io", version="v1beta1", plural="nodes"
+                    )
+                    metrics_info = []
+                    for node_metric in metrics.get('items', []):
+                        node_name = node_metric['metadata']['name']
+                        cpu_raw = node_metric['usage']['cpu']
+                        mem_raw = node_metric['usage']['memory']
+                        if cpu_raw.endswith('n'):
+                            cpu_cores = int(cpu_raw.rstrip('n')) / 1_000_000_000
+                        elif cpu_raw.endswith('u'):
+                            cpu_cores = int(cpu_raw.rstrip('u')) / 1_000_000
+                        elif cpu_raw.endswith('m'):
+                            cpu_cores = int(cpu_raw.rstrip('m')) / 1_000
+                        else:
+                            cpu_cores = 0
+                        if mem_raw.endswith('Ki'):
+                            mem_gb = int(mem_raw.rstrip('Ki')) / (1024 * 1024)
+                        elif mem_raw.endswith('Mi'):
+                            mem_gb = int(mem_raw.rstrip('Mi')) / 1024
+                        elif mem_raw.endswith('Gi'):
+                            mem_gb = int(mem_raw.rstrip('Gi'))
+                        else:
+                            mem_gb = 0
+                        metrics_info.append(f"{node_name}: CPU={cpu_cores:.2f} cores, Memory={mem_gb:.2f} Gi")
+                    node_metrics_data = "\n".join(metrics_info) if metrics_info else "No metrics available"
+                except Exception as e:
+                    node_metrics_data = f"Error fetching node metrics: {str(e)}"
+
+            data['kubernetes_health'] = f"=== NODES ===\n{''.join(node_info)}\n=== POD STATUS ===\n{', '.join(pod_summary)}\n\n=== RECENT EVENTS (last hour) ===\n{chr(10).join(recent_events) if recent_events else 'No recent warning/error events'}\n\n=== NAMESPACES ===\n{chr(10).join(namespace_status)}\n\n=== CERTIFICATE EXPIRY ===\n{cert_expiry_data}\n\n=== NODE METRICS ===\n{node_metrics_data}"
 
         except Exception as e:
             data['kubernetes_health'] = f"Error querying Kubernetes API: {str(e)}"
@@ -228,6 +299,10 @@ def gather_data(input_config):
             service_status.append(f"{svc}: active={status.strip()}, enabled={enabled.strip()}")
         data['service_status'] = "\n".join(service_status)
 
+    if input_config['checks'].get('failed_units'):
+        print("Checking failed systemd units...")
+        data['failed_units'] = run_host_command("systemctl --failed --no-pager --no-legend 2>/dev/null || echo 'All units healthy'")
+
     if input_config['checks'].get('system_health'):
         print("Checking system health...")
         # Disk usage
@@ -239,6 +314,10 @@ def gather_data(input_config):
         # Uptime
         uptime = run_host_command("uptime -p")
         data['system_health'] = f"Uptime: {uptime}\nLoad: {load}\nMemory:\n{memory}\nDisk usage:\n{disk_usage}"
+
+    if input_config['checks'].get('inode_usage'):
+        print("Checking inode usage...")
+        data['inode_usage'] = run_host_command("df -i / /home /var /mnt 2>/dev/null | grep -v '^Filesystem' | head -20")
 
     if input_config['checks'].get('host_log_analysis'):
         print("Analyzing host logs...")

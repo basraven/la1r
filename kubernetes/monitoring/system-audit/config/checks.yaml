@@ -9,3 +9,9 @@ checks:
   service_status: true
   system_health: true
   host_log_analysis: true
+  oom_events: true
+  failed_units: true
+  inode_usage: true
+  certificate_expiry: true
+  dmesg_anomalies: true
+  node_resource_pressure: true
