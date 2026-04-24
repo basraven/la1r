@@ -6,4 +6,5 @@ credentials-backup
 *.tfstate*
 kubernetes/ai
 src/kiosk
-logs
+**/logs/error.log
+**/logs/combined.log

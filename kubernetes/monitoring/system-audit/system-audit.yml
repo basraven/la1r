@@ -144,7 +144,7 @@ metadata:
   annotations:
     traefik.ingress.kubernetes.io/router.tls: "true"
     traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
-    traefik.ingress.kubernetes.io/router.middlewares: "monitoring-sablier-system-audit@kubernetescrd"
+    traefik.ingress.kubernetes.io/router.middlewares: "monitoring-authentik-system-audit@kubernetescrd,monitoring-sablier-system-audit@kubernetescrd"
 spec:
   tls:
   - secretName: system-audit-bas-tls

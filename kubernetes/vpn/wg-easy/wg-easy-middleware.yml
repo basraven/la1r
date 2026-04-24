@@ -2,26 +2,8 @@
 apiVersion: traefik.containo.us/v1alpha1
 kind: Middleware
 metadata:
-  name: sablier-system-audit
-  namespace: monitoring
-spec:
-  plugin:
-    sablier:
-      group: system-audit
-      dynamic:
-        displayName: System Audit
-        refreshFrequency: 5s
-        showDetails: "true"
-        theme: shuffle
-      sablierUrl: http://sablier:10000
-      sessionDuration: 30m
-
----
-apiVersion: traefik.containo.us/v1alpha1
-kind: Middleware
-metadata:
-  name: authentik-system-audit
-  namespace: monitoring
+  name: authentik-wg-easy
+  namespace: vpn
 spec:
   forwardAuth:
     address: http://authentik.security.svc.cluster.local:9000/outpost.goauthentik.io/auth/traefik
