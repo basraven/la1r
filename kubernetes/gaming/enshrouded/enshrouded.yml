@@ -52,11 +52,11 @@ spec:
           name: steam-query
         resources:
           limits:
-            cpu: "8"
+            cpu: "10"
             memory: "20Gi"
           requests:
-            cpu: "4"
-            memory: "10Gi"
+            cpu: "8"
+            memory: "15Gi"
         volumeMounts:
         - name: savegame
           mountPath: /home/steam/enshrouded/savegame
