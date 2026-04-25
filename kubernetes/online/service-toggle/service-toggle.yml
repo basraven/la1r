@@ -151,22 +151,24 @@ spec:
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: service-toggle-bas
+  name: service-toggle-la1r-com
   namespace: online
 spec:
   issuerRef:
     name: la1r
     kind: ClusterIssuer
-  secretName: service-toggle-bas-tls
-  commonName: toggle.bas
+  secretName: service-toggle-la1r-com-tls
+  commonName: toggle.la1r.com
   dnsNames:
-  - toggle.bas
+  - toggle.la1r.com
 ---
 apiVersion: traefik.containo.us/v1alpha1
 kind: Middleware
 metadata:
   name: service-toggle-rate-limit
   namespace: online
+  labels:
+    expose: "online"
 spec:
   rateLimit:
     average: 10
@@ -180,12 +182,14 @@ kind: IngressRoute
 metadata:
   name: service-toggle-https
   namespace: online
+  labels:
+    expose: "online"
 spec:
   entryPoints:
     - websecure
   routes:
     - kind: Rule
-      match: Host(`toggle.bas`) && PathPrefix(`/api`)
+      match: Host(`toggle.la1r.com`) && PathPrefix(`/api`)
       middlewares:
         - name: service-toggle-rate-limit
           namespace: online
@@ -195,12 +199,12 @@ spec:
         - name: service-toggle
           port: 80
     - kind: Rule
-      match: Host(`toggle.bas`)
+      match: Host(`toggle.la1r.com`)
       services:
         - name: service-toggle
           port: 80
   tls:
-    secretName: service-toggle-bas-tls
+    secretName: service-toggle-la1r-com-tls
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -219,6 +223,16 @@ spec:
     - namespaceSelector:
         matchLabels:
           kubernetes.io/metadata.name: traefik
+    ports:
+    - protocol: TCP
+      port: 8000
+  - from:
+    - podSelector:
+        matchLabels:
+          k8s-app: online-traefik-ingress-lb
+      namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: online
     ports:
     - protocol: TCP
       port: 8000

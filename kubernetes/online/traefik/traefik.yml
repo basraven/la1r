@@ -1,0 +1,230 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: IngressClass
+metadata:
+  name: online
+  annotations:
+    ingressclass.kubernetes.io/is-default-class: "false"
+spec:
+  controller: traefik.io/ingress-controller
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: online-traefik-ingress-controller
+  namespace: online
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: online-traefik-ingress-controller
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - services
+      - endpoints
+      - secrets
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - discovery.k8s.io
+    resources:
+      - endpointslices
+    verbs:
+      - list
+      - watch
+  - apiGroups:
+      - extensions
+      - networking.k8s.io
+    resources:
+      - ingresses
+      - ingressclasses
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - extensions
+      - networking.k8s.io
+    resources:
+      - ingresses/status
+    verbs:
+      - update
+  - apiGroups:
+      - traefik.containo.us
+      - traefik.io
+    resources:
+      - middlewares
+      - middlewaretcps
+      - ingressroutes
+      - traefikservices
+      - ingressroutetcps
+      - ingressrouteudps
+      - tlsoptions
+      - tlsstores
+      - serverstransports
+      - serverstransporttcps
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - get
+      - list
+      - watch
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: online-traefik-ingress-controller
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: online-traefik-ingress-controller
+subjects:
+  - kind: ServiceAccount
+    name: online-traefik-ingress-controller
+    namespace: online
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: online-traefik-config-claim
+  namespace: online
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: online-traefik-ingress-controller
+  namespace: online
+  labels:
+    k8s-app: online-traefik-ingress-lb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: online-traefik-ingress-lb
+  template:
+    metadata:
+      labels:
+        k8s-app: online-traefik-ingress-lb
+        name: online-traefik-ingress-lb
+      annotations:
+        seb_scrape: "true"
+        prometheus.io/port: "8082"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: online-traefik-ingress-controller
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - jay-c
+      volumes:
+        - name: online-traefik-config-volume
+          persistentVolumeClaim:
+            claimName: online-traefik-config-claim
+      containers:
+      - name: online-traefik-ingress-lb
+        image: traefik:v2.9
+        ports:
+        - name: http
+          containerPort: 80
+        - name: https
+          containerPort: 443
+        - name: admin
+          containerPort: 8080
+        - name: prometheus
+          containerPort: 8082
+        args:
+          - --api.insecure
+          - --accesslog
+          - --metrics=true
+          - --metrics.prometheus=true
+          - --metrics.prometheus.entryPoint=metrics
+          - --metrics.prometheus.addRoutersLabels=true
+          - --entrypoints.metrics.Address=:8082
+          - --entrypoints.web.Address=:80
+          - --entrypoints.websecure.Address=:443
+          - --entrypoints.websecure.http.tls
+          - --providers.kubernetesCRD
+          - --providers.kubernetesCRD.namespaces=online
+          - --providers.kubernetesCRD.labelselector=expose=online
+          - --providers.kubernetesCRD.allowCrossNamespace=false
+          - --certificatesResolvers.default.acme.httpChallenge=true
+          - --certificatesresolvers.default.acme.tlschallenge
+          - --certificatesresolvers.default.acme.email=mail@la1r.com
+          - --certificatesresolvers.default.acme.storage=acme/acme.json
+        volumeMounts:
+        - name: online-traefik-config-volume
+          mountPath: /acme
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: online-traefik-ingress-lb
+  namespace: online
+  labels:
+    app: online-traefik-ingress-lb
+spec:
+  type: ClusterIP
+  selector:
+    k8s-app: online-traefik-ingress-lb
+  ports:
+  - protocol: TCP
+    port: 80
+    name: web
+  - protocol: TCP
+    port: 443
+    name: websecure
+  - protocol: TCP
+    port: 8080
+    name: admin
+  - protocol: TCP
+    port: 8082
+    name: prometheus
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: online-lb-service
+  namespace: online
+spec:
+  type: LoadBalancer
+  loadBalancerIP: 192.168.6.129
+  selector:
+    k8s-app: online-traefik-ingress-lb
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+  - name: https
+    port: 443
+    targetPort: 443
+  - name: admin
+    port: 8080
+    targetPort: 8080

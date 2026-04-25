@@ -1,0 +1,1 @@
+- [Online Traefik Pattern](online-traefik.md) -- Dedicated online-namespace Traefik with label-selector CRD discovery

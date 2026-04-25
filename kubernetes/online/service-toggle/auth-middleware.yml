@@ -3,6 +3,8 @@ kind: Middleware
 metadata:
   name: service-toggle-token-auth
   namespace: online
+  labels:
+    expose: "online"
 spec:
   forwardAuth:
     address: http://service-toggle.online.svc.cluster.local/api/verify-token

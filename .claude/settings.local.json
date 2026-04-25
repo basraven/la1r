@@ -8,7 +8,13 @@
       "WebFetch(domain:raw.githubusercontent.com)",
       "WebFetch(domain:api.github.com)",
       "mcp__kubernetes__pods_log",
-      "Bash(kubectl kustomize:*)"
+      "Bash(kubectl kustomize:*)",
+      "mcp__kubernetes__pods_list",
+      "mcp__kubernetes__events_list",
+      "Bash(kubectl logs:*)",
+      "Bash(kubectl get ingressroute,ingress:*)",
+      "Bash(dig +short:*)",
+      "Bash(dig:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
