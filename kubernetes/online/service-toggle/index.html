@@ -147,10 +147,257 @@
     text-align: center;
     margin-top: 0.4rem;
   }
+
+  /* Lucky button */
+  .lucky-btn {
+    display: block;
+    width: 100%;
+    padding: 0.4rem 0;
+    font-size: 0.8rem;
+    font-weight: 700;
+    border: none;
+    border-radius: 7px;
+    cursor: pointer;
+    background: linear-gradient(135deg, #f093fb, #f5576c, #ffd452);
+    color: #fff;
+    transition: transform 0.15s, box-shadow 0.15s;
+    text-align: center;
+    letter-spacing: 0.3px;
+    box-shadow: 0 2px 12px rgba(245,87,108,0.4);
+  }
+  .lucky-btn:hover:not(:disabled) {
+    transform: scale(1.02);
+    box-shadow: 0 4px 20px rgba(245,87,108,0.6);
+  }
+  .lucky-btn:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+  .lucky-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  /* Lucky modal overlay */
+  .lucky-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    justify-content: center;
+    align-items: center;
+    animation: fade-in 0.3s ease;
+  }
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  .lucky-modal {
+    position: relative;
+    background: #1a1a2e;
+    border-radius: 20px;
+    padding: 1.5rem;
+    max-width: 340px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 10px 60px rgba(0,0,0,0.6);
+    border: 1px solid rgba(255,255,255,0.08);
+    animation: modal-pop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  @keyframes modal-pop {
+    from { transform: scale(0.7); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  .lucky-modal h2 {
+    font-size: 1.1rem;
+    margin-bottom: 0.25rem;
+    background: linear-gradient(135deg, #f093fb, #f5576c, #ffd452);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .lucky-modal .subtitle {
+    font-size: 0.7rem;
+    color: #666;
+    margin-bottom: 0.75rem;
+  }
+  .close-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.75rem;
+    background: none;
+    border: none;
+    color: #555;
+    font-size: 1.3rem;
+    cursor: pointer;
+    transition: color 0.15s;
+    line-height: 1;
+    padding: 0.2rem;
+    z-index: 10;
+  }
+  .close-btn:hover { color: #fff; }
+
+  /* Wheel */
+  .wheel-wrapper {
+    position: relative;
+    display: inline-block;
+    margin: 0 auto;
+  }
+  .wheel-pointer {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    width: 0;
+    height: 0;
+    border-left: 12px solid transparent;
+    border-right: 12px solid transparent;
+    border-top: 22px solid #FFD700;
+    filter: drop-shadow(0 2px 6px rgba(255,215,0,0.6));
+  }
+  .wheel-pointer::after {
+    content: "";
+    position: absolute;
+    top: -24px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 8px;
+    height: 8px;
+    background: #FFD700;
+    border-radius: 50%;
+    box-shadow: 0 0 10px rgba(255,215,0,0.8);
+  }
+  #lucky-canvas {
+    display: block;
+    margin: 0 auto;
+    max-width: 280px;
+    height: auto;
+  }
+
+  /* Spin button */
+  .spin-btn {
+    display: block;
+    width: 100%;
+    padding: 0.6rem;
+    margin-top: 0.75rem;
+    font-size: 1rem;
+    font-weight: 700;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .spin-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 25px rgba(102,126,234,0.5);
+  }
+  .spin-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* Result display */
+  .lucky-result {
+    display: none;
+    margin-top: 0.75rem;
+    animation: result-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.4);
+  }
+  @keyframes result-pop {
+    0% { transform: scale(0); opacity: 0; }
+    60% { transform: scale(1.15); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .result-emoji {
+    font-size: 2.5rem;
+    margin-bottom: 0.2rem;
+  }
+  .result-value {
+    font-size: 2rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #f093fb, #f5576c, #ffd452);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .result-label {
+    font-size: 0.85rem;
+    color: #aaa;
+    margin-top: 0.25rem;
+    font-style: italic;
+  }
+
+  /* Apply button */
+  .apply-btn {
+    display: none;
+    width: 100%;
+    padding: 0.6rem;
+    margin-top: 0.75rem;
+    font-size: 1rem;
+    font-weight: 700;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    background: linear-gradient(135deg, #4ade80, #34d399);
+    color: #1a1a2e;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .apply-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 25px rgba(74,222,128,0.5);
+  }
+
+  /* Confetti */
+  .confetti-container {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1001;
+    overflow: hidden;
+  }
+  .confetti-piece {
+    position: absolute;
+    top: -10px;
+    animation: confetti-fall linear forwards;
+    opacity: 0.9;
+  }
+  @keyframes confetti-fall {
+    0% {
+      transform: translateY(0) rotate(0deg);
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(100vh) rotate(720deg);
+      opacity: 0;
+    }
+  }
 </style>
 </head>
 <body>
 <div class="container" id="container"></div>
+
+<div class="lucky-overlay" id="lucky-modal">
+  <div class="lucky-modal">
+    <button class="close-btn" onclick="closeLucky()">&times;</button>
+    <h2>&#127811; Wheel of Misfortune</h2>
+    <p class="subtitle">Spin to see what the universe wants from your timer!</p>
+    <div class="wheel-wrapper">
+      <div class="wheel-pointer"></div>
+      <canvas id="lucky-canvas" width="300" height="300"></canvas>
+    </div>
+    <button class="spin-btn" id="spin-btn" onclick="spinWheel()">&#127984; SPIN!</button>
+    <div class="lucky-result" id="lucky-result"></div>
+    <button class="apply-btn" id="lucky-apply-btn">&#10003; Apply!</button>
+  </div>
+</div>
+
+<div class="confetti-container" id="confetti-container"></div>
+
 <script>
 var container = document.getElementById("container");
 
@@ -200,6 +447,7 @@ function cardHTML(dep) {
         '<div class="timer" id="cd-' + id + '"></div>' +
       '</div>' +
       '<div class="timer-row" id="ar-' + id + '"></div>' +
+      '<div class="timer-row" id="lr-' + id + '"></div>' +
       '<div class="timer-row" id="sr-' + id + '"></div>' +
       '<button class="main-btn" id="btn-' + id + '" disabled>...</button>' +
       '<div class="error-msg" id="err-' + id + '"></div>' +
@@ -215,7 +463,7 @@ function buildRow(containerId, opts, prefix, cls, ns, name) {
     var b = document.createElement("button");
     b.className = "timer-btn " + cls;
     b.textContent = prefix + h + "h";
-    b.onclick = function() { toggle(ns, name, h * (prefix === "\u2212" ? -1 : 1)); };
+    b.onclick = function() { toggle(ns, name, h * (prefix === "−" ? -1 : 1)); };
     row.appendChild(b);
   });
 }
@@ -229,12 +477,28 @@ function build(dep) {
   subRow.innerHTML = "";
   subRow.style.display = "none";
 
+  // Lucky row
+  var luckyRow = document.getElementById("lr-" + id);
+  if (luckyRow) {
+    luckyRow.innerHTML = "";
+    luckyRow.style.display = "none";
+  }
+
   if (dep.mode === "timed") {
     var opts = dep.options || [1, 2, 4];
     buildRow("ar-" + id, opts, "+", "add", dep.namespace, dep.name);
     if (dep.status === "online") {
       subRow.style.display = "";
-      buildRow("sr-" + id, opts, "\u2212", "sub", dep.namespace, dep.name);
+      buildRow("sr-" + id, opts, "−", "sub", dep.namespace, dep.name);
+    }
+    // Show lucky button
+    if (luckyRow) {
+      luckyRow.style.display = "";
+      var lb = document.createElement("button");
+      lb.className = "lucky-btn";
+      lb.textContent = "🍀 I'm Feeling Lucky";
+      lb.onclick = function() { openLucky(dep.namespace, dep.name); };
+      luckyRow.appendChild(lb);
     }
   }
 }
@@ -340,7 +604,7 @@ function setLoading(ns, name) {
   var btn = document.getElementById("btn-" + id);
   if (btn) btn.disabled = true;
   document.getElementById("err-" + id).style.display = "none";
-  ["ar-", "sr-"].forEach(function(pfx) {
+  ["ar-", "sr-", "lr-"].forEach(function(pfx) {
     var r = document.getElementById(pfx + id);
     if (r) r.querySelectorAll("button").forEach(function(b) { b.disabled = true; });
   });
@@ -384,6 +648,249 @@ async function init() {
 
 init();
 setInterval(refresh, 15000);
+
+// ===== Wheel of Fortune =====
+var LUCKY_SEGMENTS = [
+  { label: "+3h  — Escaped the tar pit", value: 3, color: "#FF6B6B" },
+  { label: "-30m — Coffee > Code", value: -0.5, color: "#FECA57" },
+  { label: "+1h30m — Yak shaving champ", value: 1.5, color: "#48DBFB" },
+  { label: "-2h  — rm -rf /etc", value: -2, color: "#FF9FF3" },
+  { label: "+5m  — Atomic commit™", value: 5/60, color: "#54A0FF" },
+  { label: "-1h  — Standup ran long", value: -1, color: "#5F27CD" },
+  { label: "+2h15m — It compiled! 🎉", value: 2.25, color: "#01A3A4" },
+  { label: "-45m — git blame is you", value: -0.75, color: "#F368E0" },
+  { label: "+10m — Quick fix™", value: 10/60, color: "#FF9F43" },
+  { label: "-3h  — Impostor syndrome", value: -3, color: "#EE5A24" },
+  { label: "+2h  — Bikeshedding", value: 2, color: "#0ABDE3" },
+  { label: "+0s  — Free square!", value: 0, color: "#10AC84" },
+];
+
+var luckyNs = null;
+var luckyName = null;
+var luckySpinning = false;
+var luckyCancel = false;
+
+function formatWheelValue(v) {
+  var totalSec = Math.round(Math.abs(v) * 3600);
+  var h = Math.floor(totalSec / 3600);
+  var m = Math.floor((totalSec % 3600) / 60);
+  var s = totalSec % 60;
+  var sign = v >= 0 ? "+" : "−";
+  if (h > 0) return sign + h + "h " + m + "m " + s + "s";
+  if (m > 0) return sign + m + "m " + s + "s";
+  return sign + s + "s";
+}
+
+function openLucky(ns, name) {
+  luckyNs = ns;
+  luckyName = name;
+  luckyCancel = false;
+  document.getElementById("lucky-modal").style.display = "flex";
+
+  document.getElementById("lucky-result").style.display = "none";
+
+  var spinBtn = document.getElementById("spin-btn");
+  spinBtn.style.display = "block";
+  spinBtn.textContent = "🎰 SPIN!";
+  spinBtn.disabled = false;
+
+  document.getElementById("lucky-apply-btn").style.display = "none";
+  drawWheel(0);
+  luckySpinning = false;
+}
+
+function closeLucky() {
+  luckyCancel = true;
+  document.getElementById("lucky-modal").style.display = "none";
+}
+
+function drawWheel(rotation) {
+  var canvas = document.getElementById("lucky-canvas");
+  var ctx = canvas.getContext("2d");
+  var W = canvas.width;
+  var H = canvas.height;
+  var cx = W / 2, cy = H / 2;
+  var R = Math.min(cx, cy) - 8;
+  var n = LUCKY_SEGMENTS.length;
+  var segAngle = (2 * Math.PI) / n;
+
+  ctx.clearRect(0, 0, W, H);
+
+  // Draw segments
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(rotation);
+
+  for (var i = 0; i < n; i++) {
+    var startAngle = i * segAngle;
+    var endAngle = (i + 1) * segAngle;
+
+    // Segment fill
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.arc(0, 0, R, startAngle, endAngle);
+    ctx.closePath();
+    ctx.fillStyle = LUCKY_SEGMENTS[i].color;
+    ctx.fill();
+
+    // Segment border
+    ctx.strokeStyle = "rgba(255,255,255,0.25)";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Label along the segment
+    ctx.save();
+    ctx.rotate(startAngle + segAngle / 2);
+    ctx.textAlign = "right";
+    ctx.fillStyle = "#fff";
+    ctx.font = "bold 10px -apple-system, sans-serif";
+    ctx.shadowColor = "rgba(0,0,0,0.6)";
+    ctx.shadowBlur = 3;
+    ctx.fillText(LUCKY_SEGMENTS[i].label, R - 10, 3.5);
+    ctx.restore();
+  }
+
+  // Dots around the outer edge
+  var dotCount = 24;
+  for (var d = 0; d < dotCount; d++) {
+    var da = (d / dotCount) * 2 * Math.PI;
+    var dx = Math.cos(da) * (R - 2);
+    var dy = Math.sin(da) * (R - 2);
+    ctx.beginPath();
+    ctx.arc(dx, dy, 2.5, 0, 2 * Math.PI);
+    ctx.fillStyle = d % 2 === 0 ? "#FFD700" : "#fff";
+    ctx.fill();
+  }
+
+  // Outer ring
+  ctx.beginPath();
+  ctx.arc(0, 0, R, 0, 2 * Math.PI);
+  ctx.strokeStyle = "rgba(255,215,0,0.4)";
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  ctx.restore();
+
+  // Center circle (drawn unrotated)
+  ctx.beginPath();
+  ctx.arc(cx, cy, 26, 0, 2 * Math.PI);
+  var grad = ctx.createRadialGradient(cx - 5, cy - 5, 0, cx, cy, 26);
+  grad.addColorStop(0, "#2a2a4e");
+  grad.addColorStop(1, "#1a1a2e");
+  ctx.fillStyle = grad;
+  ctx.fill();
+  ctx.strokeStyle = "#FFD700";
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  // Center text
+  ctx.fillStyle = "#FFD700";
+  ctx.font = "bold 12px -apple-system, sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.shadowColor = "rgba(0,0,0,0.5)";
+  ctx.shadowBlur = 4;
+  ctx.fillText("LUCKY", cx, cy);
+  ctx.shadowBlur = 0;
+}
+
+function spinWheel() {
+  if (luckySpinning) return;
+  luckySpinning = true;
+  luckyCancel = false;
+
+  var btn = document.getElementById("spin-btn");
+  btn.disabled = true;
+  btn.textContent = "🎰 Spinning...";
+
+  document.getElementById("lucky-result").style.display = "none";
+  document.getElementById("lucky-apply-btn").style.display = "none";
+
+  var n = LUCKY_SEGMENTS.length;
+  var segAngle = (2 * Math.PI) / n;
+
+  // Pick random segment
+  var winIndex = Math.floor(Math.random() * n);
+  var segCenter = (winIndex + 0.5) * segAngle;
+
+  // Calculate rotation to land on winIndex (pointer at top = -PI/2)
+  var targetAngle = -Math.PI / 2 - segCenter;
+  targetAngle = ((targetAngle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+
+  var fullSpins = 5 + Math.floor(Math.random() * 4); // 5-8 full rotations
+  var totalRotation = targetAngle + fullSpins * 2 * Math.PI;
+
+  // Animate
+  var duration = 4000 + Math.random() * 1500;
+  var startTime = null;
+
+  function animate(timestamp) {
+    if (luckyCancel) { luckySpinning = false; return; }
+    if (!startTime) startTime = timestamp;
+    var elapsed = timestamp - startTime;
+    var progress = Math.min(elapsed / duration, 1);
+
+    // Quartic ease-out for dramatic deceleration
+    var eased = 1 - Math.pow(1 - progress, 4);
+    drawWheel(totalRotation * eased);
+
+    if (progress < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      luckySpinning = false;
+      showResult(winIndex);
+    }
+  }
+
+  requestAnimationFrame(animate);
+}
+
+function showResult(winIndex) {
+  var seg = LUCKY_SEGMENTS[winIndex];
+  document.getElementById("spin-btn").style.display = "none";
+
+  var resultEl = document.getElementById("lucky-result");
+  resultEl.style.display = "block";
+  resultEl.innerHTML =
+    '<div class="result-emoji">🎊</div>' +
+    '<div class="result-value">' + formatWheelValue(seg.value) + '</div>' +
+    '<div class="result-label">' + seg.label + '</div>';
+
+  var applyBtn = document.getElementById("lucky-apply-btn");
+  applyBtn.style.display = "block";
+  applyBtn.textContent = "✅ Apply " + formatWheelValue(seg.value) + "!";
+  applyBtn.onclick = function() {
+    closeLucky();
+    toggle(luckyNs, luckyName, seg.value);
+  };
+
+  launchConfetti();
+}
+
+// ===== Confetti =====
+function launchConfetti() {
+  var container = document.getElementById("confetti-container");
+  container.innerHTML = "";
+  var colors = ["#FF6B6B", "#FECA57", "#48DBFB", "#FF9FF3", "#54A0FF", "#01A3A4", "#FFD700", "#FF9F43", "#F368E0", "#10AC84"];
+
+  for (var i = 0; i < 70; i++) {
+    var piece = document.createElement("div");
+    piece.className = "confetti-piece";
+    piece.style.left = Math.random() * 100 + "%";
+    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.width = (5 + Math.random() * 7) + "px";
+    piece.style.height = (5 + Math.random() * 7) + "px";
+    piece.style.animationDelay = Math.random() * 2 + "s";
+    piece.style.animationDuration = (2 + Math.random() * 2.5) + "s";
+    piece.style.borderRadius = Math.random() > 0.5 ? "50%" : "2px";
+    if (Math.random() > 0.5) {
+      piece.style.boxShadow = "0 0 4px rgba(255,255,255,0.3)";
+    }
+    container.appendChild(piece);
+  }
+
+  setTimeout(function() { container.innerHTML = ""; }, 5000);
+}
 </script>
 </body>
 </html>
