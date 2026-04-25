@@ -265,7 +265,7 @@ function setUI(dep) {
     btn.style.display = "block";
     btn.textContent = dep.status === "online" ? "Stop" : "Start";
     btn.className = "main-btn " + (dep.status === "online" ? "stop" : "start");
-    btn.onclick = function() { toggle(dep.name, dep.namespace); };
+    btn.onclick = function() { toggle(dep.namespace, dep.name); };
   }
   btn.disabled = false;
 
@@ -358,8 +358,8 @@ async function refresh() {
 async function toggle(ns, name, hours) {
   setLoading(ns, name);
   try {
-    var opts = { method: "POST" };
-    if (hours) { opts.headers = { "Content-Type": "application/json" }; opts.body = JSON.stringify({ hours: hours }); }
+    var opts = { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" };
+    if (hours) { opts.body = JSON.stringify({ hours: hours }); }
     var r = await authFetch("/api/toggle/" + ns + "/" + name, opts);
     if (!r.ok) throw new Error(await r.text());
     setUI(await r.json());

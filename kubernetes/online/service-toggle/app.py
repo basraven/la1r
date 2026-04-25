@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 import time
 import threading
@@ -25,6 +26,9 @@ for dep in json.loads(_raw):
 HTML = Path("/app/index.html").read_text()
 TOKEN = os.getenv("TOKEN") or ""
 
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+logger = logging.getLogger(__name__)
+
 # --- Timer & uptime tracking ---
 _timers = {}       # "ns/name" -> expiry timestamp
 _start_times = {}  # "ns/name" -> start timestamp
@@ -50,7 +54,6 @@ def _remaining_seconds(key: str) -> int:
             return 0
         remaining = int(expiry - time.time())
         if remaining <= 0:
-            del _timers[key]
             return 0
         return remaining
 
@@ -72,8 +75,6 @@ def _timer_worker():
             for key, expiry in list(_timers.items()):
                 if expiry <= now:
                     to_expire.append(key)
-            for key in to_expire:
-                del _timers[key]
         for key in to_expire:
             namespace, name = key.split("/", 1)
             try:
@@ -83,9 +84,12 @@ def _timer_worker():
                     name=name, namespace=namespace, body=body
                 )
                 with _timers_lock:
+                    del _timers[key]
                     _start_times.pop(key, None)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(
+                    "Failed to scale down %s/%s to 0: %s", namespace, name, e
+                )
 
 
 threading.Thread(target=_timer_worker, daemon=True).start()
@@ -104,8 +108,8 @@ try:
                 if c.type == "Available" and c.status == "True":
                     _start_times[key] = c.last_transition_time.timestamp()
                     break
-except Exception:
-    pass
+except Exception as e:
+    logger.warning("Failed to initialize start times: %s", e)
 
 
 # --- Token auth ---
