@@ -14,7 +14,8 @@
       "Bash(kubectl logs:*)",
       "Bash(kubectl get ingressroute,ingress:*)",
       "Bash(dig +short:*)",
-      "Bash(dig:*)"
+      "Bash(dig:*)",
+      "WebSearch"
     ]
   },
   "enableAllProjectMcpServers": true,
