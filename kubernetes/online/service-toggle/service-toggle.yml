@@ -201,3 +201,51 @@ spec:
           port: 80
   tls:
     secretName: service-toggle-bas-tls
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: service-toggle
+  namespace: online
+spec:
+  podSelector:
+    matchLabels:
+      app: service-toggle
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: traefik
+    ports:
+    - protocol: TCP
+      port: 8000
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: kube-system
+      podSelector:
+        matchLabels:
+          k8s-app: kube-dns
+    ports:
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 53
+  # API server runs on hostNetwork (k3s), so use ipBlock instead of podSelector
+  - to:
+    - ipBlock:
+        cidr: 192.168.5.3/32
+    ports:
+    - protocol: TCP
+      port: 6443
+  # Remove this rule once you build a container image with deps pre-installed
+  - to:
+    - ipBlock:
+        cidr: 0.0.0.0/0
+    ports:
+    - protocol: TCP
+      port: 443
