@@ -47,4 +47,4 @@ spec:
   accessModes:
   - ReadWriteMany
   hostPath:
-    path: "/mnt/ssd/torrent-ssd" # path to directory
+    path: "/mnt/hdd/torrent-ssd-fix" # TEMP FIX, to be improved

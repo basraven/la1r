@@ -96,8 +96,12 @@ sudo zpool set cachefile=/etc/zfs/zpool.cache ssd2
 ONLY WORKS WITH NEW DATA! I need to move existing data to a new dataset first!
 ```bash
 zfs list -o name,copies,mountpoint # current copies
+sudo zfs create -p -o copies=1 ssd2
 sudo zfs create -p -o copies=2 ssd2/ha
+sudo zfs create -p -o copies=1 hdd
 sudo zfs create -p -o copies=2 hdd/media/bas/Pictures
+sudo zfs create -p -o copies=2 hdd/media/stephanie/Photos
+
 zfs list -o name,copies,mountpoint # new copies
 ```
 

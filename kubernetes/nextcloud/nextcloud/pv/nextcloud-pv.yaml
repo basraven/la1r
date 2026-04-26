@@ -29,7 +29,7 @@ spec:
   accessModes:
   - ReadWriteOnce
   hostPath:
-    path: "/mnt/hdd/ha/nextcloud/data" # path to directory
+    path: "/mnt/ssd/ha/nextcloud/data" # path to directory
 ---
 kind: PersistentVolume
 apiVersion: v1

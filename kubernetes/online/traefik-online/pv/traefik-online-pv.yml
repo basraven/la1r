@@ -1,0 +1,16 @@
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: traefik-online-config-pv
+  labels:
+    contenttype: "traefik-online-config"
+spec:
+  capacity:
+    storage: 100Mi
+  storageClassName: traefik-online-config
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/mnt/ssd/ha/traefik-online/config"
