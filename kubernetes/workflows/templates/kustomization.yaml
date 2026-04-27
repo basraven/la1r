@@ -4,5 +4,6 @@ namespace: workflows
 resources:
 - essential-cloud-backups
 - nonessential-cloud-backups
+# - glacier-cloud-backups
 # - system-audit
 # - remote-cube-backups

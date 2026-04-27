@@ -1,0 +1,26 @@
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: glacier-workingdir-pv
+  labels:
+    contenttype: "glacier-workingdir"
+spec:
+  capacity:
+    storage: 1Gi
+  storageClassName: glacier-workingdir
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteMany
+  hostPath:
+    path: "/tmp/workflows/glacier/workingdir"
+
+  # Essential
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: la1r.workload/essential
+              operator: In
+              values:
+                - "true"

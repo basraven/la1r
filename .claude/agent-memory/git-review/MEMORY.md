@@ -1,0 +1,1 @@
+- [Workflow backup templates](project_workflow_backups.md) — Argo WorkflowTemplate pattern used for all cloud backup groups (encrypt, upload, cleanup, notify)
