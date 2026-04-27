@@ -185,13 +185,13 @@ spec:
     - name: exit-handler
       dag:
         tasks:
-          - name: notify-success
-            template: notify
-            when: "{{workflow.status}} == Succeeded"
-            arguments:
-              parameters:
-                - name: status
-                  value: "Succeeded"
+          # - name: notify-success
+          #   template: notify
+          #   when: "{{workflow.status}} == Succeeded"
+          #   arguments:
+          #     parameters:
+          #       - name: status
+          #         value: "Succeeded"
           - name: notify-failure
             template: notify
             when: "{{workflow.status}} != Succeeded"

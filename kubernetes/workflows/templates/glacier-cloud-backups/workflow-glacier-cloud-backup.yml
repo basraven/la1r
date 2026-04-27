@@ -15,72 +15,56 @@ spec:
               operator: In
               values:
               - jay-c
-  arguments: 
+  arguments:
     parameters:
       - name: bucket
         value: "la1r-backup-glacier-backup-data"   # default bucket name
       - name: appname
-      - name: localpath
       - name: storageclass
         value: "STANDARD_IA"
   volumes:
     - name: work # working dir
       persistentVolumeClaim:
         claimName: glacier-workingdir-claim
+    - name: config
+      configMap:
+        name: glacier-backup-targets
   onExit: exit-handler
   templates:
     - name: glacier-cloud-backup
-      inputs:
-        parameters:
-          - name: bucket
-          - name: appname
-          - name: localpath
-          - name: storageclass
       dag:
         tasks:
           - name: encrypt-backup
             template: encrypt-backup
-            arguments:
-              parameters:
-                - name: localpath
-                  value: "{{inputs.parameters.localpath}}"
           - name: upload-backup
             depends: encrypt-backup
             template: upload-backup
             arguments:
               parameters:
                 - name: bucket
-                  value: "{{inputs.parameters.bucket}}"
-                - name: bucketpath
-                  value: "{{inputs.parameters.appname}}/{{inputs.parameters.appname}}.gpg"
-                - name: localpath
-                  value: "{{inputs.parameters.localpath}}"
+                  value: "{{workflow.parameters.bucket}}"
+                - name: appname
+                  value: "{{workflow.parameters.appname}}"
                 - name: storageclass
-                  value: "{{inputs.parameters.storageclass}}"
+                  value: "{{workflow.parameters.storageclass}}"
       
 
     - name: encrypt-backup
-      inputs:
-        parameters:
-          - name: localpath
       container:
         image: debian:bullseye-slim # can be any image with bash
         command: [sh, -c]
         args:
           - |
             apt update && apt install -y gnupg
-            
-            # Create folder
-            mkdir -p /mnt/work{{inputs.parameters.localpath}}
 
-            # Make folder checksum
-            find "{{inputs.parameters.localpath}}" -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | awk '{print $1}' > /mnt/work{{inputs.parameters.localpath}}/backup.sha256
-
-            # Tar folder
-            tar -czf /tmp/backup.tar.gz "{{inputs.parameters.localpath}}"
-
-            # Encrypt folder
-            gpg --output /mnt/work{{inputs.parameters.localpath}}/backup.gpg --encrypt --recipient-file /mnt/gpg/automation-gpg-public.asc /tmp/backup.tar.gz     
+            grep '^  - /' /mnt/config/targets | sed 's/^  - //' | while read -r localpath; do
+              echo "=== Encrypting $localpath ==="
+              mkdir -p "/mnt/work${localpath}"
+              find "$localpath" -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | awk '{print $1}' > "/mnt/work${localpath}/backup.sha256"
+              tar -czf /tmp/backup.tar.gz "$localpath"
+              gpg --output "/mnt/work${localpath}/backup.gpg" --encrypt --recipient-file /mnt/gpg/automation-gpg-public.asc /tmp/backup.tar.gz
+              rm -f /tmp/backup.tar.gz
+            done
         volumeMounts:
           - name: work
             mountPath: /mnt/work
@@ -89,6 +73,9 @@ spec:
             readOnly: true
           - name: gpg-automated-keys
             mountPath: /mnt/gpg/
+          - name: config
+            mountPath: /mnt/config
+            readOnly: true
       volumes:
       - name: hdd-ro-glacier
         persistentVolumeClaim:
@@ -103,42 +90,47 @@ spec:
       inputs:
         parameters:
           - name: bucket
-          - name: bucketpath
-          - name: localpath
+          - name: appname
           - name: storageclass
       container:
         image: amazon/aws-cli:latest
         command: [sh, -c]
         args:
           - |
-            echo "FAKE Uploading /mnt/work{{inputs.parameters.localpath}}/backup.gpg to bucket: {{inputs.parameters.bucket}} at: {{inputs.parameters.bucketpath}}"
-            NEW_SHA256=$(cat /mnt/work{{inputs.parameters.localpath}}/backup.sha256 | tr -d '[:space:]')
+            grep '^  - /' /mnt/config/targets | sed 's/^  - //' | while read -r target; do
+              TARGET_ID=$(echo "$target" | sed 's|/mnt/hdd/||' | sed 's|/|_|g')
+              BUCKET_PATH="{{inputs.parameters.appname}}/${TARGET_ID}.gpg"
+              echo "Uploading /mnt/work${target}/backup.gpg to bucket: {{inputs.parameters.bucket}} at: ${BUCKET_PATH}"
+              NEW_SHA256=$(cat "/mnt/work${target}/backup.sha256" | tr -d '[:space:]')
 
-            # Try to get existing object's sha256 tag
-            # S3_SHA256=$(aws s3api get-object-tagging \
-            #   --bucket "{{inputs.parameters.bucket}}" \
-            #   --key "{{inputs.parameters.bucketpath}}" \
-            #   --query "TagSet[?Key=='sha256'].Value | [0]" \
-            #   --output text 2>/dev/null | tr -d '[:space:]')
+              # Try to get existing object's sha256 tag
+              # S3_SHA256=$(aws s3api get-object-tagging \
+              #   --bucket "{{inputs.parameters.bucket}}" \
+              #   --key "${BUCKET_PATH}" \
+              #   --query "TagSet[?Key=='sha256'].Value | [0]" \
+              #   --output text 2>/dev/null | tr -d '[:space:]')
 
-            # echo "Local sha256: $NEW_SHA256, S3 sha256: $S3_SHA256"
-          
-            # if [ "$NEW_SHA256" != "$S3_SHA256" ]; then
-            #     echo "SHA256 changed or object does not exist. Uploading new version..."
-            #      aws s3api put-object \
-            #       --bucket "{{inputs.parameters.bucket}}" \
-            #       --key "{{inputs.parameters.bucketpath}}" \
-            #       --body /mnt/work{{inputs.parameters.localpath}}/backup.gpg \
-            #       --storage-class {{inputs.parameters.storageclass}} \
-            #       --tagging "sha256=$NEW_SHA256" \
-            #       --metadata sha256="$NEW_SHA256"
-            # else
-            #     echo "SHA256 matches existing metadata. Skipping upload."
-            # fi
+              # echo "Local sha256: $NEW_SHA256, S3 sha256: $S3_SHA256"
 
+              # if [ "$NEW_SHA256" != "$S3_SHA256" ]; then
+              #     echo "SHA256 changed or object does not exist. Uploading new version..."
+              #      aws s3api put-object \
+              #       --bucket "{{inputs.parameters.bucket}}" \
+              #       --key "${BUCKET_PATH}" \
+              #       --body "/mnt/work${target}/backup.gpg" \
+              #       --storage-class {{inputs.parameters.storageclass}} \
+              #       --tagging "sha256=$NEW_SHA256" \
+              #       --metadata sha256="$NEW_SHA256"
+              # else
+              #     echo "SHA256 matches existing metadata. Skipping upload."
+              # fi
+            done
         volumeMounts:
           - name: work
             mountPath: /mnt/work
+          - name: config
+            mountPath: /mnt/config
+            readOnly: true
           - name: aws-credentials-volume
             mountPath: /root/.aws/credentials
             subPath: credentials
@@ -169,21 +161,26 @@ spec:
         args:
           - |
             echo "Cleaning workingdir"
-            rm -rf /mnt/work{{workflow.parameters.localpath}}
+            grep '^  - /' /mnt/config/targets | sed 's/^  - //' | while read -r target; do
+              rm -rf "/mnt/work${target}"
+            done
         volumeMounts:
           - name: work
             mountPath: /mnt/work
+          - name: config
+            mountPath: /mnt/config
+            readOnly: true
     
     - name: exit-handler
       dag:
         tasks:
-          - name: notify-success
-            template: notify
-            when: "{{workflow.status}} == Succeeded"
-            arguments:
-              parameters:
-                - name: status
-                  value: "Succeeded"
+          # - name: notify-success
+          #   template: notify
+          #   when: "{{workflow.status}} == Succeeded"
+          #   arguments:
+          #     parameters:
+          #       - name: status
+          #         value: "Succeeded"
           - name: notify-failure
             template: notify
             when: "{{workflow.status}} != Succeeded"
@@ -206,7 +203,7 @@ spec:
           - |
             set -euo pipefail
             URL="http://ntfy.monitoring.svc.cluster.local/backup"
-            MSG="{{workflow.parameters.appname}} backup {{inputs.parameters.status}} for workflow {{workflow.name}} in ns {{workflow.namespace}}. Bucket: {{workflow.parameters.bucket}} Path: {{workflow.parameters.appname}}/{{workflow.parameters.appname}}.gpg"
+            MSG="{{workflow.parameters.appname}} backup {{inputs.parameters.status}} for workflow {{workflow.name}} in ns {{workflow.namespace}}. Bucket: {{workflow.parameters.bucket}}"
             echo "Sending ntfy notification to $URL"
             curl -fsS -X POST \
               -H "Title: {{workflow.parameters.appname}} backup {{inputs.parameters.status}}" \
