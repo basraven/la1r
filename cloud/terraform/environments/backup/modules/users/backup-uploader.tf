@@ -19,7 +19,8 @@ resource "aws_iam_policy" "backup_upload_policy" {
         ]
         Resource = [
             "${var.backup_data_bucket_arn}/*",
-            "${var.backup_versioned_data_bucket_arn}/*"
+            "${var.backup_versioned_data_bucket_arn}/*",
+            "${var.backup_glacier_data_bucket_arn}/*"
         ]
       }
     ]
@@ -40,7 +41,8 @@ resource "aws_iam_policy" "backup_list_policy" {
         ]
         Resource = [
             "${var.backup_data_bucket_arn}",
-            "${var.backup_versioned_data_bucket_arn}"
+            "${var.backup_versioned_data_bucket_arn}",
+            "${var.backup_glacier_data_bucket_arn}"
         ]
       }
     ]
@@ -61,7 +63,8 @@ resource "aws_iam_policy" "backup_tag_policy" {
         ]
         Resource = [
             "${var.backup_data_bucket_arn}/*",
-            "${var.backup_versioned_data_bucket_arn}/*"
+            "${var.backup_versioned_data_bucket_arn}/*",
+            "${var.backup_glacier_data_bucket_arn}/*"
         ]
       }
     ]

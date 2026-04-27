@@ -9,3 +9,9 @@ variable "backup_data_bucket_arn" {
   description = "The ARN of the backup data bucket"
   type        = string
 }
+
+# Define a variable for the S3 glacier backup data bucket ARN
+variable "backup_glacier_data_bucket_arn" {
+  description = "The ARN of the glacier backup data bucket"
+  type        = string
+}
