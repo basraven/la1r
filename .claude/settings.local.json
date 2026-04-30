@@ -15,7 +15,9 @@
       "Bash(kubectl get ingressroute,ingress:*)",
       "Bash(dig +short:*)",
       "Bash(dig:*)",
-      "WebSearch"
+      "WebSearch",
+      "mcp__homeassistant__list_devices",
+      "mcp__homeassistant__system_info"
     ]
   },
   "enableAllProjectMcpServers": true,

@@ -15,28 +15,28 @@
     - { role: ufw, tags: ['ufw'] }
     - { role: fail2ban, tags: ['fail2ban'] }
 
-- name: Configure kiosk node
-  hosts: kiosk
-  roles:
-    - { role: kiosk, tags: ['kiosk'] }
+# - name: Configure kiosk node
+#   hosts: kiosk
+#   roles:
+#     - { role: kiosk, tags: ['kiosk'] }
 
-- name: Install k3s (single-node) on stephanie
-  hosts: stephanie
-  roles:
-    - { role: k3s, tags: ['k3s'] }
+# - name: Install k3s (single-node) on stephanie
+#   hosts: stephanie
+#   roles:
+#     - { role: k3s, tags: ['k3s'] }
 
-- name: Configure remote nodes
-  hosts: remote
-  roles:
-    - { role: remote-wg, tags: ['remote-wg'], ignore_errors: yes }
+# - name: Configure remote nodes
+#   hosts: remote
+#   roles:
+#     - { role: remote-wg, tags: ['remote-wg'], ignore_errors: yes }
     # FIXME: to update or remove# - { role: remote-backup, tags: ['remote-backup'], ignore_errors: yes }
 
     # - { role: haproxy, tags: ['haproxy'], when: "'ha_proxy_settings' in hostvars[inventory_hostname]" }
 #     - { role: kubernetes-install, tags: ['kubernetes'] }
 #     - { role: kubernetes-join, tags: ['kubernetes'] }
 
-- name: Configure GPU nodes
-  hosts: gpu
-  become: true
-  roles:
-    - { role: gpu, tags: ['gpu'] }
+# - name: Configure GPU nodes
+#   hosts: gpu
+#   become: true
+#   roles:
+#     - { role: gpu, tags: ['gpu'] }
