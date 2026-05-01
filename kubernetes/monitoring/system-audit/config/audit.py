@@ -8,6 +8,23 @@ from openai import OpenAI
 REPORTS_DIR = "/reports"
 CONFIG_PATH = "/config/checks.yaml"
 
+# Mapping of data keys to human-readable check labels
+CHECK_LABELS = {
+    'zpool_status': 'ZFS Pool Status (zpool status)',
+    'zpool_list': 'ZFS Pool List (zpool list)',
+    'smart': 'Disk SMART Health',
+    'journal': 'Journal Errors (last 7 days, priority err..emerg)',
+    'oom_events': 'OOM Events (dmesg + journalctl)',
+    'dmesg_anomalies': 'Dmesg Anomalies (err/warn level)',
+    'kubernetes_health': 'Kubernetes Cluster Health',
+    'system_updates': 'System Updates (apt list --upgradable)',
+    'service_status': 'Service Status (systemctl is-active/is-enabled)',
+    'failed_units': 'Failed Systemd Units (systemctl --failed)',
+    'system_health': 'System Health (disk/memory/load/uptime)',
+    'inode_usage': 'Inode Usage (df -i)',
+    'host_logs': 'Host Log Analysis (/var/log)',
+}
+
 def run_host_command(cmd):
     """Runs a command on the K8s node via nsenter"""
     try:
@@ -372,7 +389,7 @@ def main():
         with open(suppressions_file, "r") as f:
             suppressions_text = f.read().strip()
 
-    system_content = "You are a homelab system auditor. Always start your report with a summary table that quickly identifies urgent issues. The table should have columns: Check Category, Status (OK/Warning/Error), Urgency (High/Medium/Low), Brief Description. Then provide detailed sections. Output only professional markdown."
+    system_content = "You are a homelab system auditor. Always start your report with a summary table that quickly identifies urgent issues. The table should have columns: Check Category, Status (OK/Warning/Error), Urgency (High/Medium/Low), Brief Description. Then provide detailed sections with analysis, interpretation, and recommendations. The raw command outputs are shown separately above your analysis — do NOT reproduce them verbatim. Focus on what the data means, what is concerning, and what actions to take. Output only professional markdown."
     if suppressions_text:
         system_content += f"\n\nCRITICAL: The following known issues/warnings are explicitly suppressed. You MUST NOT include them in the summary table or any part of the report. Ignore them completely:\n{suppressions_text}"
 
@@ -397,8 +414,24 @@ def main():
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     report_file = os.path.join(REPORTS_DIR, f"audit_{timestamp}.md")
 
+    # Build expandable raw data sections
+    raw_sections = []
+    for key, val in data.items():
+        label = CHECK_LABELS.get(key, key.replace('_', ' ').title())
+        raw_sections.append(
+            f"<details>\n<summary>{label}</summary>\n\n"
+            f"```\n{val}\n```\n\n"
+            f"</details>\n"
+        )
+
     with open(report_file, "w") as f:
         f.write(f"# System Audit Report - {datetime.now().strftime('%Y-%m-%d %H:%M')}\n\n")
+        f.write("## Raw Command Outputs\n\n")
+        f.write("Expand each section below to see the exact commands run and their output. "
+                "Use this to validate the AI analysis.\n\n")
+        f.write("\n".join(raw_sections))
+        f.write("\n\n---\n\n")
+        f.write("## AI Analysis\n\n")
         f.write(report)
 
     print(f"Report saved to {report_file}")

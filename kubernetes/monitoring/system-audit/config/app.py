@@ -6,6 +6,40 @@ from datetime import datetime
 
 st.set_page_config(page_title="System Audit AI", layout="wide")
 
+# Custom styling for expandable report sections
+st.markdown("""
+<style>
+details {
+    margin: 0.5em 0;
+    padding: 0.5em 1em;
+    background: #1e1e1e;
+    border-radius: 8px;
+    border: 1px solid #333;
+}
+details[open] {
+    background: #252525;
+}
+details summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: #e0e0e0;
+    padding: 0.25em 0;
+}
+details summary:hover {
+    color: #ffffff;
+}
+details[open] summary {
+    margin-bottom: 0.5em;
+    border-bottom: 1px solid #333;
+    padding-bottom: 0.5em;
+}
+details pre, details code {
+    background: #1a1a1a;
+    border-radius: 4px;
+}
+</style>
+""", unsafe_allow_html=True)
+
 REPORTS_DIR = "/reports"
 
 # --- UI Sidebar ---
