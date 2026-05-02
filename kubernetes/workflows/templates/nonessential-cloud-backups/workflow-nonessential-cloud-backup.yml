@@ -200,7 +200,7 @@ spec:
                 - name: status
                   value: "Failed"
           - name: cleanup
-            depends: "notify-success.Succeeded || notify-success.Failed || notify-success.Skipped || notify-failure.Succeeded || notify-failure.Failed || notify-failure.Skipped"
+            depends: "notify-failure.Succeeded || notify-failure.Failed || notify-failure.Skipped"
             template: clean-workingdir
 
     - name: notify

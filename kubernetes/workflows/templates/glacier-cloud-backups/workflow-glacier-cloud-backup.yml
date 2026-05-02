@@ -34,22 +34,53 @@ spec:
     - name: glacier-cloud-backup
       dag:
         tasks:
+          - name: list-targets
+            template: list-targets
           - name: encrypt-backup
+            depends: list-targets
             template: encrypt-backup
+            arguments:
+              parameters:
+                - name: target
+                  value: "{{item}}"
+            withParam: "{{tasks.list-targets.outputs.parameters.targets}}"
           - name: upload-backup
             depends: encrypt-backup
             template: upload-backup
             arguments:
               parameters:
+                - name: target
+                  value: "{{item}}"
                 - name: bucket
                   value: "{{workflow.parameters.bucket}}"
                 - name: appname
                   value: "{{workflow.parameters.appname}}"
                 - name: storageclass
                   value: "{{workflow.parameters.storageclass}}"
-      
+            withParam: "{{tasks.list-targets.outputs.parameters.targets}}"
+
+    - name: list-targets
+      container:
+        image: debian:bullseye-slim
+        command: [sh, -c]
+        args:
+          - |
+            apt update && apt install -y jq
+            grep '^  - /' /mnt/config/targets | sed 's/^  - //' | jq -R -s 'split("\n") | map(select(length > 0))' > /tmp/targets.json
+        volumeMounts:
+          - name: config
+            mountPath: /mnt/config
+            readOnly: true
+      outputs:
+        parameters:
+          - name: targets
+            valueFrom:
+              path: /tmp/targets.json
 
     - name: encrypt-backup
+      inputs:
+        parameters:
+          - name: target
       container:
         image: debian:bullseye-slim # can be any image with bash
         command: [sh, -c]
@@ -57,14 +88,13 @@ spec:
           - |
             apt update && apt install -y gnupg
 
-            grep '^  - /' /mnt/config/targets | sed 's/^  - //' | while read -r localpath; do
-              echo "=== Encrypting $localpath ==="
-              mkdir -p "/mnt/work${localpath}"
-              find "$localpath" -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | awk '{print $1}' > "/mnt/work${localpath}/backup.sha256"
-              tar -czf /tmp/backup.tar.gz "$localpath"
-              gpg --output "/mnt/work${localpath}/backup.gpg" --encrypt --recipient-file /mnt/gpg/automation-gpg-public.asc /tmp/backup.tar.gz
-              rm -f /tmp/backup.tar.gz
-            done
+            TARGET="{{inputs.parameters.target}}"
+            echo "=== Encrypting $TARGET ==="
+            mkdir -p "/mnt/work${TARGET}"
+            find "$TARGET" -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | awk '{print $1}' > "/mnt/work${TARGET}/backup.sha256"
+            tar -czf /tmp/backup.tar.gz "$TARGET"
+            gpg --output "/mnt/work${TARGET}/backup.gpg" --encrypt --recipient-file /mnt/gpg/automation-gpg-public.asc /tmp/backup.tar.gz
+            rm -f /tmp/backup.tar.gz
         volumeMounts:
           - name: work
             mountPath: /mnt/work
@@ -73,9 +103,6 @@ spec:
             readOnly: true
           - name: gpg-automated-keys
             mountPath: /mnt/gpg/
-          - name: config
-            mountPath: /mnt/config
-            readOnly: true
       volumes:
       - name: hdd-ro-glacier
         persistentVolumeClaim:
@@ -92,45 +119,42 @@ spec:
           - name: bucket
           - name: appname
           - name: storageclass
+          - name: target
       container:
         image: amazon/aws-cli:latest
         command: [sh, -c]
         args:
           - |
-            grep '^  - /' /mnt/config/targets | sed 's/^  - //' | while read -r target; do
-              TARGET_ID=$(echo "$target" | sed 's|/mnt/hdd/||' | sed 's|/|_|g')
-              BUCKET_PATH="{{inputs.parameters.appname}}/${TARGET_ID}.gpg"
-              echo "Uploading /mnt/work${target}/backup.gpg to bucket: {{inputs.parameters.bucket}} at: ${BUCKET_PATH}"
-              NEW_SHA256=$(cat "/mnt/work${target}/backup.sha256" | tr -d '[:space:]')
+            TARGET="{{inputs.parameters.target}}"
+            TARGET_ID=$(echo "$TARGET" | sed 's|/mnt/hdd/||' | sed 's|/|_|g')
+            BUCKET_PATH="{{inputs.parameters.appname}}/${TARGET_ID}.gpg"
+            echo "Uploading /mnt/work${TARGET}/backup.gpg to bucket: {{inputs.parameters.bucket}} at: ${BUCKET_PATH}"
+            NEW_SHA256=$(cat "/mnt/work${TARGET}/backup.sha256" | tr -d '[:space:]')
 
-              # Try to get existing object's sha256 tag
-              # S3_SHA256=$(aws s3api get-object-tagging \
-              #   --bucket "{{inputs.parameters.bucket}}" \
-              #   --key "${BUCKET_PATH}" \
-              #   --query "TagSet[?Key=='sha256'].Value | [0]" \
-              #   --output text 2>/dev/null | tr -d '[:space:]')
+            # Try to get existing object's sha256 tag
+            # S3_SHA256=$(aws s3api get-object-tagging \
+            #   --bucket "{{inputs.parameters.bucket}}" \
+            #   --key "${BUCKET_PATH}" \
+            #   --query "TagSet[?Key=='sha256'].Value | [0]" \
+            #   --output text 2>/dev/null | tr -d '[:space:]')
 
-              # echo "Local sha256: $NEW_SHA256, S3 sha256: $S3_SHA256"
+            # echo "Local sha256: $NEW_SHA256, S3 sha256: $S3_SHA256"
 
-              # if [ "$NEW_SHA256" != "$S3_SHA256" ]; then
-              #     echo "SHA256 changed or object does not exist. Uploading new version..."
-              #      aws s3api put-object \
-              #       --bucket "{{inputs.parameters.bucket}}" \
-              #       --key "${BUCKET_PATH}" \
-              #       --body "/mnt/work${target}/backup.gpg" \
-              #       --storage-class {{inputs.parameters.storageclass}} \
-              #       --tagging "sha256=$NEW_SHA256" \
-              #       --metadata sha256="$NEW_SHA256"
-              # else
-              #     echo "SHA256 matches existing metadata. Skipping upload."
-              # fi
-            done
+            # if [ "$NEW_SHA256" != "$S3_SHA256" ]; then
+            #     echo "SHA256 changed or object does not exist. Uploading new version..."
+            #      aws s3api put-object \
+            #       --bucket "{{inputs.parameters.bucket}}" \
+            #       --key "${BUCKET_PATH}" \
+            #       --body "/mnt/work${TARGET}/backup.gpg" \
+            #       --storage-class {{inputs.parameters.storageclass}} \
+            #       --tagging "sha256=$NEW_SHA256" \
+            #       --metadata sha256="$NEW_SHA256"
+            # else
+            #     echo "SHA256 matches existing metadata. Skipping upload."
+            # fi
         volumeMounts:
           - name: work
             mountPath: /mnt/work
-          - name: config
-            mountPath: /mnt/config
-            readOnly: true
           - name: aws-credentials-volume
             mountPath: /root/.aws/credentials
             subPath: credentials
@@ -170,7 +194,7 @@ spec:
           - name: config
             mountPath: /mnt/config
             readOnly: true
-    
+
     - name: exit-handler
       dag:
         tasks:
@@ -189,7 +213,7 @@ spec:
                 - name: status
                   value: "Failed"
           - name: cleanup
-            depends: "notify-success.Succeeded || notify-success.Failed || notify-success.Skipped || notify-failure.Succeeded || notify-failure.Failed || notify-failure.Skipped"
+            depends: "notify-failure.Succeeded || notify-failure.Failed || notify-failure.Skipped"
             template: clean-workingdir
 
     - name: notify

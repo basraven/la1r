@@ -25,6 +25,23 @@ CHECK_LABELS = {
     'host_logs': 'Host Log Analysis (/var/log)',
 }
 
+# Define the section order and which data keys belong to each section.
+# The AI analysis report will use these exact section headers.
+SECTIONS = [
+    ("System Health", ["system_health"]),
+    ("System Updates", ["system_updates"]),
+    ("Service Status", ["service_status"]),
+    ("Failed Systemd Units", ["failed_units"]),
+    ("Inode Usage", ["inode_usage"]),
+    ("ZFS Pool Health", ["zpool_status", "zpool_list"]),
+    ("Disk SMART Health", ["smart"]),
+    ("Journal Errors", ["journal"]),
+    ("OOM Events", ["oom_events"]),
+    ("Dmesg Anomalies", ["dmesg_anomalies"]),
+    ("Host Log Analysis", ["host_logs"]),
+    ("Kubernetes Health", ["kubernetes_health"]),
+]
+
 def run_host_command(cmd):
     """Runs a command on the K8s node via nsenter"""
     try:
@@ -342,6 +359,59 @@ def gather_data(input_config):
 
     return data
 
+def insert_raw_data_into_report(report, data):
+    """Insert raw command output expandable sections into the AI report per section."""
+    import re
+
+    # Build a mapping from section title -> list of data keys
+    section_data_map = {title: keys for title, keys in SECTIONS}
+
+    # Split the report at ## headers (keep the delimiter on each part)
+    # The first segment is everything before the first ## (summary table area)
+    parts = re.split(r'\n(?=## )', report)
+
+    new_parts = []
+    for part in parts:
+        new_parts.append(part)
+
+        # Extract the section title from the first line of this part
+        first_line = part.strip().split('\n')[0] if part.strip() else ''
+        if first_line.startswith('## '):
+            section_title = first_line[3:].strip()
+            data_keys = section_data_map.get(section_title)
+            if data_keys:
+                raw_blocks = []
+                for key in data_keys:
+                    val = data.get(key)
+                    if val:
+                        label = CHECK_LABELS.get(key, key.replace('_', ' ').title())
+                        raw_blocks.append(
+                            f"<details>\n<summary>{label}</summary>\n\n"
+                            f"```\n{val}\n```\n\n"
+                            f"</details>\n"
+                        )
+                if raw_blocks:
+                    new_parts.append("\n" + "\n".join(raw_blocks) + "\n")
+
+    # Also append any leftover data keys that didn't match a section
+    matched_keys = set()
+    for title, keys in section_data_map.items():
+        matched_keys.update(keys)
+    unmatched = {k: v for k, v in data.items() if k not in matched_keys and v}
+    if unmatched:
+        raw_blocks = []
+        for key, val in unmatched.items():
+            label = CHECK_LABELS.get(key, key.replace('_', ' ').title())
+            raw_blocks.append(
+                f"<details>\n<summary>{label}</summary>\n\n"
+                f"```\n{val}\n```\n\n"
+                f"</details>\n"
+            )
+        new_parts.append("\n## Additional Raw Data\n\n" + "\n".join(raw_blocks))
+
+    return "\n".join(new_parts)
+
+
 def main():
     print("Starting System Audit...")
     if not os.path.exists(REPORTS_DIR):
@@ -389,7 +459,18 @@ def main():
         with open(suppressions_file, "r") as f:
             suppressions_text = f.read().strip()
 
-    system_content = "You are a homelab system auditor. Always start your report with a summary table that quickly identifies urgent issues. The table should have columns: Check Category, Status (OK/Warning/Error), Urgency (High/Medium/Low), Brief Description. Then provide detailed sections with analysis, interpretation, and recommendations. The raw command outputs are shown separately above your analysis — do NOT reproduce them verbatim. Focus on what the data means, what is concerning, and what actions to take. Output only professional markdown."
+    section_headers = "\n".join(f"- {s[0]}" for s in SECTIONS)
+    system_content = (
+        "You are a homelab system auditor. Always start your report with a summary table "
+        "that quickly identifies urgent issues. The table should have columns: Check Category, "
+        "Status (OK/Warning/Error), Urgency (High/Medium/Low), Brief Description.\n\n"
+        "After the summary table, provide detailed sections with analysis, interpretation, "
+        "and recommendations. Structure your detailed analysis using exactly these section "
+        f"headers (in order):\n{section_headers}\n\n"
+        "Raw command outputs will be shown as expandable sections alongside each analysis "
+        "section — do NOT reproduce them verbatim. Focus on what the data means, what is "
+        "concerning, and what actions to take. Output only professional markdown."
+    )
     if suppressions_text:
         system_content += f"\n\nCRITICAL: The following known issues/warnings are explicitly suppressed. You MUST NOT include them in the summary table or any part of the report. Ignore them completely:\n{suppressions_text}"
 
@@ -414,24 +495,11 @@ def main():
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     report_file = os.path.join(REPORTS_DIR, f"audit_{timestamp}.md")
 
-    # Build expandable raw data sections
-    raw_sections = []
-    for key, val in data.items():
-        label = CHECK_LABELS.get(key, key.replace('_', ' ').title())
-        raw_sections.append(
-            f"<details>\n<summary>{label}</summary>\n\n"
-            f"```\n{val}\n```\n\n"
-            f"</details>\n"
-        )
+    # Insert raw data expandable sections per-section in the AI report
+    report = insert_raw_data_into_report(report, data)
 
     with open(report_file, "w") as f:
         f.write(f"# System Audit Report - {datetime.now().strftime('%Y-%m-%d %H:%M')}\n\n")
-        f.write("## Raw Command Outputs\n\n")
-        f.write("Expand each section below to see the exact commands run and their output. "
-                "Use this to validate the AI analysis.\n\n")
-        f.write("\n".join(raw_sections))
-        f.write("\n\n---\n\n")
-        f.write("## AI Analysis\n\n")
         f.write(report)
 
     print(f"Report saved to {report_file}")

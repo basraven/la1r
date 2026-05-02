@@ -13,7 +13,7 @@ spec:
   accessModes:
   - ReadWriteMany
   hostPath:
-    path: "/tmp/workflows/glacier/workingdir"
+    path: "/mnt/hdd/tmp/workflows/glacier/workingdir"
 
   # Essential
   nodeAffinity:
