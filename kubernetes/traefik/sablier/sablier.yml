@@ -12,7 +12,7 @@ spec:
       labels:
         app: sablier
     spec:
-      
+      priorityClassName: traefik-priority
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:

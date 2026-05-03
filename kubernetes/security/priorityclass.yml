@@ -1,0 +1,9 @@
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: security-priority
+value: 500000000
+globalDefault: false
+preemptionPolicy: PreemptLowerPriority
+description: "Priority for security workloads (authentik, vaultwarden), same as DNS priority"

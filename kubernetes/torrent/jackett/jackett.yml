@@ -16,6 +16,7 @@ spec:
       labels:
         app: jackett
     spec:
+      priorityClassName: torrent-priority
       # NonEssential
       affinity:
         nodeAffinity:

@@ -14,6 +14,7 @@ spec:
       labels:
         app: enshrouded-traffic-watcher
     spec:
+      priorityClassName: gaming-priority
       # Run on the same node as the enshrouded server for network visibility
       # affinity:
       #   nodeAffinity:

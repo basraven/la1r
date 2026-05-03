@@ -21,6 +21,7 @@ spec:
         task: monitoring
         app: vaultwarden
     spec:
+      priorityClassName: security-priority
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:

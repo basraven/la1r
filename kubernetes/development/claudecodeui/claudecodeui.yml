@@ -85,6 +85,7 @@ spec:
         task: development
         app: claudecodeui
     spec:
+      priorityClassName: development-priority
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:

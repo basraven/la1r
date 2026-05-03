@@ -3,6 +3,7 @@ kind: Kustomization
 namespace: traefik
 resources:
   - namespace.yml
+  - priorityclass.yml
   - traefik-crd1.yml
   - traefik.yml
   - traefik-rbac.yml

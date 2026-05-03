@@ -16,6 +16,7 @@ spec:
       labels:
         app: sonarr
     spec:
+      priorityClassName: torrent-priority
       # NonEssential
       affinity:
         nodeAffinity:

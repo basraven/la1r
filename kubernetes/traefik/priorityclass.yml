@@ -1,0 +1,9 @@
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: traefik-priority
+value: 500000000
+globalDefault: false
+preemptionPolicy: PreemptLowerPriority
+description: "Priority for traefik ingress controller, same as DNS priority"

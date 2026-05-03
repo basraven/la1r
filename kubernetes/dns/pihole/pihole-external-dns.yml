@@ -52,6 +52,7 @@ spec:
       labels:
         app: pihole-external-dns
     spec:
+      priorityClassName: dns-priority
       serviceAccountName: pihole-external-dns
       securityContext:
         fsGroup: 65534

@@ -1,0 +1,9 @@
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: development-priority
+value: 50000000
+globalDefault: false
+preemptionPolicy: PreemptLowerPriority
+description: "Priority for development workloads, below homeautomation (100000000) but above default (0)"

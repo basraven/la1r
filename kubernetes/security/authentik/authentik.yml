@@ -19,6 +19,7 @@ spec:
         app: authentik
         component: postgres
     spec:
+      priorityClassName: security-priority
       containers:
       - name: postgres
         image: postgres:16
@@ -65,6 +66,7 @@ spec:
         app: authentik
         component: redis
     spec:
+      priorityClassName: security-priority
       containers:
       - name: redis
         image: redis:8
@@ -95,6 +97,7 @@ spec:
         app: authentik
         component: server
     spec:
+      priorityClassName: security-priority
       containers:
       - name: server
         image: ghcr.io/goauthentik/server:2025.8.4
@@ -177,6 +180,7 @@ spec:
         app: authentik
         component: worker
     spec:
+      priorityClassName: security-priority
       containers:
       - name: worker
         image: ghcr.io/goauthentik/server:2025.8.4

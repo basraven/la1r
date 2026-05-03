@@ -16,6 +16,7 @@ spec:
       labels:
         app: qbittorrent-standard
     spec:
+      priorityClassName: torrent-priority
       dnsPolicy: None
       dnsConfig:
         nameservers:

@@ -13,7 +13,8 @@ spec:
       labels:
         app: traefik-watcher
     spec:
-      
+      priorityClassName: torrent-priority
+
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
