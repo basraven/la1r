@@ -1,0 +1,1 @@
+- [Headlamp deployment](headlamp_deployment.md) — Headlamp K8s UI replacing kubernetes-dashboard, Authentik forwardAuth, port 4466

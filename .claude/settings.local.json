@@ -17,7 +17,10 @@
       "Bash(dig:*)",
       "WebSearch",
       "mcp__homeassistant__list_devices",
-      "mcp__homeassistant__system_info"
+      "mcp__homeassistant__system_info",
+      "Bash(kubectl get:*)",
+      "Bash(kubectl -n headlamp logs -l app=headlamp --tail=5)",
+      "mcp__playwright__browser_navigate"
     ]
   },
   "enableAllProjectMcpServers": true,

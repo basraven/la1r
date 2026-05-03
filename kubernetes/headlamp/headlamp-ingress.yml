@@ -1,0 +1,33 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: kubernetes-bas
+  namespace: headlamp
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: kubernetes-bas-tls
+  commonName: kubernetes.bas
+  dnsNames:
+  - kubernetes.bas
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: headlamp-https
+  namespace: headlamp
+spec:
+  entryPoints:
+  - websecure
+  routes:
+  - kind: Rule
+    match: Host(`kubernetes.bas`) || Host(`www.kubernetes.bas`)
+    services:
+    - kind: Service
+      name: headlamp
+      namespace: headlamp
+      port: 4466
+  tls:
+    secretName: kubernetes-bas-tls

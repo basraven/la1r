@@ -1,0 +1,108 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: headlamp
+  namespace: headlamp
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: headlamp-admin
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- kind: ServiceAccount
+  name: headlamp
+  namespace: headlamp
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: headlamp
+  namespace: headlamp
+  labels:
+    app: headlamp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: headlamp
+  template:
+    metadata:
+      labels:
+        app: headlamp
+    spec:
+      serviceAccountName: headlamp
+      automountServiceAccountToken: true
+      containers:
+      - name: headlamp
+        image: ghcr.io/headlamp-k8s/headlamp:v0.30.0
+        imagePullPolicy: IfNotPresent
+        command:
+        - /bin/sh
+        - -c
+        args:
+        - HOME=/tmp exec /headlamp/headlamp-server -in-cluster -html-static-dir /headlamp/frontend -oidc-client-id="$(cat /etc/headlamp-oidc/client-id)" -oidc-idp-issuer-url=https://auth.la1r.com/application/o/kubernetes-dashboard/ -oidc-scopes=openid,profile,email,offline_access -oidc-client-secret="$(cat /etc/headlamp-oidc/client-secret)"
+        ports:
+        - containerPort: 4466
+          name: http
+        env: []
+        volumeMounts:
+        - mountPath: /tmp
+          name: tmp-volume
+        - mountPath: /etc/headlamp-oidc
+          name: oidc-secret
+          readOnly: true
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false
+          runAsNonRoot: true
+          runAsUser: 1001
+          runAsGroup: 1001
+          capabilities:
+            drop:
+            - ALL
+          seccompProfile:
+            type: RuntimeDefault
+        livenessProbe:
+          httpGet:
+            path: /
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+      volumes:
+      - name: tmp-volume
+        emptyDir: {}
+      - name: oidc-secret
+        secret:
+          secretName: headlamp-oidc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: headlamp
+  namespace: headlamp
+spec:
+  type: ClusterIP
+  selector:
+    app: headlamp
+  ports:
+  - name: http
+    port: 4466
+    targetPort: 4466
