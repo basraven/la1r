@@ -5,4 +5,8 @@ resources:
 - homeassistant-pvc.yml
 - z2m-pv.yml
 - z2m-pvc.yml
+- otbr-pv.yml
+- otbr-pvc.yml
+- matter-server-pv.yml
+- matter-server-pvc.yml
 

@@ -16,6 +16,7 @@ spec:
       labels:
         app: homeassistant
     spec:
+      priorityClassName: homeautomation-priority
       hostNetwork: true  # This is the key change
       dnsPolicy: ClusterFirstWithHostNet # Required when using hostNetwork
       volumes:

@@ -16,6 +16,7 @@ spec:
       labels:
         app: zigbee2mqtt
     spec:
+      priorityClassName: homeautomation-priority
       volumes:
         - name: localtime
           hostPath:

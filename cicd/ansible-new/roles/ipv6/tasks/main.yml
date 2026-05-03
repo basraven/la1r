@@ -1,0 +1,22 @@
+---
+- name: Apply IPv6 sysctl settings
+  become: yes
+  ansible.posix.sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    state: present
+    reload: true
+  loop: "{{ ipv6_sysctl_settings }}"
+
+- name: Persist IPv6 sysctl settings in drop-in file
+  become: yes
+  ansible.builtin.copy:
+    dest: /etc/sysctl.d/99-otbr-ipv6.conf
+    content: |
+      # Managed by Ansible - OTBR/Matter IPv6 requirements
+      {% for item in ipv6_sysctl_settings %}
+      {{ item.name }} = {{ item.value }}
+      {% endfor %}
+    owner: root
+    group: root
+    mode: "0644"

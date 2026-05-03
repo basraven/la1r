@@ -1,0 +1,5 @@
+---
+ufw_app_otbr:
+  title: "OTBR by Seb"
+  description: "Open Thread Border Router - web UI and REST API"
+  ports: '8080/tcp|8081/tcp'

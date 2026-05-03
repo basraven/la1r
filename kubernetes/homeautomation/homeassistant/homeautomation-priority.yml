@@ -1,0 +1,11 @@
+---
+# PriorityClass for homeautomation workloads
+# Sits below system-critical (2000000000) but above default (0)
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: homeautomation-priority
+value: 100000000
+globalDefault: false
+preemptionPolicy: PreemptLowerPriority
+description: "Higher priority for homeautomation pods to prevent eviction under node pressure"

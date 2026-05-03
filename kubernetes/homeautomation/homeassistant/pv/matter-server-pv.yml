@@ -1,0 +1,16 @@
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: matter-server-config-pv
+  labels:
+    contenttype: "matter-server-config"
+spec:
+  capacity:
+    storage: 100Mi
+  storageClassName: matter-server-config
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/mnt/ssd/na/homeassistant/matter-server"

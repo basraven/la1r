@@ -1,0 +1,16 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: matter-server-config-claim
+  namespace: homeautomation
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: matter-server-config
+  selector:
+    matchLabels:
+      contenttype: "matter-server-config"
+  resources:
+    requests:
+      storage: 100Mi

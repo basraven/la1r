@@ -13,6 +13,7 @@
     # - { role: samba, tags: ['samba']}
     # - { role: ubuntu-config, tags: ['ubuntu-config']}
     - { role: ufw, tags: ['ufw'] }
+    - { role: ipv6, tags: ['ipv6'] }
     - { role: fail2ban, tags: ['fail2ban'] }
 
 # - name: Configure kiosk node

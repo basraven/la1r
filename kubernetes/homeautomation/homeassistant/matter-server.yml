@@ -1,0 +1,70 @@
+---
+# Matter Server - bridges Matter devices to Home Assistant
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: matter-server
+  namespace: homeautomation
+  labels:
+    app: matter-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: matter-server
+  template:
+    metadata:
+      labels:
+        app: matter-server
+    spec:
+      priorityClassName: homeautomation-priority
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      volumes:
+        - name: localtime
+          hostPath:
+            path: /etc/localtime
+            type: File
+        - name: matter-server-data
+          persistentVolumeClaim:
+            claimName: matter-server-config-claim
+      containers:
+      - name: matter-server
+        image: ghcr.io/home-assistant-libs/python-matter-server:stable
+        securityContext:
+          privileged: true
+        args:
+          - "--storage-path"
+          - "/data"
+        env:
+        - name: TZ
+          value: Europe/Amsterdam
+        - name: OTBR_REST_API_URL
+          value: "http://otbr:8081"
+        ports:
+        - name: ws
+          containerPort: 5580
+        volumeMounts:
+        - name: localtime
+          mountPath: /etc/localtime
+          readOnly: true
+        - name: matter-server-data
+          mountPath: /data
+
+---
+# Service for Matter Server websocket API (internal, consumed by Home Assistant)
+apiVersion: v1
+kind: Service
+metadata:
+  name: matter-server
+  namespace: homeautomation
+  labels:
+    app: matter-server
+spec:
+  type: ClusterIP
+  selector:
+    app: matter-server
+  ports:
+  - name: ws
+    port: 5580
+    targetPort: 5580

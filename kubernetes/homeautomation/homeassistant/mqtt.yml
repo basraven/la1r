@@ -1,0 +1,55 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mqtt
+  namespace: homeautomation
+  labels:
+    app: mqtt
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mqtt
+  template:
+    metadata:
+      labels:
+        app: mqtt
+    spec:
+      priorityClassName: homeautomation-priority
+      volumes:
+        - name: localtime
+          hostPath:
+            path: /etc/localtime
+            type: File
+        - name: mosquitto-config
+          configMap:
+            name: mosquitto-config
+      containers:
+      - name: mqtt
+        image: eclipse-mosquitto:latest
+        ports:
+        - name: http
+          containerPort: 1883
+        volumeMounts:
+        - name: localtime
+          mountPath: /etc/localtime
+          readOnly: true
+        - name: mosquitto-config
+          mountPath: /mosquitto/config/mosquitto.conf
+          subPath: mosquitto.conf
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mqtt
+  namespace: homeautomation
+spec:
+  type: ClusterIP
+  selector:
+    app: mqtt
+  ports:
+  - name: mqtt
+    port: 1883
+    targetPort: 1883

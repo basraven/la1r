@@ -1,0 +1,16 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: otbr-config-claim
+  namespace: homeautomation
+spec:
+  accessModes:
+  - ReadWriteOnce
+  storageClassName: otbr-config
+  selector:
+    matchLabels:
+      contenttype: "otbr-config"
+  resources:
+    requests:
+      storage: 100Mi

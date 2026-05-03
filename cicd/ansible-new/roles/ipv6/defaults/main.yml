@@ -1,0 +1,11 @@
+---
+# IPv6 sysctl settings for Thread/OTBR support
+# accept_ra=2: accept Router Advertisements even when forwarding is enabled
+# accept_ra_rt_info_max_plen=64: accept RA route info for /64 prefixes (Thread uses /64)
+ipv6_sysctl_settings:
+  - name: net.ipv6.conf.all.forwarding
+    value: "1"
+  - name: net.ipv6.conf.all.accept_ra
+    value: "2"
+  - name: net.ipv6.conf.all.accept_ra_rt_info_max_plen
+    value: "64"

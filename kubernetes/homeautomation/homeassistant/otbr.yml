@@ -1,0 +1,213 @@
+---
+# OTBR (Open Thread Border Router) - Thread networking via SONOFF Dongle Plus MG24
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otbr
+  namespace: homeautomation
+  labels:
+    app: otbr
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: otbr
+  template:
+    metadata:
+      labels:
+        app: otbr
+    spec:
+      priorityClassName: homeautomation-priority
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      volumes:
+        - name: localtime
+          hostPath:
+            path: /etc/localtime
+            type: File
+        - name: serial-by-id
+          hostPath:
+            path: /dev/serial/by-id
+            type: Directory
+        - name: net-tun
+          hostPath:
+            path: /dev/net/tun
+            type: CharDevice
+        - name: otbr-data
+          persistentVolumeClaim:
+            claimName: otbr-config-claim
+      containers:
+      # Nginx reverse proxy — merges web UI and REST API on port 80 (same origin, no mixed content)
+      - name: nginx
+        image: nginx:alpine
+        ports:
+        - name: web
+          containerPort: 8580
+        volumeMounts:
+        - name: localtime
+          mountPath: /etc/localtime
+          readOnly: true
+        command:
+          - "sh"
+          - "-c"
+          - |
+            cat > /etc/nginx/nginx.conf <<'NGINX'
+            events {}
+            http {
+              server {
+                listen 8580;
+                location /api {
+                  proxy_pass http://127.0.0.1:8081;
+                  proxy_http_version 1.1;
+                  proxy_set_header Host $host;
+                }
+                location / {
+                  proxy_pass http://127.0.0.1:8082;
+                  proxy_http_version 1.1;
+                  proxy_set_header Host $host;
+                }
+              }
+            }
+            NGINX
+            exec nginx -g "daemon off;"
+
+      # OTBR agent — Thread networking + REST API
+      - name: otbr
+        image: openthread/border-router:latest
+        securityContext:
+          privileged: true
+        command:
+          - "sh"
+          - "-c"
+          - |
+            # Thread data dir
+            mkdir -p /data/thread && ln -sft /var/lib /data/thread 2>/dev/null || true
+
+            # Clean up stale firewall rules from previous runs
+            ip6tables -D FORWARD -o wpan0 -j OT_FORWARD_INGRESS 2>/dev/null || true
+            ip6tables -F OT_FORWARD_INGRESS 2>/dev/null || true
+            ip6tables -X OT_FORWARD_INGRESS 2>/dev/null || true
+            ipset destroy otbr-ingress-deny-src 2>/dev/null || true
+            ipset destroy otbr-ingress-deny-src-swap 2>/dev/null || true
+            ipset destroy otbr-ingress-allow-dst 2>/dev/null || true
+            ipset destroy otbr-ingress-allow-dst-swap 2>/dev/null || true
+            iptables -t mangle -D PREROUTING -i wpan0 -j MARK --set-mark 0x1001 2>/dev/null || true
+            iptables -t nat -D POSTROUTING -m mark --mark 0x1001 -j MASQUERADE 2>/dev/null || true
+
+            # Firewall setup (required for Thread IPv6 forwarding)
+            ipset create -exist otbr-ingress-deny-src hash:net family inet6
+            ipset create -exist otbr-ingress-deny-src-swap hash:net family inet6
+            ipset create -exist otbr-ingress-allow-dst hash:net family inet6
+            ipset create -exist otbr-ingress-allow-dst-swap hash:net family inet6
+            ip6tables -N OT_FORWARD_INGRESS 2>/dev/null || true
+            ip6tables -I FORWARD 1 -o wpan0 -j OT_FORWARD_INGRESS 2>/dev/null || true
+            ip6tables -A OT_FORWARD_INGRESS -m pkttype --pkt-type unicast -i wpan0 -j DROP
+            ip6tables -A OT_FORWARD_INGRESS -m set --match-set otbr-ingress-deny-src src -j DROP
+            ip6tables -A OT_FORWARD_INGRESS -m set --match-set otbr-ingress-allow-dst dst -j ACCEPT
+            ip6tables -A OT_FORWARD_INGRESS -m pkttype --pkt-type unicast -j DROP
+            ip6tables -A OT_FORWARD_INGRESS -j ACCEPT
+
+            # NAT64 setup (Thread devices access IPv4 internet)
+            iptables -t mangle -A PREROUTING -i wpan0 -j MARK --set-mark 0x1001 2>/dev/null || true
+            iptables -t nat -A POSTROUTING -m mark --mark 0x1001 -j MASQUERADE 2>/dev/null || true
+            iptables -t filter -A FORWARD -o enp4s0 -j ACCEPT 2>/dev/null || true
+            iptables -t filter -A FORWARD -i enp4s0 -j ACCEPT 2>/dev/null || true
+
+            # Start otbr-agent first, wait for REST API to come up
+            /usr/sbin/otbr-agent -d7 -v -s \
+              --vendor-name OpenThread --model-name BorderRouter \
+              -I wpan0 -B enp4s0 \
+              "spinel+hdlc+uart:///dev/serial/by-id/usb-SONOFF_SONOFF_Dongle_Plus_MG24_baff22b0eda2ef11b754946661ce3355-if00-port0" \
+              "trel://enp4s0" \
+              --rest-listen-address 0.0.0.0 --rest-listen-port 8081 &
+            AGENT_PID=$!
+
+            # Wait for REST API
+            for i in $(seq 1 30); do
+              if grep -q ':1F91' /proc/net/tcp 2>/dev/null; then break; fi
+              sleep 1
+            done
+
+            # Start otbr-web
+            /usr/sbin/otbr-web -I wpan0 -d6 -a 0.0.0.0 -p 8082 &
+            WEB_PID=$!
+
+            # Keep otbr-agent as main process (Thread networking is critical)
+            wait $AGENT_PID
+        env:
+        - name: TZ
+          value: Europe/Amsterdam
+        volumeMounts:
+        - name: localtime
+          mountPath: /etc/localtime
+          readOnly: true
+        - name: serial-by-id
+          mountPath: /dev/serial/by-id
+          readOnly: true
+        - name: net-tun
+          mountPath: /dev/net/tun
+        - name: otbr-data
+          mountPath: /var/lib/otbr
+
+---
+# Service for OTBR (everything on port 80 via nginx)
+apiVersion: v1
+kind: Service
+metadata:
+  name: otbr
+  namespace: homeautomation
+  labels:
+    app: otbr
+spec:
+  type: ClusterIP
+  selector:
+    app: otbr
+  ports:
+  - name: web
+    port: 80
+    targetPort: 8580
+  - name: rest-api
+    port: 8081
+    targetPort: 8081
+
+---
+# Certificate for OTBR web UI
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: otbr-bas
+  namespace: homeautomation
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: otbr-bas-tls
+  commonName: otbr.bas
+  dnsNames:
+  - otbr.bas
+  - www.otbr.bas
+
+---
+# Ingress for OTBR web UI
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: otbr-https
+  namespace: homeautomation
+  annotations:
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+spec:
+  tls:
+  - secretName: otbr-bas-tls
+  rules:
+  - host: otbr.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: otbr
+            port:
+              number: 80
