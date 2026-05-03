@@ -36,16 +36,8 @@ spec:
         tasks:
           - name: list-targets
             template: list-targets
-          - name: encrypt-backup
-            depends: list-targets
-            template: encrypt-backup
-            arguments:
-              parameters:
-                - name: target
-                  value: "{{item}}"
-            withParam: "{{tasks.list-targets.outputs.parameters.targets}}"
           - name: upload-backup
-            depends: encrypt-backup
+            depends: list-targets
             template: upload-backup
             arguments:
               parameters:
@@ -77,41 +69,31 @@ spec:
             valueFrom:
               path: /tmp/targets.json
 
-    - name: encrypt-backup
+    - name: compute-local-sha
       inputs:
         parameters:
           - name: target
+      volumes:
+      - name: hdd-ro-glacier
+        persistentVolumeClaim:
+          claimName: hdd-ro-glacier-claim
+          readOnly: true
       container:
-        image: debian:bullseye-slim # can be any image with bash
+        image: debian:bullseye-slim
         command: [sh, -c]
         args:
           - |
-            apt update && apt install -y gnupg
-
             TARGET="{{inputs.parameters.target}}"
-            echo "=== Encrypting $TARGET ==="
+            echo "=== Computing SHA for $TARGET ==="
             mkdir -p "/mnt/work${TARGET}"
             find "$TARGET" -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | awk '{print $1}' > "/mnt/work${TARGET}/backup.sha256"
-            tar -czf /tmp/backup.tar.gz "$TARGET"
-            gpg --output "/mnt/work${TARGET}/backup.gpg" --encrypt --recipient-file /mnt/gpg/automation-gpg-public.asc /tmp/backup.tar.gz
-            rm -f /tmp/backup.tar.gz
+            echo "SHA256: $(cat /mnt/work${TARGET}/backup.sha256)"
         volumeMounts:
           - name: work
             mountPath: /mnt/work
           - name: hdd-ro-glacier
             mountPath: /mnt/hdd
             readOnly: true
-          - name: gpg-automated-keys
-            mountPath: /mnt/gpg/
-      volumes:
-      - name: hdd-ro-glacier
-        persistentVolumeClaim:
-          claimName: hdd-ro-glacier-claim
-          readOnly: true
-      # GPG public key
-      - name: gpg-automated-keys
-        secret:
-          secretName: gpg-automated-keys
 
     - name: upload-backup
       inputs:
@@ -132,7 +114,15 @@ spec:
                   value: "{{inputs.parameters.bucket}}"
                 - name: appname
                   value: "{{inputs.parameters.appname}}"
-          - name: notify-approval-needed
+
+          - name: compute-local-sha
+            template: compute-local-sha
+            arguments:
+              parameters:
+                - name: target
+                  value: "{{inputs.parameters.target}}"
+
+          - name: notify-create
             depends: check-s3-status
             template: notify-approval-required
             when: "{{tasks.check-s3-status.outputs.parameters.needs_approval}} == true"
@@ -144,39 +134,50 @@ spec:
                   value: "{{inputs.parameters.bucket}}"
                 - name: appname
                   value: "{{inputs.parameters.appname}}"
-          - name: human-approval
-            depends: notify-approval-needed
+
+          - name: approve-create
+            depends: notify-create
             template: approve-upload
             when: "{{tasks.check-s3-status.outputs.parameters.needs_approval}} == true"
-          - name: compare-and-act
-            depends: "check-s3-status && (human-approval.Succeeded || human-approval.Skipped)"
-            template: compare-and-act
+
+          - name: compare-sha
+            depends: "check-s3-status && compute-local-sha"
+            template: compare-sha
+            arguments:
+              parameters:
+                - name: target
+                  value: "{{inputs.parameters.target}}"
+                - name: s3_sha256
+                  value: "{{tasks.check-s3-status.outputs.parameters.s3_sha256}}"
+
+          - name: notify-change
+            depends: compare-sha
+            template: ntfy-send
+            when: "{{tasks.compare-sha.outputs.parameters.status}} == change"
+            arguments:
+              parameters:
+                - name: title
+                  value: "{{workflow.parameters.appname}} backup - SHA mismatch"
+                - name: message
+                  value: "SHA mismatch for {{inputs.parameters.target}}. Local: {{tasks.compare-sha.outputs.parameters.local_sha256}} vs S3: {{tasks.check-s3-status.outputs.parameters.s3_sha256}}. Approve in Argo to proceed with upload if this was intentional."
+
+          - name: approve-change
+            depends: notify-change
+            template: approve-change
+            when: "{{tasks.compare-sha.outputs.parameters.status}} == change"
+
+          - name: encrypt-and-upload
+            depends: "compare-sha && (approve-create.Succeeded || approve-create.Skipped) && (approve-change.Succeeded || approve-change.Skipped)"
+            template: encrypt-and-upload
+            when: "{{tasks.compare-sha.outputs.parameters.status}} != skipped"
             arguments:
               parameters:
                 - name: target
                   value: "{{inputs.parameters.target}}"
                 - name: bucket
                   value: "{{inputs.parameters.bucket}}"
-                - name: appname
-                  value: "{{inputs.parameters.appname}}"
                 - name: storageclass
                   value: "{{inputs.parameters.storageclass}}"
-                - name: s3_sha256
-                  value: "{{tasks.check-s3-status.outputs.parameters.s3_sha256}}"
-          - name: notify-bitrot
-            depends: compare-and-act
-            template: ntfy-send
-            when: "{{tasks.compare-and-act.outputs.parameters.status}} == bitrot"
-            arguments:
-              parameters:
-                - name: title
-                  value: "{{workflow.parameters.appname}} backup - BIT ROT DETECTED"
-                - name: message
-                  value: "Bit rot detected! Target: {{inputs.parameters.target}}. Bucket: {{inputs.parameters.bucket}}. Local SHA256: {{tasks.compare-and-act.outputs.parameters.local_sha256}}. S3 SHA256: {{tasks.compare-and-act.outputs.parameters.s3_sha256}}."
-          - name: fail-on-bitrot
-            depends: notify-bitrot
-            template: fail
-            when: "{{tasks.compare-and-act.outputs.parameters.status}} == bitrot"
 
     - name: check-s3-status
       inputs:
@@ -248,17 +249,59 @@ spec:
     - name: approve-upload
       suspend: {}
 
-    - name: compare-and-act
+    - name: approve-change
+      suspend: {}
+
+    - name: compare-sha
+      inputs:
+        parameters:
+          - name: target
+          - name: s3_sha256
+      container:
+        image: debian:bullseye-slim
+        command: [sh, -c]
+        args:
+          - |
+            TARGET="{{inputs.parameters.target}}"
+            LOCAL_SHA256=$(cat "/mnt/work${TARGET}/backup.sha256" | tr -d '[:space:]')
+            S3_SHA256="{{inputs.parameters.s3_sha256}}"
+
+            echo "Local SHA256: [$LOCAL_SHA256]"
+            echo "S3 SHA256:    [$S3_SHA256]"
+
+            if [ -z "$S3_SHA256" ]; then
+              echo "Object does not exist in S3. Upload needed."
+              echo -n "upload" > /tmp/status
+            elif [ "$LOCAL_SHA256" = "$S3_SHA256" ]; then
+              echo "SHA256 matches. Nothing to do."
+              echo -n "skipped" > /tmp/status
+            else
+              echo "SHA256 mismatch! Possible bitrot or intentional update."
+              echo -n "change" > /tmp/status
+            fi
+
+            echo -n "$LOCAL_SHA256" > /tmp/local_sha256
+        volumeMounts:
+          - name: work
+            mountPath: /mnt/work
+      outputs:
+        parameters:
+          - name: status
+            valueFrom:
+              path: /tmp/status
+          - name: local_sha256
+            valueFrom:
+              path: /tmp/local_sha256
+
+    - name: encrypt-and-upload
       inputs:
         parameters:
           - name: target
           - name: bucket
-          - name: appname
           - name: storageclass
-          - name: s3_sha256
       container:
-        image: amazon/aws-cli:latest
-        command: [sh, -c]
+        image: debian:bullseye-slim
+        command: [bash, -c]
         args:
           - |
             set -euo pipefail
@@ -267,41 +310,35 @@ spec:
             TARGET_PATH=$(echo "$TARGET" | sed 's|^/mnt/hdd/||')
             BUCKET_PATH="${TARGET_PATH}.gpg"
             NEW_SHA256=$(cat "/mnt/work${TARGET}/backup.sha256" | tr -d '[:space:]')
-            S3_SHA256="{{inputs.parameters.s3_sha256}}"
 
-            echo "New SHA256:  [$NEW_SHA256]"
-            echo "S3 SHA256:   [$S3_SHA256]"
+            echo "=== Installing dependencies ==="
+            apt update > /dev/null 2>&1 && apt install -y tar gzip gnupg awscli > /dev/null 2>&1
 
-            if [ -z "$S3_SHA256" ]; then
-              echo "Object does not exist in S3 yet. Performing initial upload..."
-              aws s3api put-object \
-                --bucket "{{inputs.parameters.bucket}}" \
-                --key "${BUCKET_PATH}" \
-                --body "/mnt/work${TARGET}/backup.gpg" \
-                --storage-class {{inputs.parameters.storageclass}} \
-                --tagging "sha256=$NEW_SHA256" \
-                --metadata sha256="$NEW_SHA256"
-              echo "Upload complete."
-              echo -n "uploaded" > /tmp/status
-            elif [ "$NEW_SHA256" == "$S3_SHA256" ]; then
-              echo "SHA256 matches existing S3 object. No changes detected. Skipping upload."
-              echo -n "skipped" > /tmp/status
-            else
-              echo "=============================================="
-              echo "  BIT ROT DETECTED!"
-              echo "  Target: $TARGET"
-              echo "  Local SHA256:  $NEW_SHA256"
-              echo "  S3 SHA256:     $S3_SHA256"
-              echo "  Possible hard drive corruption or data modification."
-              echo "=============================================="
-              echo -n "bitrot" > /tmp/status
-            fi
+            WORK_DIR="/mnt/work${TARGET}"
+            echo "=== Encrypting $TARGET ==="
+            tar -czf "${WORK_DIR}/backup.tar.gz" "$TARGET"
+            gpg --batch --no-tty --yes --output "${WORK_DIR}/backup.gpg" --encrypt --recipient-file /mnt/gpg/automation-gpg-public.asc "${WORK_DIR}/backup.tar.gz"
+            rm -f "${WORK_DIR}/backup.tar.gz"
 
-            echo -n "$NEW_SHA256" > /tmp/local_sha256
-            echo -n "$S3_SHA256" > /tmp/s3_sha256
+            echo "=== Uploading to S3 ==="
+            aws s3api put-object \
+              --bucket "{{inputs.parameters.bucket}}" \
+              --key "${BUCKET_PATH}" \
+              --body "${WORK_DIR}/backup.gpg" \
+              --storage-class {{inputs.parameters.storageclass}} \
+              --tagging "sha256=$NEW_SHA256" \
+              --metadata sha256="$NEW_SHA256" \
+              --output json
+            echo "Upload complete."
+            rm -f "${WORK_DIR}/backup.gpg" "${WORK_DIR}/backup.sha256"
         volumeMounts:
           - name: work
             mountPath: /mnt/work
+          - name: hdd-ro-glacier
+            mountPath: /mnt/hdd
+            readOnly: true
+          - name: gpg-automated-keys
+            mountPath: /mnt/gpg/
           - name: aws-credentials-volume
             mountPath: /root/.aws/credentials
             subPath: credentials
@@ -311,6 +348,13 @@ spec:
             subPath: config
             readOnly: true
       volumes:
+      - name: hdd-ro-glacier
+        persistentVolumeClaim:
+          claimName: hdd-ro-glacier-claim
+          readOnly: true
+      - name: gpg-automated-keys
+        secret:
+          secretName: gpg-automated-keys
       - name: aws-credentials-volume
         secret:
           secretName: aws-config-backup-uploader
@@ -323,17 +367,6 @@ spec:
           items:
             - key: config
               path: config
-      outputs:
-        parameters:
-          - name: status
-            valueFrom:
-              path: /tmp/status
-          - name: local_sha256
-            valueFrom:
-              path: /tmp/local_sha256
-          - name: s3_sha256
-            valueFrom:
-              path: /tmp/s3_sha256
 
     - name: notify-approval-required
       inputs:
@@ -341,6 +374,11 @@ spec:
           - name: target
           - name: bucket
           - name: appname
+      volumes:
+      - name: hdd-ro-glacier
+        persistentVolumeClaim:
+          claimName: hdd-ro-glacier-claim
+          readOnly: true
       container:
         image: curlimages/curl:8.7.1
         command: [sh, -c]
@@ -350,16 +388,9 @@ spec:
             TARGET="{{inputs.parameters.target}}"
             BUCKET="{{inputs.parameters.bucket}}"
             APPNAME="{{inputs.parameters.appname}}"
-            FILE_SIZE=$(stat -c%s "/mnt/work${TARGET}/backup.gpg" 2>/dev/null || echo "0")
-            HR_SIZE=$(awk -v bytes="$FILE_SIZE" 'BEGIN {
-              if (bytes == 0) { print "unknown"; exit }
-              split("bytes KiB MiB GiB TiB", units)
-              u = 1
-              while (bytes >= 1024 && u < 5) { bytes /= 1024; u++ }
-              printf "%.1f %s", bytes, units[u]
-            }')
+            SOURCE_SIZE=$(du -sh "$TARGET" 2>/dev/null | cut -f1 || echo "unknown")
             URL="http://ntfy.monitoring.svc.cluster.local/backup"
-            MSG="Human approval required: ${TARGET} does not exist in S3 bucket ${BUCKET}, size: ${HR_SIZE}. Resume the upload in Argo"
+            MSG="Human approval required: ${TARGET} does not exist in S3 bucket ${BUCKET}, source size: ~${SOURCE_SIZE} (uncompressed). Resume the upload in Argo"
             curl -fsS -X POST \
               -H "Title: ${APPNAME} backup - approval required" \
               --data "$MSG" \
@@ -367,6 +398,9 @@ spec:
         volumeMounts:
           - name: work
             mountPath: /mnt/work
+          - name: hdd-ro-glacier
+            mountPath: /mnt/hdd
+            readOnly: true
 
     - name: ntfy-send
       inputs:
@@ -385,14 +419,6 @@ spec:
               --data "{{inputs.parameters.message}}" \
               "$URL"
 
-    - name: fail
-      container:
-        image: debian:bullseye-slim
-        command: [sh, -c]
-        args:
-          - |
-            echo "Bit rot detected. Failing workflow."
-            exit 1
 
     - name: clean-workingdir
       container:
