@@ -1,0 +1,12 @@
+{
+  "browser": {
+    "launchOptions": {
+      "args": [
+        "--ignore-certificate-errors"
+      ]
+    },
+    "contextOptions": {
+      "ignoreHTTPSErrors": true
+    }
+  }
+}
