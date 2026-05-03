@@ -120,38 +120,98 @@ spec:
           - name: appname
           - name: storageclass
           - name: target
+      dag:
+        tasks:
+          - name: check-s3-status
+            template: check-s3-status
+            arguments:
+              parameters:
+                - name: target
+                  value: "{{inputs.parameters.target}}"
+                - name: bucket
+                  value: "{{inputs.parameters.bucket}}"
+                - name: appname
+                  value: "{{inputs.parameters.appname}}"
+          - name: notify-approval-needed
+            depends: check-s3-status
+            template: notify-approval-required
+            when: "{{tasks.check-s3-status.outputs.parameters.needs_approval}} == true"
+            arguments:
+              parameters:
+                - name: target
+                  value: "{{inputs.parameters.target}}"
+                - name: bucket
+                  value: "{{inputs.parameters.bucket}}"
+                - name: appname
+                  value: "{{inputs.parameters.appname}}"
+          - name: human-approval
+            depends: notify-approval-needed
+            template: approve-upload
+            when: "{{tasks.check-s3-status.outputs.parameters.needs_approval}} == true"
+          - name: compare-and-act
+            depends: "check-s3-status && (human-approval.Succeeded || human-approval.Skipped)"
+            template: compare-and-act
+            arguments:
+              parameters:
+                - name: target
+                  value: "{{inputs.parameters.target}}"
+                - name: bucket
+                  value: "{{inputs.parameters.bucket}}"
+                - name: appname
+                  value: "{{inputs.parameters.appname}}"
+                - name: storageclass
+                  value: "{{inputs.parameters.storageclass}}"
+                - name: s3_sha256
+                  value: "{{tasks.check-s3-status.outputs.parameters.s3_sha256}}"
+          - name: notify-bitrot
+            depends: compare-and-act
+            template: ntfy-send
+            when: "{{tasks.compare-and-act.outputs.parameters.status}} == bitrot"
+            arguments:
+              parameters:
+                - name: title
+                  value: "{{workflow.parameters.appname}} backup - BIT ROT DETECTED"
+                - name: message
+                  value: "Bit rot detected! Target: {{inputs.parameters.target}}. Bucket: {{inputs.parameters.bucket}}. Local SHA256: {{tasks.compare-and-act.outputs.parameters.local_sha256}}. S3 SHA256: {{tasks.compare-and-act.outputs.parameters.s3_sha256}}."
+          - name: fail-on-bitrot
+            depends: notify-bitrot
+            template: fail
+            when: "{{tasks.compare-and-act.outputs.parameters.status}} == bitrot"
+
+    - name: check-s3-status
+      inputs:
+        parameters:
+          - name: target
+          - name: bucket
+          - name: appname
       container:
         image: amazon/aws-cli:latest
         command: [sh, -c]
         args:
           - |
             TARGET="{{inputs.parameters.target}}"
-            TARGET_ID=$(echo "$TARGET" | sed 's|/mnt/hdd/||' | sed 's|/|_|g')
-            BUCKET_PATH="{{inputs.parameters.appname}}/${TARGET_ID}.gpg"
-            echo "Uploading /mnt/work${TARGET}/backup.gpg to bucket: {{inputs.parameters.bucket}} at: ${BUCKET_PATH}"
-            NEW_SHA256=$(cat "/mnt/work${TARGET}/backup.sha256" | tr -d '[:space:]')
+            TARGET_PATH=$(echo "$TARGET" | sed 's|^/mnt/hdd/||')
+            BUCKET_PATH="${TARGET_PATH}.gpg"
 
-            # Try to get existing object's sha256 tag
-            # S3_SHA256=$(aws s3api get-object-tagging \
-            #   --bucket "{{inputs.parameters.bucket}}" \
-            #   --key "${BUCKET_PATH}" \
-            #   --query "TagSet[?Key=='sha256'].Value | [0]" \
-            #   --output text 2>/dev/null | tr -d '[:space:]')
+            # Get existing object's sha256 tag from S3
+            S3_SHA256=$(aws s3api get-object-tagging \
+              --bucket "{{inputs.parameters.bucket}}" \
+              --key "${BUCKET_PATH}" \
+              --query "TagSet[?Key=='sha256'].Value | [0]" \
+              --output text 2>/dev/null | tr -d '[:space:]')
 
-            # echo "Local sha256: $NEW_SHA256, S3 sha256: $S3_SHA256"
+            # AWS CLI returns "None" string when no matching tags found
+            [ "$S3_SHA256" = "None" ] && S3_SHA256=""
 
-            # if [ "$NEW_SHA256" != "$S3_SHA256" ]; then
-            #     echo "SHA256 changed or object does not exist. Uploading new version..."
-            #      aws s3api put-object \
-            #       --bucket "{{inputs.parameters.bucket}}" \
-            #       --key "${BUCKET_PATH}" \
-            #       --body "/mnt/work${TARGET}/backup.gpg" \
-            #       --storage-class {{inputs.parameters.storageclass}} \
-            #       --tagging "sha256=$NEW_SHA256" \
-            #       --metadata sha256="$NEW_SHA256"
-            # else
-            #     echo "SHA256 matches existing metadata. Skipping upload."
-            # fi
+            echo "S3 sha256: [$S3_SHA256]"
+
+            if [ -z "$S3_SHA256" ]; then
+              echo -n "true" > /tmp/needs_approval
+            else
+              echo -n "false" > /tmp/needs_approval
+            fi
+
+            echo -n "$S3_SHA256" > /tmp/s3_sha256
         volumeMounts:
           - name: work
             mountPath: /mnt/work
@@ -164,7 +224,6 @@ spec:
             subPath: config
             readOnly: true
       volumes:
-      # AWS credentials
       - name: aws-credentials-volume
         secret:
           secretName: aws-config-backup-uploader
@@ -177,6 +236,163 @@ spec:
           items:
             - key: config
               path: config
+      outputs:
+        parameters:
+          - name: s3_sha256
+            valueFrom:
+              path: /tmp/s3_sha256
+          - name: needs_approval
+            valueFrom:
+              path: /tmp/needs_approval
+
+    - name: approve-upload
+      suspend: {}
+
+    - name: compare-and-act
+      inputs:
+        parameters:
+          - name: target
+          - name: bucket
+          - name: appname
+          - name: storageclass
+          - name: s3_sha256
+      container:
+        image: amazon/aws-cli:latest
+        command: [sh, -c]
+        args:
+          - |
+            set -euo pipefail
+
+            TARGET="{{inputs.parameters.target}}"
+            TARGET_PATH=$(echo "$TARGET" | sed 's|^/mnt/hdd/||')
+            BUCKET_PATH="${TARGET_PATH}.gpg"
+            NEW_SHA256=$(cat "/mnt/work${TARGET}/backup.sha256" | tr -d '[:space:]')
+            S3_SHA256="{{inputs.parameters.s3_sha256}}"
+
+            echo "New SHA256:  [$NEW_SHA256]"
+            echo "S3 SHA256:   [$S3_SHA256]"
+
+            if [ -z "$S3_SHA256" ]; then
+              echo "Object does not exist in S3 yet. Performing initial upload..."
+              aws s3api put-object \
+                --bucket "{{inputs.parameters.bucket}}" \
+                --key "${BUCKET_PATH}" \
+                --body "/mnt/work${TARGET}/backup.gpg" \
+                --storage-class {{inputs.parameters.storageclass}} \
+                --tagging "sha256=$NEW_SHA256" \
+                --metadata sha256="$NEW_SHA256"
+              echo "Upload complete."
+              echo -n "uploaded" > /tmp/status
+            elif [ "$NEW_SHA256" == "$S3_SHA256" ]; then
+              echo "SHA256 matches existing S3 object. No changes detected. Skipping upload."
+              echo -n "skipped" > /tmp/status
+            else
+              echo "=============================================="
+              echo "  BIT ROT DETECTED!"
+              echo "  Target: $TARGET"
+              echo "  Local SHA256:  $NEW_SHA256"
+              echo "  S3 SHA256:     $S3_SHA256"
+              echo "  Possible hard drive corruption or data modification."
+              echo "=============================================="
+              echo -n "bitrot" > /tmp/status
+            fi
+
+            echo -n "$NEW_SHA256" > /tmp/local_sha256
+            echo -n "$S3_SHA256" > /tmp/s3_sha256
+        volumeMounts:
+          - name: work
+            mountPath: /mnt/work
+          - name: aws-credentials-volume
+            mountPath: /root/.aws/credentials
+            subPath: credentials
+            readOnly: true
+          - name: aws-config-volume
+            mountPath: /root/.aws/config
+            subPath: config
+            readOnly: true
+      volumes:
+      - name: aws-credentials-volume
+        secret:
+          secretName: aws-config-backup-uploader
+          items:
+            - key: credentials
+              path: credentials
+      - name: aws-config-volume
+        secret:
+          secretName: aws-config-backup-uploader
+          items:
+            - key: config
+              path: config
+      outputs:
+        parameters:
+          - name: status
+            valueFrom:
+              path: /tmp/status
+          - name: local_sha256
+            valueFrom:
+              path: /tmp/local_sha256
+          - name: s3_sha256
+            valueFrom:
+              path: /tmp/s3_sha256
+
+    - name: notify-approval-required
+      inputs:
+        parameters:
+          - name: target
+          - name: bucket
+          - name: appname
+      container:
+        image: curlimages/curl:8.7.1
+        command: [sh, -c]
+        args:
+          - |
+            set -euo pipefail
+            TARGET="{{inputs.parameters.target}}"
+            BUCKET="{{inputs.parameters.bucket}}"
+            APPNAME="{{inputs.parameters.appname}}"
+            FILE_SIZE=$(stat -c%s "/mnt/work${TARGET}/backup.gpg" 2>/dev/null || echo "0")
+            HR_SIZE=$(awk -v bytes="$FILE_SIZE" 'BEGIN {
+              if (bytes == 0) { print "unknown"; exit }
+              split("bytes KiB MiB GiB TiB", units)
+              u = 1
+              while (bytes >= 1024 && u < 5) { bytes /= 1024; u++ }
+              printf "%.1f %s", bytes, units[u]
+            }')
+            URL="http://ntfy.monitoring.svc.cluster.local/backup"
+            MSG="Human approval required: ${TARGET} does not exist in S3 bucket ${BUCKET}, size: ${HR_SIZE}. Resume the upload in Argo"
+            curl -fsS -X POST \
+              -H "Title: ${APPNAME} backup - approval required" \
+              --data "$MSG" \
+              "$URL"
+        volumeMounts:
+          - name: work
+            mountPath: /mnt/work
+
+    - name: ntfy-send
+      inputs:
+        parameters:
+          - name: title
+          - name: message
+      container:
+        image: curlimages/curl:8.7.1
+        command: [sh, -c]
+        args:
+          - |
+            set -euo pipefail
+            URL="http://ntfy.monitoring.svc.cluster.local/backup"
+            curl -fsS -X POST \
+              -H "Title: {{inputs.parameters.title}}" \
+              --data "{{inputs.parameters.message}}" \
+              "$URL"
+
+    - name: fail
+      container:
+        image: debian:bullseye-slim
+        command: [sh, -c]
+        args:
+          - |
+            echo "Bit rot detected. Failing workflow."
+            exit 1
 
     - name: clean-workingdir
       container:
