@@ -1,5 +1,6 @@
 import os
 import sys
+import re
 import yaml
 import subprocess
 from datetime import datetime
@@ -576,6 +577,261 @@ def analyze_pentest_results(scan_data, api_key):
                 {"role": "user", "content": prompt}
             ],
             max_tokens=2000
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        return f"Error generating security analysis: {str(e)}"
+
+
+# --- Advanced pentest: NSE categories, risk scoring, multi-phase scanning ---
+
+NSE_CATEGORIES = {
+    "web": {
+        "label": "Web Services (headers, methods, dir enum)",
+        "ports": [80, 443, 8080, 8443, 3000, 5000, 9090, 9443],
+        "scripts": "http-headers,http-security-headers,http-methods,http-enum,http-webdav-scan,http-title",
+    },
+    "ssl": {
+        "label": "SSL/TLS (ciphers, certs, heartbleed)",
+        "ports": [443, 8443, 9443, 465, 993, 995, 636],
+        "scripts": "ssl-enum-ciphers,ssl-cert,ssl-heartbleed,tls-nextprotoneg",
+    },
+    "ssh": {
+        "label": "SSH (algorithms, host keys)",
+        "ports": [22],
+        "scripts": "ssh2-enum-algos,ssh-hostkey,ssh-auth-methods",
+    },
+    "smb": {
+        "label": "SMB/Windows (shares, OS discovery)",
+        "ports": [139, 445],
+        "scripts": "smb-enum-shares,smb-os-discovery,smb-protocols",
+    },
+    "dns": {
+        "label": "DNS (zone transfer, recursion)",
+        "ports": [53],
+        "scripts": "dns-zone-transfer,dns-recursion,dns-nsid",
+    },
+    "mysql": {
+        "label": "MySQL/MariaDB (info, weak auth)",
+        "ports": [3306],
+        "scripts": "mysql-info,mysql-empty-password",
+    },
+    "ftp": {
+        "label": "FTP (anonymous login, bounce)",
+        "ports": [21],
+        "scripts": "ftp-anon,ftp-bounce,ftp-syst,ftp-vsftpd-backdoor",
+    },
+    "rdp": {
+        "label": "RDP (encryption, NTLM info)",
+        "ports": [3389],
+        "scripts": "rdp-enum-encryption,rdp-ntlm-info",
+    },
+}
+
+
+def get_nmap_args(scan_type, family="ipv4"):
+    """Get nmap arguments for a given scan type and address family."""
+    base = {"quick": "-sS -F -T4 --max-retries 1 --reason",
+            "thorough": "-sS -sV -O --top-ports 1000 -T4 --max-retries 2 --reason",
+            "extensive": "-sS -sV -O --top-ports 10000 -T5 --max-retries 1 --min-rate 500 --reason",
+            "full": "-sS -sV -O -p- -T4 --max-retries 2 --reason"}.get(
+        scan_type, "-sS -sV --top-ports 1000 -T4 --reason")
+    if family == "ipv6":
+        return f"-6 {base}"
+    return base
+
+
+def parse_open_ports(nmap_output):
+    """Parse nmap output to extract open ports with service info."""
+    ports = []
+    pattern = r'^(\d+)/(tcp|udp)\s+open\s+(\S+)\s*(.*)'
+    for line in nmap_output.splitlines():
+        m = re.match(pattern, line)
+        if m:
+            ports.append({
+                "port": int(m.group(1)),
+                "protocol": m.group(2),
+                "service": m.group(3),
+                "version": m.group(4).strip(),
+            })
+    return ports
+
+
+def calculate_risk_score(ports, nse_output=""):
+    """Calculate a security risk score from 0-100 based on open ports and findings."""
+    import math
+    score = 0
+
+    PORT_RISK = {
+        21: 15, 23: 20, 25: 8, 53: 5, 111: 4, 135: 10, 139: 8, 445: 10,
+        1433: 10, 1521: 10, 2049: 8, 3306: 10, 3389: 15, 5432: 10,
+        5900: 15, 5901: 15, 5985: 8, 5986: 8, 6379: 12, 9200: 10,
+        11211: 15, 27017: 12, 27018: 10,
+    }
+
+    for p in ports:
+        score += PORT_RISK.get(p["port"], 1)
+
+    if ports:
+        score += int(math.log2(len(ports) + 1) * 5)
+
+    if nse_output:
+        if re.search(r'(?i)weak|WEAK|RC4|DES\b|3DES|MD5|EXPORT|NULL\s+cipher', nse_output):
+            score += 10
+        if re.search(r'(?i)vulnerable|VULNERABLE|heartbleed|shellshock|eternalblue', nse_output):
+            score += 15
+        if re.search(r'(?i)anonymous.*logged|Anonymous.*yes', nse_output):
+            score += 10
+        if re.search(r'(?i)Zone transfer|AXFR', nse_output):
+            score += 10
+        if re.search(r'(?i)empty.*password|no password', nse_output):
+            score += 15
+
+    return min(score, 100)
+
+
+def get_risk_level(score):
+    """Return (label, emoji) for a risk score."""
+    if score < 20:
+        return "Very Low", "🟢"
+    elif score < 40:
+        return "Low", "🔵"
+    elif score < 60:
+        return "Moderate", "🟡"
+    elif score < 80:
+        return "High", "🟠"
+    return "Critical", "🔴"
+
+
+def run_advanced_pentest(target, scan_type, deep_analysis=False, nse_categories=None, family="ipv4"):
+    """Run a multi-phase pentest scan.
+
+    Phase 1 — Port discovery using the selected scan profile.
+    Phase 2 — Targeted NSE deep-dive on discovered services (if enabled).
+    Phase 3 — Risk scoring and findings summary.
+
+    Returns (combined_report, phase1_output, ports_list, risk_score, nse_output).
+    """
+    target = target.strip()
+
+    # Phase 1: Port scan
+    scan_args = get_nmap_args(scan_type, family)
+    phase1_output = run_nmap_scan(target, scan_args, timeout=900)
+
+    if phase1_output.startswith("Error:"):
+        return phase1_output, phase1_output, [], 0, ""
+
+    ports = parse_open_ports(phase1_output)
+
+    # Phase 2: NSE deep analysis
+    nse_output = ""
+    if deep_analysis and nse_categories and ports:
+        scripts_to_run = []
+        ports_to_scan = set()
+        for cat in nse_categories:
+            cat_info = NSE_CATEGORIES.get(cat)
+            if not cat_info:
+                continue
+            cat_ports = [p["port"] for p in ports if p["port"] in cat_info["ports"]]
+            if cat_ports:
+                scripts_to_run.append(cat_info["scripts"])
+                ports_to_scan.update(cat_ports)
+
+        if scripts_to_run and ports_to_scan:
+            script_arg = ",".join(scripts_to_run)
+            port_list = ",".join(str(p) for p in sorted(ports_to_scan))
+            try:
+                nse_result = subprocess.run(
+                    f"nmap -sV --script={script_arg} -p{port_list} {target} 2>&1",
+                    shell=True, capture_output=True, text=True, timeout=600
+                )
+                nse_output = nse_result.stdout or ""
+                if nse_result.stderr:
+                    nse_output += f"\n--- STDERR ---\n{nse_result.stderr}"
+            except subprocess.TimeoutExpired:
+                nse_output = "NSE deep scan timed out after 600 seconds."
+            except Exception as e:
+                nse_output = f"NSE deep scan error: {e}"
+
+    # Phase 3: Risk scoring
+    risk_score = calculate_risk_score(ports, nse_output)
+    level_label, level_icon = get_risk_level(risk_score)
+
+    # Build combined report
+    combined = f"TARGET: {target}\nRISK SCORE: {risk_score}/100 ({level_icon} {level_label})\n\n"
+    combined += f"{'='*60}\nPHASE 1: PORT DISCOVERY ({scan_type.upper()})\n{'='*60}\n\n{phase1_output}\n\n"
+
+    if nse_output:
+        combined += f"{'='*60}\nPHASE 2: SERVICE DEEP ANALYSIS\n{'='*60}\n\n{nse_output}\n\n"
+
+    if ports:
+        combined += f"{'='*60}\nFINDINGS SUMMARY\n{'='*60}\n\n"
+        combined += f"Total open ports: {len(ports)}\n\n"
+        HIGH_RISK_PORTS = {21: "FTP (cleartext auth)", 23: "Telnet (cleartext)", 3389: "RDP",
+                           5900: "VNC", 5901: "VNC", 6379: "Redis (no auth)",
+                           11211: "Memcached (amplification risk)", 27017: "MongoDB (no auth)"}
+        MEDIUM_RISK_PORTS = {22: "SSH", 25: "SMTP", 53: "DNS", 139: "NetBIOS", 445: "SMB",
+                             1433: "MSSQL", 1521: "Oracle DB", 3306: "MySQL",
+                             5432: "PostgreSQL", 8080: "HTTP-alt", 8443: "HTTPS-alt"}
+        high_found = [p for p in ports if p["port"] in HIGH_RISK_PORTS]
+        med_found = [p for p in ports if p["port"] in MEDIUM_RISK_PORTS]
+        if high_found:
+            combined += f"🔴 HIGH RISK ({len(high_found)}):\n"
+            for p in high_found:
+                combined += (f"  - Port {p['port']}/{p['protocol']}: {p['service']} "
+                             f"{p['version']} [{HIGH_RISK_PORTS[p['port']]}]\n")
+            combined += "\n"
+        if med_found:
+            combined += f"🟠 MEDIUM RISK ({len(med_found)}):\n"
+            for p in med_found:
+                combined += (f"  - Port {p['port']}/{p['protocol']}: {p['service']} "
+                             f"{p['version']} [{MEDIUM_RISK_PORTS[p['port']]}]\n")
+            combined += "\n"
+        safe_ports = [p for p in ports if p["port"] not in HIGH_RISK_PORTS
+                      and p["port"] not in MEDIUM_RISK_PORTS]
+        if safe_ports:
+            combined += f"✅ LOW RISK ({len(safe_ports)}): standard service ports\n"
+
+    return combined, phase1_output, ports, risk_score, nse_output
+
+
+def analyze_pentest_results(scan_data, api_key, risk_score=None):
+    """Send pentest scan results to AI for comprehensive security analysis."""
+    try:
+        import httpx
+        http_client = httpx.Client()
+        client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com", http_client=http_client)
+    except Exception:
+        client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
+
+    risk_context = ""
+    if risk_score is not None:
+        risk_context = f"\nThe automated risk score for this target is {risk_score}/100."
+
+    prompt = (
+        "You are a professional penetration tester and security analyst. "
+        "Review the following pentest scan data and provide a comprehensive, "
+        "actionable markdown report. Structure it as:\n\n"
+        "1. **Executive Summary** — what was scanned, the overall risk posture, and key findings\n"
+        "2. **Attack Surface Analysis** — breakdown of exposed services, their purpose, and risk\n"
+        "3. **Vulnerability Assessment** — specific vulnerabilities or misconfigurations found "
+        "(weak ciphers, outdated versions, unnecessary services, default credentials, etc.)\n"
+        "4. **CVE Correlation** — map detected service versions to known CVEs where possible\n"
+        "5. **Remediation Plan** — prioritized, actionable steps to improve security posture\n\n"
+        "Be specific and reference actual ports, services, and versions found."
+        f"{risk_context}"
+        " If no significant issues are found, state that clearly.\n\n"
+        f"Scan data:\n```\n{scan_data[:20000]}\n```"
+    )
+
+    try:
+        response = client.chat.completions.create(
+            model="deepseek-v4-flash",
+            messages=[
+                {"role": "system", "content": "You are a senior penetration tester providing concise, actionable security assessments. Use professional cybersecurity terminology."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=3000
         )
         return response.choices[0].message.content
     except Exception as e:
