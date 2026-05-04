@@ -412,6 +412,176 @@ def insert_raw_data_into_report(report, data):
     return "\n".join(new_parts)
 
 
+def run_nmap_scan(target, scan_args, timeout=900):
+    """Run an nmap scan against a target and return the output."""
+    try:
+        cmd = f"nmap {scan_args} {target} 2>&1"
+        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=timeout)
+        output = result.stdout or ""
+        if result.stderr:
+            output += f"\n--- STDERR ---\n{result.stderr}"
+        return output if output.strip() else f"Error: no output from nmap (exit code {result.returncode})"
+    except subprocess.TimeoutExpired:
+        return "Error: Scan timed out after {} seconds. Try a quicker scan type.".format(timeout)
+    except FileNotFoundError:
+        return "Error: nmap not found. Ensure it is installed in the container."
+    except Exception as e:
+        return f"Exception: {str(e)}"
+
+
+def discover_external_ips():
+    """Discover external IPv4 and IPv6 addresses.
+
+    Tries external echo services first, then falls back to querying the
+    local Kubernetes node and host interfaces for IPv6 addresses.
+    """
+    import urllib.request
+    import ipaddress
+    import os
+
+    result = {"ipv4": None, "ipv6": None, "error": None}
+
+    # --- IPv4 via external echo services ---
+    for svc in ["https://api.ipify.org", "https://checkip.amazonaws.com", "https://ipv4.icanhazip.com"]:
+        try:
+            req = urllib.request.Request(svc, headers={"User-Agent": "curl/8.0"})
+            resp = urllib.request.urlopen(req, timeout=10)
+            ip = resp.read().decode("utf-8").strip()
+            if ip:
+                result["ipv4"] = ip
+                break
+        except Exception:
+            continue
+
+    # --- IPv6: try echo services, then K8s node, then host interfaces ---
+    for svc in ["https://api6.ipify.org", "https://v6.ident.me", "https://ipv6.icanhazip.com"]:
+        try:
+            req = urllib.request.Request(svc, headers={"User-Agent": "curl/8.0"})
+            resp = urllib.request.urlopen(req, timeout=10)
+            ip = resp.read().decode("utf-8").strip()
+            if ip:
+                result["ipv6"] = ip
+                break
+        except Exception:
+            continue
+
+    if not result["ipv6"]:
+        # Try the Kubernetes API for the node's IPv6 addresses
+        try:
+            from kubernetes import client, config as kube_config
+            kube_config.load_incluster_config()
+            v1 = client.CoreV1Api()
+            node_name = os.environ.get("KUBERNETES_NODE_NAME")
+            if node_name:
+                node = v1.read_node(node_name)
+            else:
+                # Fall back to listing nodes
+                nodes = v1.list_node().items
+                if nodes:
+                    node = nodes[0]
+                else:
+                    node = None
+
+            if node and node.status.addresses:
+                for addr in node.status.addresses:
+                    try:
+                        parsed = ipaddress.ip_address(addr.address)
+                        if isinstance(parsed, ipaddress.IPv6Address):
+                            if not parsed.is_link_local and not parsed.is_loopback:
+                                result["ipv6"] = str(parsed)
+                                result["_source"] = "k8s-node"
+                                break
+                    except ValueError:
+                        continue
+        except Exception:
+            pass
+
+    if not result["ipv6"]:
+        # Check host interfaces via nsenter for any IPv6 (including link-local)
+        try:
+            nsenter_result = subprocess.run(
+                "nsenter -t 1 -n -- cat /proc/net/if_inet6 2>/dev/null",
+                shell=True, capture_output=True, text=True, timeout=10
+            )
+            addrs = [a.strip() for a in nsenter_result.stdout.splitlines() if a.strip()]
+            global_addrs = []
+            link_local_addrs = []
+            for line in addrs:
+                parts = line.split()
+                if len(parts) < 6:
+                    continue
+                raw_hex = parts[0]
+                iface = parts[5]
+                # Reconstruct IPv6 from hex (8 groups of 4 hex digits)
+                addr_str = ":".join(raw_hex[i:i+4] for i in range(0, 32, 4))
+                try:
+                    parsed = ipaddress.IPv6Address(addr_str)
+                except Exception:
+                    continue
+                if parsed.is_global:
+                    global_addrs.append((str(parsed), iface))
+                elif parsed.is_link_local:
+                    link_local_addrs.append((str(parsed), iface))
+
+            if global_addrs:
+                result["ipv6"] = global_addrs[0][0]
+                result["_source"] = f"host-interface ({global_addrs[0][1]})"
+
+            if not global_addrs and link_local_addrs:
+                result["_link_local"] = link_local_addrs[0][0]
+        except Exception:
+            pass
+
+    if not result["ipv4"] and not result["ipv6"]:
+        result["error"] = "Could not discover external IPs from any source."
+    elif not result["ipv4"]:
+        result["error"] = "Could not discover external IPv4 address."
+    elif not result["ipv6"]:
+        link_local = result.get("_link_local", "")
+        base_msg = ("No global IPv6 address found on this node. The node has link-local IPv6 "
+                     "only — your public IPv6 is likely on your router/firewall, not the K8s node.")
+        if link_local:
+            base_msg += f" (link-local: {link_local})"
+        base_msg += " Enter your IPv6 address manually."
+        result["error"] = base_msg
+
+    return result
+
+
+def analyze_pentest_results(scan_data, api_key):
+    """Send pentest scan results to AI for security analysis."""
+    try:
+        import httpx
+        http_client = httpx.Client()
+        client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com", http_client=http_client)
+    except Exception:
+        client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
+
+    prompt = (
+        "You are a professional security analyst. Review the following nmap pentest scan data "
+        "and provide a concise, actionable markdown report. Structure it as:\n\n"
+        "1. **Executive Summary** — what was scanned and the overall risk level\n"
+        "2. **Open Ports & Services** — which ports are open, what services are running, and their risk\n"
+        "3. **Potential Vulnerabilities** — any obvious issues (outdated versions, unnecessary services, weak configs)\n"
+        "4. **Recommendations** — prioritized actions to improve security\n\n"
+        "Be specific and reference actual ports and services found. If no issues are found, say so.\n\n"
+        f"Scan data:\n```\n{scan_data[:15000]}\n```"
+    )
+
+    try:
+        response = client.chat.completions.create(
+            model="deepseek-v4-flash",
+            messages=[
+                {"role": "system", "content": "You are a cybersecurity analyst. Be concise and technical."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=2000
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        return f"Error generating security analysis: {str(e)}"
+
+
 def main():
     print("Starting System Audit...")
     if not os.path.exists(REPORTS_DIR):

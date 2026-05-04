@@ -6,9 +6,10 @@ metadata:
   namespace: monitoring
   labels:
     app: system-audit
-    sablier.enable: "true"
-    sablier.group: system-audit
+    # sablier.enable: "true"
+    # sablier.group: system-audit
 spec:
+  replicas: 1
   strategy:
     type: Recreate
   selector:
@@ -34,7 +35,7 @@ spec:
       initContainers:
       - name: setup-env
         image: python:3.11-slim
-        command: ['sh', '-c', 'apt-get update && apt-get install -y gzip xz-utils bzip2 && python -m venv /venv && /venv/bin/pip install -r /config/requirements.txt']
+        command: ['sh', '-c', 'apt-get update && apt-get install -y gzip xz-utils bzip2 nmap && python -m venv /venv && /venv/bin/pip install -r /config/requirements.txt']
         volumeMounts:
         - name: venv
           mountPath: /venv
@@ -43,7 +44,7 @@ spec:
       containers:
       - name: system-audit
         image: python:3.11-slim
-        command: ['/venv/bin/streamlit', 'run', '/config/app.py', '--server.port=8501', '--server.address=0.0.0.0']
+        command: ['sh', '-c', 'apt-get update && apt-get install -y nmap && /venv/bin/streamlit run /config/app.py --server.port=8501 --server.address=0.0.0.0 --theme.base=dark']
         ports:
         - containerPort: 8501
         securityContext:
@@ -54,6 +55,10 @@ spec:
             secretKeyRef:
               name: deepseek-apikey
               key: ANTHROPIC_AUTH_TOKEN
+        - name: KUBERNETES_NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
         volumeMounts:
         - name: venv
           mountPath: /venv
@@ -144,7 +149,7 @@ metadata:
   annotations:
     traefik.ingress.kubernetes.io/router.tls: "true"
     traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
-    traefik.ingress.kubernetes.io/router.middlewares: "monitoring-authentik-system-audit@kubernetescrd,monitoring-sablier-system-audit@kubernetescrd"
+    traefik.ingress.kubernetes.io/router.middlewares: "monitoring-authentik-system-audit@kubernetescrd"
 spec:
   tls:
   - secretName: system-audit-bas-tls
