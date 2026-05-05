@@ -321,13 +321,16 @@ spec:
             rm -f "${WORK_DIR}/backup.tar.gz"
 
             echo "=== Uploading to S3 ==="
-            aws s3api put-object \
+            aws s3 cp \
+              "${WORK_DIR}/backup.gpg" \
+              "s3://{{inputs.parameters.bucket}}/${BUCKET_PATH}" \
+              --storage-class {{inputs.parameters.storageclass}} \
+              --metadata sha256="$NEW_SHA256"
+            # s3 cp doesn't support --tagging directly, so set tags after upload
+            aws s3api put-object-tagging \
               --bucket "{{inputs.parameters.bucket}}" \
               --key "${BUCKET_PATH}" \
-              --body "${WORK_DIR}/backup.gpg" \
-              --storage-class {{inputs.parameters.storageclass}} \
-              --tagging "sha256=$NEW_SHA256" \
-              --metadata sha256="$NEW_SHA256" \
+              --tagging "TagSet=[{Key=sha256,Value=$NEW_SHA256}]" \
               --output json
             echo "Upload complete."
             rm -f "${WORK_DIR}/backup.gpg" "${WORK_DIR}/backup.sha256"
