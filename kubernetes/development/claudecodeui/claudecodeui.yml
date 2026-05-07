@@ -50,6 +50,18 @@ data:
       echo "Claude Code CLI already installed"
     fi
 
+    # Rebuild native addons for plugins (node-pty linux-x64 prebuild missing when installed with --ignore-scripts)
+    echo "Rebuilding native addons for plugins..."
+    PLUGIN_DIR="$HOME/.claude-code-ui/plugins"
+    if [ -d "$PLUGIN_DIR" ]; then
+      for plugin in "$PLUGIN_DIR"/*/; do
+        if [ -f "${plugin}package.json" ]; then
+          echo "Rebuilding native addons in $(basename "$plugin")..."
+          (cd "$plugin" && npm rebuild 2>/dev/null) || true
+        fi
+      done
+    fi
+
     # Start the claudecodeui server
     # Try to find the correct command - cloudcli might need different arguments
     # First check what commands are available
