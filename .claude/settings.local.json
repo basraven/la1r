@@ -28,7 +28,9 @@
       "mcp__playwright__browser_tabs",
       "mcp__playwright__browser_take_screenshot",
       "mcp__playwright__browser_network_requests",
-      "mcp__playwright__browser_network_request"
+      "mcp__playwright__browser_network_request",
+      "mcp__playwright__browser_run_code_unsafe",
+      "WebFetch(domain:letsencrypt.status.io)"
     ]
   },
   "enableAllProjectMcpServers": true,

@@ -16,7 +16,6 @@ spec:
         prometheus.io/scrape: "true"
         prometheus.io/port: "9100"
     spec:
-      priorityClassName: essential
       hostPID: true
       hostNetwork: true
       containers:

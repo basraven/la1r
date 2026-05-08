@@ -2,15 +2,15 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: mqtt-config-claim
+  name: mqtt-data-claim
   namespace: homeautomation
 spec:
   accessModes:
     - ReadWriteOnce
-  storageClassName: mqtt-settings-data
+  storageClassName: mqtt-data
   selector:
     matchLabels:
-      contenttype: "mqtt-settings-data"
+      contenttype: "mqtt-data"
   resources:
     requests:
       storage: 150Mi

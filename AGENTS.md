@@ -19,3 +19,10 @@ Homelab infrastructure: K8s (manifests), Ansible (config), Terraform (cloud), Hu
 ## Development Guidelines
 - **Ansible:** Use roles. Keep vars in `group_vars`/`host_vars`. 
 - **Terraform:** Modules in `cloud/terraform/modules/`.
+
+## Agent Delegation (use these proactively)
+- **Kubernetes manifest work** (get/create/modify/apply) → delegate to `k8s-engineer` agent
+- **GUI/UI browser validation** (checking web UI, screenshots) → delegate to `gui-validate` agent. NEVER use playwright tools directly in the main conversation.
+- **Terraform/cloud infrastructure** → delegate to `tf-engineer` agent
+- **Git diff review** → delegate to `git-review` agent
+- **Code exploration, reading, simple edits** → handle directly (no delegation needed)
