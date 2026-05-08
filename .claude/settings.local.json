@@ -18,7 +18,17 @@
       "WebSearch",
       "mcp__homeassistant__list_devices",
       "mcp__homeassistant__system_info",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "Bash(kubectl get:*)",
+      "WebFetch(domain:grafana.com)",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_console_messages",
+      "mcp__playwright__browser_snapshot",
+      "mcp__playwright__browser_click",
+      "mcp__playwright__browser_tabs",
+      "mcp__playwright__browser_take_screenshot",
+      "mcp__playwright__browser_network_requests",
+      "mcp__playwright__browser_network_request"
     ]
   },
   "enableAllProjectMcpServers": true,

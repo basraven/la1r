@@ -6,7 +6,8 @@
       ]
     },
     "contextOptions": {
-      "ignoreHTTPSErrors": true
+      "ignoreHTTPSErrors": true,
+    "storageState": "./playwright-mcp/storage-state.json"
     }
   }
 }

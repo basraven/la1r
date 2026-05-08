@@ -6,6 +6,11 @@ certificatesDir: /etc/kubernetes/pki
 controlPlaneEndpoint: "{{ ha_proxy_vir_ip }}:443"
 apiServer:
   timeoutForControlPlane: 4m0s
+  extraArgs:
+    oidc-issuer-url: "https://auth.la1r.com/application/o/kubernetes-dashboard/"
+    oidc-client-id: "Ziu0kdJQcepZsZHq0c8NRzChfy8RptmvrWVjoZio"
+    oidc-username-claim: "email"
+    oidc-groups-claim: "groups"
 dns:
   type: CoreDNS
 etcd:

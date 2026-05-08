@@ -8,3 +8,4 @@ kubernetes/ai
 src/kiosk
 **/logs/error.log
 **/logs/combined.log
+.playwright-mcp

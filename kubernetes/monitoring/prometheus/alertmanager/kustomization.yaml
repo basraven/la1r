@@ -3,4 +3,4 @@ kind: Kustomization
 resources:
 - pvc
 - alertmanager.yml
-- discord-webhook.yml
+# - discord-webhook.yml

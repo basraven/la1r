@@ -1,1 +1,3 @@
 - [Headlamp deployment](headlamp_deployment.md) — Headlamp K8s UI replacing kubernetes-dashboard, Authentik forwardAuth, port 4466
+- [Traefik API group](traefik_api_group.md) — This cluster uses traefik.containo.us (not traefik.io) for Traefik CRDs
+- [Grafana MCP token](grafana_mcp_token.md) — Create a Grafana service account token via API for grafana/mcp-grafana when Grafana uses anonymous admin

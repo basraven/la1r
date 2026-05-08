@@ -14,6 +14,17 @@
   async: 600
   poll: 5
 
+- name: Init Kubernetes / Add hostAliases for auth.la1r.com to kube-apiserver manifest <-- THIS HASN'T BEEN TESTED!
+  become: yes
+  ansible.builtin.shell:
+    cmd: |
+      if ! grep -q 'hostAliases' /etc/kubernetes/manifests/kube-apiserver.yaml 2>/dev/null; then
+        awk '!f && /^  containers:/ {print "  hostAliases:"; print "  - ip: \"192.168.6.2\""; print "    hostnames:"; print "    - \"auth.la1r.com\""; f=1} {print}' \
+          /etc/kubernetes/manifests/kube-apiserver.yaml > /tmp/kube-apiserver.yaml.tmp \
+          && mv /tmp/kube-apiserver.yaml.tmp /etc/kubernetes/manifests/kube-apiserver.yaml
+      fi
+    executable: /bin/bash
+
 - name: "Init Kubernetes / Copy kubeconfig to {{ target_user_name }} home directory"
   become: yes
   shell: |

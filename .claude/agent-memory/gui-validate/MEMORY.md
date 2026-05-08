@@ -1,0 +1,1 @@
+- [Headlamp OIDC login loop](headlamp_oidc_issue.md) — Headlamp dashboard login loop: kube-apiserver needs OIDC flags to accept tokens

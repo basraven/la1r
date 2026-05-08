@@ -5,6 +5,7 @@ resources:
   - pv
   - grafana.yml
   - middleware.yml
+  - grafana-mcp.yml
 
 # configMapGenerator:
 #   - name: grafana-dashboards

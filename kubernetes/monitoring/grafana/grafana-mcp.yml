@@ -1,0 +1,102 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana-mcp
+  namespace: monitoring
+  labels:
+    app: grafana-mcp
+spec:
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: grafana-mcp
+  template:
+    metadata:
+      labels:
+        app: grafana-mcp
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - jay-c
+      containers:
+      - name: grafana-mcp
+        image: grafana/mcp-grafana:latest
+        ports:
+        - containerPort: 8000
+          protocol: TCP
+        env:
+        - name: GRAFANA_URL
+          value: "http://grafana:80"
+        - name: GRAFANA_SERVICE_ACCOUNT_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: grafana-mcp-secret
+              key: api-key
+        resources:
+          requests:
+            cpu: 25m
+            memory: 32Mi
+          limits:
+            cpu: 100m
+            memory: 128Mi
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana-mcp
+  namespace: monitoring
+spec:
+  ports:
+  - port: 8000
+    targetPort: 8000
+  selector:
+    app: grafana-mcp
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: grafana-mcp-bas
+  namespace: monitoring
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: grafana-mcp-bas-tls
+  commonName: grafana-mcp.bas
+  dnsNames:
+  - grafana-mcp.bas
+  - www.grafana-mcp.bas
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: grafana-mcp-https
+  namespace: monitoring
+  annotations:
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+spec:
+  tls:
+  - secretName: grafana-mcp-bas-tls
+  rules:
+  - host: grafana-mcp.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: grafana-mcp
+            port:
+              number: 8000
