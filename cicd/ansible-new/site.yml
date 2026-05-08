@@ -16,11 +16,6 @@
     - { role: ipv6, tags: ['ipv6'] }
     - { role: fail2ban, tags: ['fail2ban'] }
 
-# - name: Configure kiosk node
-#   hosts: kiosk
-#   roles:
-#     - { role: kiosk, tags: ['kiosk'] }
-
 # - name: Install k3s (single-node) on stephanie
 #   hosts: stephanie
 #   roles:
