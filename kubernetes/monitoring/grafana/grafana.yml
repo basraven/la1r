@@ -63,16 +63,42 @@ spec:
         - name: GF_AUTH_BASIC_ENABLED
           value: "false"
         - name: GF_AUTH_ANONYMOUS_ENABLED
+          value: "false"
+        - name: GF_AUTH_DISABLE_LOGIN_FORM
           value: "true"
-        - name: GF_AUTH_ANONYMOUS_ORG_ROLE
-          value: "Admin"
-        # - name: GF_AUTH_DISABLE_LOGIN_FORM
-        #   value: "true"
-        # - name: GF_AUTH_DISABLE_SIGNOUT_MENU
-        #   value: "true"
+        - name: GF_AUTH_DISABLE_SIGNOUT_MENU
+          value: "true"
         - name: GF_USERS_ALLOW_SIGN_UP
           value: "false"
-        
+
+        # OIDC authentication with Authentik
+        - name: GF_AUTH_GENERIC_OAUTH_ENABLED
+          value: "true"
+        - name: GF_AUTH_GENERIC_OAUTH_NAME
+          value: Authentik
+        - name: GF_AUTH_GENERIC_OAUTH_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: grafana-oidc
+              key: client-id
+        - name: GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: grafana-oidc
+              key: client-secret
+        - name: GF_AUTH_GENERIC_OAUTH_SCOPES
+          value: openid profile email
+        - name: GF_AUTH_GENERIC_OAUTH_AUTH_URL
+          value: https://auth.la1r.com/application/o/authorize/
+        - name: GF_AUTH_GENERIC_OAUTH_TOKEN_URL
+          value: https://auth.la1r.com/application/o/token/
+        - name: GF_AUTH_GENERIC_OAUTH_API_URL
+          value: https://auth.la1r.com/application/o/userinfo/
+        - name: GF_AUTH_GENERIC_OAUTH_SIGN_OUT_REDIRECT_URL
+          value: https://auth.la1r.com/application/o/grafana/end-session/
+        - name: GF_AUTH_GENERIC_OAUTH_ALLOW_SIGN_UP
+          value: "true"
+
         # Enabling sending emails through my own gmail account
         - name: GF_SMTP_ENABLED
           value: "true"
@@ -99,9 +125,7 @@ spec:
         - name: REQUESTS_CA_BUNDLE 
           value: "false"
         - name: GF_SERVER_ROOT_URL
-          # If you're only using the API Server proxy, set this value instead:
-          # value: /api/v1/namespaces/monitoring/services/grafana/proxy
-          value: /
+          value: https://grafana.bas/
         # - name: plugins
         #   value: "vonage-status-panel"
           # value: "grafana-clock-panel,grafana-simple-json-datasource"

@@ -15,7 +15,7 @@ The MQTT broker acts as the central message bus for home automation, enabling co
 
 ### 2. Persistent Storage (`pv/`)
 - **mqtt-data-pv**: 150Mi hostPath volume for Mosquitto data.
-- **mqtt-config-claim**: PVC for configuration data, referencing a storage class and label.
+- **mqtt-data-claim**: PVC for Mosquitto data, using StorageClass `mqtt-data` and label `contenttype: mqtt-data`.
 
 ### 3. Networking
 - **Service**: Exposes the broker on port 1883 as a ClusterIP for use within the cluster.

@@ -30,7 +30,8 @@
       "mcp__playwright__browser_network_requests",
       "mcp__playwright__browser_network_request",
       "mcp__playwright__browser_run_code_unsafe",
-      "WebFetch(domain:letsencrypt.status.io)"
+      "WebFetch(domain:letsencrypt.status.io)",
+      "mcp__playwright__browser_evaluate"
     ]
   },
   "enableAllProjectMcpServers": true,
