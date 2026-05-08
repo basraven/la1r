@@ -13,6 +13,9 @@ spec:
         natOutgoing: Enabled
         blockSize: 29
         nodeSelector: all()
+    nodeAddressAutodetectionV4:
+      firstFound: false
+      interface: enp4s0
 
 
 # ---
