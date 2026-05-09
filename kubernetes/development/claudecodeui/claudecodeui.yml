@@ -18,6 +18,14 @@ data:
       echo "kubectl already installed"
     fi
 
+    # Install ansible if not already installed
+    if ! command -v ansible &> /dev/null; then
+      echo "Installing ansible..."
+      pip3 install --break-system-packages ansible
+    else
+      echo "ansible already installed"
+    fi
+
     # --- FIX: Mark directories as safe for Git ---
     git config --global --add safe.directory '*'
 
