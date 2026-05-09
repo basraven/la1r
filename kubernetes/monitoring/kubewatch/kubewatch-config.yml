@@ -1,0 +1,7 @@
+handler:
+  webhook:
+    url: "http://localhost:8080/"
+    tlsskip: false
+resource:
+  pod: false
+  event: true

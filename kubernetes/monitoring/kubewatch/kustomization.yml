@@ -3,3 +3,10 @@ kind: Kustomization
 namespace: monitoring
 resources:
   - kubewatch.yml
+configMapGenerator:
+- name: kubewatch
+  files:
+  - .kubewatch.yaml=kubewatch-config.yml
+- name: kubewatch-filter
+  files:
+  - filter.py

@@ -33,43 +33,6 @@ subjects:
     name: kubewatch
     namespace: monitoring
 ---
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: kubewatch
-  namespace: monitoring
-  labels:
-    app: kubewatch
-    task: monitoring
-data:
-  .kubewatch.yaml: |
-    namespace: "monitoring"
-    handler:
-      webhook:
-        url: "http://ntfy.monitoring.svc.cluster.local/k8s-status"
-        tlsskip: false
-    resource:
-      deployment: false
-      replicationcontroller: false
-      replicaset: false
-      daemonset: false
-      statefulset: false
-      services: false
-      pod: true
-      job: false
-      node: false
-      clusterrole: false
-      clusterrolebinding: false
-      serviceaccount: false
-      persistentvolume: false
-      namespace: false
-      secret: false
-      configmap: false
-      ingress: false
-      hpa: false
-      event: false
-      coreevent: false
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -109,7 +72,20 @@ spec:
         volumeMounts:
         - name: config-volume
           mountPath: /opt/bitnami/kubewatch
+      - name: kubewatch-filter
+        image: python:3-alpine
+        imagePullPolicy: IfNotPresent
+        command: ["python", "/app/filter.py"]
+        env:
+        - name: NTFY_URL
+          value: "http://ntfy.monitoring.svc.cluster.local/k8s-status"
+        volumeMounts:
+        - name: filter-script
+          mountPath: /app
       volumes:
       - name: config-volume
         configMap:
           name: kubewatch
+      - name: filter-script
+        configMap:
+          name: kubewatch-filter
