@@ -8,7 +8,7 @@ data:
   init.sh: |-
     #!/bin/bash
     # Install build dependencies
-    apt-get update && apt-get install -y git python3-dev build-essential g++ make python3-setuptools openssh-client
+    apt-get update && apt-get install -y git python3-dev build-essential g++ make python3-setuptools openssh-client sshpass
 
     # Install kubectl if not already installed
     if ! command -v kubectl &> /dev/null; then
