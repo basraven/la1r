@@ -24,5 +24,6 @@ Homelab infrastructure: K8s (manifests), Ansible (config), Terraform (cloud), Hu
 - **Kubernetes manifest work** (get/create/modify/apply) → delegate to `k8s-engineer` agent
 - **GUI/UI browser validation** (checking web UI, screenshots) → delegate to `gui-validate` agent. NEVER use playwright tools directly in the main conversation.
 - **Terraform/cloud infrastructure** → delegate to `tf-engineer` agent
+- **Home Assistant tasks** (device control, automations, scenes, media, add-ons, maintenance) → delegate to `ha-engineer` agent. NEVER use curl to interact with Home Assistant — always use MCP tools via this agent.
 - **Git diff review** → delegate to `git-review` agent
 - **Code exploration, reading, simple edits** → handle directly (no delegation needed)
