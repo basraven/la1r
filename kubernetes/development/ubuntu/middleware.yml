@@ -1,0 +1,17 @@
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: sablier-ubuntu-xfce4
+  namespace: development
+spec:
+  plugin:
+    sablier:
+      group: ubuntu-xfce4
+      dynamic:
+        displayName: Ubuntu XFCE4 Desktop
+        refreshFrequency: 5s
+        showDetails: "true"
+        theme: shuffle
+      sablierUrl: http://sablier:10000
+      sessionDuration: 8h

@@ -1,0 +1,156 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ubuntu-xfce4
+  namespace: development
+  labels:
+    app: ubuntu-xfce4
+    sablier.enable: "true"
+    sablier.group: ubuntu-xfce4
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ubuntu-xfce4
+  template:
+    metadata:
+      labels:
+        task: development
+        app: ubuntu-xfce4
+    spec:
+      priorityClassName: development-priority
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - jay-c
+      initContainers:
+      - name: setup-desktop
+        image: ubuntu:24.04
+        env:
+        - name: DEBIAN_FRONTEND
+          value: noninteractive
+        command:
+        - /bin/sh
+        - -c
+        - |
+          set -e
+          apt-get update && apt-get install -y git
+          echo "Cloning Nordic GTK theme..."
+          git clone --depth 1 https://github.com/EliverLara/Nordic.git /setup/Nordic
+
+          echo "Creating XFCE config files..."
+          mkdir -p /setup/xfce4/xfconf/xfce-perchannel-xml/
+          echo '<?xml version="1.0" encoding="UTF-8"?><channel name="xsettings" version="1.0"><property name="Net" type="empty"><property name="ThemeName" type="string" value="Nordic"/><property name="IconThemeName" type="string" value="Papirus-Dark"/></property></channel>' > /setup/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml
+          echo '<?xml version="1.0" encoding="UTF-8"?><channel name="xfwm4" version="1.0"><property name="general" type="empty"><property name="theme" type="string" value="Nordic"/></property></channel>' > /setup/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xml
+        volumeMounts:
+        - name: setup
+          mountPath: /setup
+      containers:
+      - name: ubuntu-xfce4
+        image: ubuntu:24.04
+        ports:
+        - containerPort: 6080
+          name: novnc
+        - containerPort: 5900
+          name: vnc
+        securityContext:
+          runAsUser: 0
+          runAsGroup: 0
+        env:
+        - name: DEBIAN_FRONTEND
+          value: noninteractive
+        - name: DISPLAY
+          value: ":1"
+        - name: RESOLUTION
+          value: "1280x800x24"
+        command: ["/bin/sh", "-c"]
+        args:
+        - /init.sh
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "2Gi"
+            cpu: "2000m"
+        volumeMounts:
+        - name: setup
+          mountPath: /setup
+        - name: dev-shm
+          mountPath: /dev/shm
+        - name: ubuntu-xfce4-init
+          mountPath: /init.sh
+          subPath: init.sh
+      volumes:
+      - name: setup
+        emptyDir: {}
+      - name: dev-shm
+        emptyDir:
+          medium: Memory
+          sizeLimit: 256Mi
+      - name: ubuntu-xfce4-init
+        configMap:
+          name: ubuntu-xfce4-init
+          items:
+          - key: init.sh
+            path: init.sh
+          defaultMode: 0755
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ubuntu-xfce4
+  namespace: development
+spec:
+  ports:
+  - port: 80
+    targetPort: 6080
+    name: novnc
+  - port: 5900
+    targetPort: 5900
+    name: vnc
+  selector:
+    app: ubuntu-xfce4
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: ubuntu-xfce4-bas
+  namespace: development
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: ubuntu-xfce4-bas-tls
+  commonName: ubuntu.bas
+  dnsNames:
+  - ubuntu.bas
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ubuntu-xfce4-https
+  namespace: development
+  annotations:
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+    traefik.ingress.kubernetes.io/router.middlewares: "development-authentik-ubuntu-xfce4@kubernetescrd,development-sablier-ubuntu-xfce4@kubernetescrd"
+spec:
+  tls:
+  - secretName: ubuntu-xfce4-bas-tls
+  rules:
+  - host: ubuntu.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: ubuntu-xfce4
+            port:
+              number: 80
