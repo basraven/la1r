@@ -68,6 +68,8 @@ spec:
           value: ":1"
         - name: RESOLUTION
           value: "1280x800x24"
+        - name: HOME
+          value: "/home/basraven"
         command: ["/bin/sh", "-c"]
         args:
         - /init.sh
@@ -79,6 +81,8 @@ spec:
             memory: "2Gi"
             cpu: "2000m"
         volumeMounts:
+        - name: openvscode-server-home-volume
+          mountPath: /home
         - name: setup
           mountPath: /setup
         - name: dev-shm
@@ -87,6 +91,9 @@ spec:
           mountPath: /init.sh
           subPath: init.sh
       volumes:
+      - name: openvscode-server-home-volume
+        persistentVolumeClaim:
+          claimName: openvscode-server-home-claim
       - name: setup
         emptyDir: {}
       - name: dev-shm
