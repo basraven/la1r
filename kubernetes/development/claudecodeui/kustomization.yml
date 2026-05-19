@@ -4,3 +4,13 @@ namespace: development
 resources:
   - claudecodeui.yml
   - middleware.yml
+  - container-build.yml
+configMapGenerator:
+- name: claudecodeui-init
+  files:
+  - init.sh
+- name: claudecodeui-dockerfile
+  files:
+  - Dockerfile
+generatorOptions:
+  disableNameSuffixHash: true

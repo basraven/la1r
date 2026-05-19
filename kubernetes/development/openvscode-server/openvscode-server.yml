@@ -1,17 +1,4 @@
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: openvscode-server-init
-data:
-  init.sh: |-
-    #!/bin/bash
-    # rename the user
-    usermod -l basraven -d /home/basraven -m $(id -un 1000)
 
-    # Set passwordless sudo for the user
-    echo "basraven ALL=(ALL) NOPASSWD:ALL" | tee /etc/sudoers.d/basraven
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -52,10 +39,11 @@ spec:
           runAsUser: 0
           runAsGroup: 0
           privileged: true
-        image: gitpod/openvscode-server:latest
+        image: registry.registry.svc.cluster.local:5000/openvscode-server:latest
+        imagePullPolicy: IfNotPresent
         command: ["/bin/sh", "-c"]
         args:
-        - ulimit -n 1048576 && /seb/init.sh && su basraven -c "/home/basraven/code.bas.install.sh" && su basraven -c "/home/.openvscode-server/bin/openvscode-server --host=0.0.0.0"
+        - /init.sh
         env:
         - name: PASSWORD
           valueFrom:
@@ -68,7 +56,7 @@ spec:
           - name: openvscode-server-home-volume
             mountPath: /home
           - name: openvscode-server-init
-            mountPath: /seb/init.sh
+            mountPath: /init.sh
             subPath: init.sh
       volumes:
         # - name: openvscode-server-data-volume

@@ -1,95 +1,4 @@
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: claudecodeui-init
-  namespace: development
-data:
-  init.sh: |-
-    #!/bin/bash
-    # Install build dependencies
-    apt-get update && apt-get install -y git python3-dev build-essential g++ make python3-setuptools openssh-client sshpass
 
-    # Install kubectl if not already installed
-    if ! command -v kubectl &> /dev/null; then
-      echo "Installing kubectl..."
-      curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" && chmod +x kubectl && sudo mv kubectl /usr/local/bin/
-    else
-      echo "kubectl already installed"
-    fi
-
-    # Install ansible if not already installed
-    if ! command -v ansible &> /dev/null; then
-      echo "Installing ansible..."
-      pip3 install --break-system-packages ansible
-    else
-      echo "ansible already installed"
-    fi
-
-    # --- FIX: Mark directories as safe for Git ---
-    git config --global --add safe.directory '*'
-
-    # Check if cloudcli is already installed
-    if ! command -v cloudcli &> /dev/null; then
-      # Install cloudcli package
-      npm install -g @cloudcli-ai/cloudcli --unsafe-perm
-    fi
-
-    # Install task-master-ai globally
-    if ! command -v task &> /dev/null; then
-      npm install -g task-master-ai --unsafe-perm
-    fi
-
-    # Install Claude Code CLI using official bash install script
-    if ! command -v claude &> /dev/null; then
-      echo "Installing Claude Code CLI using official bash install script..."
-      # Ensure curl is available
-      if ! command -v curl &> /dev/null; then
-        apt-get install -y curl
-      fi
-      # Run the official install script
-      curl -fsSL https://claude.ai/install.sh | bash
-      # Add ~/.local/bin to PATH if not already there
-      export PATH="$HOME/.local/bin:$PATH"
-      echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
-      # Source bashrc to make claude command available immediately
-      source ~/.bashrc
-    else
-      echo "Claude Code CLI already installed"
-    fi
-
-    # Rebuild native addons for plugins (node-pty linux-x64 prebuild missing when installed with --ignore-scripts)
-    echo "Rebuilding native addons for plugins..."
-    PLUGIN_DIR="$HOME/.claude-code-ui/plugins"
-    if [ -d "$PLUGIN_DIR" ]; then
-      for plugin in "$PLUGIN_DIR"/*/; do
-        if [ -f "${plugin}package.json" ]; then
-          echo "Rebuilding native addons in $(basename "$plugin")..."
-          (cd "$plugin" && npm rebuild 2>/dev/null) || true
-        fi
-      done
-    fi
-
-    # Start the claudecodeui server
-    # Try to find the correct command - cloudcli might need different arguments
-    # First check what commands are available
-    # echo "Checking cloudcli commands..."
-    # cloudcli --help
-
-    cd /home/basraven/projects/la1r
-
-    # Try various possible commands
-    echo "Trying to start cloudcli..."
-    if cloudcli start --port 3001; then
-      echo "Started with 'cloudcli start --port 3001'"
-    elif cloudcli --port 3001; then
-      echo "Started with 'cloudcli --port 3001'"
-    else
-      # Fallback: start a simple HTTP server if cloudcli doesn't have UI command
-      echo "Starting fallback HTTP server on port 3001"
-      python3 -m http.server 3001
-    fi
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -127,7 +36,8 @@ spec:
         securityContext:
           runAsUser: 0
           runAsGroup: 0
-        image: docker/sandbox-templates:claude-code
+        image: registry.registry.svc.cluster.local:5000/claudecodeui:latest
+        imagePullPolicy: IfNotPresent
         env:
         - name: DATABASE_PATH
           value: "/home/basraven/.claudecodeui"

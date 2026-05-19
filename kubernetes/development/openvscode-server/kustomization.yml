@@ -6,3 +6,13 @@ resources:
   - middleware.yml
   - auth-middleware.yml
   - openvscode-server.yml
+  - container-build.yml
+configMapGenerator:
+- name: openvscode-server-init
+  files:
+  - init.sh
+- name: openvscode-server-dockerfile
+  files:
+  - Dockerfile
+generatorOptions:
+  disableNameSuffixHash: true
