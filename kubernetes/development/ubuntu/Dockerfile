@@ -1,7 +1,7 @@
 FROM ubuntu:24.04
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install all apt packages (combining local/Dockerfile and init.sh)
+# Install all apt packages
 RUN apt-get update && apt-get install -y \
     xfce4 \
     xfce4-goodies \
@@ -53,15 +53,28 @@ RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/s
 # Install ansible
 RUN pip3 install --break-system-packages ansible
 
-# Configure npm for global installs and install cloudcli + task-master-ai
+# Install npm-based tools globally
 RUN npm config set prefix /usr/local && \
     npm install -g @cloudcli-ai/cloudcli --unsafe-perm && \
-    npm install -g task-master-ai --unsafe-perm
+    npm install -g task-master-ai --unsafe-perm && \
+    npm install -g @anthropic-ai/claude-code --unsafe-perm
+
+# Install Windsurf IDE (download to /opt, link to /usr/local/bin)
+RUN mkdir -p /opt && \
+    WINDSURF_URL="https://windsurf.com/api/download/editor/linux-x64/latest" && \
+    (curl -fsSL "$WINDSURF_URL" -o /tmp/windsurf.tar.gz && \
+     tar -xzf /tmp/windsurf.tar.gz -C /opt/ 2>/dev/null && \
+     WINDSURF_BIN=$(find /opt -name windsurf -type f 2>/dev/null | head -1) && \
+     [ -n "$WINDSURF_BIN" ] && ln -sf "$WINDSURF_BIN" /usr/local/bin/windsurf && \
+     echo "Windsurf IDE installed" && \
+     rm -f /tmp/windsurf.tar.gz) || echo "Windsurf download skipped (build continues)"
 
 # Mark all directories as safe for Git
 RUN git config --global --add safe.directory '*'
 
 ENV DISPLAY=:1
 ENV RESOLUTION=1280x800x24
+ENV NPM_CONFIG_PREFIX=/home/basraven/.npm-global
+ENV PATH=/home/basraven/.npm-global/bin:/usr/local/bin:/usr/bin:/bin
 
 EXPOSE 5900 6080
