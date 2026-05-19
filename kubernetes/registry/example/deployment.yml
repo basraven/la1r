@@ -2,10 +2,11 @@
 # Example: Deployment that pulls the image built by the Job above.
 # The image is served from the internal registry at registry.registry.svc.cluster.local.
 #
-# Prerequisites:
-#   1. Apply dockerfile-cm.yml  (creates the Dockerfile ConfigMap)
-#   2. Apply build-job.yml      (builds the image and pushes it to the registry)
-#   3. Apply this deployment    (pulls and runs the built image)
+# Apply via kustomize to auto-generate the Dockerfile ConfigMap:
+#   kubectl apply -k kubernetes/registry/example
+#
+# Then delete the build Job to trigger a rebuild:
+#   kubectl delete job example-hello-build-image -n registry
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -23,15 +24,6 @@ spec:
       labels:
         app: example-hello
     spec:
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-            - matchExpressions:
-              - key: kubernetes.io/hostname
-                operator: In
-                values:
-                - jay-c
       containers:
       - name: nginx
         image: registry.registry.svc.cluster.local:5000/example-hello:latest

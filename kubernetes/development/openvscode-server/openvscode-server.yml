@@ -20,17 +20,6 @@ spec:
         app: openvscode-server
     spec:
       priorityClassName: development-priority
-
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-            - matchExpressions:
-              - key: kubernetes.io/hostname
-                operator: In
-                values:
-                - jay-c
-
       containers:
       - name: openvscode-server
         ports:

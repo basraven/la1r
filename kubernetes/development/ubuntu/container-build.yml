@@ -16,15 +16,6 @@ spec:
         job: build-image
     spec:
       restartPolicy: Never
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-            - matchExpressions:
-              - key: kubernetes.io/hostname
-                operator: In
-                values:
-                - jay-c
       containers:
       - name: kaniko
         image: gcr.io/kaniko-project/executor:latest
