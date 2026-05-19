@@ -1,0 +1,4 @@
+---
+- hosts: jay-c
+  roles:
+  - kubernetes-init

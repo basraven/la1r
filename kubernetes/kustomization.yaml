@@ -19,6 +19,7 @@ resources:
   - security
   - workflows
   - development
+  - registry
   # - crm
   - cluster
   - ai

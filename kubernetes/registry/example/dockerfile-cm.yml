@@ -1,0 +1,16 @@
+---
+# Example: Dockerfile stored in a ConfigMap.
+# The build Job mounts this ConfigMap to provide the Dockerfile to kaniko.
+# Replace the inline Dockerfile content with your own.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: example-hello-dockerfile
+  namespace: registry
+  labels:
+    app: example-hello
+    contenttype: "dockerfile"
+data:
+  Dockerfile: |
+    FROM nginx:alpine
+    RUN echo "Hello from the OCI registry built via kaniko Job" > /usr/share/nginx/html/index.html

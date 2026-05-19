@@ -28,31 +28,9 @@ spec:
                 operator: In
                 values:
                 - jay-c
-      initContainers:
-      - name: setup-desktop
-        image: ubuntu:24.04
-        env:
-        - name: DEBIAN_FRONTEND
-          value: noninteractive
-        command:
-        - /bin/sh
-        - -c
-        - |
-          set -e
-          apt-get update && apt-get install -y git
-          echo "Cloning Nordic GTK theme..."
-          git clone --depth 1 https://github.com/EliverLara/Nordic.git /setup/Nordic
-
-          echo "Creating XFCE config files..."
-          mkdir -p /setup/xfce4/xfconf/xfce-perchannel-xml/
-          echo '<?xml version="1.0" encoding="UTF-8"?><channel name="xsettings" version="1.0"><property name="Net" type="empty"><property name="ThemeName" type="string" value="Nordic"/><property name="IconThemeName" type="string" value="Papirus-Dark"/></property></channel>' > /setup/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml
-          echo '<?xml version="1.0" encoding="UTF-8"?><channel name="xfwm4" version="1.0"><property name="general" type="empty"><property name="theme" type="string" value="Nordic"/></property></channel>' > /setup/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xml
-        volumeMounts:
-        - name: setup
-          mountPath: /setup
       containers:
       - name: ubuntu-xfce4
-        image: ubuntu:24.04
+        image: registry.registry.svc.cluster.local:5000/ubuntu-xfce4:latest
         ports:
         - containerPort: 6080
           name: novnc
@@ -83,8 +61,6 @@ spec:
         volumeMounts:
         - name: openvscode-server-home-volume
           mountPath: /home
-        - name: setup
-          mountPath: /setup
         - name: dev-shm
           mountPath: /dev/shm
         - name: ubuntu-xfce4-init
@@ -94,8 +70,6 @@ spec:
       - name: openvscode-server-home-volume
         persistentVolumeClaim:
           claimName: openvscode-server-home-claim
-      - name: setup
-        emptyDir: {}
       - name: dev-shm
         emptyDir:
           medium: Memory

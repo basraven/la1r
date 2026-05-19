@@ -1,0 +1,61 @@
+---
+# Example: kaniko build Job.
+# Mounts a Dockerfile ConfigMap, builds the OCI image, pushes to the internal registry.
+#
+# The internal registry uses a cert-manager Certificate (HTTPS).
+# kaniko uses --skip-tls-verify-registry to skip verification for cluster-internal traffic.
+#
+# Prerequisites:
+#   - example-hello-dockerfile ConfigMap (contains the Dockerfile)
+#
+#   --single-snapshot Combine all layers into one (fewer layers = faster push/pull).
+#   --cache=false     Disables layer caching since this is a one-shot build.
+#
+# To rebuild: delete this Job and re-apply.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: example-hello-build-image
+  namespace: registry
+  labels:
+    app: example-hello
+    contenttype: "build-job"
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      labels:
+        app: example-hello
+        job: build-image
+    spec:
+      restartPolicy: Never
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - jay-c
+      containers:
+      - name: kaniko
+        image: gcr.io/kaniko-project/executor:latest
+        args:
+        - --dockerfile=Dockerfile
+        - --context=/workspace
+        - --destination=registry.registry.svc.cluster.local:5000/example-hello:latest
+        - --skip-tls-verify-registry=registry.registry.svc.cluster.local:5000
+        - --cache=false
+        - --single-snapshot
+        volumeMounts:
+        - name: dockerfile
+          mountPath: /workspace/Dockerfile
+          subPath: Dockerfile
+      volumes:
+      - name: dockerfile
+        configMap:
+          name: example-hello-dockerfile
+          items:
+          - key: Dockerfile
+            path: Dockerfile

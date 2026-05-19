@@ -1,0 +1,58 @@
+---
+# Forwards cluster.local DNS queries from the node to CoreDNS so the kubelet
+# can resolve in-cluster registry hostnames.
+#
+# Strategy: global DNS = 8.8.8.8 (all normal traffic), per-link DNS = CoreDNS
+# with ~cluster.local routing (only cluster-internal names).  This separation
+# ensures cluster.local queries never hit Google DNS.
+
+- name: Init Kubernetes / Forward cluster.local DNS to CoreDNS
+  become: yes
+  tags: registry_access
+  block:
+  - name: Init Kubernetes / Set global DNS to 8.8.8.8
+    become: yes
+    ansible.builtin.copy:
+      dest: /etc/systemd/resolved.conf.d/cluster-dns.conf
+      mode: "0644"
+      content: |
+        [Resolve]
+        DNS=8.8.8.8
+
+  - name: Init Kubernetes / Route cluster.local to CoreDNS on enp4s0
+    become: yes
+    ansible.builtin.shell:
+      executable: /bin/bash
+      cmd: |
+        resolvectl dns enp4s0 {{ coredns_cluster_ip }}
+        resolvectl domain enp4s0 "~cluster.local"
+
+  - name: Init Kubernetes / Restart systemd-resolved
+    become: yes
+    ansible.builtin.systemd:
+      name: systemd-resolved
+      state: restarted
+      daemon_reload: true
+
+- name: Init Kubernetes / Install la1r CA to system trust store
+  become: yes
+  tags: registry_access
+  block:
+  - name: Init Kubernetes / Copy la1r CA cert from credentials
+    become: yes
+    ansible.builtin.copy:
+      src: "{{ playbook_dir }}/../../credentials/ssl/ca.crt"
+      dest: /usr/local/share/ca-certificates/la1r-ca.crt
+      mode: "0644"
+
+  - name: Init Kubernetes / Update CA trust store
+    become: yes
+    ansible.builtin.shell:
+      cmd: update-ca-certificates
+      executable: /bin/bash
+
+  - name: Init Kubernetes / Restart containerd to pick up new CA
+    become: yes
+    ansible.builtin.systemd:
+      name: containerd
+      state: restarted

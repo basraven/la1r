@@ -1,0 +1,105 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: registry
+  namespace: registry
+  labels:
+    app: registry
+    contenttype: "registry"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: registry
+  template:
+    metadata:
+      labels:
+        app: registry
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - jay-c
+      containers:
+      - name: registry
+        image: registry:2
+        ports:
+        - containerPort: 5000
+          name: registry
+        env:
+        - name: REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY
+          value: /var/lib/registry
+        - name: REGISTRY_HTTP_ADDR
+          value: "0.0.0.0:5000"
+        - name: REGISTRY_HTTP_TLS_CERTIFICATE
+          value: /certs/tls.crt
+        - name: REGISTRY_HTTP_TLS_KEY
+          value: /certs/tls.key
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          tcpSocket:
+            port: 5000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          tcpSocket:
+            port: 5000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        volumeMounts:
+        - name: registry-data
+          mountPath: /var/lib/registry
+        - name: registry-tls
+          mountPath: /certs
+          readOnly: true
+      volumes:
+      - name: registry-data
+        persistentVolumeClaim:
+          claimName: registry-data-claim
+      - name: registry-tls
+        secret:
+          secretName: registry-tls
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: registry
+  namespace: registry
+  labels:
+    app: registry
+spec:
+  ports:
+  - port: 5000
+    targetPort: 5000
+    name: registry
+  selector:
+    app: registry
+  type: ClusterIP
+---
+# TLS certificate for internal registry access (containerd/kubelet pulls via ClusterIP)
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: registry
+  namespace: registry
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: registry-tls
+  commonName: registry.registry.svc.cluster.local
+  dnsNames:
+  - registry.registry.svc.cluster.local
+  - registry

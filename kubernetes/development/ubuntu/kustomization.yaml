@@ -5,9 +5,13 @@ resources:
   - ubuntu-xfce4.yml
   - middleware.yml
   - auth-middleware.yml
+  - container-build.yml
 configMapGenerator:
 - name: ubuntu-xfce4-init
   files:
   - init.sh
+- name: ubuntu-xfce4-dockerfile
+  files:
+  - Dockerfile
 generatorOptions:
   disableNameSuffixHash: true

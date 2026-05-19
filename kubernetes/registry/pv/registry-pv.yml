@@ -1,0 +1,16 @@
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: registry-data-pv
+  labels:
+    contenttype: "registry-data"
+spec:
+  capacity:
+    storage: 10Gi
+  storageClassName: registry-data
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/mnt/ssd/na/registry/data"

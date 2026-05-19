@@ -2,6 +2,9 @@
 - include_tasks: init-kubernetes.yml
   tags:
     - init_kubernetes
+- include_tasks: configure-registry-access.yml
+  tags:
+    - registry_access
 # - include_tasks: reset-kubernetes.yml
 #   tags:
 #     - reset_kubernetes

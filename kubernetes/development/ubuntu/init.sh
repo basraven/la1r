@@ -25,13 +25,6 @@ apt-get install -y \
     sudo \
     xz-utils
 
-echo "Copying Nordic theme..."
-cp -r /setup/Nordic /usr/share/themes/
-
-echo "Configuring XFCE defaults..."
-mkdir -p /etc/xdg/xfce4/xfconf/xfce-perchannel-xml/
-cp /setup/xfce4/xfconf/xfce-perchannel-xml/*.xml /etc/xdg/xfce4/xfconf/xfce-perchannel-xml/
-
 echo "Setting up noVNC..."
 ln -sf /usr/share/novnc/vnc.html /usr/share/novnc/index.html
 

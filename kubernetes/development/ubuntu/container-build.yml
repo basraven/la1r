@@ -1,0 +1,48 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ubuntu-xfce4-build-image
+  namespace: development
+  labels:
+    app: ubuntu-xfce4
+    contenttype: "build-job"
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      labels:
+        app: ubuntu-xfce4
+        job: build-image
+    spec:
+      restartPolicy: Never
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - jay-c
+      containers:
+      - name: kaniko
+        image: gcr.io/kaniko-project/executor:latest
+        args:
+        - --dockerfile=Dockerfile
+        - --context=/workspace
+        - --destination=registry.registry.svc.cluster.local:5000/ubuntu-xfce4:latest
+        - --skip-tls-verify-registry=registry.registry.svc.cluster.local:5000
+        - --cache=false
+        - --single-snapshot
+        volumeMounts:
+        - name: dockerfile
+          mountPath: /workspace/Dockerfile
+          subPath: Dockerfile
+      volumes:
+      - name: dockerfile
+        configMap:
+          name: ubuntu-xfce4-dockerfile
+          items:
+          - key: Dockerfile
+            path: Dockerfile

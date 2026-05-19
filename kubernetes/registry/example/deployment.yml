@@ -1,0 +1,51 @@
+---
+# Example: Deployment that pulls the image built by the Job above.
+# The image is served from the internal registry at registry.registry.svc.cluster.local.
+#
+# Prerequisites:
+#   1. Apply dockerfile-cm.yml  (creates the Dockerfile ConfigMap)
+#   2. Apply build-job.yml      (builds the image and pushes it to the registry)
+#   3. Apply this deployment    (pulls and runs the built image)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: example-hello
+  namespace: registry
+  labels:
+    app: example-hello
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: example-hello
+  template:
+    metadata:
+      labels:
+        app: example-hello
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - jay-c
+      containers:
+      - name: nginx
+        image: registry.registry.svc.cluster.local:5000/example-hello:latest
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: example-hello
+  namespace: registry
+spec:
+  ports:
+  - port: 80
+    targetPort: 80
+  selector:
+    app: example-hello
