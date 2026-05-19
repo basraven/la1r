@@ -8,8 +8,8 @@
 # Prerequisites:
 #   - example-hello-dockerfile ConfigMap (contains the Dockerfile)
 #
-#   --single-snapshot Combine all layers into one (fewer layers = faster push/pull).
-#   --cache=false     Disables layer caching since this is a one-shot build.
+#   --cache=true         Enables layer caching so only changed layers rebuild.
+#   --single-snapshot    Flattens layers into one (faster push, single layer pull).
 #
 # To rebuild: delete this Job and re-apply.
 apiVersion: batch/v1
@@ -46,7 +46,7 @@ spec:
         - --context=/workspace
         - --destination=registry.registry.svc.cluster.local:5000/example-hello:latest
         - --skip-tls-verify-registry=registry.registry.svc.cluster.local:5000
-        - --cache=false
+        - --cache=true
         - --single-snapshot
         volumeMounts:
         - name: dockerfile

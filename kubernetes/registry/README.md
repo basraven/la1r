@@ -61,7 +61,7 @@ spec:
         - --context=/workspace
         - --destination=registry.registry.svc.cluster.local:5000/myapp:latest
         - --skip-tls-verify-registry=registry.registry.svc.cluster.local:5000
-        - --cache=false
+        - --cache=true
         - --single-snapshot
         volumeMounts:
         - name: dockerfile
@@ -81,6 +81,7 @@ spec:
 containers:
 - name: myapp
   image: registry.registry.svc.cluster.local:5000/myapp:latest
+  imagePullPolicy: IfNotPresent
 ```
 
 ### Rebuilding
