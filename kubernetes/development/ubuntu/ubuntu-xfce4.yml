@@ -58,6 +58,9 @@ spec:
         - name: ubuntu-xfce4-init
           mountPath: /init.sh
           subPath: init.sh
+        - name: ubuntu-xfce4-install-tools
+          mountPath: /install-tools.sh
+          subPath: install-tools.sh
         - name: vnc-auth
           mountPath: /etc/vnc-auth
           readOnly: true
@@ -75,6 +78,13 @@ spec:
           items:
           - key: init.sh
             path: init.sh
+          defaultMode: 0755
+      - name: ubuntu-xfce4-install-tools
+        configMap:
+          name: ubuntu-xfce4-install-tools
+          items:
+          - key: install-tools.sh
+            path: install-tools.sh
           defaultMode: 0755
       - name: vnc-auth
         secret:

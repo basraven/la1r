@@ -1,6 +1,11 @@
 #!/bin/bash
 set -e
 
+# Install missing development tools
+if [ -f /install-tools.sh ]; then
+  bash /install-tools.sh
+fi
+
 # Rename UID 1000 to basraven if not already basraven
 if ! id basraven &> /dev/null 2>&1; then
   if id -un 1000 &> /dev/null 2>&1; then

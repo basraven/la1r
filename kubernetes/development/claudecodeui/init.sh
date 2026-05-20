@@ -1,6 +1,11 @@
 #!/bin/bash
 set -e
 
+# Install missing development tools
+if [ -f /install-tools.sh ]; then
+  bash /install-tools.sh
+fi
+
 # Rebuild native addons for plugins (node-pty linux-x64 prebuild missing when installed with --ignore-scripts)
 echo "Rebuilding native addons for plugins..."
 PLUGIN_DIR="$HOME/.claude-code-ui/plugins"

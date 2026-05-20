@@ -14,6 +14,7 @@ RUN apt-get update && apt-get install -y \
     sshpass \
     curl \
     sudo \
+    unzip \
     && rm -rf /var/lib/apt/lists/*
 
 # Install kubectl
@@ -22,6 +23,12 @@ RUN curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/s
 
 # Install ansible
 RUN pip3 install --break-system-packages ansible
+
+# Install AWS CLI v2
+RUN curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o /tmp/awscliv2.zip && \
+    unzip -q /tmp/awscliv2.zip -d /tmp/ && \
+    /tmp/aws/install --update && \
+    rm -rf /tmp/awscliv2.zip /tmp/aws
 
 # Install Node.js from official binary (avoids 1200+ deb packages from Ubuntu repos)
 RUN NODE_DIST_URL=$(curl -sL -o /dev/null -w '%{url_effective}' https://nodejs.org/dist/latest-v22.x/) && \

@@ -12,5 +12,8 @@ configMapGenerator:
 - name: claudecodeui-dockerfile
   files:
   - Dockerfile
+- name: claudecodeui-install-tools
+  files:
+  - ../common/install-tools.sh
 generatorOptions:
   disableNameSuffixHash: true
