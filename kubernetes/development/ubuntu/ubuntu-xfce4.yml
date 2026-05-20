@@ -61,6 +61,9 @@ spec:
         - name: ubuntu-xfce4-install-tools
           mountPath: /install-tools.sh
           subPath: install-tools.sh
+        - name: vnc-auth
+          mountPath: /etc/vnc-auth
+          readOnly: true
       volumes:
       - name: openvscode-server-home-volume
         persistentVolumeClaim:
@@ -83,6 +86,9 @@ spec:
           - key: install-tools.sh
             path: install-tools.sh
           defaultMode: 0755
+      - name: vnc-auth
+        secret:
+          secretName: ubuntu-xfce4-vnc-auth
 ---
 apiVersion: v1
 kind: Service
@@ -113,6 +119,22 @@ spec:
   commonName: ubuntu.bas
   dnsNames:
   - ubuntu.bas
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ubuntu-xfce4-vnc-lb
+  namespace: development
+spec:
+  type: LoadBalancer
+  # Requires manual add of vnc.ubuntu.bas in pihole.bas
+  loadBalancerIP: 192.168.6.31
+  ports:
+  - port: 5900
+    targetPort: 5900
+    name: vnc
+  selector:
+    app: ubuntu-xfce4
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
