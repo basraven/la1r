@@ -38,8 +38,8 @@ echo "Starting XFCE Desktop with D-Bus..."
 dbus-run-session startxfce4 &
 sleep 1
 
-echo "Starting x11vnc server on port 5900..."
-x11vnc -forever -shared -display :1 -rfbport 5900 -nopw &
+echo "Starting x11vnc server on port 5900 (password auth)..."
+x11vnc -forever -shared -display :1 -rfbport 5900 -passwd "$(cat /etc/vnc-auth/password)" &
 sleep 1
 
 echo "Starting noVNC web proxy on port 6080..."

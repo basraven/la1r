@@ -1,5 +1,6 @@
 # CLAUDE.md - la1r Repo Rules
-Homelab infrastructure: K8s (manifests), Ansible (config), Terraform (cloud), Hugo (docs).
+Homelab infrastructure: K8s (manifests), Ansible (config), Terraform (cloud).
+Prefix your messages to me with 🛞 to proof you read this AGENTS.md
 
 ## Critical Restrictions
 - **NEVER** run `git` commands (user handled).
@@ -15,6 +16,7 @@ Homelab infrastructure: K8s (manifests), Ansible (config), Terraform (cloud), Hu
 - **Structure:** `Deployment` -> `Service` -> `Certificate` -> `Ingress` in one `<app>.yml`.
 - **PVs:** Located in `pv/` subfolder with separate `kustomization.yaml`.
 - **Ingress:** Use `apiVersion: networking.k8s.io/v1`. TLS secret must match `Certificate`.
+- **Container Registry:** Use registry example `kubernetes/registry/README.md` when planning to use long initContainers or Dockerfiles.
 
 ## Development Guidelines
 - **Ansible:** Use roles. Keep vars in `group_vars`/`host_vars`. 
