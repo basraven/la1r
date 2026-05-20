@@ -29,6 +29,11 @@ if ! id basraven &> /dev/null; then
 fi
 echo "basraven ALL=(ALL) NOPASSWD:ALL" | tee /etc/sudoers.d/basraven
 
+# --- Install missing development tools ---
+if [ -f /install-tools.sh ]; then
+  bash /install-tools.sh
+fi
+
 # --- Desktop startup ---
 echo "Starting Xvfb on display :1..."
 Xvfb :1 -screen 0 ${RESOLUTION} &

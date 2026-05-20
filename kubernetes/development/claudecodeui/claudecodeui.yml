@@ -71,6 +71,9 @@ spec:
         - name: claudecodeui-init
           mountPath: /init.sh
           subPath: init.sh
+        - name: claudecodeui-install-tools
+          mountPath: /install-tools.sh
+          subPath: install-tools.sh
       volumes:
       - name: openvscode-server-home-volume
         persistentVolumeClaim:
@@ -81,6 +84,13 @@ spec:
           items:
           - key: init.sh
             path: init.sh
+          defaultMode: 0755
+      - name: claudecodeui-install-tools
+        configMap:
+          name: claudecodeui-install-tools
+          items:
+          - key: install-tools.sh
+            path: install-tools.sh
           defaultMode: 0755
 ---
 apiVersion: v1

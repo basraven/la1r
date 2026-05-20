@@ -25,6 +25,8 @@ RUN apt-get update && apt-get install -y \
     sshpass \
     sudo \
     xz-utils \
+    unzip \
+    gpg \
     && rm -rf /var/lib/apt/lists/*
 
 # Clone Nordic GTK theme
@@ -60,15 +62,26 @@ RUN npm config set prefix /usr/local && \
     npm install -g task-master-ai --unsafe-perm && \
     npm install -g @anthropic-ai/claude-code --unsafe-perm
 
-# Install Windsurf IDE (download to /opt, link to /usr/local/bin)
-RUN mkdir -p /opt && \
-    WINDSURF_URL="https://windsurf.com/api/download/editor/linux-x64/latest" && \
-    (curl -fsSL "$WINDSURF_URL" -o /tmp/windsurf.tar.gz && \
-     tar -xzf /tmp/windsurf.tar.gz -C /opt/ 2>/dev/null && \
-     WINDSURF_BIN=$(find /opt -name windsurf -type f 2>/dev/null | head -1) && \
-     [ -n "$WINDSURF_BIN" ] && ln -sf "$WINDSURF_BIN" /usr/local/bin/windsurf && \
-     echo "Windsurf IDE installed" && \
-     rm -f /tmp/windsurf.tar.gz) || echo "Windsurf download skipped (build continues)"
+# Install Windsurf IDE (via official APT repo)
+RUN curl -fsSL https://windsurf-stable.codeiumdata.com/wVxQEIWkwPUEAGf3/windsurf.gpg \
+      | gpg --dearmor -o /usr/share/keyrings/windsurf-stable-archive-keyring.gpg 2>/dev/null && \
+    echo "deb [signed-by=/usr/share/keyrings/windsurf-stable-archive-keyring.gpg arch=amd64] https://windsurf-stable.codeiumdata.com/wVxQEIWkwPUEAGf3/apt stable main" \
+      > /etc/apt/sources.list.d/windsurf.list && \
+    apt-get update -qq && apt-get install -y -qq windsurf && \
+    echo "Windsurf IDE installed"
+
+# Install VS Code (via Microsoft APT repo)
+RUN curl -fsSL "https://packages.microsoft.com/keys/microsoft.asc" \
+      | gpg --dearmor -o /usr/share/keyrings/microsoft-archive-keyring.gpg && \
+    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft-archive-keyring.gpg] https://packages.microsoft.com/repos/code stable main" \
+      > /etc/apt/sources.list.d/vscode.list && \
+    apt-get update -qq && apt-get install -y -qq code
+
+# Install AWS CLI v2
+RUN curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o /tmp/awscliv2.zip && \
+    unzip -q /tmp/awscliv2.zip -d /tmp/ && \
+    /tmp/aws/install --update && \
+    rm -rf /tmp/awscliv2.zip /tmp/aws
 
 # Mark all directories as safe for Git
 RUN git config --global --add safe.directory '*'

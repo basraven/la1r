@@ -47,6 +47,9 @@ spec:
           - name: openvscode-server-init
             mountPath: /init.sh
             subPath: init.sh
+          - name: openvscode-server-install-tools
+            mountPath: /install-tools.sh
+            subPath: install-tools.sh
       volumes:
         # - name: openvscode-server-data-volume
         #   persistentVolumeClaim:
@@ -60,6 +63,13 @@ spec:
             items:
             - key: init.sh
               path: init.sh
+            defaultMode: 0755
+        - name: openvscode-server-install-tools
+          configMap:
+            name: openvscode-server-install-tools
+            items:
+            - key: install-tools.sh
+              path: install-tools.sh
             defaultMode: 0755
 ---
 apiVersion: v1
