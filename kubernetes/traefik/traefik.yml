@@ -92,6 +92,7 @@ spec:
           - --providers.kubernetesingress.ingressendpoint.ip=192.168.6.2
           - --providers.kubernetesIngress.allowEmptyServices=true
           - --providers.kubernetesCRD
+          - --providers.kubernetesCRD.labelselector=expose!=online
           - --providers.kubernetesCRD.allowCrossNamespace=true
           - --providers.kubernetescrd.allowexternalnameservices=true
           - --experimental.plugins.sablier.modulename=github.com/sablierapp/sablier
