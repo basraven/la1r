@@ -14,8 +14,6 @@ configMapGenerator:
 - name: openvscode-server-dockerfile
   files:
   - Dockerfile
-- name: openvscode-server-install-tools
-  files:
-  - ../common/install-tools.sh
+
 generatorOptions:
   disableNameSuffixHash: true

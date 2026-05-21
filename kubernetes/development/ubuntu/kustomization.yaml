@@ -13,8 +13,6 @@ configMapGenerator:
 - name: ubuntu-xfce4-dockerfile
   files:
   - Dockerfile
-- name: ubuntu-xfce4-install-tools
-  files:
-  - ../common/install-tools.sh
+
 generatorOptions:
   disableNameSuffixHash: true

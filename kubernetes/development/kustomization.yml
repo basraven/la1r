@@ -3,5 +3,7 @@ kind: Kustomization
 resources:
 - namespace.yml
 - priorityclass.yml
+- common
 - openvscode-server
 - claudecodeui
+- ubuntu
