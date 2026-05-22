@@ -3,8 +3,6 @@
 # Mounted as a ConfigMap and called from init.sh in each deployment container.
 # Installs tools only if they are missing, so it's safe to call on every start.
 
-set -e
-
 log() {
   echo "[install-tools] $*"
 }
