@@ -86,6 +86,13 @@ RUN curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o /tm
 # Mark all directories as safe for Git
 RUN git config --global --add safe.directory '*'
 
+# Rename existing ubuntu user (UID 1000) to basraven for non-root desktop sessions
+# Ubuntu 24.04 base image ships with an 'ubuntu' user at UID 1000
+RUN usermod -l basraven ubuntu && \
+    usermod -d /home/basraven -m basraven && \
+    groupmod -n basraven ubuntu && \
+    echo "basraven ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/basraven
+
 ENV DISPLAY=:1
 ENV RESOLUTION=1280x800x24
 ENV NPM_CONFIG_PREFIX=/home/basraven/.npm-global

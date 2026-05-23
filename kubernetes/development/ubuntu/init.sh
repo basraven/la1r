@@ -1,40 +1,46 @@
 #!/bin/bash
 set -e
 
-# --- User setup (runtime, depends on PVC-backed /home) ---
-if ! id basraven &> /dev/null; then
-  if id -un 1000 &> /dev/null 2>&1; then
-    if command -v usermod &> /dev/null; then
-      usermod -l basraven -d /home/basraven "$(id -un 1000)"
-    else
-      # UID 1000 exists but usermod/useradd not available — direct edit
-      sed -i "s/^$(id -un 1000):/basraven:/" /etc/passwd
-      sed -i "s/^$(id -un 1000):/basraven:/" /etc/shadow 2>/dev/null || true
-      sed -i "s/^$(id -un 1000):/basraven:/" /etc/group 2>/dev/null || true
-    fi
-  else
-    if command -v useradd &> /dev/null; then
-      if [ -d /home/basraven ]; then
-        useradd -u 1000 -d /home/basraven -M -s /bin/bash basraven
+# --- Phase 1: Privileged setup (runs only as root) ---
+if [ "$(id -u)" -eq 0 ]; then
+  # --- User setup (runtime, depends on PVC-backed /home) ---
+  if ! id basraven &> /dev/null; then
+    if id -un 1000 &> /dev/null 2>&1; then
+      if command -v usermod &> /dev/null; then
+        usermod -l basraven -d /home/basraven "$(id -un 1000)"
       else
-        useradd -u 1000 -d /home/basraven -m -s /bin/bash basraven
+        # UID 1000 exists but usermod/useradd not available — direct edit
+        sed -i "s/^$(id -un 1000):/basraven:/" /etc/passwd
+        sed -i "s/^$(id -un 1000):/basraven:/" /etc/shadow 2>/dev/null || true
+        sed -i "s/^$(id -un 1000):/basraven:/" /etc/group 2>/dev/null || true
       fi
     else
-      # useradd not available — direct passwd entry
-      echo "basraven:x:1000:1000::/home/basraven:/bin/bash" >> /etc/passwd
-      echo "basraven:!:20000:0:99999:7:::" >> /etc/shadow 2>/dev/null || true
-      [ -d /home/basraven ] || mkdir -p /home/basraven
+      if command -v useradd &> /dev/null; then
+        if [ -d /home/basraven ]; then
+          useradd -u 1000 -d /home/basraven -M -s /bin/bash basraven
+        else
+          useradd -u 1000 -d /home/basraven -m -s /bin/bash basraven
+        fi
+      else
+        # useradd not available — direct passwd entry
+        echo "basraven:x:1000:1000::/home/basraven:/bin/bash" >> /etc/passwd
+        echo "basraven:!:20000:0:99999:7:::" >> /etc/shadow 2>/dev/null || true
+        [ -d /home/basraven ] || mkdir -p /home/basraven
+      fi
     fi
   fi
-fi
-echo "basraven ALL=(ALL) NOPASSWD:ALL" | tee /etc/sudoers.d/basraven
+  echo "basraven ALL=(ALL) NOPASSWD:ALL" | tee /etc/sudoers.d/basraven
 
-# --- Install missing development tools ---
-if [ -f /install-tools.sh ]; then
-  bash /install-tools.sh
+  # --- Install missing development tools ---
+  if [ -f /install-tools.sh ]; then
+    bash /install-tools.sh
+  fi
+
+  # Drop privileges to basraven for desktop session
+  exec su basraven -c "/bin/bash /init.sh"
 fi
 
-# --- Desktop startup ---
+# --- Phase 2: Desktop startup (runs as basraven) ---
 echo "Starting Xvfb on display :1..."
 Xvfb :1 -screen 0 ${RESOLUTION} &
 sleep 1

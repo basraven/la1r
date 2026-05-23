@@ -22,15 +22,15 @@ spec:
       containers:
       - name: ubuntu-xfce4
         image: registry.registry.svc.cluster.local:5000/ubuntu-xfce4:latest
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         ports:
         - containerPort: 6080
           name: novnc
         - containerPort: 5900
           name: vnc
         securityContext:
-          runAsUser: 0
-          runAsGroup: 0
+          runAsUser: 1000
+          runAsGroup: 1000
         env:
         - name: DEBIAN_FRONTEND
           value: noninteractive
