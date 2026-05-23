@@ -41,6 +41,17 @@ if [ "$(id -u)" -eq 0 ]; then
 fi
 
 # --- Phase 2: Desktop startup (runs as basraven) ---
+
+# Set Chrome as the default browser (for Windsurf OAuth, etc.)
+mkdir -p /home/basraven/.config
+cat > /home/basraven/.config/mimeapps.list << 'EOF'
+[Default Applications]
+text/html=google-chrome.desktop
+x-scheme-handler/http=google-chrome.desktop
+x-scheme-handler/https=google-chrome.desktop
+x-scheme-handler/ftp=google-chrome.desktop
+EOF
+
 echo "Starting Xvfb on display :1..."
 Xvfb :1 -screen 0 ${RESOLUTION} &
 sleep 1

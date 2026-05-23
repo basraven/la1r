@@ -61,6 +61,33 @@ install_windsurf() {
   log "Windsurf installed: $(windsurf --version 2>/dev/null | head -1)"
 }
 
+# ---- Google Chrome ----
+install_chrome() {
+  command -v google-chrome-stable &>/dev/null && return 0
+
+  # Only install Chrome if a desktop environment is available
+  if [ -z "$DISPLAY" ] && [ ! -d /usr/share/xfce4 ]; then
+    log "Skipping Google Chrome: no desktop environment detected"
+    return 0
+  fi
+
+  log "Installing Google Chrome..."
+
+  if [ ! -f /usr/share/keyrings/google-chrome-keyring.gpg ]; then
+    curl -fsSL https://dl.google.com/linux/linux_signing_key.pub \
+      | gpg --dearmor -o /usr/share/keyrings/google-chrome-keyring.gpg 2>/dev/null
+  fi
+
+  if [ ! -f /etc/apt/sources.list.d/google-chrome.list ]; then
+    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main" \
+      > /etc/apt/sources.list.d/google-chrome.list
+  fi
+
+  apt-get update -qq
+  apt-get install -y -qq google-chrome-stable
+  log "Google Chrome installed: $(google-chrome-stable --version 2>/dev/null)"
+}
+
 # ---- VS Code (via APT) ----
 install_vscode() {
   command -v code &>/dev/null && return 0
@@ -98,5 +125,6 @@ install_ansible
 install_aws_cli
 install_windsurf
 install_vscode
+install_chrome
 
 log "Installation check complete."
