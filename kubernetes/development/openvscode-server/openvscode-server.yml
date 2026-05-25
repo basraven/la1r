@@ -33,6 +33,13 @@ spec:
         command: ["/bin/sh", "-c"]
         args:
         - /init.sh
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "512m"
+          limits:
+            memory: "4Gi"
+            cpu: "2000m"
         env:
         - name: PASSWORD
           valueFrom:
