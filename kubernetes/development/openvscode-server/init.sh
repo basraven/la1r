@@ -26,5 +26,5 @@ if [ -f /home/basraven/code.bas.install.sh ]; then
   su basraven -c "/home/basraven/code.bas.install.sh"
 fi
 
-# Start openvscode-server as basraven user
-exec su basraven -c "/home/.openvscode-server/bin/openvscode-server --host=0.0.0.0"
+# Start openvscode-server as basraven user (sources deepseek.sh for Claude config)
+exec su basraven -c "source /home/basraven/.claude/deepseek.sh && exec /home/.openvscode-server/bin/openvscode-server --host=0.0.0.0"
