@@ -3,7 +3,7 @@ kind: Kustomization
 namespace: development
 resources:
   - pv
-  - middleware.yml
+  # - middleware.yml          # sablier disabled — re-enable to restore dynamic scaling
   - auth-middleware.yml
   - openvscode-server.yml
   - container-build.yml

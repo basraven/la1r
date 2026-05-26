@@ -1,19 +1,20 @@
----
-apiVersion: traefik.containo.us/v1alpha1
-kind: Middleware
-metadata:
-  name: sablier-claudecodeui
-  namespace: development
-spec:
-  plugin:
-    sablier:
-      group: claudecodeui
-      # blocking:
-      #   defaultTimeout: 10s
-      dynamic:
-        displayName: Claude Code UI
-        refreshFrequency: 5s
-        showDetails: "true"
-        theme: shuffle
-      sablierUrl: http://sablier:10000
-      sessionDuration: 3h
+# ---
+# apiVersion: traefik.containo.us/v1alpha1
+# kind: Middleware
+# metadata:
+#   name: sablier-claudecodeui
+#   namespace: development
+# spec:
+#   plugin:
+#     sablier:
+#       group: claudecodeui
+#       dynamic:
+#         displayName: Claude Code UI
+#         refreshFrequency: 5s
+#         showDetails: "true"
+#         theme: shuffle
+#       sablierUrl: http://sablier:10000
+#       sessionDuration: 3h
+#
+# To re-enable: uncomment this file, uncomment middleware.yml in kustomization.yml,
+# and uncomment the sablier labels + middleware annotation in claudecodeui.yml.

@@ -6,8 +6,8 @@ metadata:
   namespace: development
   labels:
     app: claudecodeui
-    sablier.enable: "true"
-    sablier.group: claudecodeui
+    # sablier.enable: "true"
+    # sablier.group: claudecodeui
 spec:
   replicas: 1
   selector:
@@ -128,7 +128,8 @@ metadata:
   annotations:
     traefik.ingress.kubernetes.io/router.tls: "true"
     traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
-    traefik.ingress.kubernetes.io/router.middlewares: "development-sablier-claudecodeui@kubernetescrd"
+    # sablier middleware removed — uncomment to re-enable:
+    # traefik.ingress.kubernetes.io/router.middlewares: "development-sablier-claudecodeui@kubernetescrd"
 spec:
   tls:
   - secretName: claudecodeui-bas-tls

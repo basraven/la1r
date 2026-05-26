@@ -3,7 +3,7 @@ kind: Kustomization
 namespace: development
 resources:
   - claudecodeui.yml
-  - middleware.yml
+  # - middleware.yml          # sablier disabled — re-enable to restore dynamic scaling
   - container-build.yml
 configMapGenerator:
 - name: claudecodeui-init
