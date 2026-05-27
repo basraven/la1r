@@ -31,7 +31,7 @@ spec:
         args:
         - --dockerfile=Dockerfile
         - --context=/workspace
-        - --destination=registry.registry.svc.cluster.local:5000/openvscode-server:v1
+        - --destination=registry.registry.svc.cluster.local:5000/openvscode-server:v2
         - --skip-tls-verify-registry=registry.registry.svc.cluster.local:5000
         - --cache=true
         - --single-snapshot

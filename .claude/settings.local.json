@@ -31,7 +31,8 @@
       "WebFetch(domain:letsencrypt.status.io)",
       "mcp__playwright__browser_evaluate",
       "Bash(kubectl describe:*)",
-      "Bash(kubectl events:*)"
+      "Bash(kubectl events:*)",
+      "Bash(kubectl delete job *)"
     ]
   },
   "enableAllProjectMcpServers": true,

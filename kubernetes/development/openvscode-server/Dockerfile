@@ -6,7 +6,7 @@ USER root
 # Install system packages
 RUN apt-get update && apt-get install -y \
     sudo curl unzip python3-pip \
-    nano ssh bash-completion zip fish zsh p7zip-full jq \
+    nano ssh bash-completion zip fish zsh p7zip-full jq ansible \
     && rm -rf /var/lib/apt/lists/*
 
 # Install AWS CLI v2

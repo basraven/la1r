@@ -28,7 +28,7 @@ spec:
           runAsUser: 0
           runAsGroup: 0
           privileged: true
-        image: registry.registry.svc.cluster.local:5000/openvscode-server:v1
+        image: registry.registry.svc.cluster.local:5000/openvscode-server:v2
         imagePullPolicy: IfNotPresent
         command: ["/bin/sh", "-c"]
         args:
