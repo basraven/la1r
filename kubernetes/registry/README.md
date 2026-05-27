@@ -9,7 +9,7 @@ ConfigMap (Dockerfile)  ->  kaniko Job  ->  Registry (HTTPS)  ->  Deployment
 ```
 
 1. **Dockerfile** stored in a ConfigMap (declarative, no external files)
-2. **kaniko Job** reads the ConfigMap, builds the image, pushes to `registry.registry.svc.cluster.local:5000`
+2. **kaniko Job** reads the ConfigMap, builds the image, pushes to `registry.registry.svc.cluster.local:5000` with a version tag (`v1`, `v2`, ...)
 3. **Deployment** pulls the pre-built image — no runtime apt installs
 
 ## Components
@@ -59,7 +59,7 @@ spec:
         args:
         - --dockerfile=Dockerfile
         - --context=/workspace
-        - --destination=registry.registry.svc.cluster.local:5000/myapp:latest
+        - --destination=registry.registry.svc.cluster.local:5000/myapp:v1
         - --skip-tls-verify-registry=registry.registry.svc.cluster.local:5000
         - --cache=true
         - --single-snapshot
@@ -80,11 +80,20 @@ spec:
 ```yaml
 containers:
 - name: myapp
-  image: registry.registry.svc.cluster.local:5000/myapp:latest
+  image: registry.registry.svc.cluster.local:5000/myapp:v1
   imagePullPolicy: IfNotPresent
 ```
 
-### Rebuilding
+### Tag pattern
+
+Images use incrementing version tags (`v1`, `v2`, `v3`...) instead of `:latest`. To rebuild an image:
+
+1. Bump the version in both `container-build.yml` and the deployment YAML
+2. Run `kubectl apply -k .` from the app directory
+
+The build job creates the new image in the registry. The deployment's `IfNotPresent` automatically pulls the new tag since it doesn't exist on the node yet.
+
+## Rebuilding
 
 ```bash
 kubectl delete job myapp-build-image

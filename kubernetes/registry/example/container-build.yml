@@ -36,7 +36,7 @@ spec:
         args:
         - --dockerfile=Dockerfile
         - --context=/workspace
-        - --destination=registry.registry.svc.cluster.local:5000/example-hello:latest
+        - --destination=registry.registry.svc.cluster.local:5000/example-hello:v1
         - --skip-tls-verify-registry=registry.registry.svc.cluster.local:5000
         - --cache=true
         - --single-snapshot

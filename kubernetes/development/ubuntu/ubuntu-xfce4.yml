@@ -21,7 +21,7 @@ spec:
       priorityClassName: development-priority
       containers:
       - name: ubuntu-xfce4
-        image: registry.registry.svc.cluster.local:5000/ubuntu-xfce4:latest
+        image: registry.registry.svc.cluster.local:5000/ubuntu-xfce4:v1
         imagePullPolicy: Always
         ports:
         - containerPort: 6080
