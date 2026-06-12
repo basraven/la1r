@@ -4,6 +4,7 @@ Prefix your messages to me with 🛞 to proof you read this AGENTS.md
 
 ## Critical Restrictions
 - **NEVER** run `git` commands (user handled).
+- **Commits:** Never add `Co-Authored-By` or similar trailers to commit messages.
 - **K8s:** Never use `kubectl patch`; modify YAMLs directly. Write `logs` to files, don't stream to stdout.
 
 ## Core Scripts & Commands

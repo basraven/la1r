@@ -1,0 +1,9 @@
+---
+- name: "grub config / add ahci.mobile_lpm_policy=1 to GRUB_CMDLINE_LINUX_DEFAULT"
+  become: yes
+  ansible.builtin.lineinfile:
+    path: /etc/default/grub
+    backrefs: yes
+    regexp: '^(GRUB_CMDLINE_LINUX_DEFAULT="(?!.*ahci\.mobile_lpm_policy=1).*)"$'
+    line: '\1 ahci.mobile_lpm_policy=1"'
+  notify: update grub
