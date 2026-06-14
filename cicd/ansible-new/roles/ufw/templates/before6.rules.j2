@@ -1,0 +1,85 @@
+#
+# rules.before (IPv6)
+#
+# Rules that are run before the ufw command line interface rules. See
+# /etc/ufw/before6.rules for more information.
+#
+
+# Don't delete these required lines, otherwise there will be errors
+*filter
+:ufw6-before-input - [0:0]
+:ufw6-before-output - [0:0]
+:ufw6-before-forward - [0:0]
+:ufw6-not-local - [0:0]
+# custom logging chains
+:ufw6-logging-input - [0:0]
+:ufw6-logging-output - [0:0]
+:ufw6-logging-forward - [0:0]
+
+:ufw6-logging-deny - [0:0]
+:ufw6-logging-allow - [0:0]
+:ufw6-logging-not-local - [0:0]
+:ufw6-skip-to-policy-input - [0:0]
+:ufw6-skip-to-policy-output - [0:0]
+:ufw6-skip-to-policy-forward - [0:0]
+:ufw6-user-input - [0:0]
+:ufw6-user-output - [0:0]
+:ufw6-user-forward - [0:0]
+:ufw6-user-limit - [0:0]
+:ufw6-user-limit-accept - [0:0]
+# End required lines
+
+
+# allow all on loopback
+-A ufw6-before-input -i lo -j ACCEPT
+-A ufw6-before-output -o lo -j ACCEPT
+
+# quickly process packets for existing connections
+-A ufw6-before-input -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+-A ufw6-before-output -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+-A ufw6-before-forward -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+
+
+# drop INVALID packets
+-A ufw6-before-input -m conntrack --ctstate INVALID -j ufw6-logging-input
+-A ufw6-before-input -m conntrack --ctstate INVALID -j DROP
+
+# ok icmp codes for IPv6
+-A ufw6-before-input -p ipv6-icmp --icmpv6-type destination-unreachable -j ACCEPT
+-A ufw6-before-input -p ipv6-icmp --icmpv6-type packet-too-big -j ACCEPT
+-A ufw6-before-input -p ipv6-icmp --icmpv6-type time-exceeded -j ACCEPT
+-A ufw6-before-input -p ipv6-icmp --icmpv6-type parameter-problem -j ACCEPT
+-A ufw6-before-input -p ipv6-icmp --icmpv6-type echo-request -j ACCEPT
+-A ufw6-before-input -p ipv6-icmp --icmpv6-type echo-reply -j ACCEPT
+
+# allow multicast listener discovery (MLD)
+-A ufw6-before-input -p ipv6-icmp --icmpv6-type 130 -j ACCEPT
+-A ufw6-before-input -p ipv6-icmp --icmpv6-type 131 -j ACCEPT
+-A ufw6-before-input -p ipv6-icmp --icmpv6-type 132 -j ACCEPT
+-A ufw6-before-input -p ipv6-icmp --icmpv6-type 143 -j ACCEPT
+
+# allow neighbor discovery (NDP)
+-A ufw6-before-input -p ipv6-icmp --icmpv6-type neighbor-solicitation -j ACCEPT
+-A ufw6-before-input -p ipv6-icmp --icmpv6-type neighbor-advertisement -j ACCEPT
+-A ufw6-before-input -p ipv6-icmp --icmpv6-type router-solicitation -j ACCEPT
+-A ufw6-before-input -p ipv6-icmp --icmpv6-type router-advertisement -j ACCEPT
+
+# allow DHCPv6
+-A ufw6-before-input -p udp --sport 547 --dport 546 -j ACCEPT
+
+#
+# ufw6-not-local
+#
+-A ufw6-before-input -j ufw6-not-local
+
+-A ufw6-not-local -m addrtype --dst-type LOCAL -j RETURN
+-A ufw6-not-local -m addrtype --dst-type MULTICAST -j RETURN
+
+-A ufw6-not-local -m limit --limit 3/min --limit-burst 10 -j ufw6-logging-not-local
+-A ufw6-not-local -j DROP
+
+# allow IPv6 mDNS (avahi)
+-A ufw6-before-input -p udp -d ff02::fb --dport 5353 -j ACCEPT
+
+# don't delete the 'COMMIT' line or these rules won't be processed
+COMMIT

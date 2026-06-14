@@ -11,9 +11,9 @@
 - name: Persist IPv6 sysctl settings in drop-in file
   become: yes
   ansible.builtin.copy:
-    dest: /etc/sysctl.d/99-otbr-ipv6.conf
+    dest: /etc/sysctl.d/99-ipv6-hardening.conf
     content: |
-      # Managed by Ansible - OTBR/Matter IPv6 requirements
+      # Managed by Ansible — secure IPv6 settings (non-router K8s node)
       {% for item in ipv6_sysctl_settings %}
       {{ item.name }} = {{ item.value }}
       {% endfor %}

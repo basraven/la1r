@@ -1,11 +1,25 @@
 ---
-# IPv6 sysctl settings for Thread/OTBR support
-# accept_ra=2: accept Router Advertisements even when forwarding is enabled
-# accept_ra_rt_info_max_plen=64: accept RA route info for /64 prefixes (Thread uses /64)
+# Secure IPv6 sysctl settings for a non-router K8s node
+# - All forwarding disabled (no routing — only Calico handles pod networking)
+# - Accept RAs (default) for SLAAC addressing
+# - Hardening against IPv6 spoofing/NDP attacks
 ipv6_sysctl_settings:
+  # Disable all IPv6 forwarding (we are not a router)
   - name: net.ipv6.conf.all.forwarding
-    value: "1"
+    value: "0"
+
+  # Accept Router Advertisements (for SLAAC address assignment)
   - name: net.ipv6.conf.all.accept_ra
-    value: "2"
-  - name: net.ipv6.conf.all.accept_ra_rt_info_max_plen
-    value: "64"
+    value: "1"
+
+  # Reject RAs on the loopback interface (pointless, blocks spoofed RAs)
+  - name: net.ipv6.conf.lo.accept_ra
+    value: "0"
+
+  # NDP hardening: don't accept proxy Neighbor Advertisements by default
+  - name: net.ipv6.conf.all.proxy_ndp
+    value: "0"
+
+  # Use RFC 7217 stable privacy addresses (not EUI-64 based)
+  - name: net.ipv6.conf.all.addr_gen_mode
+    value: "1"

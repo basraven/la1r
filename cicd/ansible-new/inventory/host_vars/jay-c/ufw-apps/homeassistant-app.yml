@@ -1,5 +1,0 @@
----
-ufw_app_homeassistant-app:
-  title: "homeassistant by Seb"
-  description: "Ports required for homeassistant"
-  ports: '8123/tcp'

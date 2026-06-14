@@ -1,13 +1,11 @@
 ---
-# Reset UFW and load all host-specific variables.
-# This ensures a clean slate and loads configurations from both:
+# Load all host-specific variables from:
 # 1. inventory/host_vars/<host>/ufw.yml (for custom rules)
 # 2. inventory/host_vars/<host>/ufw-apps/*.yml (for application profiles)
-
-- name: Reset UFW to default state
-  become: yes
-  command: ufw --force reset
-  check_mode: no
+# NOTE: no ufw --force reset here — that flushes Calico's iptables rules
+# and breaks pod networking on K8s nodes. Instead, the role manages rules
+# idempotently: stale app rules are explicitly deleted, unmanaged app profile
+# files are purged, and only the desired rules are applied.
 
 - name: Include vars from main ufw.yml if present
   include_vars:
@@ -60,6 +58,16 @@
     group: root
     mode: '0644'
     backup: yes
+
+- name: Configure UFW before6.rules for IPv6
+  become: yes
+  ansible.builtin.template:
+    src: before6.rules.j2
+    dest: /etc/ufw/before6.rules
+    owner: root
+    group: root
+    mode: '0644'
+    backup: yes
     
 - name: Apply required sysctls for forwarding/NAT (host-specific)
   become: yes
@@ -83,7 +91,7 @@
     _apps_to_enable: "{{ (ufw_enable_applications | default([])) + (_ufw_app_defs.keys() | list) }}"
 
 # -----------------------------------------------------------------------------
-# Purge unmanaged application profile files
+# Purge unmanaged application profile files AND their UFW rules
 # -----------------------------------------------------------------------------
 - name: Find existing UFW application files on host
   become: yes
@@ -91,6 +99,17 @@
     paths: /etc/ufw/applications.d
     file_type: file
   register: _existing_apps
+
+- name: Remove stale UFW rules for deleted app profiles
+  become: yes
+  command: ufw --force delete allow "{{ item.path | basename }}"
+  loop: "{{ _existing_apps.files | rejectattr('path','search','/etc/ufw/applications.d/README') | list }}"
+  when: "(item.path | basename) not in _apps_to_enable"
+  loop_control:
+    label: "{{ item.path | basename }}"
+  register: _ufw_stale_delete
+  failed_when: false
+  changed_when: _ufw_stale_delete.rc == 0
 
 - name: Remove unmanaged UFW application files
   become: yes

@@ -1,5 +1,0 @@
----
-ufw_app_matter-server:
-  title: "Matter Server by Seb"
-  description: "Matter smart home device server - WebSocket API"
-  ports: '5580/tcp'

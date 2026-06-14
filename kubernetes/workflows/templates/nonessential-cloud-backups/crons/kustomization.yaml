@@ -2,7 +2,6 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
 - cron-weekly-grafana-cloud-backup.yml
-- cron-weekly-homeassistant-cloud-backup.yml
 - cron-weekly-immich-db-cloud-backup.yml
 - cron-weekly-jackett-cloud-backup.yml
 - cron-weekly-jellyfin-cloud-backup.yml

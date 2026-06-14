@@ -3,7 +3,7 @@ kind: Kustomization
 resources:
 - namespace.yml
 #- frigate
-- homeassistant
+#- homeassistant (deprecated — moved to separate host)
 - mqtt
 #- discord
 #- hue-mqtt
