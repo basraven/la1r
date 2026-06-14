@@ -3,7 +3,7 @@ Homelab infrastructure: K8s (manifests), Ansible (config), Terraform (cloud).
 Prefix your messages to me with 🛞 to proof you read this AGENTS.md
 
 ## Critical Restrictions
-- **NEVER** run `git` commands (user handled).
+- **NEVER** run `git push` commands (user handled).
 - **Commits:** Never add `Co-Authored-By` or similar trailers to commit messages.
 - **K8s:** Never use `kubectl patch`; modify YAMLs directly. Write `logs` to files, don't stream to stdout.
 

@@ -7,18 +7,10 @@ metadata:
     contenttype: "homeassistant-config"
 spec:
   capacity:
-    storage: 1Gi
-  storageClassName: local-storage
+    storage: 5Gi
+  storageClassName: homeassistant-config
   persistentVolumeReclaimPolicy: Retain
   accessModes:
-  - ReadWriteMany
-  local:
-    path: /mnt/largessd/configs/homeassistant
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-      - matchExpressions:
-        - key: kubernetes.io/hostname
-          operator: In
-          values:
-          - linux-wayne
+  - ReadWriteOnce
+  hostPath:
+    path: "/mnt/ssd/na/homeassistant/config"
