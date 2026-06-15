@@ -1,4 +1,0 @@
-/jobs/**/workspace*
-/jobs/**/builds*
-/**/nextBuildNumber
-/jobs/**/scm-polling.log
