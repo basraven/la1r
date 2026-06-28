@@ -23,6 +23,13 @@ data:
       - match:
           alertname: "Jay-C Server should be online"
         receiver: jayc_webhook
+      - match:
+          alertname: "ServiceUnreachable"
+        receiver: discord_webhook
+        continue: true
+      - match:
+          alertname: "CertificateExpiringSoon"
+        receiver: discord_webhook
       # capture All WARN to the 'warning' with P3
 
     receivers:

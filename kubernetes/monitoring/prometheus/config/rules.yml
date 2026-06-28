@@ -32,4 +32,33 @@ groups:
           alertname: jayc-server-offline
         annotations:
           summary: "Jay-C Server should be online but is not"
-          description: "The Jay-C Server should be online but is not"    
+          description: "The Jay-C Server should be online but is not"
+
+  - name: uptime_alerts
+    interval: 30s
+    rules:
+      - alert: ServiceUnreachable
+        expr: gatus_result{success="false"} == 1
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.name }} is unreachable"
+          description: "Gatus probe for {{ $labels.name }} ({{ $labels.group }}) has been failing for over 2 minutes"
+
+      - alert: HighResponseTime
+        expr: gatus_result_time > 2000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.name }} response time is high"
+          description: "{{ $labels.name }} is taking over 2 seconds to respond (current: {{ $value }}ms)"
+
+      - alert: CertificateExpiringSoon
+        expr: gatus_certificate_expiry_days < 30
+        labels:
+          severity: warning
+        annotations:
+          summary: "SSL certificate expiring for {{ $labels.name }}"
+          description: "Certificate for {{ $labels.name }} expires in {{ $value }} days"    

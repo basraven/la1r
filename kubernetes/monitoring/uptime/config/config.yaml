@@ -1,0 +1,508 @@
+# Gatus configuration — la1r Homelab Uptime Monitoring
+# https://github.com/TwiN/gatus
+#
+# Groups are organized by Kubernetes namespace + public + nodes.
+# Sablier-managed services are probed via sablier-proxy sidecar:
+#   200 = healthy OR intentionally sleeping   |   503 = genuinely broken
+
+metrics: true
+
+storage:
+  type: memory
+
+web:
+  address: 0.0.0.0
+  port: 8080
+
+ui:
+  title: "la1r Uptime"
+  description: "Homelab service availability monitoring"
+  dark-mode: true
+  default-sort-by: group
+
+alerting:
+  ntfy:
+    url: "http://ntfy.monitoring.svc.cluster.local"
+    topic: "uptime"
+    priority: 4
+    default-alert:
+      failure-threshold: 3
+      success-threshold: 2
+      send-on-resolved: true
+
+maintenance:
+  enabled: true
+  every: ["Sunday"]
+  timezone: "UTC"
+  start: "02:00"
+  duration: "4h"
+
+endpoints:
+  # =========================================================================
+  # PUBLIC — internet-facing services
+  # Probed via internal LB IPs with Host headers to avoid DNS hairpin issues.
+  # Accept non-5xx responses (auth-protected services return 302/401).
+  # =========================================================================
+  - name: auth.la1r.com
+    group: public
+    url: "https://192.168.6.2"
+    interval: 60s
+    headers:
+      Host: "auth.la1r.com"
+    conditions:
+      - "[STATUS] < 500"
+      - "[CERTIFICATE_EXPIRATION] > 720h"
+    client:
+      insecure: true
+    alerts:
+      - type: ntfy
+
+  - name: toggle.la1r.com
+    group: public
+    url: "https://192.168.6.129"
+    interval: 60s
+    headers:
+      Host: "toggle.la1r.com"
+    conditions:
+      - "[STATUS] < 500"
+      - "[CERTIFICATE_EXPIRATION] > 720h"
+    client:
+      insecure: true
+    alerts:
+      - type: ntfy
+
+  # =========================================================================
+  # NODES — physical hosts and appliances
+  # =========================================================================
+  - name: jay-c
+    group: nodes
+    url: "icmp://192.168.5.3"
+    interval: 60s
+    conditions:
+      - "[CONNECTED] == true"
+    alerts:
+      - type: ntfy
+
+  - name: homeassistant
+    group: nodes
+    url: "icmp://192.168.8.1"
+    interval: 60s
+    conditions:
+      - "[CONNECTED] == true"
+
+  - name: samba
+    group: nodes
+    url: "tcp://192.168.5.103:445"
+    interval: 60s
+    conditions:
+      - "[CONNECTED] == true"
+
+  - name: unifi-controller
+    group: nodes
+    url: "tcp://192.168.5.243:8443"
+    interval: 60s
+    conditions:
+      - "[CONNECTED] == true"
+
+  - name: api-gateway
+    group: nodes
+    url: "tcp://192.168.5.100:443"
+    interval: 60s
+    conditions:
+      - "[CONNECTED] == true"
+
+  # =========================================================================
+  # monitoring namespace
+  # =========================================================================
+  - name: prometheus
+    group: monitoring
+    url: "http://prometheus:9090"
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: alertmanager
+    group: monitoring
+    url: "http://alertmanager-service:9093"
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: grafana-mcp
+    group: monitoring
+    url: "http://grafana-mcp:80"
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: ntfy
+    group: monitoring
+    url: "http://ntfy:80"
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: blackbox-exporter
+    group: monitoring
+    url: "http://prometheus-blackbox-exporter:80"
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+
+  - name: push-gateway
+    group: monitoring
+    url: "http://prometheus-push-gateway:80"
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+
+  - name: system-audit
+    group: monitoring
+    url: "http://system-audit:80"
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+
+  - name: kubewatch
+    group: monitoring
+    url: "http://kubewatch:80"
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+
+  # grafana is Sablier-managed (scales to 0 when idle)
+  - name: grafana
+    group: monitoring
+    url: "http://localhost:9090/health?deployment=grafana&namespace=monitoring&check-url=http://grafana.monitoring.svc.cluster.local:80"
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  # =========================================================================
+  # security namespace
+  # =========================================================================
+  - name: authentik-server
+    group: security
+    url: "http://authentik-server.security:9000"
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: vaultwarden
+    group: security
+    url: "http://vaultwarden.security:80"
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  # =========================================================================
+  # torrent namespace
+  # =========================================================================
+  - name: jackett
+    group: torrent
+    url: "http://jackett.torrent:9117"
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+
+  - name: qbittorrent
+    group: torrent
+    url: "http://qbittorrent-standard.torrent:8080"
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+
+  - name: radarr
+    group: torrent
+    url: "http://radarr.torrent:7878"
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+
+  - name: sonarr
+    group: torrent
+    url: "http://sonarr.torrent:8989"
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+
+  # Sablier-managed
+  - name: jellyfin
+    group: torrent
+    url: "http://localhost:9090/health?deployment=jellyfin&namespace=torrent&check-url=http://jellyfin.torrent.svc.cluster.local:8096"
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: jellyseerr
+    group: torrent
+    url: "http://localhost:9090/health?deployment=jellyseerr&namespace=torrent&check-url=http://jellyseerr.torrent.svc.cluster.local:5055"
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  # =========================================================================
+  # ai namespace
+  # =========================================================================
+  - name: mcp-kubernetes
+    group: ai
+    url: "http://mcp-kubernetes.ai:80"
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+
+  # Sablier-managed
+  - name: langflow
+    group: ai
+    url: "http://localhost:9090/health?deployment=langflow&namespace=ai&check-url=http://langflow.ai.svc.cluster.local:7860"
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: mcp-inspector
+    group: ai
+    url: "http://localhost:9090/health?deployment=mcp-inspector&namespace=ai&check-url=http://mcp-inspector.ai.svc.cluster.local:5173"
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: ollama
+    group: ai
+    url: "http://localhost:9090/health?deployment=ollama&namespace=ai&check-url=http://ollama.ai.svc.cluster.local:11434"
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: openclaw
+    group: ai
+    url: "http://localhost:9090/health?deployment=openclaw&namespace=ai&check-url=http://openclaw.ai.svc.cluster.local:3000"
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  - name: phoenix
+    group: ai
+    url: "http://localhost:9090/health?deployment=phoenix&namespace=ai&check-url=http://phoenix.ai.svc.cluster.local:6006"
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  # =========================================================================
+  # development namespace
+  # =========================================================================
+  - name: claudecodeui
+    group: development
+    url: "http://claudecodeui.development:80"
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+
+  - name: openvscode-server
+    group: development
+    url: "http://openvscode-server.development:80"
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+
+  # Sablier-managed
+  - name: ubuntu-xfce4
+    group: development
+    url: "http://localhost:9090/health?deployment=ubuntu-xfce4&namespace=development&check-url=http://ubuntu-xfce4.development.svc.cluster.local:6080"
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  # =========================================================================
+  # dns namespace
+  # =========================================================================
+  - name: pihole
+    group: dns
+    url: "http://pihole.dns:80"
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+
+  # =========================================================================
+  # headlamp namespace
+  # =========================================================================
+  - name: headlamp
+    group: headlamp
+    url: "http://headlamp.headlamp:80"
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+
+  # =========================================================================
+  # registry namespace
+  # =========================================================================
+  - name: registry
+    group: registry
+    url: "tcp://registry.registry.svc.cluster.local:5000"
+    interval: 60s
+    conditions:
+      - "[CONNECTED] == true"
+
+  # =========================================================================
+  # storage namespace
+  # =========================================================================
+  - name: minio
+    group: storage
+    url: "http://minio.storage:9000"
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  # =========================================================================
+  # vpn namespace
+  # =========================================================================
+  - name: wg-easy
+    group: vpn
+    url: "http://wg-easy.vpn:51821"
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+
+  # =========================================================================
+  # workflows namespace
+  # =========================================================================
+  - name: argo-server
+    group: workflows
+    url: "http://argo-server.workflows:2746"
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+
+  # =========================================================================
+  # online namespace
+  # =========================================================================
+  - name: online-traefik
+    group: online
+    url: "tcp://online-traefik-ingress-lb.online.svc.cluster.local:80"
+    interval: 60s
+    conditions:
+      - "[CONNECTED] == true"
+    alerts:
+      - type: ntfy
+
+  - name: ddclient-la1r
+    group: online
+    url: "tcp://ddclient-la1r.online:80"
+    interval: 120s
+    conditions:
+      - "[CONNECTED] == true"
+
+  - name: service-toggle-app
+    group: online
+    url: "http://service-toggle.online:80"
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+
+  # =========================================================================
+  # crm namespace (Sablier-managed)
+  # =========================================================================
+  - name: monica
+    group: crm
+    url: "http://localhost:9090/health?deployment=monica&namespace=crm&check-url=http://monica.crm.svc.cluster.local:80"
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  # =========================================================================
+  # nextcloud namespace (Sablier-managed)
+  # =========================================================================
+  - name: nextcloud
+    group: nextcloud
+    url: "http://localhost:9090/health?deployment=nextcloud&namespace=nextcloud&check-url=http://nextcloud.nextcloud.svc.cluster.local:80"
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  # =========================================================================
+  # media namespace (Sablier-managed)
+  # =========================================================================
+  - name: immich-server
+    group: media
+    url: "http://localhost:9090/health?deployment=immich-server&namespace=media&check-url=http://immich-server.media.svc.cluster.local:8080"
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  # =========================================================================
+  # gaming namespace (Sablier-managed)
+  # =========================================================================
+  - name: enshrouded
+    group: gaming
+    url: "http://localhost:9090/health?deployment=enshrouded&namespace=gaming&check-url=tcp://enshrouded.gaming.svc.cluster.local:15637"
+    interval: 120s
+    conditions:
+      - "[STATUS] == 200"
+    alerts:
+      - type: ntfy
+
+  # =========================================================================
+  # traefik namespace — internal cluster ingress infrastructure
+  # =========================================================================
+  - name: traefik-internal
+    group: traefik
+    url: "tcp://traefik.traefik.svc.cluster.local:80"
+    interval: 60s
+    conditions:
+      - "[CONNECTED] == true"
+    alerts:
+      - type: ntfy
+
+  - name: sablier
+    group: traefik
+    url: "http://sablier.traefik.svc.cluster.local:10000"
+    interval: 60s
+    conditions:
+      - "[STATUS] == 200"
+
+  # =========================================================================
+  # cert-manager namespace — certificate infrastructure
+  # =========================================================================
+  - name: cert-manager-webhook
+    group: cert-manager
+    url: "tcp://cert-manager-webhook.cert-manager.svc.cluster.local:443"
+    interval: 60s
+    conditions:
+      - "[CONNECTED] == true"

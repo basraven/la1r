@@ -1,0 +1,18 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: kiosk
+resources:
+- namespace.yml
+- kiosk.yml
+
+configMapGenerator:
+- name: kiosk-src
+  files:
+  - src/package.json
+  - src/index.html
+  - src/index.js
+  - src/App.js
+  - src/styles.css
+- name: kiosk-nginx
+  files:
+  - nginx/default.conf

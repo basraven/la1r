@@ -1,0 +1,109 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kiosk
+  labels:
+    app: kiosk
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: kiosk
+  template:
+    metadata:
+      labels:
+        app: kiosk
+    spec:
+      initContainers:
+      - name: build-spa
+        image: node:lts-alpine
+        command: ["sh", "-c"]
+        args:
+        - |
+          cp -rL /src/. /work/
+          cd /work
+          npm install
+          npx parcel build index.html --public-url ./
+          cp -r dist/* /output/
+        volumeMounts:
+        - name: src
+          mountPath: /src
+        - name: work
+          mountPath: /work
+        - name: spa-files
+          mountPath: /output
+      containers:
+      - name: kiosk
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: spa-files
+          mountPath: /usr/share/nginx/html
+        - name: nginx-config
+          mountPath: /etc/nginx/conf.d/default.conf
+          subPath: default.conf
+      volumes:
+      - name: src
+        configMap:
+          name: kiosk-src
+      - name: work
+        emptyDir: {}
+      - name: spa-files
+        emptyDir: {}
+      - name: nginx-config
+        configMap:
+          name: kiosk-nginx
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kiosk
+spec:
+  ports:
+  - name: web
+    port: 80
+    targetPort: 80
+  selector:
+    app: kiosk
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: kiosk-bas
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: kiosk-bas-tls
+  commonName: kiosk.bas
+  dnsNames:
+  - kiosk.bas
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kiosk-https
+  annotations:
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+spec:
+  tls:
+  - secretName: kiosk-bas-tls
+  rules:
+  - host: kiosk.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: kiosk
+            port:
+              number: 80

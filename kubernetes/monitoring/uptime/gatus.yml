@@ -1,0 +1,209 @@
+---
+# RBAC: ServiceAccount for sablier-proxy to read deployment state
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: gatus
+  namespace: monitoring
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: gatus-deployment-reader
+rules:
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: gatus-deployment-reader
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: gatus-deployment-reader
+subjects:
+- kind: ServiceAccount
+  name: gatus
+  namespace: monitoring
+---
+# Deployment: Gatus + sablier-proxy sidecar
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gatus
+  namespace: monitoring
+  labels:
+    app: gatus
+    task: monitoring
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: gatus
+  template:
+    metadata:
+      labels:
+        app: gatus
+        task: monitoring
+    spec:
+      serviceAccountName: gatus
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - jay-c
+      containers:
+      # --- Gatus main container ---
+      - name: gatus
+        image: ghcr.io/twin/gatus:v5.15.0
+        ports:
+        - containerPort: 8080
+          name: http
+        resources:
+          requests:
+            cpu: 25m
+            memory: 32Mi
+          limits:
+            cpu: 100m
+            memory: 128Mi
+        env:
+        - name: GATUS_CONFIG_PATH
+          value: /config
+        - name: TZ
+          value: Etc/UTC
+        volumeMounts:
+        - name: config
+          mountPath: /config/config.yaml
+          subPath: config.yaml
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+
+      # --- sablier-proxy sidecar: runs the pre-compiled binary ---
+      - name: sablier-proxy
+        image: alpine:latest
+        command: ["/bin/sablier-proxy"]
+        ports:
+        - containerPort: 9090
+          name: proxy
+        resources:
+          requests:
+            cpu: 10m
+            memory: 16Mi
+          limits:
+            cpu: 50m
+            memory: 64Mi
+        volumeMounts:
+        - name: sablier-proxy-bin
+          mountPath: /bin
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 9090
+          initialDelaySeconds: 5
+          periodSeconds: 30
+
+      # --- Init container: compiles the Go binary ---
+      initContainers:
+      - name: sablier-proxy-build
+        image: golang:alpine
+        command: ["go", "build", "-o", "/bin/sablier-proxy", "/app/main.go"]
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        volumeMounts:
+        - name: sablier-proxy-src
+          mountPath: /app
+        - name: sablier-proxy-bin
+          mountPath: /bin
+
+      volumes:
+      - name: config
+        configMap:
+          name: gatus-config
+      - name: sablier-proxy-src
+        configMap:
+          name: sablier-proxy-src
+          defaultMode: 0744
+      - name: sablier-proxy-bin
+        emptyDir: {}
+---
+# Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: gatus
+  namespace: monitoring
+  labels:
+    task: monitoring
+spec:
+  ports:
+  - name: http
+    port: 80
+    targetPort: 8080
+  - name: metrics
+    port: 8080
+    targetPort: 8080
+  selector:
+    app: gatus
+---
+# Certificate
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: gatus-bas
+  namespace: monitoring
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: gatus-bas-tls
+  commonName: status.bas
+  dnsNames:
+  - status.bas
+  - www.status.bas
+---
+# Ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: gatus-https
+  namespace: monitoring
+  annotations:
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+spec:
+  tls:
+  - secretName: gatus-bas-tls
+  rules:
+  - host: status.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: gatus
+            port:
+              number: 80
