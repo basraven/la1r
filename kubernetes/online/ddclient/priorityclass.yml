@@ -1,0 +1,9 @@
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: online-priority
+value: 250000000
+globalDefault: false
+preemptionPolicy: PreemptLowerPriority
+description: "Priority for online workloads, above development/torrent (50000000) but below dns/traefik/security (500000000)"

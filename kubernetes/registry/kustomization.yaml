@@ -3,5 +3,6 @@ kind: Kustomization
 namespace: registry
 resources:
   - namespace.yml
+  - priorityclass.yml
   - registry.yml
   - pv

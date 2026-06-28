@@ -2,7 +2,42 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
 - namespace.yml
+- priorityclass.yml
 - cert-manager.yml
 - dns-lexicon-webhook.yml
 - cluster-issuer-la1r.yml
 - cluster-issuer-letsencrypt-la1r.yml
+
+patches:
+  - target:
+      kind: Deployment
+      name: cert-manager
+    patch: |-
+      - op: add
+        path: /spec/template/spec/priorityClassName
+        value: cert-manager-priority
+      - op: add
+        path: /spec/template/spec/containers/0/resources
+        value:
+          requests:
+            cpu: 100m
+            memory: 64Mi
+          limits:
+            cpu: 200m
+            memory: 128Mi
+  - target:
+      kind: Deployment
+      name: cert-manager-webhook
+    patch: |-
+      - op: add
+        path: /spec/template/spec/priorityClassName
+        value: cert-manager-priority
+      - op: add
+        path: /spec/template/spec/containers/0/resources
+        value:
+          requests:
+            cpu: 50m
+            memory: 32Mi
+          limits:
+            cpu: 100m
+            memory: 64Mi

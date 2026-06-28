@@ -1,0 +1,67 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: pod-cleanup
+  namespace: workflows
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: pod-cleanup
+  namespace: workflows
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: pod-cleanup
+  namespace: workflows
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: pod-cleanup
+subjects:
+- kind: ServiceAccount
+  name: pod-cleanup
+  namespace: workflows
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cleanup-completed-pods
+  namespace: workflows
+spec:
+  schedule: "0 3 * * 0"  # Every Sunday at 03:00
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: pod-cleanup
+          restartPolicy: OnFailure
+          nodeName: jay-c
+          containers:
+          - name: kubectl
+            image: bitnami/kubectl:1.31
+            command:
+            - /bin/bash
+            - -c
+            - |
+              # Delete completed (Succeeded or Failed) pods older than 14 days
+              # Note: kubectl field-selectors use AND, so we fetch all and filter in jq
+              kubectl get pods -n workflows -o json | jq -r '
+                .items[] |
+                select(.status.phase == "Succeeded" or .status.phase == "Failed") |
+                select(.status.completionTime? // .status.startTime? |
+                  fromdateiso8601? < (now - 14*24*60*60)) |
+                .metadata.name
+              ' | while read name; do
+                echo "Deleting completed pod: workflows/$name"
+                kubectl delete pod -n workflows "$name" --ignore-not-found
+              done

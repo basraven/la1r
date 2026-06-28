@@ -1,19 +1,17 @@
-# ---
-# apiVersion: traefik.containo.us/v1alpha1
-# kind: Middleware
-# metadata:
-#   name: sablier-openvscode-server
-# spec:
-#   plugin:
-#     sablier:
-#       group: openvscode-server
-#       dynamic:
-#         displayName: Open VSCode Server
-#         refreshFrequency: 5s
-#         showDetails: "true"
-#         theme: shuffle
-#       sablierUrl: http://sablier:10000
-#       sessionDuration: 3h
-#
-# To re-enable: uncomment this file, uncomment middleware.yml in kustomization.yml,
-# and uncomment the sablier labels + middleware annotation in openvscode-server.yml.
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: sablier-openvscode-server
+  namespace: development
+spec:
+  plugin:
+    sablier:
+      group: openvscode-server
+      dynamic:
+        displayName: Open VSCode Server
+        refreshFrequency: 5s
+        showDetails: "true"
+        theme: shuffle
+      sablierUrl: http://sablier:10000
+      sessionDuration: 3h

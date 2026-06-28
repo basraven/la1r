@@ -27,15 +27,16 @@ spec:
                 operator: In
                 values:
                 - jay-c
+      priorityClassName: monitoring-priority
       containers:
       - name: ntfy
         resources:
-          # requests:
-          #   cpu: 50m
-          #   memory: 56Mi
-          # limits:
-          #   cpu: 200m
-          #   memory: 256Mi
+          requests:
+            cpu: 50m
+            memory: 56Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
         image: binwiederhier/ntfy:v2.14
         ports:
         - containerPort: 80

@@ -6,8 +6,8 @@ metadata:
   namespace: development
   labels:
     app: openvscode-server
-    # sablier.enable: "true"
-    # sablier.group: openvscode-server
+    sablier.enable: "true"
+    sablier.group: openvscode-server
 spec:
   replicas: 1
   selector:
@@ -115,8 +115,7 @@ metadata:
   annotations:
     traefik.ingress.kubernetes.io/router.tls: "true"
     traefik.ingress.kubernetes.io/router.entrypoints: "websecure"    
-    traefik.ingress.kubernetes.io/router.middlewares: "development-auth-openvscode-server@kubernetescrd"
-    # To re-enable sablier: prepend "development-sablier-openvscode-server@kubernetescrd," before auth
+    traefik.ingress.kubernetes.io/router.middlewares: "development-sablier-openvscode-server@kubernetescrd,development-auth-openvscode-server@kubernetescrd"
 spec:
   tls:
   - secretName: openvscode-server-bas-tls

@@ -40,7 +40,13 @@ spec:
         volumeMounts:
         - name: data
           mountPath: /var/lib/postgresql/data
-        resources: {}
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+          limits:
+            cpu: 200m
+            memory: 512Mi
       volumes:
       - name: data
         persistentVolumeClaim:
@@ -72,10 +78,16 @@ spec:
         image: redis:8
         imagePullPolicy: IfNotPresent
         args: ["--save", "", "--appendonly", "no"]
+        resources:
+          requests:
+            cpu: 50m
+            memory: 32Mi
+          limits:
+            cpu: 100m
+            memory: 64Mi
         ports:
         - name: redis
           containerPort: 6379
-        resources: {}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -144,6 +156,13 @@ spec:
           value: "2"
         - name: TZ
           value: Europe/Amsterdam
+        resources:
+          requests:
+            cpu: 250m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 1Gi
         ports:
         - name: http
           containerPort: 9000
@@ -152,7 +171,6 @@ spec:
           mountPath: /media
         - name: tmp
           mountPath: /tmp
-        resources: {}
       volumes:
       - name: media
         persistentVolumeClaim:
@@ -220,7 +238,13 @@ spec:
           mountPath: /media
         - name: tmp
           mountPath: /tmp
-        resources: {}
+        resources:
+          requests:
+            cpu: 200m
+            memory: 256Mi
+          limits:
+            cpu: 400m
+            memory: 512Mi
       volumes:
       - name: media
         persistentVolumeClaim:

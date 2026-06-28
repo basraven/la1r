@@ -21,6 +21,7 @@ spec:
           emptyDir: {}
         - name: cache
           emptyDir: {}
+      priorityClassName: online-priority
       containers:
       - name: ddclient-la1r
         image: linuxserver/ddclient:4.0.0
@@ -57,6 +58,13 @@ spec:
             mountPath: /config
           - name: cache
             mountPath: /tmp
+        resources:
+          requests:
+            cpu: 25m
+            memory: 32Mi
+          limits:
+            cpu: 100m
+            memory: 64Mi
         env:
           - name: DDNS_PASSWORD
             valueFrom:

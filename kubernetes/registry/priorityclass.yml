@@ -1,0 +1,9 @@
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: registry-priority
+value: 250000000
+globalDefault: false
+preemptionPolicy: PreemptLowerPriority
+description: "Priority for registry workloads, above development/torrent (50000000) but below dns/traefik/security (500000000)"
