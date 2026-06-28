@@ -16,6 +16,7 @@ spec:
       labels:
         app: wg-easy
     spec:
+      priorityClassName: vpn-priority
       hostNetwork: true
       affinity:
         nodeAffinity:
@@ -49,6 +50,13 @@ spec:
               value: "true"
             - name: WG_ALLOWED_IPS
               value: "0.0.0.0/0"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
           ports:
             - containerPort: 51820
               protocol: UDP
