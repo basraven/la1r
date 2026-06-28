@@ -1,1 +1,0 @@
-kind delete cluster --name la1r
