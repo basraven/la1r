@@ -1,9 +1,13 @@
 # Gatus configuration — la1r Homelab Uptime Monitoring
 # https://github.com/TwiN/gatus
 #
-# Groups are organized by Kubernetes namespace + public + nodes.
-# Sablier-managed services are probed via sablier-proxy sidecar:
-#   200 = healthy OR intentionally sleeping   |   503 = genuinely broken
+# Endpoint naming:  name (PROBE:port · condition)
+#   PROBE  = HTTP | HTTPS | TCP | ICMP | DNS
+#   <500   = accepts any non-5xx response (auth-protected services)
+#   ==200  = strict 200 OK required
+#   CONN   = TCP connect only
+#   SSL    = certificate expiry check included
+#   SAB    = Sablier-aware (probed via sablier-proxy)
 
 metrics: true
 
@@ -39,12 +43,10 @@ maintenance:
 
 endpoints:
   # =========================================================================
-  # PUBLIC — internet-facing services
-  # Probed via internal LB IPs with Host headers to avoid DNS hairpin issues.
-  # Accept non-5xx responses (auth-protected services return 302/401).
+  # PUBLIC — internet-facing (probed via LB IPs with Host headers)
   # =========================================================================
-  - name: auth.la1r.com
-    group: public
+  - name: "auth.la1r.com (HTTPS · <500 · SSL)"
+    group: 1-public
     url: "https://192.168.6.2"
     interval: 60s
     headers:
@@ -57,8 +59,8 @@ endpoints:
     alerts:
       - type: ntfy
 
-  - name: toggle.la1r.com
-    group: public
+  - name: "toggle.la1r.com (HTTPS · <500 · SSL)"
+    group: 1-public
     url: "https://192.168.6.129"
     interval: 60s
     headers:
@@ -71,11 +73,22 @@ endpoints:
     alerts:
       - type: ntfy
 
+  # Public DNS — verify .la1r.com resolves from inside the cluster
+  - name: "la1r.com (DNS · A record)"
+    group: 1-public
+    url: "dns://la1r.com"
+    interval: 120s
+    conditions:
+      - "[BODY] != 0.0.0.0"
+    dns:
+      query-type: A
+      query-name: "la1r.com"
+
   # =========================================================================
   # NODES — physical hosts and appliances
   # =========================================================================
-  - name: jay-c
-    group: nodes
+  - name: "jay-c · K8s server (ICMP)"
+    group: 2-nodes
     url: "icmp://192.168.5.3"
     interval: 60s
     conditions:
@@ -83,38 +96,59 @@ endpoints:
     alerts:
       - type: ntfy
 
-  - name: homeassistant
-    group: nodes
+  - name: "homeassistant · HA Yellow (ICMP)"
+    group: 2-nodes
     url: "icmp://192.168.8.1"
     interval: 60s
     conditions:
       - "[CONNECTED] == true"
 
-  - name: samba
-    group: nodes
+  - name: "samba · NAS storage (TCP:445)"
+    group: 2-nodes
     url: "tcp://192.168.5.103:445"
     interval: 60s
     conditions:
       - "[CONNECTED] == true"
 
-  - name: unifi-controller
-    group: nodes
+  - name: "unifi-controller (TCP:8443)"
+    group: 2-nodes
     url: "tcp://192.168.5.243:8443"
     interval: 60s
     conditions:
       - "[CONNECTED] == true"
 
-  - name: api-gateway
-    group: nodes
+  - name: "api-gateway (TCP:443)"
+    group: 2-nodes
     url: "tcp://192.168.5.100:443"
     interval: 60s
     conditions:
       - "[CONNECTED] == true"
 
+  # DNS — verify internal .bas domains resolve
+  - name: "status.bas (DNS · A record)"
+    group: 2-nodes
+    url: "dns://status.bas"
+    interval: 120s
+    conditions:
+      - "[BODY] != 0.0.0.0"
+    dns:
+      query-type: A
+      query-name: "status.bas"
+
+  - name: "grafana.bas (DNS · A record)"
+    group: 2-nodes
+    url: "dns://grafana.bas"
+    interval: 120s
+    conditions:
+      - "[BODY] != 0.0.0.0"
+    dns:
+      query-type: A
+      query-name: "grafana.bas"
+
   # =========================================================================
   # monitoring namespace
   # =========================================================================
-  - name: prometheus
+  - name: "prometheus (HTTP:9090 · ==200)"
     group: monitoring
     url: "http://prometheus:9090"
     interval: 60s
@@ -123,7 +157,7 @@ endpoints:
     alerts:
       - type: ntfy
 
-  - name: alertmanager
+  - name: "alertmanager (HTTP:9093 · ==200)"
     group: monitoring
     url: "http://alertmanager-service:9093"
     interval: 60s
@@ -132,16 +166,16 @@ endpoints:
     alerts:
       - type: ntfy
 
-  - name: grafana-mcp
+  - name: "grafana-mcp (HTTP:8000 · <500)"
     group: monitoring
-    url: "http://grafana-mcp:80"
+    url: "http://grafana-mcp:8000"
     interval: 60s
     conditions:
-      - "[STATUS] == 200"
+      - "[STATUS] < 500"
     alerts:
       - type: ntfy
 
-  - name: ntfy
+  - name: "ntfy (HTTP:80 · ==200)"
     group: monitoring
     url: "http://ntfy:80"
     interval: 60s
@@ -150,36 +184,30 @@ endpoints:
     alerts:
       - type: ntfy
 
-  - name: blackbox-exporter
+  - name: "blackbox-exporter (HTTP:80 · ==200)"
     group: monitoring
     url: "http://prometheus-blackbox-exporter:80"
     interval: 60s
     conditions:
       - "[STATUS] == 200"
 
-  - name: push-gateway
+  - name: "push-gateway (HTTP:80 · ==200)"
     group: monitoring
     url: "http://prometheus-push-gateway:80"
     interval: 60s
     conditions:
       - "[STATUS] == 200"
 
-  - name: system-audit
+  - name: "system-audit (HTTP:80 · <500)"
     group: monitoring
     url: "http://system-audit:80"
     interval: 60s
     conditions:
-      - "[STATUS] == 200"
+      - "[STATUS] < 500"
 
-  - name: kubewatch
-    group: monitoring
-    url: "http://kubewatch:80"
-    interval: 60s
-    conditions:
-      - "[STATUS] == 200"
+  # kubewatch — worker daemon, no web interface. Monitored via Prometheus pod status.
 
-  # grafana is Sablier-managed (scales to 0 when idle)
-  - name: grafana
+  - name: "grafana · Sablier (HTTP:80 · <500 · SAB)"
     group: monitoring
     url: "http://localhost:9090/health?deployment=grafana&namespace=monitoring&check-url=http://grafana.monitoring.svc.cluster.local:80"
     interval: 60s
@@ -191,57 +219,56 @@ endpoints:
   # =========================================================================
   # security namespace
   # =========================================================================
-  - name: authentik-server
+  - name: "authentik (HTTP:9000 · <500)"
     group: security
-    url: "http://authentik-server.security:9000"
+    url: "http://authentik.security:9000"
     interval: 60s
     conditions:
-      - "[STATUS] == 200"
+      - "[STATUS] < 500"
     alerts:
       - type: ntfy
 
-  - name: vaultwarden
+  - name: "vaultwarden (HTTP:80 · <500)"
     group: security
     url: "http://vaultwarden.security:80"
     interval: 60s
     conditions:
-      - "[STATUS] == 200"
+      - "[STATUS] < 500"
     alerts:
       - type: ntfy
 
   # =========================================================================
   # torrent namespace
   # =========================================================================
-  - name: jackett
+  - name: "jackett (HTTP:9117 · <500)"
     group: torrent
     url: "http://jackett.torrent:9117"
     interval: 60s
     conditions:
-      - "[STATUS] == 200"
+      - "[STATUS] < 500"
 
-  - name: qbittorrent
+  - name: "qbittorrent (HTTP:8080 · <500)"
     group: torrent
     url: "http://qbittorrent-standard.torrent:8080"
     interval: 60s
     conditions:
-      - "[STATUS] == 200"
+      - "[STATUS] < 500"
 
-  - name: radarr
+  - name: "radarr (HTTP:7878 · <500)"
     group: torrent
     url: "http://radarr.torrent:7878"
     interval: 60s
     conditions:
-      - "[STATUS] == 200"
+      - "[STATUS] < 500"
 
-  - name: sonarr
+  - name: "sonarr (HTTP:8989 · <500)"
     group: torrent
     url: "http://sonarr.torrent:8989"
     interval: 60s
     conditions:
-      - "[STATUS] == 200"
+      - "[STATUS] < 500"
 
-  # Sablier-managed
-  - name: jellyfin
+  - name: "jellyfin · Sablier (HTTP:8096 · <500 · SAB)"
     group: torrent
     url: "http://localhost:9090/health?deployment=jellyfin&namespace=torrent&check-url=http://jellyfin.torrent.svc.cluster.local:8096"
     interval: 60s
@@ -250,7 +277,7 @@ endpoints:
     alerts:
       - type: ntfy
 
-  - name: jellyseerr
+  - name: "jellyseerr · Sablier (HTTP:5055 · <500 · SAB)"
     group: torrent
     url: "http://localhost:9090/health?deployment=jellyseerr&namespace=torrent&check-url=http://jellyseerr.torrent.svc.cluster.local:5055"
     interval: 60s
@@ -262,15 +289,14 @@ endpoints:
   # =========================================================================
   # ai namespace
   # =========================================================================
-  - name: mcp-kubernetes
+  - name: "mcp-kubernetes (HTTP:80 · <500)"
     group: ai
     url: "http://mcp-kubernetes.ai:80"
     interval: 60s
     conditions:
-      - "[STATUS] == 200"
+      - "[STATUS] < 500"
 
-  # Sablier-managed
-  - name: langflow
+  - name: "langflow · Sablier (HTTP:7860 · <500 · SAB)"
     group: ai
     url: "http://localhost:9090/health?deployment=langflow&namespace=ai&check-url=http://langflow.ai.svc.cluster.local:7860"
     interval: 60s
@@ -279,7 +305,7 @@ endpoints:
     alerts:
       - type: ntfy
 
-  - name: mcp-inspector
+  - name: "mcp-inspector · idle (HTTP:5173 · <500 · SAB)"
     group: ai
     url: "http://localhost:9090/health?deployment=mcp-inspector&namespace=ai&check-url=http://mcp-inspector.ai.svc.cluster.local:5173"
     interval: 60s
@@ -288,7 +314,7 @@ endpoints:
     alerts:
       - type: ntfy
 
-  - name: ollama
+  - name: "ollama · idle (HTTP:11434 · <500 · SAB)"
     group: ai
     url: "http://localhost:9090/health?deployment=ollama&namespace=ai&check-url=http://ollama.ai.svc.cluster.local:11434"
     interval: 60s
@@ -297,7 +323,7 @@ endpoints:
     alerts:
       - type: ntfy
 
-  - name: openclaw
+  - name: "openclaw · idle (HTTP:3000 · <500 · SAB)"
     group: ai
     url: "http://localhost:9090/health?deployment=openclaw&namespace=ai&check-url=http://openclaw.ai.svc.cluster.local:3000"
     interval: 60s
@@ -306,7 +332,7 @@ endpoints:
     alerts:
       - type: ntfy
 
-  - name: phoenix
+  - name: "phoenix · Sablier (HTTP:6006 · <500 · SAB)"
     group: ai
     url: "http://localhost:9090/health?deployment=phoenix&namespace=ai&check-url=http://phoenix.ai.svc.cluster.local:6006"
     interval: 60s
@@ -318,22 +344,21 @@ endpoints:
   # =========================================================================
   # development namespace
   # =========================================================================
-  - name: claudecodeui
+  - name: "claudecodeui (HTTP:80 · <500)"
     group: development
     url: "http://claudecodeui.development:80"
     interval: 60s
     conditions:
-      - "[STATUS] == 200"
+      - "[STATUS] < 500"
 
-  - name: openvscode-server
+  - name: "openvscode-server (HTTP:80 · <500)"
     group: development
     url: "http://openvscode-server.development:80"
     interval: 60s
     conditions:
-      - "[STATUS] == 200"
+      - "[STATUS] < 500"
 
-  # Sablier-managed
-  - name: ubuntu-xfce4
+  - name: "ubuntu-xfce4 · Sablier (HTTP:6080 · <500 · SAB)"
     group: development
     url: "http://localhost:9090/health?deployment=ubuntu-xfce4&namespace=development&check-url=http://ubuntu-xfce4.development.svc.cluster.local:6080"
     interval: 60s
@@ -345,27 +370,27 @@ endpoints:
   # =========================================================================
   # dns namespace
   # =========================================================================
-  - name: pihole
+  - name: "pihole (HTTP:80 · <500)"
     group: dns
     url: "http://pihole.dns:80"
     interval: 60s
     conditions:
-      - "[STATUS] == 200"
+      - "[STATUS] < 500"
 
   # =========================================================================
   # headlamp namespace
   # =========================================================================
-  - name: headlamp
+  - name: "headlamp (HTTP:80 · <500)"
     group: headlamp
     url: "http://headlamp.headlamp:80"
     interval: 60s
     conditions:
-      - "[STATUS] == 200"
+      - "[STATUS] < 500"
 
   # =========================================================================
   # registry namespace
   # =========================================================================
-  - name: registry
+  - name: "registry (TCP:5000 · CONN)"
     group: registry
     url: "tcp://registry.registry.svc.cluster.local:5000"
     interval: 60s
@@ -375,39 +400,39 @@ endpoints:
   # =========================================================================
   # storage namespace
   # =========================================================================
-  - name: minio
+  - name: "minio (HTTP:9000 · <500)"
     group: storage
     url: "http://minio.storage:9000"
     interval: 60s
     conditions:
-      - "[STATUS] == 200"
+      - "[STATUS] < 500"
     alerts:
       - type: ntfy
 
   # =========================================================================
   # vpn namespace
   # =========================================================================
-  - name: wg-easy
+  - name: "wg-easy (HTTP:51821 · <500)"
     group: vpn
     url: "http://wg-easy.vpn:51821"
     interval: 60s
     conditions:
-      - "[STATUS] == 200"
+      - "[STATUS] < 500"
 
   # =========================================================================
   # workflows namespace
   # =========================================================================
-  - name: argo-server
+  - name: "argo-server (HTTP:2746 · <500)"
     group: workflows
     url: "http://argo-server.workflows:2746"
     interval: 60s
     conditions:
-      - "[STATUS] == 200"
+      - "[STATUS] < 500"
 
   # =========================================================================
   # online namespace
   # =========================================================================
-  - name: online-traefik
+  - name: "online-traefik (TCP:80 · CONN)"
     group: online
     url: "tcp://online-traefik-ingress-lb.online.svc.cluster.local:80"
     interval: 60s
@@ -416,24 +441,19 @@ endpoints:
     alerts:
       - type: ntfy
 
-  - name: ddclient-la1r
-    group: online
-    url: "tcp://ddclient-la1r.online:80"
-    interval: 120s
-    conditions:
-      - "[CONNECTED] == true"
+  # ddclient-la1r — daemon, no web interface. Monitored via Prometheus pod status.
 
-  - name: service-toggle-app
+  - name: "service-toggle (HTTP:80 · <500)"
     group: online
     url: "http://service-toggle.online:80"
     interval: 60s
     conditions:
-      - "[STATUS] == 200"
+      - "[STATUS] < 500"
 
   # =========================================================================
   # crm namespace (Sablier-managed)
   # =========================================================================
-  - name: monica
+  - name: "monica · Sablier (HTTP:80 · <500 · SAB)"
     group: crm
     url: "http://localhost:9090/health?deployment=monica&namespace=crm&check-url=http://monica.crm.svc.cluster.local:80"
     interval: 60s
@@ -445,7 +465,7 @@ endpoints:
   # =========================================================================
   # nextcloud namespace (Sablier-managed)
   # =========================================================================
-  - name: nextcloud
+  - name: "nextcloud · Sablier (HTTP:80 · <500 · SAB)"
     group: nextcloud
     url: "http://localhost:9090/health?deployment=nextcloud&namespace=nextcloud&check-url=http://nextcloud.nextcloud.svc.cluster.local:80"
     interval: 60s
@@ -457,7 +477,7 @@ endpoints:
   # =========================================================================
   # media namespace (Sablier-managed)
   # =========================================================================
-  - name: immich-server
+  - name: "immich · Sablier (HTTP:8080 · <500 · SAB)"
     group: media
     url: "http://localhost:9090/health?deployment=immich-server&namespace=media&check-url=http://immich-server.media.svc.cluster.local:8080"
     interval: 60s
@@ -469,7 +489,7 @@ endpoints:
   # =========================================================================
   # gaming namespace (Sablier-managed)
   # =========================================================================
-  - name: enshrouded
+  - name: "enshrouded · idle (TCP:15637 · CONN · SAB)"
     group: gaming
     url: "http://localhost:9090/health?deployment=enshrouded&namespace=gaming&check-url=tcp://enshrouded.gaming.svc.cluster.local:15637"
     interval: 120s
@@ -479,20 +499,20 @@ endpoints:
       - type: ntfy
 
   # =========================================================================
-  # traefik namespace — internal cluster ingress infrastructure
+  # traefik namespace — internal ingress infrastructure
   # =========================================================================
-  - name: traefik-internal
+  - name: "traefik-internal (TCP:80 · CONN)"
     group: traefik
-    url: "tcp://traefik.traefik.svc.cluster.local:80"
+    url: "tcp://traefik-ingress-service.traefik.svc.cluster.local:80"
     interval: 60s
     conditions:
       - "[CONNECTED] == true"
     alerts:
       - type: ntfy
 
-  - name: sablier
+  - name: "sablier (HTTP:10000 · ==200)"
     group: traefik
-    url: "http://sablier.traefik.svc.cluster.local:10000"
+    url: "http://sablier.traefik.svc.cluster.local:10000/health"
     interval: 60s
     conditions:
       - "[STATUS] == 200"
@@ -500,7 +520,7 @@ endpoints:
   # =========================================================================
   # cert-manager namespace — certificate infrastructure
   # =========================================================================
-  - name: cert-manager-webhook
+  - name: "cert-manager-webhook (TCP:443 · CONN)"
     group: cert-manager
     url: "tcp://cert-manager-webhook.cert-manager.svc.cluster.local:443"
     interval: 60s
