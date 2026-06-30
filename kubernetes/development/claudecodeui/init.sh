@@ -20,13 +20,13 @@ fi
 
 cd /home/basraven/projects/la1r
 
-# Initialize TaskMaster AI if not already set up (persists on PVC)
-if [ ! -d ".taskmaster" ]; then
-  echo "Initializing TaskMaster AI..."
-  task-master init --yes
-else
-  echo "TaskMaster AI already initialized."
-fi
+# # Initialize TaskMaster AI if not already set up (persists on PVC)
+# if [ ! -d ".taskmaster" ]; then
+#   echo "Initializing TaskMaster AI..."
+#   task-master init --yes
+# else
+#   echo "TaskMaster AI already initialized."
+# fi
 
 echo "Trying to start cloudcli..."
 if cloudcli start --port 3001; then
