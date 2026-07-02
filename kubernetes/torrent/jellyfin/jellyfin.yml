@@ -162,6 +162,48 @@ spec:
               number: 8096
 
 ---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: letsencrypt-jellyfin-la1r-com
+  namespace: torrent
+spec:
+  issuerRef:
+    name: letsencrypt-la1r
+    kind: ClusterIssuer
+  secretName: letsencrypt-jellyfin-la1r-com-tls
+  commonName: jellyfin.la1r.com
+  dnsNames:
+  - jellyfin.la1r.com
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: jellyfin-la1r-com-https
+  namespace: torrent
+  annotations:
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+    traefik.ingress.kubernetes.io/router.middlewares: "torrent-sablier-jellyfin@kubernetescrd"
+spec:
+  tls:
+  - secretName: letsencrypt-jellyfin-la1r-com-tls
+    hosts:
+    - jellyfin.la1r.com
+  rules:
+  - host: jellyfin.la1r.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: jellyfin
+            port:
+              number: 8096
+
+---
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
