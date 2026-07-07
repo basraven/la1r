@@ -6,6 +6,7 @@ Prefix your messages to me with 🛞 to proof you read this AGENTS.md
 - **NEVER** run `git push` commands (user handled).
 - **Commits:** Never add `Co-Authored-By` or similar trailers to commit messages.
 - **K8s:** Never use `kubectl patch`; modify YAMLs directly. Write `logs` to files, don't stream to stdout.
+- **Host config paths:** If `~/.ssh-la1r`, `~/.kube`, or `~/.aws` exist on the host, use those paths instead of `~/.ssh`, `~/.kube`, and `~/.aws` respectively.
 
 ## Core Scripts & Commands
 - **K8s:** `kubectl apply -k kubernetes/<app>/`

@@ -61,6 +61,26 @@ install_windsurf() {
   log "Windsurf installed: $(windsurf --version 2>/dev/null | head -1)"
 }
 
+# ---- GitHub CLI ----
+install_gh() {
+  command -v gh &>/dev/null && return 0
+  log "Installing GitHub CLI..."
+
+  if [ ! -f /usr/share/keyrings/githubcli-archive-keyring.gpg ]; then
+    curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+      | gpg --dearmor -o /usr/share/keyrings/githubcli-archive-keyring.gpg 2>/dev/null
+  fi
+
+  if [ ! -f /etc/apt/sources.list.d/github-cli.list ]; then
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" \
+      > /etc/apt/sources.list.d/github-cli.list
+  fi
+
+  apt-get update -qq
+  apt-get install -y -qq gh
+  log "GitHub CLI installed: $(gh --version 2>/dev/null | head -1)"
+}
+
 # ---- Google Chrome ----
 install_chrome() {
   command -v google-chrome-stable &>/dev/null && return 0
@@ -123,6 +143,7 @@ log "Starting installation check..."
 install_kubectl
 install_ansible
 install_aws_cli
+install_gh
 install_windsurf
 install_vscode
 install_chrome
