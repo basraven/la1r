@@ -27,7 +27,7 @@ spec:
         securityContext:
           runAsUser: 0
           runAsGroup: 0
-        image: registry.registry.svc.cluster.local:5000/claudecodeui:v1
+        image: registry.registry.svc.cluster.local:5000/claudecodeui:v3
         imagePullPolicy: IfNotPresent
         env:
         - name: DATABASE_PATH
