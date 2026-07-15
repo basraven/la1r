@@ -61,6 +61,26 @@ install_windsurf() {
   log "Windsurf installed: $(windsurf --version 2>/dev/null | head -1)"
 }
 
+# ---- jq ----
+install_jq() {
+  command -v jq &>/dev/null && return 0
+  log "Installing jq..."
+  apt-get install -y -qq jq
+  log "jq installed: $(jq --version 2>/dev/null)"
+}
+
+# ---- yq (mikefarah/yq, Go version) ----
+install_yq() {
+  command -v yq &>/dev/null && return 0
+  log "Installing yq..."
+  local yq_version
+  yq_version=$(curl -fsSL "https://api.github.com/repos/mikefarah/yq/releases/latest" | grep tag_name | cut -d'"' -f4)
+  curl -fsSL "https://github.com/mikefarah/yq/releases/download/${yq_version}/yq_linux_amd64" \
+    -o /usr/local/bin/yq
+  chmod +x /usr/local/bin/yq
+  log "yq installed: $(yq --version 2>/dev/null)"
+}
+
 # ---- GitHub CLI ----
 install_gh() {
   command -v gh &>/dev/null && return 0
@@ -141,6 +161,8 @@ install_vscode() {
 log "Starting installation check..."
 
 install_kubectl
+install_jq
+install_yq
 install_ansible
 install_aws_cli
 install_gh
