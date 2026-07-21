@@ -2,6 +2,20 @@
 
 In-cluster container registry replacing init-container apt installs at pod startup. Images are built via kaniko Jobs and pushed to this registry over HTTPS (TLS via cert-manager).
 
+## Prerequisites: Node DNS must route cluster.local to CoreDNS
+
+The kubelet/containerd uses the node's DNS to resolve image names. Since
+`registry.registry.svc.cluster.local` is an in-cluster name only CoreDNS knows,
+the node must be configured to forward `cluster.local` queries to CoreDNS.
+
+This is handled by Ansible (`cicd/ansible/roles/kubernetes-init/tasks/configure-registry-access.yml`):
+
+1. systemd-resolved routes `~cluster.local` on `enp4s0` to CoreDNS (10.96.0.10)
+2. Kubelet `resolvConf` points to the systemd-resolved stub (`/run/systemd/resolve/stub-resolv.conf`)
+
+Without this, new image tag rollouts fail with `ImagePullBackOff` — DNS
+resolution of `registry.registry.svc.cluster.local` fails from the node.
+
 ## How it works
 
 ```
