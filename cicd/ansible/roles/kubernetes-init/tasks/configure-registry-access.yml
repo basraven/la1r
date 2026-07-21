@@ -34,6 +34,25 @@
       state: restarted
       daemon_reload: true
 
+- name: Init Kubernetes / Point kubelet resolvConf at systemd-resolved stub
+  become: yes
+  tags: registry_access
+  block:
+  - name: Init Kubernetes / Ensure kubelet uses stub-resolv.conf for DNS routing
+    become: yes
+    ansible.builtin.replace:
+      path: /var/lib/kubelet/config.yaml
+      regexp: 'resolvConf: /run/systemd/resolve/resolv\.conf'
+      replace: 'resolvConf: /run/systemd/resolve/stub-resolv.conf'
+      backup: yes
+
+  - name: Init Kubernetes / Restart kubelet to pick up new resolvConf
+    become: yes
+    ansible.builtin.systemd:
+      name: kubelet
+      state: restarted
+      daemon_reload: true
+
 - name: Init Kubernetes / Install la1r CA to system trust store
   become: yes
   tags: registry_access
