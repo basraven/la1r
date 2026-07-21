@@ -32,7 +32,8 @@
       "mcp__playwright__browser_evaluate",
       "Bash(kubectl describe:*)",
       "Bash(kubectl events:*)",
-      "Bash(kubectl delete job *)"
+      "Bash(kubectl delete job *)",
+      "Bash(export KUBECONFIG=/home/basraven/.kube-la1r/config)"
     ]
   },
   "enableAllProjectMcpServers": true,

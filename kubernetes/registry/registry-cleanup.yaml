@@ -1,0 +1,113 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: registry-cleanup
+  namespace: registry
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: registry-cleanup
+  namespace: registry
+rules:
+- apiGroups: [""]
+  resources: ["pods", "pods/exec"]
+  verbs: ["get", "list", "exec"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: registry-cleanup
+  namespace: registry
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: registry-cleanup
+subjects:
+- kind: ServiceAccount
+  name: registry-cleanup
+  namespace: registry
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: registry-cleanup
+  namespace: registry
+spec:
+  schedule: "0 3 * * *"  # Daily at 03:00
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: registry-cleanup
+          restartPolicy: OnFailure
+          nodeName: jay-c  # Same node as the registry pod
+          containers:
+          - name: cleanup
+            image: alpine:3.20
+            command:
+            - /bin/sh
+            - -c
+            - |
+              set -euo pipefail
+
+              REGISTRY="registry.registry.svc.cluster.local:5000"
+
+              echo "=== Installing tools ==="
+              apk add --no-cache jq
+
+              echo "=== Downloading regctl ==="
+              wget -qO /usr/local/bin/regctl https://github.com/regclient/regclient/releases/latest/download/regctl-linux-amd64
+              chmod +x /usr/local/bin/regctl
+
+              echo "=== Downloading kubectl ==="
+              wget -qO /usr/local/bin/kubectl https://dl.k8s.io/release/v1.31.0/bin/linux/amd64/kubectl
+              chmod +x /usr/local/bin/kubectl
+
+              echo "=== Listing repositories ==="
+              repos=$(regctl repo ls --insecure "$REGISTRY")
+              echo "Repositories: $repos"
+
+              for repo in $repos; do
+                echo "--- Processing: $repo ---"
+
+                tags=$(regctl tag ls --insecure "$REGISTRY/$repo")
+                tag_count=$(echo "$tags" | grep -c .)
+
+                if [ "$tag_count" -le 1 ]; then
+                  echo "Only $tag_count tag(s) for $repo, nothing to clean up"
+                  continue
+                fi
+                echo "Found $tag_count tags for $repo"
+
+                # Build timestamp-sorted list of tags
+                ts_file=$(mktemp)
+                for tag in $tags; do
+                  ts=$(regctl image config --insecure "$REGISTRY/$repo:$tag" 2>/dev/null | jq -r '.created // "1970-01-01T00:00:00Z"')
+                  echo "$ts $tag" >> "$ts_file"
+                done
+
+                # Sort by timestamp (oldest first), keep the newest
+                sorted=$(sort "$ts_file")
+                latest=$(echo "$sorted" | tail -1 | awk '{print $NF}')
+                echo "Keeping latest tag: $latest"
+
+                # Delete all older tags
+                while IFS=' ' read -r ts tag; do
+                  if [ "$tag" != "$latest" ]; then
+                    echo "Deleting old tag: $repo:$tag (created: $ts)"
+                    regctl tag rm --insecure "$REGISTRY/$repo:$tag" || echo "  WARNING: failed to delete $repo:$tag"
+                  fi
+                done < "$ts_file"
+
+                rm -f "$ts_file"
+              done
+
+              echo "=== Running garbage collection ==="
+              kubectl exec -n registry deployment/registry -- registry garbage-collect --delete-untagged=true /etc/docker/registry/config.yml || echo "  WARNING: garbage collection failed"
+
+              echo "=== Registry cleanup complete ==="

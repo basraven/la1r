@@ -5,4 +5,5 @@ resources:
   - namespace.yml
   - priorityclass.yml
   - registry.yml
+  - registry-cleanup.yaml
   - pv
