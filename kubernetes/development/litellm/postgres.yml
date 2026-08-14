@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: litellm-postgres
+  namespace: development
+  labels:
+    app: litellm-postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: litellm-postgres
+  template:
+    metadata:
+      labels:
+        task: development
+        app: litellm-postgres
+    spec:
+      priorityClassName: development-priority
+      containers:
+      - name: postgres
+        image: postgres:16-alpine
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          runAsUser: 0
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: litellm-postgres-credentials
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: litellm-postgres-credentials
+              key: POSTGRES_PASSWORD
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: litellm-postgres-credentials
+              key: POSTGRES_DB
+        volumeMounts:
+        - name: postgres-data
+          mountPath: /var/lib/postgresql/data
+      volumes:
+      - name: postgres-data
+        persistentVolumeClaim:
+          claimName: litellm-db-claim
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: litellm-postgres
+  namespace: development
+spec:
+  ports:
+  - port: 5432
+    targetPort: 5432
+  selector:
+    app: litellm-postgres

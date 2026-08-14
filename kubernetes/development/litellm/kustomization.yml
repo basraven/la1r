@@ -3,6 +3,8 @@ kind: Kustomization
 namespace: development
 resources:
   - litellm.yml
+  - postgres.yml
+  - pv
 configMapGenerator:
 - name: litellm-config
   files:

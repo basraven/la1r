@@ -41,6 +41,11 @@ spec:
             secretKeyRef:
               name: litellm-master-key
               key: DEEPINFRA_API_KEY
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: litellm-postgres-credentials
+              key: DATABASE_URL
         volumeMounts:
         - name: litellm-config
           mountPath: /app/config.yaml

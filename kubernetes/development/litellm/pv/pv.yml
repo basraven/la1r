@@ -1,0 +1,15 @@
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: litellm-db-pv
+  labels:
+    contenttype: "litellm-db"
+spec:
+  capacity:
+    storage: 5Gi
+  storageClassName: litellm-db
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteMany
+  hostPath:
+    path: "/mnt/ssd/ha/litellm"

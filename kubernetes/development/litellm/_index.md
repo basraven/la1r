@@ -12,6 +12,9 @@ so clients (like `claudecodeui`) reach one OpenAI/Anthropic-compatible endpoint 
   - Certificate `letsencrypt-litellm-la1r-com` (ClusterIssuer `letsencrypt-la1r`, Let's Encrypt via DNS-01)
   - Ingress `litellm-la1r-com-https` → host `litellm.la1r.com` (Traefik, websecure)
 - **`config.yaml`** — LiteLLM router config (mounted as ConfigMap `litellm-config`)
+- **`postgres.yml`** — dedicated PostgreSQL (in the `development` ns) backing litellm's
+  virtual keys / spend tracking (LiteLLM requires PostgreSQL; SQLite is unsupported)
+- **`pv/`** — hostPath PV + PVC for the Postgres data dir at `/mnt/ssd/ha/litellm`
 - **`kustomization.yml`** — namespaced overlay; register new resources here
 
 ## Configuration
@@ -22,17 +25,23 @@ so clients (like `claudecodeui`) reach one OpenAI/Anthropic-compatible endpoint 
 model_list:
   - model_name: deepseek-v4-flash
     litellm_params:
-      model: deepinfra/deepseek-ai/DeepSeek-V3
+      model: deepinfra/deepseek-ai/DeepSeek-V4-Flash-0731
       api_key: os.environ/DEEPINFRA_API_KEY
+      extra_body:
+        service_tier: flex
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
 ```
 
-- **`LITELLM_MASTER_KEY`** — gateway key; every request must send
-  `Authorization: Bearer <key>`. Also unlocks the admin UI at `/ui`.
+- **`LITELLM_MASTER_KEY`** — gateway/admin key; unlocks the admin UI at `/ui`.
 - **`DEEPINFRA_API_KEY`** — upstream key used to call DeepInfra.
-- Both are injected via `valueFrom.secretKeyRef` from the Kubernetes Secret
+- Both injected via `valueFrom.secretKeyRef` from the Kubernetes Secret
   `litellm-master-key` (keys `LITELLM_MASTER_KEY` and `DEEPINFRA_API_KEY`).
+- **`DATABASE_URL`** — PostgreSQL (deployment `litellm-postgres`, service
+  `litellm-postgres:5432`), required for virtual keys; injected from Secret
+  `litellm-postgres-credentials`.
+- **Client auth uses a virtual key** (`sk-...`), created via `/ui` or `/key/generate` —
+  not the master key. The master key is rejected by client endpoints in this build.
 
 ### Adding or changing a model
 1. Edit `config.yaml` → add/change a `model_list` entry (provider prefix, e.g.
@@ -54,10 +63,15 @@ Never put key values in this repo's manifests or commit messages.
 
 ## Usage
 
+litellm serves the Anthropic-format API at the **root** `/v1/messages` path (Claude Code
+appends `/v1/messages` to `ANTHROPIC_BASE_URL` automatically). Use the root URL — **not**
+the `/anthropic` passthrough, whose key auth is unreliable in this build. Authenticate
+with a **virtual key** (`sk-...`), not the master key.
+
 In-cluster clients (same `development` namespace) use the Service DNS:
 
 ```
-http://litellm/anthropic          # Anthropic-format (e.g. claudecodeui)
+http://litellm                    # Anthropic-format (ANTHROPIC_BASE_URL)
 http://litellm/v1                 # OpenAI-format
 ```
 
@@ -66,13 +80,14 @@ Fully-qualified: `http://litellm.development.svc.cluster.local:80`
 External (via ingress):
 
 ```
-https://litellm.la1r.com/anthropic
-https://litellm.la1r.com/v1
+https://litellm.la1r.com          # Anthropic-format (ANTHROPIC_BASE_URL)
+https://litellm.la1r.com/v1       # OpenAI-format
 ```
 
 ### claudecodeui
-Point `ANTHROPIC_BASE_URL` at `http://litellm/anthropic`, `ANTHROPIC_AUTH_TOKEN`
-to the litellm master key, and keep `ANTHROPIC_MODEL: deepseek-v4-flash`.
+Point `ANTHROPIC_BASE_URL` at `http://litellm` (root; Claude Code appends
+`/v1/messages`), `ANTHROPIC_AUTH_TOKEN` to the **virtual key** (`sk-...`), and keep
+`ANTHROPIC_MODEL: deepseek-v4-flash`.
 
 ## Health checks
 - `GET https://litellm.la1r.com/health/liveliness` — unauthenticated
