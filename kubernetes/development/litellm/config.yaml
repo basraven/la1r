@@ -1,0 +1,7 @@
+model_list:
+  - model_name: deepseek-v4-flash
+    litellm_params:
+      model: deepinfra/deepseek-ai/DeepSeek-V3
+      api_key: os.environ/DEEPINFRA_API_KEY
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY

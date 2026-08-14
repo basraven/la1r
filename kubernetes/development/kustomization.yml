@@ -6,4 +6,5 @@ resources:
 - common
 - openvscode-server
 - claudecodeui
+- litellm
 - ubuntu

@@ -1,0 +1,80 @@
+# LiteLLM Gateway
+
+LiteLLM proxy hosting LLM providers for the development namespace. It fronts **DeepInfra**
+so clients (like `claudecodeui`) reach one OpenAI/Anthropic-compatible endpoint at
+**`https://litellm.bas`** instead of talking to providers directly.
+
+## Structure
+- **`litellm.yml`** — `Deployment -> Service -> Certificate -> Ingress` (single file):
+  - Deployment `litellm` (image `ghcr.io/berriai/litellm:main-stable`, port 4000, arg
+    `--config /app/config.yaml --port 4000`)
+  - Service `litellm` → port 80 → 4000
+  - Certificate `litellm-bas` (ClusterIssuer `la1r`, self-signed CA for `*.bas`)
+  - Ingress `litellm-https` → host `litellm.bas` (Traefik, websecure)
+- **`config.yaml`** — LiteLLM router config (mounted as ConfigMap `litellm-config`)
+- **`kustomization.yml`** — namespaced overlay; register new resources here
+
+## Configuration
+
+`config.yaml` maps a client-facing model name to a provider+model. Current route:
+
+```yaml
+model_list:
+  - model_name: deepseek-v4-flash
+    litellm_params:
+      model: deepinfra/deepseek-ai/DeepSeek-V3
+      api_key: os.environ/DEEPINFRA_API_KEY
+general_settings:
+  master_key: os.environ/LITELLM_MASTER_KEY
+```
+
+- **`LITELLM_MASTER_KEY`** — gateway key; every request must send
+  `Authorization: Bearer <key>`. Also unlocks the admin UI at `/ui`.
+- **`DEEPINFRA_API_KEY`** — upstream key used to call DeepInfra.
+- Both are injected via `valueFrom.secretKeyRef` from the Kubernetes Secret
+  `litellm-master-key` (keys `LITELLM_MASTER_KEY` and `DEEPINFRA_API_KEY`).
+
+### Adding or changing a model
+1. Edit `config.yaml` → add/change a `model_list` entry (provider prefix, e.g.
+   `deepinfra/<model-id>`, `anthropic/<model>`, `openai/<model>`).
+2. `kubectl apply -k kubernetes/development/litellm/` (ConfigMap + Deployment update).
+3. The Deployment rolls automatically because the pod env/ConfigMap changed.
+
+### Rotating / updating keys
+The key values live **only** in the private `la1r-cred` repo at
+`credentials/kubernetes/litellm-master-key.yml` (git-ignored plaintext, GPG `.asc`
+encrypted for commit). Edit that file, then:
+
+```sh
+kubectl apply -f credentials/kubernetes/litellm-master-key.yml
+kubectl -n development rollout restart deploy/litellm
+```
+
+Never put key values in this repo's manifests or commit messages.
+
+## Usage
+
+In-cluster clients (same `development` namespace) use the Service DNS:
+
+```
+http://litellm/anthropic          # Anthropic-format (e.g. claudecodeui)
+http://litellm/v1                 # OpenAI-format
+```
+
+Fully-qualified: `http://litellm.development.svc.cluster.local:80`
+
+External (via ingress):
+
+```
+https://litellm.bas/anthropic
+https://litellm.bas/v1
+```
+
+### claudecodeui
+Point `ANTHROPIC_BASE_URL` at `http://litellm/anthropic`, `ANTHROPIC_AUTH_TOKEN`
+to the litellm master key, and keep `ANTHROPIC_MODEL: deepseek-v4-flash`.
+
+## Health checks
+- `GET https://litellm.bas/health/liveliness` — unauthenticated
+- `GET https://litellm.bas/health/readiness` — requires master key
+- `GET https://litellm.bas/v1/models` — lists registered models (requires master key)
