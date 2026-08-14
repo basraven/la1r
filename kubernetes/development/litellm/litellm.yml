@@ -70,31 +70,33 @@ spec:
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: litellm-bas
+  name: letsencrypt-litellm-la1r-com
   namespace: development
 spec:
   issuerRef:
-    name: la1r
+    name: letsencrypt-la1r
     kind: ClusterIssuer
-  secretName: litellm-bas-tls
-  commonName: litellm.bas
+  secretName: letsencrypt-litellm-la1r-com-tls
+  commonName: litellm.la1r.com
   dnsNames:
-  - litellm.bas
+  - litellm.la1r.com
 
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: litellm-https
+  name: litellm-la1r-com-https
   namespace: development
   annotations:
     traefik.ingress.kubernetes.io/router.tls: "true"
     traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
 spec:
   tls:
-  - secretName: litellm-bas-tls
+  - secretName: letsencrypt-litellm-la1r-com-tls
+    hosts:
+    - litellm.la1r.com
   rules:
-  - host: litellm.bas
+  - host: litellm.la1r.com
     http:
       paths:
       - path: /

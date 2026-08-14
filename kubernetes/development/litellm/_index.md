@@ -2,15 +2,15 @@
 
 LiteLLM proxy hosting LLM providers for the development namespace. It fronts **DeepInfra**
 so clients (like `claudecodeui`) reach one OpenAI/Anthropic-compatible endpoint at
-**`https://litellm.bas`** instead of talking to providers directly.
+**`https://litellm.la1r.com`** instead of talking to providers directly.
 
 ## Structure
 - **`litellm.yml`** — `Deployment -> Service -> Certificate -> Ingress` (single file):
   - Deployment `litellm` (image `ghcr.io/berriai/litellm:main-stable`, port 4000, arg
     `--config /app/config.yaml --port 4000`)
   - Service `litellm` → port 80 → 4000
-  - Certificate `litellm-bas` (ClusterIssuer `la1r`, self-signed CA for `*.bas`)
-  - Ingress `litellm-https` → host `litellm.bas` (Traefik, websecure)
+  - Certificate `letsencrypt-litellm-la1r-com` (ClusterIssuer `letsencrypt-la1r`, Let's Encrypt via DNS-01)
+  - Ingress `litellm-la1r-com-https` → host `litellm.la1r.com` (Traefik, websecure)
 - **`config.yaml`** — LiteLLM router config (mounted as ConfigMap `litellm-config`)
 - **`kustomization.yml`** — namespaced overlay; register new resources here
 
@@ -66,8 +66,8 @@ Fully-qualified: `http://litellm.development.svc.cluster.local:80`
 External (via ingress):
 
 ```
-https://litellm.bas/anthropic
-https://litellm.bas/v1
+https://litellm.la1r.com/anthropic
+https://litellm.la1r.com/v1
 ```
 
 ### claudecodeui
@@ -75,6 +75,6 @@ Point `ANTHROPIC_BASE_URL` at `http://litellm/anthropic`, `ANTHROPIC_AUTH_TOKEN`
 to the litellm master key, and keep `ANTHROPIC_MODEL: deepseek-v4-flash`.
 
 ## Health checks
-- `GET https://litellm.bas/health/liveliness` — unauthenticated
-- `GET https://litellm.bas/health/readiness` — requires master key
-- `GET https://litellm.bas/v1/models` — lists registered models (requires master key)
+- `GET https://litellm.la1r.com/health/liveliness` — unauthenticated
+- `GET https://litellm.la1r.com/health/readiness` — requires master key
+- `GET https://litellm.la1r.com/v1/models` — lists registered models (requires master key)
