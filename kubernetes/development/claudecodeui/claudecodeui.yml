@@ -38,12 +38,12 @@ spec:
         - name: WORKSPACES_ROOT
           value: "/home/basraven/projects"
         - name: ANTHROPIC_BASE_URL
-          value: "http://litellm"
+          value: "https://api.deepseek.com/anthropic"
         - name: ANTHROPIC_AUTH_TOKEN
           valueFrom:
             secretKeyRef:
-              name: litellm-master-key
-              key: LITELLM_CLAUDE_UI_VIRTUAL_KEY
+              name: deepseek-apikey
+              key: ANTHROPIC_AUTH_TOKEN
         - name: API_TIMEOUT_MS
           value: "600000"
         - name: ANTHROPIC_MODEL
