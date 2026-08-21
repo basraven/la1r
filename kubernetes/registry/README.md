@@ -32,6 +32,7 @@ ConfigMap (Dockerfile)  ->  kaniko Job  ->  Registry (HTTPS)  ->  Deployment
 |------|---------|
 | `namespace.yml` | `registry` namespace |
 | `registry.yml` | Deployment, Service, cert-manager Certificate |
+| `registry-cleanup.yaml` | Daily CronJob that prunes old tags and runs garbage collection |
 | `kustomization.yaml` | Kustomize grouping |
 | `pv/` | PersistentVolume + PersistentVolumeClaim (10Gi on `/mnt/ssd/na/registry/data`) |
 | `example/` | Reusable template showing the full build pattern |
@@ -106,6 +107,20 @@ Images use incrementing version tags (`v1`, `v2`, `v3`...) instead of `:latest`.
 2. Run `kubectl apply -k .` from the app directory
 
 The build job creates the new image in the registry. The deployment's `IfNotPresent` automatically pulls the new tag since it doesn't exist on the node yet.
+
+## Cleanup
+
+`registry-cleanup.yaml` deploys a daily CronJob (`0 3 * * *`) that prunes old image tags and garbage-collects:
+
+1. Lists every repo in the registry (regctl connects over the HTTPS endpoint via `regctl registry set --tls insecure`)
+2. For each repo, keeps only the **newest tag by image `created` timestamp** and deletes the rest
+3. Runs `registry garbage-collect --delete-untagged=true` to reclaim untagged blobs
+
+Notes:
+
+- A tag referenced by a running workload survives only if it is the newest-created in its repo. Bump to a new tag on release so the previous tag becomes pruneable.
+- The job's Role grants `get` on `deployments` (namespace `registry`) so it can `kubectl exec` the registry Deployment for GC.
+- regctl is pinned to `v0.11.5`. regctl has never supported a standalone `--insecure` flag — use `regctl registry set <host> --tls insecure` to skip cert verification.
 
 ## Rebuilding
 

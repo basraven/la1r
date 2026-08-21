@@ -14,6 +14,9 @@ rules:
 - apiGroups: [""]
   resources: ["pods", "pods/exec"]
   verbs: ["get", "list", "exec"]
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["get"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -61,21 +64,24 @@ spec:
               apk add --no-cache jq
 
               echo "=== Downloading regctl ==="
-              wget -qO /usr/local/bin/regctl https://github.com/regclient/regclient/releases/latest/download/regctl-linux-amd64
+              wget -qO /usr/local/bin/regctl https://github.com/regclient/regclient/releases/download/v0.11.5/regctl-linux-amd64
               chmod +x /usr/local/bin/regctl
+
+              # Registry is HTTPS-only with a private CA: skip cert verify (not disable TLS)
+              regctl registry set "$REGISTRY" --tls insecure
 
               echo "=== Downloading kubectl ==="
               wget -qO /usr/local/bin/kubectl https://dl.k8s.io/release/v1.31.0/bin/linux/amd64/kubectl
               chmod +x /usr/local/bin/kubectl
 
               echo "=== Listing repositories ==="
-              repos=$(regctl repo ls --insecure "$REGISTRY")
+              repos=$(regctl repo ls "$REGISTRY")
               echo "Repositories: $repos"
 
               for repo in $repos; do
                 echo "--- Processing: $repo ---"
 
-                tags=$(regctl tag ls --insecure "$REGISTRY/$repo")
+                tags=$(regctl tag ls "$REGISTRY/$repo")
                 tag_count=$(echo "$tags" | grep -c .)
 
                 if [ "$tag_count" -le 1 ]; then
@@ -87,7 +93,7 @@ spec:
                 # Build timestamp-sorted list of tags
                 ts_file=$(mktemp)
                 for tag in $tags; do
-                  ts=$(regctl image config --insecure "$REGISTRY/$repo:$tag" 2>/dev/null | jq -r '.created // "1970-01-01T00:00:00Z"')
+                  ts=$(regctl image config "$REGISTRY/$repo:$tag" 2>/dev/null | jq -r '.created // "1970-01-01T00:00:00Z"')
                   echo "$ts $tag" >> "$ts_file"
                 done
 
@@ -100,7 +106,7 @@ spec:
                 while IFS=' ' read -r ts tag; do
                   if [ "$tag" != "$latest" ]; then
                     echo "Deleting old tag: $repo:$tag (created: $ts)"
-                    regctl tag rm --insecure "$REGISTRY/$repo:$tag" || echo "  WARNING: failed to delete $repo:$tag"
+                    regctl tag rm "$REGISTRY/$repo:$tag" || echo "  WARNING: failed to delete $repo:$tag"
                   fi
                 done < "$ts_file"
 
