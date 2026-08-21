@@ -1,0 +1,16 @@
+---
+# Note: kubeadm v1.33.11 logs a strict-decoding warning about the
+# certificateValidityDuration field in the config. That is EXPECTED and
+# non-fatal — certs renew to ~1 year anyway. We re-mint the admin client
+# cert to long-lived below.
+
+- name: Renew all kubeadm PKI certs
+  command: "kubeadm certs renew all --config={{ renew_kubeadm_config }}"
+  register: _renew_out
+
+- name: Show renewal output
+  debug:
+    var: _renew_out.stdout_lines
+
+- name: Re-mint long-lived admin client cert into admin.conf
+  script: mint-admin-client-cert.sh {{ renew_admin_days }}

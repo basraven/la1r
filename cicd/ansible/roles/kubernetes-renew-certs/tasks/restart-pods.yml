@@ -1,0 +1,26 @@
+---
+# The static-pod manifests in /etc/kubernetes/manifests are unchanged; the
+# kubelet will re-create the pods from them with the renewed certs on disk.
+# Deleting via crictl forces that. Never delete the manifest files themselves.
+
+- name: Delete control-plane static pods so kubelet recreates them with fresh certs
+  shell: |
+    set -euo pipefail
+    for name in {{ renew_static_pods | join(' ') }}; do
+      ids=$(crictl pods --name "$name" -q 2>/dev/null || true)
+      for pid in $ids; do
+        echo "removing static pod $name ($pid)"
+        crictl rmp -f "$pid"
+      done
+    done
+  register: _rmp_out
+
+- name: Show pod removal output
+  debug:
+    var: _rmp_out.stdout_lines
+
+- name: Restart kubelet so it loads the renewed kubelet.conf
+  systemd:
+    name: kubelet
+    state: restarted
+    daemon_reload: true

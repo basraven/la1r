@@ -1,0 +1,7 @@
+---
+- include_tasks: preflight.yml
+- include_tasks: backup.yml
+- include_tasks: renew.yml
+- include_tasks: restart-pods.yml
+- include_tasks: wait-healthy.yml
+- include_tasks: verify.yml

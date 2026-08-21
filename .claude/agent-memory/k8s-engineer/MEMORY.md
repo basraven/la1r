@@ -1,3 +1,6 @@
 - [Headlamp deployment](headlamp_deployment.md) — Headlamp K8s UI replacing kubernetes-dashboard, Authentik forwardAuth, port 4466
 - [Traefik API group](traefik_api_group.md) — This cluster uses traefik.containo.us (not traefik.io) for Traefik CRDs
 - [Grafana MCP token](grafana_mcp_token.md) — Create a Grafana service account token via API for grafana/mcp-grafana when Grafana uses anonymous admin
+- [Cluster PKI certs](cluster_pki_certs.md) — kubeadm 1yr PKI certs; renewal applied 2026-08-20 (server certs→2027, admin→2035 via manual mint); v1.33.11 ignores certificateValidityDuration
+- [Bitnami image migration](bitnami_image_migration.md) — bitnami/* removed from Docker Hub Aug 2025; user prefers alpine/k8s (pinned tag) over unmaintained bitnamilegacy for kubectl+jq scripts
+- [Registry CronJob](registry_cronjob.md) — registry-cleanup prunes to newest tag/repo daily 03:00; first success 2026-08-21; GC step blocked by RBAC (Role lacks deployments get)

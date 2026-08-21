@@ -1,0 +1,47 @@
+---
+- name: Ensure required binaries exist on the control plane
+  command: "which {{ item }}"
+  with_items: [kubeadm, kubelet, crictl]
+  register: _which
+  changed_when: false
+  failed_when: _which.rc != 0
+
+- name: Record pre-renewal certificate expiry
+  command: kubeadm certs check-expiration
+  register: _pre_expiry
+  changed_when: false
+
+- name: Show pre-renewal expiry
+  debug:
+    var: _pre_expiry.stdout_lines
+
+- name: Ensure the kubeadm config exists (carries apiserver cert SANs)
+  stat:
+    path: "{{ renew_kubeadm_config }}"
+  register: _cfg
+
+- name: Fail if the kubeadm config is missing
+  fail:
+    msg: "{{ renew_kubeadm_config }} not found — cannot renew with --config (needed for cert SANs)."
+  when: not _cfg.stat.exists
+
+- name: Compute days until apiserver cert expiry
+  shell: |
+    enddate=$(openssl x509 -in /etc/kubernetes/pki/apiserver.crt -noout -enddate | cut -d= -f2)
+    exp=$(date -d "$enddate" +%s)
+    echo $(( (exp - $(date +%s)) / 86400 ))
+  register: _days_remaining
+  changed_when: false
+
+- name: Report days remaining
+  debug:
+    msg: "apiserver cert has {{ _days_remaining.stdout | default('?') }} days remaining (min {{ renew_min_remaining_days }}, force={{ renew_force | default(false) }})"
+
+- name: Skip renewal — certs still fresh
+  debug:
+    msg: "Cert renewal not needed yet ({{ _days_remaining.stdout }}d left > {{ renew_min_remaining_days }}d). Run with -e renew_force=true to force."
+  when: _days_remaining is defined and (_days_remaining.stdout | int) > renew_min_remaining_days and not (renew_force | default(false))
+
+- name: End play if renewal not needed
+  meta: end_play
+  when: _days_remaining is defined and (_days_remaining.stdout | int) > renew_min_remaining_days and not (renew_force | default(false))

@@ -1,0 +1,35 @@
+---
+# Kubernetes kubeadm PKI certificate renewal — role defaults
+# See the proven procedure in .claude/agent-memory/k8s-engineer/cluster_pki_certs.md
+
+# Where the pre-renewal backup tarballs are kept (and how many to retain).
+renew_backup_dir: /root/kubeadm-cert-backup
+renew_backup_keep: 5
+
+# Kubeadm config used for renewal. This v1beta4 file carries the apiserver
+# certSANs (jay-c, 192.168.5.3, kube-vip 192.168.5.100). Do NOT point at the old
+# /etc/kubernetes/kubeadm-config.yml (v1beta3, HA proxy 192.168.5.100:443).
+renew_kubeadm_config: /etc/kubernetes/kubeadm-config.yaml
+
+# kubeadm v1.33.11 ignores certificateValidityDuration, so `renew all` produces
+# ~1-year server certs. That's fine (on-node, renewed in place). The ADMIN client
+# cert is re-minted long-lived here so kubeconfigs never need redistribution.
+renew_admin_days: 3285   # ~9 years, aligned with the CA (valid to 2035)
+
+# Control-plane static pods to recreate after renewal so the kubelet re-spawns
+# them from /etc/kubernetes/manifests with the fresh certs on disk.
+renew_static_pods:
+  - kube-apiserver-jay-c
+  - etcd-jay-c
+  - kube-controller-manager-jay-c
+  - kube-scheduler-jay-c
+
+# Safety guard: if the apiserver cert still has more than this many days left,
+# the play self-skips unless renew_force=true (-e renew_force=true).
+renew_min_remaining_days: 300
+
+# Optional ntfy notification target (e.g. https://ntfy.bas/renew-certs).
+# Leave empty to skip notifications.
+renew_ntfy_url: ""
+
+renew_logfile: /var/log/kubeadm-cert-renewal.log

@@ -1,0 +1,15 @@
+---
+# Renew kubeadm PKI certs on the control plane (jay-c).
+#
+#   ./renew-certs.sh                    # run now (self-skips if certs still fresh)
+#   ./renew-certs.sh -e renew_force=true      # force renewal
+#   ./renew-certs.sh --check            # dry-run / connection smoke test
+#   ./renew-certs.sh --tags preflight,backup,verify   # safe subset, no downtime
+#
+# WARNING: a full run restarts the control-plane static pods + kubelet on a
+# single-node cluster — expect ~30-90s of API/etcd downtime. Run in a
+# maintenance window, ~1 month before cert expiry (next: 2027-08-20).
+- hosts: jay-c
+  become: yes
+  roles:
+    - kubernetes-renew-certs

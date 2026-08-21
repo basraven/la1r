@@ -1,0 +1,55 @@
+---
+- name: Show post-renewal certificate expiry
+  command: kubeadm certs check-expiration
+  register: _post_expiry
+  changed_when: false
+
+- name: Show post-renewal expiry
+  debug:
+    var: _post_expiry.stdout_lines
+
+- name: Verify admin.conf client cert is long-lived
+  shell: >
+    openssl x509 -in /etc/kubernetes/admin.conf -noout -enddate | awk '{print $(NF-1)}'
+  register: _admin_year
+  changed_when: false
+
+- name: Fail if the admin client cert is not long-lived
+  fail:
+    msg: "admin.conf client cert expires in {{ _admin_year.stdout }}, expected 2034+. Re-mint did not take effect."
+  when:
+    - not ansible_check_mode
+    - _admin_year is defined
+    - _admin_year.stdout | default('') != ''
+    - _admin_year.stdout | int < 2034
+
+- name: Verify the apiserver cert is valid (not expired)
+  command: openssl x509 -in /etc/kubernetes/pki/apiserver.crt -noout -enddate
+  register: _apiserver_expiry
+  changed_when: false
+
+- name: Show apiserver cert expiry
+  debug:
+    var: _apiserver_expiry.stdout
+
+- name: Confirm nodes are Ready
+  command: kubectl --kubeconfig /etc/kubernetes/admin.conf get nodes
+  register: _nodes
+  changed_when: false
+
+- name: Show nodes
+  debug:
+    var: _nodes.stdout_lines
+
+- name: Append summary to renewal log
+  lineinfile:
+    path: "{{ renew_logfile }}"
+    line: "{{ ansible_date_time.iso8601 }} kubeadm certs renewed; apiserver={{ _apiserver_expiry.stdout }}; admin={{ _admin_year.stdout }}; nodes: {{ _nodes.stdout_lines | join(' | ') }}"
+  when: not ansible_check_mode
+
+- name: Notify via ntfy (if configured)
+  uri:
+    url: "{{ renew_ntfy_url }}"
+    method: POST
+    body: "kubeadm certs renewed on jay-c — apiserver {{ _apiserver_expiry.stdout }}, admin client valid {{ _admin_year.stdout }}"
+  when: renew_ntfy_url | length > 0 and not ansible_check_mode

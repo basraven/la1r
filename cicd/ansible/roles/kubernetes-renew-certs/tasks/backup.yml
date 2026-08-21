@@ -1,0 +1,27 @@
+---
+- name: Create backup directory
+  file:
+    path: "{{ renew_backup_dir }}"
+    state: directory
+    mode: '0700'
+
+- name: Tarball PKI + control-plane kubeconfigs (rollback artifact)
+  shell: >
+    tar czf "{{ renew_backup_dir }}/kubeadm-pki-{{ ansible_date_time.iso8601_basic_short }}.tar.gz"
+    -C /etc/kubernetes pki admin.conf controller-manager.conf scheduler.conf
+
+- name: Prune old backups, keep the newest {{ renew_backup_keep }}
+  shell: >
+    ls -1t {{ renew_backup_dir }}/kubeadm-pki-*.tar.gz 2>/dev/null
+    | tail -n +{{ renew_backup_keep + 1 }}
+    | xargs -r rm -f
+  changed_when: false
+
+- name: List current backups
+  command: "ls -1t {{ renew_backup_dir }}"
+  register: _backups
+  changed_when: false
+
+- name: Show backups
+  debug:
+    var: _backups.stdout_lines

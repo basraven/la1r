@@ -1,0 +1,35 @@
+---
+# Single-node control plane: restarting apiserver + etcd causes a short
+# outage (typically 30-90s). Poll until the apiserver reports ready and all
+# four control-plane pods are back Running.
+
+- name: Wait for control plane to become healthy (timeout 10 min)
+  shell: |
+    set -euo pipefail
+    deadline=$((SECONDS + 600))
+    until kubectl --kubeconfig /etc/kubernetes/admin.conf get --raw=/readyz >/dev/null 2>&1; do
+      if (( SECONDS > deadline )); then
+        echo "ERROR: apiserver /readyz not OK within 600s" >&2
+        exit 1
+      fi
+      sleep 10
+    done
+    echo "apiserver /readyz OK"
+    sleep 15
+    for name in {{ renew_static_pods | join(' ') }}; do
+      if ! crictl pods --name "$name" | grep -q Running; then
+        echo "ERROR: control-plane pod $name is not Running:" >&2
+        crictl pods | grep "$name" >&2 || true
+        exit 1
+      fi
+      echo "$name Running"
+    done
+    echo "control plane healthy"
+  args:
+    executable: /bin/bash
+  register: _wait_out
+  changed_when: false
+
+- name: Show wait result
+  debug:
+    var: _wait_out.stdout_lines
