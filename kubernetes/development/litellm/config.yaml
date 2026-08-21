@@ -3,8 +3,7 @@ model_list:
     litellm_params:
       model: deepinfra/deepseek-ai/DeepSeek-V4-Flash-0731
       api_key: os.environ/DEEPINFRA_API_KEY
-      extra_body:
-        service_tier: flex
+      timeout: 600
 
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
