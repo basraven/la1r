@@ -48,7 +48,7 @@ spec:
           nodeName: jay-c
           containers:
           - name: kubectl
-            image: bitnami/kubectl:1.31
+            image: alpine/k8s:1.33.11
             command:
             - /bin/bash
             - -c
