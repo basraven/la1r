@@ -4,3 +4,4 @@
 - [Cluster PKI certs](cluster_pki_certs.md) — kubeadm 1yr PKI certs; renewal applied 2026-08-20 (server certs→2027, admin→2035 via manual mint); v1.33.11 ignores certificateValidityDuration
 - [Bitnami image migration](bitnami_image_migration.md) — bitnami/* removed from Docker Hub Aug 2025; user prefers alpine/k8s (pinned tag) over unmaintained bitnamilegacy for kubectl+jq scripts
 - [Registry CronJob](registry_cronjob.md) — registry-cleanup prunes to newest tag/repo daily 03:00; first success 2026-08-21; GC step blocked by RBAC (Role lacks deployments get)
+- [claudecodeui codex config](claudecodeui_codex_config.md) — PVC-persisted ~/.codex/config.toml; init.sh now MERGES litellm provider (v5+); pod shows Ready before init.sh finishes, so wait ~2min (grep pod log for "Codex LiteLLM provider merged") before verifying config; litellm evidence = POST /v1/responses 200
