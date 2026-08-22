@@ -1,1 +1,2 @@
 - [Headlamp OIDC login loop](headlamp_oidc_issue.md) — Headlamp dashboard login loop: kube-apiserver needs OIDC flags to accept tokens
+- [CloudCLI auth + terminal](claudecodeui_auth_terminal.md) — claude.bas login wall blocks UI (single-user, no creds); xterm.js web-terminal panel is where codex would run
