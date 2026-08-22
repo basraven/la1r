@@ -13,6 +13,21 @@ litellm_settings:
 router_settings:
   num_retries: 2
   retry_after: 5.0
+  # Reroute codex's default/fallback GPT model names to the only model the
+  # gateway exposes (deepseek). codex may request gpt-5.x from stale sessions or
+  # its built-in model list; aliases rewrite those to deepseek-v4-flash.
+  #
+  # NOTE: this MUST be `router_settings.model_group_alias`. The older
+  # `litellm_settings.aliases` key is inert in litellm 1.96.2 (it never populates
+  # `litellm.model_alias_map`), so it silently failed to rewrite gpt-5.x names
+  # and every gpt-5.x request hit the router with the un-aliased name → 400
+  # "Invalid model name" (after the key-scope fix moved it past auth).
+  model_group_alias:
+    gpt-5.5: deepseek-v4-flash
+    gpt-5.4: deepseek-v4-flash
+    gpt-5.4-mini: deepseek-v4-flash
+    gpt-5.6: deepseek-v4-flash
+    gpt-5.6-sol: deepseek-v4-flash
 
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
