@@ -113,6 +113,17 @@ else:
     print("Codex models_cache already has deepseek-v4-flash.")
 PY
 
+# CloudCLI caches per-provider model lists in ~/.cloudcli/provider-models-cache.json.
+# If it holds a stale codex entry (e.g. the built-in gpt-5.x fallback cached before
+# deepseek was configured), CloudCLI serves that list until the entry expires —
+# surviving rollouts. Clear it on every start so the picker is rebuilt from the
+# ensured ~/.codex/models_cache.json above.
+CLOUDCLI_MODELS_CACHE="$HOME/.cloudcli/provider-models-cache.json"
+if [ -f "$CLOUDCLI_MODELS_CACHE" ]; then
+  rm -f "$CLOUDCLI_MODELS_CACHE"
+  echo "CloudCLI provider-models-cache cleared."
+fi
+
 cd /home/basraven/projects/la1r
 
 # # Initialize TaskMaster AI if not already set up (persists on PVC)
