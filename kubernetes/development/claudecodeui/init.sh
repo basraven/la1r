@@ -27,6 +27,9 @@ if [ ! -f "$CODEX_CFG" ]; then
   cat > "$CODEX_CFG" <<'EOF'
 model = "deepseek-v4-flash"
 model_provider = "litellm"
+# bwrap can't create namespaces in this pod (no CAP_SYS_ADMIN, userns blocked);
+# run commands without the bubblewrap sandbox.
+sandbox_mode = "danger-full-access"
 
 [model_providers.litellm]
 name = "LiteLLM (DeepInfra)"
@@ -54,6 +57,10 @@ EOF
 else
   echo "Codex already configured for LiteLLM."
 fi
+
+# Ensure the bubblewrap-less sandbox mode is set even when merging into an
+# existing config (top-level key; must stay above any table sections).
+grep -q '^sandbox_mode[[:space:]]*=' "$CODEX_CFG" || sed -i '1isandbox_mode = "danger-full-access"\n' "$CODEX_CFG"
 
 # Ensure Codex has a credential so CloudCLI reports the provider as "connected".
 # Codex routes through litellm via config.toml (env_key LITELLM_API_KEY); this
