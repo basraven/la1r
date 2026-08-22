@@ -55,6 +55,18 @@ else
   echo "Codex already configured for LiteLLM."
 fi
 
+# Ensure Codex has a credential so CloudCLI reports the provider as "connected".
+# Codex routes through litellm via config.toml (env_key LITELLM_API_KEY); this
+# auth.json OPENAI_API_KEY entry is what CloudCLI's status check reads.
+if [ -n "$LITELLM_API_KEY" ]; then
+  CODEX_AUTH="$HOME/.codex/auth.json"
+  if [ ! -s "$CODEX_AUTH" ] || ! grep -q '"OPENAI_API_KEY"' "$CODEX_AUTH" 2>/dev/null; then
+    printf '{\n  "OPENAI_API_KEY": "%s"\n}\n' "$LITELLM_API_KEY" > "$CODEX_AUTH"
+    chmod 600 "$CODEX_AUTH"
+    echo "Codex auth.json written (OPENAI_API_KEY)."
+  fi
+fi
+
 cd /home/basraven/projects/la1r
 
 # # Initialize TaskMaster AI if not already set up (persists on PVC)
