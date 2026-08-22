@@ -27,7 +27,7 @@ spec:
         securityContext:
           runAsUser: 0
           runAsGroup: 0
-        image: registry.registry.svc.cluster.local:5000/claudecodeui:v4
+        image: registry.registry.svc.cluster.local:5000/claudecodeui:v5
         imagePullPolicy: IfNotPresent
         env:
         - name: DATABASE_PATH
@@ -64,6 +64,11 @@ spec:
           value: "true"
         - name: IS_SANDBOX
           value: "1"
+        - name: LITELLM_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: litellm-virtual-key
+              key: LITELLM_API_KEY
         command: ["/bin/sh", "-c"]
         args:
         - /init.sh
