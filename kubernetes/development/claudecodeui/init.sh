@@ -67,71 +67,51 @@ if [ -n "$LITELLM_API_KEY" ]; then
   fi
 fi
 
-# Expose deepseek-v4-flash in CloudCLI's codex model picker. CloudCLI's
-# codex-models.provider.js reads ~/.codex/models_cache.json and, when present,
-# uses it instead of its built-in gpt-5.x fallback catalog — so we mirror that
-# fallback catalog verbatim (keeping the gpt-5.4 default) and ADD deepseek-v4-flash
-# as an additional, effort-less entry (so no reasoning_effort param is sent).
-CODEX_MODELS="$HOME/.codex/models_cache.json"
-if [ ! -s "$CODEX_MODELS" ] || ! grep -q 'deepseek-v4-flash' "$CODEX_MODELS" 2>/dev/null; then
-  cat > "$CODEX_MODELS" <<'JSON'
-{
-  "models": [
-    {
-      "slug": "gpt-5.4",
-      "display_name": "gpt-5.4",
-      "priority": 1,
-      "visibility": "list",
-      "supported_in_api": true,
-      "supported_reasoning_levels": [
-        { "effort": "low" },
-        { "effort": "medium" },
-        { "effort": "high" },
-        { "effort": "xhigh" }
-      ],
-      "default_reasoning_level": "medium"
-    },
-    {
-      "slug": "gpt-5.5",
-      "display_name": "gpt-5.5",
-      "priority": 2,
-      "visibility": "list",
-      "supported_in_api": true,
-      "supported_reasoning_levels": [
-        { "effort": "low" },
-        { "effort": "medium" },
-        { "effort": "high" },
-        { "effort": "xhigh" }
-      ],
-      "default_reasoning_level": "medium"
-    },
-    {
-      "slug": "gpt-5.4-mini",
-      "display_name": "gpt-5.4-mini",
-      "priority": 3,
-      "visibility": "list",
-      "supported_in_api": true,
-      "supported_reasoning_levels": [
-        { "effort": "low" },
-        { "effort": "medium" },
-        { "effort": "high" },
-        { "effort": "xhigh" }
-      ],
-      "default_reasoning_level": "medium"
-    },
-    {
-      "slug": "deepseek-v4-flash",
-      "display_name": "deepseek-v4-flash",
-      "description": "DeepSeek V4 Flash via LiteLLM/DeepInfra",
-      "priority": 4,
-      "visibility": "list",
-      "supported_in_api": true
-    }
-  ]
+# Expose deepseek-v4-flash in CloudCLI's codex model picker. The cache file
+# (~/.codex/models_cache.json) is codex's own cache: CloudCLI reads it for the
+# model picker, and codex reads it for model metadata. codex/CloudCLI updates may
+# rewrite it, so on every start we re-ensure deepseek-v4-flash is present —
+# additively, without removing any other models an update may have added.
+python3 - "$HOME/.codex/models_cache.json" <<'PY'
+import json, os, sys
+
+path = sys.argv[1]
+os.makedirs(os.path.dirname(path), exist_ok=True)
+ENTRY = {
+    "slug": "deepseek-v4-flash",
+    "display_name": "deepseek-v4-flash",
+    "description": "DeepSeek V4 Flash via LiteLLM/DeepInfra",
+    "supported_reasoning_levels": [],
+    "shell_type": "unified_exec",
+    "visibility": "list",
+    "supported_in_api": True,
+    "priority": 1,
+    "support_verbosity": False,
+    "truncation_policy": {"mode": "bytes", "limit": 10000},
+    "experimental_supported_tools": [],
+    "context_window": 1000000,
+    "max_context_window": 1000000,
+    "auto_compact_token_limit": 950000,
+    "model_messages": {"instructions_template": "You are a helpful coding agent. Reply concisely."},
 }
-JSON
-  echo "Codex models_cache written (deepseek-v4-flash added)."
-fi
+try:
+    with open(path) as f:
+        data = json.load(f)
+    if not isinstance(data, dict) or not isinstance(data.get("models"), list):
+        data = {"models": []}
+except (OSError, ValueError):
+    data = {"fetched_at": "1970-01-01T00:00:00Z", "client_version": "0.149.0", "models": []}
+if not any(isinstance(m, dict) and m.get("slug") == "deepseek-v4-flash" for m in data["models"]):
+    data["models"].append(ENTRY)
+    data.setdefault("fetched_at", "1970-01-01T00:00:00Z")
+    data.setdefault("client_version", "0.149.0")
+    with open(path, "w") as f:
+        json.dump(data, f, indent=2)
+        f.write("\n")
+    print("Codex models_cache: deepseek-v4-flash ensured.")
+else:
+    print("Codex models_cache already has deepseek-v4-flash.")
+PY
 
 cd /home/basraven/projects/la1r
 
