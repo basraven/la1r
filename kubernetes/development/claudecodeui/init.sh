@@ -67,6 +67,72 @@ if [ -n "$LITELLM_API_KEY" ]; then
   fi
 fi
 
+# Expose deepseek-v4-flash in CloudCLI's codex model picker. CloudCLI's
+# codex-models.provider.js reads ~/.codex/models_cache.json and, when present,
+# uses it instead of its built-in gpt-5.x fallback catalog — so we mirror that
+# fallback catalog verbatim (keeping the gpt-5.4 default) and ADD deepseek-v4-flash
+# as an additional, effort-less entry (so no reasoning_effort param is sent).
+CODEX_MODELS="$HOME/.codex/models_cache.json"
+if [ ! -s "$CODEX_MODELS" ] || ! grep -q 'deepseek-v4-flash' "$CODEX_MODELS" 2>/dev/null; then
+  cat > "$CODEX_MODELS" <<'JSON'
+{
+  "models": [
+    {
+      "slug": "gpt-5.4",
+      "display_name": "gpt-5.4",
+      "priority": 1,
+      "visibility": "list",
+      "supported_in_api": true,
+      "supported_reasoning_levels": [
+        { "effort": "low" },
+        { "effort": "medium" },
+        { "effort": "high" },
+        { "effort": "xhigh" }
+      ],
+      "default_reasoning_level": "medium"
+    },
+    {
+      "slug": "gpt-5.5",
+      "display_name": "gpt-5.5",
+      "priority": 2,
+      "visibility": "list",
+      "supported_in_api": true,
+      "supported_reasoning_levels": [
+        { "effort": "low" },
+        { "effort": "medium" },
+        { "effort": "high" },
+        { "effort": "xhigh" }
+      ],
+      "default_reasoning_level": "medium"
+    },
+    {
+      "slug": "gpt-5.4-mini",
+      "display_name": "gpt-5.4-mini",
+      "priority": 3,
+      "visibility": "list",
+      "supported_in_api": true,
+      "supported_reasoning_levels": [
+        { "effort": "low" },
+        { "effort": "medium" },
+        { "effort": "high" },
+        { "effort": "xhigh" }
+      ],
+      "default_reasoning_level": "medium"
+    },
+    {
+      "slug": "deepseek-v4-flash",
+      "display_name": "deepseek-v4-flash",
+      "description": "DeepSeek V4 Flash via LiteLLM/DeepInfra",
+      "priority": 4,
+      "visibility": "list",
+      "supported_in_api": true
+    }
+  ]
+}
+JSON
+  echo "Codex models_cache written (deepseek-v4-flash added)."
+fi
+
 cd /home/basraven/projects/la1r
 
 # # Initialize TaskMaster AI if not already set up (persists on PVC)
