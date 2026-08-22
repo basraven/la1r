@@ -21,7 +21,7 @@ The `claudecodeui` deployment (namespace `development`) routes the OpenAI Codex 
 - Merged into existing: `Codex LiteLLM provider merged into existing config.`
 - No-op (already configured): `Codex already configured for LiteLLM.` ← observed when PVC already has litellm
 - auth.json only written if absent: `Codex auth.json written (OPENAI_API_KEY).` — absent from log means it was already on PVC (do NOT read absence as failure)
-- models_cache: `Codex models_cache: deepseek-v4-flash ensured.` / `Codex models_cache already has deepseek-v4-flash.` (latter when PVC already has it)
+- models_cache/provider-models-cache handling **REMOVED from init.sh (2026-08-22)** — the `~/.codex/models_cache.json` and `~/.cloudcli/provider-models-cache.json` rewrite blocks are gone; the litellm `router_settings.model_group_alias` (gpt-5.x→deepseek-v4-flash) makes the per-model picker cache unnecessary. `init.sh` is now only install-tools → native-addon rebuild → codex config.toml merge → auth.json → cloudcli start. Sync `claudecodeui-init` to the live cluster with `kubectl apply -k .../claudecodeui/` (configmap `configured`).
 
 **Expected good config.toml** (both blocks + top-level keys):
 ```
