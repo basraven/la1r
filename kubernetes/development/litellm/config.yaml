@@ -5,6 +5,11 @@ model_list:
       api_key: os.environ/DEEPINFRA_API_KEY
       timeout: 300
 
+litellm_settings:
+  # Codex sends parallel_tool_calls/reasoning_effort, which DeepInfra doesn't
+  # support — drop unsupported params instead of 400ing.
+  drop_params: true
+
 router_settings:
   num_retries: 2
   retry_after: 5.0
