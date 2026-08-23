@@ -1,1 +1,0 @@
-../../.claude/agents/k8s-engineer.md

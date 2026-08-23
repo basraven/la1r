@@ -31,3 +31,9 @@ Prefix your messages to me with 🛞 to proof you read this AGENTS.md
 - **Home Assistant tasks** (device control, automations, scenes, media, add-ons, maintenance) → delegate to `ha-engineer` agent. NEVER use curl to interact with Home Assistant — always use MCP tools via this agent.
 - **Git diff review** → delegate to `git-review` agent
 - **Code exploration, reading, simple edits** → handle directly (no delegation needed)
+## Agent Definitions (dual-maintenance)
+- Agent definitions live in **two parallel places** that must stay in sync:
+  - `.claude/agents/<name>.md` — Claude Code format (Markdown + YAML frontmatter)
+  - `.codex/agents/<name>.toml` — Codex format (TOML: `name`, `description`, `developer_instructions`)
+- When **adding a new agent**, create BOTH the `.md` and the `.toml`.
+- When **changing an agent**, reflect the change in BOTH files (they cannot be symlinked — the formats differ).
