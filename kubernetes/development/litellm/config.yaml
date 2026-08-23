@@ -4,6 +4,11 @@ model_list:
       model: deepinfra/deepseek-ai/DeepSeek-V4-Flash-0731
       api_key: os.environ/DEEPINFRA_API_KEY
       timeout: 300
+    model_info:
+      # 1M input window (DeepSeek's real cap); cap output so input+output never
+      # overflows 1,048,576 (codex asked for 384k output on a 664k context → overflow).
+      max_input_tokens: 1000000
+      max_output_tokens: 128000
 
 litellm_settings:
   # Codex sends parallel_tool_calls/reasoning_effort, which DeepInfra doesn't
