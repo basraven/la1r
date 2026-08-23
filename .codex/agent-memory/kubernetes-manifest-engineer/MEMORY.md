@@ -1,0 +1,1 @@
+../../../.claude/agent-memory/kubernetes-manifest-engineer/MEMORY.md

@@ -1,0 +1,1 @@
+../../../.claude/agent-memory/k8s-engineer/cluster_pki_certs.md

@@ -1,0 +1,1 @@
+../../../.claude/agent-memory/k8s-engineer/bitnami_image_migration.md

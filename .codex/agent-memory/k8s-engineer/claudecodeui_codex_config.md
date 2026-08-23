@@ -1,0 +1,1 @@
+../../../.claude/agent-memory/k8s-engineer/claudecodeui_codex_config.md

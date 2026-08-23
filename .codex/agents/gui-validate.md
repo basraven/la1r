@@ -1,0 +1,1 @@
+../../.claude/agents/gui-validate.md

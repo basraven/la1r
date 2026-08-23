@@ -1,0 +1,1 @@
+../../../.claude/agent-memory/gui-validate/claudecodeui_auth_terminal.md

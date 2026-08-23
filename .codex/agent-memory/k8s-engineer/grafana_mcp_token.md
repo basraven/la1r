@@ -1,0 +1,1 @@
+../../../.claude/agent-memory/k8s-engineer/grafana_mcp_token.md
