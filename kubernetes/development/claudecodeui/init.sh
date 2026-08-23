@@ -62,6 +62,82 @@ fi
 # existing config (top-level key; must stay above any table sections).
 grep -q '^sandbox_mode[[:space:]]*=' "$CODEX_CFG" || sed -i '1isandbox_mode = "danger-full-access"\n' "$CODEX_CFG"
 
+# Keep codex's DeepSeek model metadata capped for auto-compaction.
+#
+# Why this exists: litellm's model_info caps (max_input_tokens/max_output_tokens)
+# are metadata-only — they are advertised via /v1/models but litellm does NOT
+# clamp the client's requested max_output_tokens. codex 0.149.0 has no config or
+# catalog key for a max output cap, and requests max_output_tokens=384000 by
+# default. DeepSeek's real context limit is 1,048,576 tokens, so a request with
+# input >= 664,577 tokens overflows (664577 + 384000 = 1048577) and deepinfra
+# rejects mid-stream -> codex "stream closed before response.completed".
+#
+# The knob codex DOES honor is auto_compact_token_limit in its model catalog:
+# lowering it to 600000 makes codex compact conversation history before a
+# request can overflow (600k input + 384k output = 984k < 1,048,576).
+CODEX_CATALOG_DIR="$HOME/.codex/model-catalogs"
+CODEX_CATALOG="$CODEX_CATALOG_DIR/models.json"
+ensure_codex_catalog() {
+  mkdir -p "$CODEX_CATALOG_DIR"
+  if [ ! -f "$CODEX_CATALOG" ]; then
+    cat > "$CODEX_CATALOG" <<'JSON'
+{
+  "models": [
+    {
+      "slug": "deepseek-v4-flash",
+      "display_name": "deepseek-v4-flash",
+      "description": "DeepSeek V4 Flash via LiteLLM/DeepInfra",
+      "supported_reasoning_levels": [],
+      "shell_type": "unified_exec",
+      "visibility": "list",
+      "supported_in_api": true,
+      "priority": 1,
+      "additional_speed_tiers": [],
+      "service_tiers": [],
+      "support_verbosity": false,
+      "experimental_supported_tools": [],
+      "context_window": 1000000,
+      "max_context_window": 1000000,
+      "auto_compact_token_limit": 600000,
+      "truncation_policy": {
+        "mode": "bytes",
+        "limit": 10000
+      },
+      "model_messages": {
+        "instructions_template": "You are a helpful coding agent. Reply concisely."
+      }
+    }
+  ]
+}
+JSON
+    echo "Codex deepseek model catalog written (auto_compact_token_limit=600000)."
+  else
+    python3 - "$CODEX_CATALOG" <<'PYEOF'
+import json, sys
+path = sys.argv[1]
+with open(path) as f:
+    data = json.load(f)
+changed = False
+for m in data.get("models", []):
+    if m.get("slug") == "deepseek-v4-flash":
+        if m.get("auto_compact_token_limit") != 600000:
+            m["auto_compact_token_limit"] = 600000
+            changed = True
+if changed:
+    with open(path, "w") as f:
+        json.dump(data, f, indent=2)
+        f.write("\n")
+    print("Codex deepseek catalog auto_compact_token_limit set to 600000.")
+else:
+    print("Codex deepseek catalog already capped at 600000.")
+PYEOF
+  fi
+  # Point config.toml at the catalog (top-level key; must stay above tables).
+  grep -q '^model_catalog_json[[:space:]]*=' "$CODEX_CFG" || \
+    sed -i '1imodel_catalog_json = "'"$CODEX_CATALOG"'"\n' "$CODEX_CFG"
+}
+ensure_codex_catalog
+
 # Ensure Codex has a credential so CloudCLI reports the provider as "connected".
 # Codex routes through litellm via config.toml (env_key LITELLM_API_KEY); this
 # auth.json OPENAI_API_KEY entry is what CloudCLI's status check reads.

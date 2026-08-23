@@ -9,5 +9,6 @@ configMapGenerator:
 - name: litellm-config
   files:
   - config.yaml
+  - clamp_output.py
 generatorOptions:
   disableNameSuffixHash: true

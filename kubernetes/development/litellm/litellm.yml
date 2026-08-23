@@ -57,6 +57,9 @@ spec:
         - name: litellm-config
           mountPath: /app/config.yaml
           subPath: config.yaml
+        - name: litellm-config
+          mountPath: /app/clamp_output.py
+          subPath: clamp_output.py
       volumes:
       - name: litellm-config
         configMap:
@@ -64,6 +67,8 @@ spec:
           items:
           - key: config.yaml
             path: config.yaml
+          - key: clamp_output.py
+            path: clamp_output.py
 
 ---
 apiVersion: v1

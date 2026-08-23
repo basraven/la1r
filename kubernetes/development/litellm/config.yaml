@@ -5,15 +5,35 @@ model_list:
       api_key: os.environ/DEEPINFRA_API_KEY
       timeout: 300
     model_info:
+      # id: litellm registers model_info into litellm.model_cost under this id.
+      # Without it, get_max_tokens("deepseek-v4-flash") can't resolve the model
+      # and the modify_params clamp below silently no-ops (returns the request's
+      # 384k output unchanged). Make the id match the model_name so the clamp
+      # can cap output.
+      id: deepseek-v4-flash
       # 1M input window (DeepSeek's real cap); cap output so input+output never
       # overflows 1,048,576 (codex asked for 384k output on a 664k context → overflow).
+      # 65536 = 1,048,576 - 950,000 (codex auto-compact limit) keeps a ~33k margin
+      # at the worst-case pre-compaction input.
       max_input_tokens: 1000000
-      max_output_tokens: 128000
+      max_output_tokens: 65536
 
 litellm_settings:
   # Codex sends parallel_tool_calls/reasoning_effort, which DeepInfra doesn't
   # support — drop unsupported params instead of 400ing.
   drop_params: true
+  # Allow litellm to modify request params. Required for the built-in
+  # get_modified_max_tokens() clamp to run: it caps max_tokens at
+  # model_info.max_output_tokens, so codex's hardcoded 384k output request can't
+  # overflow the 1M window (without this, the model_info caps only show up in
+  # /v1/models and are never enforced on the /v1/responses path).
+  modify_params: true
+  # Enforce the output cap via a pre-call deployment hook (see clamp_output.py).
+  # Belt-and-suspenders over modify_params: this clamps the outgoing request's
+  # max_tokens/max_output_tokens directly, regardless of whether the built-in
+  # clamp resolves the model. Module is mounted at /app/clamp_output.py.
+  callbacks:
+  - clamp_output.clamp_output
 
 router_settings:
   num_retries: 2
