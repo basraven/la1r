@@ -27,6 +27,13 @@ if [ ! -f "$CODEX_CFG" ]; then
   cat > "$CODEX_CFG" <<'EOF'
 model = "deepseek-v4-flash"
 model_provider = "litellm"
+# codex 0.149.x reads compaction/context limits from TOP-LEVEL config.toml keys,
+# NOT from the model-catalog JSON field auto_compact_token_limit (ignored).
+# model_auto_compact_token_limit keeps input well under DeepSeek's 1,048,576
+# window; model_context_window advertises the real cap so codex schedules
+# compaction before input+codex's 384k output can overflow.
+model_context_window = 1000000
+model_auto_compact_token_limit = 600000
 # bwrap can't create namespaces in this pod (no CAP_SYS_ADMIN, userns blocked);
 # run commands without the bubblewrap sandbox.
 sandbox_mode = "danger-full-access"
@@ -61,6 +68,13 @@ fi
 # Ensure the bubblewrap-less sandbox mode is set even when merging into an
 # existing config (top-level key; must stay above any table sections).
 grep -q '^sandbox_mode[[:space:]]*=' "$CODEX_CFG" || sed -i '1isandbox_mode = "danger-full-access"\n' "$CODEX_CFG"
+
+# Ensure codex's compaction/context-window limits are pinned at the top level
+# (top-level keys; must stay above any table sections). Without model_auto_
+# compact_token_limit codex 0.149.x does NOT compact at 600k and lets input grow
+# until input+384k output overflows DeepSeek's 1,048,576 window.
+grep -q '^model_auto_compact_token_limit[[:space:]]*=' "$CODEX_CFG" ||   sed -i '1imodel_auto_compact_token_limit = 600000\n' "$CODEX_CFG"
+grep -q '^model_context_window[[:space:]]*=' "$CODEX_CFG" ||   sed -i '1imodel_context_window = 1000000\n' "$CODEX_CFG"
 
 # Keep codex's DeepSeek model metadata capped for auto-compaction.
 #
