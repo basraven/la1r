@@ -30,7 +30,7 @@ spec:
                 
       containers:
         - name: wg-easy
-          image: ghcr.io/wg-easy/wg-easy:15.3
+          image: ghcr.io/wg-easy/wg-easy:15.4
           securityContext:
             privileged: true
             capabilities:
