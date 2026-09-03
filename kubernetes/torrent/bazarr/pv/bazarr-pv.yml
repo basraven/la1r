@@ -1,0 +1,48 @@
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: bazarr-config-pv
+  labels:
+    contenttype: "bazarr-config"
+spec:
+  capacity:
+    storage: 1Gi
+  storageClassName: bazarr-config-data
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/mnt/ssd/na/bazarr-config"
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: bazarr-torrent-data-pv
+  labels:
+    contenttype: "bazarr-torrent-data"
+spec:
+  capacity:
+    storage: 10Gi
+  storageClassName: bazarr-torrent-data
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/mnt/hdd/torrent"
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: bazarr-torrent-ssd-data-pv
+  labels:
+    contenttype: "bazarr-torrent-ssd-data"
+spec:
+  capacity:
+    storage: 200Gi
+  storageClassName: bazarr-torrent-ssd-data
+  persistentVolumeReclaimPolicy: Retain
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/mnt/ssd/torrent-ssd"

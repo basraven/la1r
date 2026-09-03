@@ -1,0 +1,121 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bazarr
+  namespace: torrent
+  labels:
+    app: bazarr
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: bazarr
+  template:
+    metadata:
+      labels:
+        app: bazarr
+    spec:
+      priorityClassName: torrent-priority
+      # NonEssential
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: la1r.workload/nonessential
+                operator: In
+                values:
+                - "true"
+
+      volumes:
+        - name: bazarr-config-volume
+          persistentVolumeClaim:
+            claimName: bazarr-config-claim
+        - name: bazarr-torrent-volume
+          persistentVolumeClaim:
+            claimName: bazarr-torrent-data-claim
+        - name: bazarr-torrent-ssd-volume
+          persistentVolumeClaim:
+            claimName: bazarr-torrent-ssd-data-claim
+      containers:
+      - name: bazarr
+        image: linuxserver/bazarr
+        ports:
+        - name: http
+          containerPort: 6767
+        env:
+        - name: TZ
+          value: Europe/Amsterdam
+        - name: PGID
+          value: "1000"
+        - name: PUID
+          value: "1000"
+        volumeMounts:
+          - name: bazarr-config-volume
+            mountPath: /config
+          - name: bazarr-torrent-volume
+            mountPath: /torrent
+          - name: bazarr-torrent-ssd-volume
+            mountPath: /torrent-ssd
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: bazarr
+  name: bazarr
+  namespace: torrent
+spec:
+  ports:
+  - name: http
+    targetPort: 6767
+    port: 80
+  selector:
+    app: bazarr
+  type: ClusterIP
+
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: bazarr-bas
+  namespace: torrent
+spec:
+  issuerRef:
+    name: la1r
+    kind: ClusterIssuer
+  secretName: bazarr-bas-tls
+  commonName: bazarr.bas
+  dnsNames:
+  - bazarr.bas
+  - www.bazarr.bas
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: bazarr-https
+  namespace: torrent
+  annotations:
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.entrypoints: "websecure"
+spec:
+  tls:
+  - secretName: bazarr-bas-tls
+  rules:
+  - host: bazarr.bas
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: bazarr
+            port:
+              number: 80

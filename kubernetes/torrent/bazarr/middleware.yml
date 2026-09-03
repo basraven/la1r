@@ -1,0 +1,19 @@
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: sablier-bazarr
+  namespace: torrent
+spec:
+  plugin:
+    sablier:
+      group: jellyfin
+      # blocking:
+      #   defaultTimeout: 10s
+      dynamic:
+        displayName: Bazarr
+        refreshFrequency: 5s
+        showDetails: "true"
+        theme: shuffle
+      sablierUrl: http://sablier:10000
+      sessionDuration: 30m
