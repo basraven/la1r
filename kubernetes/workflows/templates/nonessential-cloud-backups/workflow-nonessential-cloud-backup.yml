@@ -65,7 +65,7 @@ spec:
         parameters:
           - name: localpath
       container:
-        image: debian:bullseye-slim # can be any image with bash
+        image: debian:trixie-slim # can be any image with bash
         command: [sh, -c]
         args:
           - |
@@ -172,7 +172,7 @@ spec:
 
     - name: clean-workingdir
       container:
-        image: debian:bullseye-slim # can be any image with bash
+        image: debian:trixie-slim # can be any image with bash
         command: [sh, -c]
         args:
           - |

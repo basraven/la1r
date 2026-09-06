@@ -53,7 +53,7 @@ spec:
 
     - name: list-targets
       container:
-        image: debian:bullseye-slim
+        image: debian:trixie-slim
         command: [sh, -c]
         args:
           - |
@@ -79,7 +79,7 @@ spec:
           claimName: hdd-ro-glacier-claim
           readOnly: true
       container:
-        image: debian:bullseye-slim
+        image: debian:trixie-slim
         command: [sh, -c]
         args:
           - |
@@ -258,7 +258,7 @@ spec:
           - name: target
           - name: s3_sha256
       container:
-        image: debian:bullseye-slim
+        image: debian:trixie-slim
         command: [sh, -c]
         args:
           - |
@@ -300,7 +300,7 @@ spec:
           - name: bucket
           - name: storageclass
       container:
-        image: debian:bullseye-slim
+        image: debian:trixie-slim
         command: [bash, -c]
         args:
           - |
@@ -425,7 +425,7 @@ spec:
 
     - name: clean-workingdir
       container:
-        image: debian:bullseye-slim # can be any image with bash
+        image: debian:trixie-slim # can be any image with bash
         command: [sh, -c]
         args:
           - |
