@@ -8,10 +8,12 @@ alerting:
         - targets:
             - 'alertmanager-service:9093'
 scrape_configs:
-- job_name: 'targetsjson'
-  file_sd_configs:
-  - files:
-    - '/etc/prometheus/targets.json'
+# targetsjson (file_sd) job disabled 2026-09-06: sole target haproxy 192.168.5.103:9101
+# is decommissioned (HAProxy role removed from jay-c). Target retained in config/targets.json.
+# - job_name: 'targetsjson'
+#   file_sd_configs:
+#   - files:
+#     - '/etc/prometheus/targets.json'
 
 - job_name: 'pushgateway'
   static_configs:
@@ -46,6 +48,11 @@ scrape_configs:
     - source_labels: [__meta_kubernetes_pod_annotation_seb_scrape]
       action: keep
       regex: "true"
+    # Pod SD expands one target per container port; only :8082 serves metrics,
+    # so drop the other ports (was producing 6 fake DOWN/404 targets).
+    - source_labels: [__address__]
+      action: keep
+      regex: .*:8082$
     - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_port]
       target_label: __param_port
     - source_labels: [__param_port]
