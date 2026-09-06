@@ -33,12 +33,12 @@ spec:
       - name: grafana
         resources:
           requests:
-            cpu: 50m
-            memory: 56Mi
-          limits:
-            cpu: 200m
+            cpu: 100m
             memory: 256Mi
-        image: grafana/grafana:latest
+          limits:
+            cpu: 500m
+            memory: 1Gi
+        image: grafana/grafana:13.2.1
         ports:
         - containerPort: 3000
           protocol: TCP
@@ -87,7 +87,9 @@ spec:
               name: grafana-oidc
               key: client-secret
         - name: GF_AUTH_GENERIC_OAUTH_SCOPES
-          value: openid profile email
+          value: openid profile email groups
+        - name: GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_PATH
+          value: "contains(groups[*], 'authentik Admins') && 'Admin' || 'Viewer'"
         - name: GF_AUTH_GENERIC_OAUTH_AUTH_URL
           value: https://auth.la1r.com/application/o/authorize/
         - name: GF_AUTH_GENERIC_OAUTH_TOKEN_URL
