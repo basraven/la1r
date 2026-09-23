@@ -164,6 +164,23 @@ if [ -n "$LITELLM_API_KEY" ]; then
   fi
 fi
 
+# Bootstrap the ponytail Claude Code plugin (lazy-senior-dev ruleset) unless
+# already installed. State lives on the home PVC under ~/.claude/plugins and the
+# enabledPlugins entry in settings.json — installs once, idempotent on reboot.
+ensure_ponytail_plugin() {
+  if grep -q '"ponytail@ponytail"' "$HOME/.claude/settings.json" 2>/dev/null; then
+    echo "ponytail plugin already installed."
+    return 0
+  fi
+  echo "Installing ponytail plugin for Claude Code..."
+  export CLAUDE_CODE_PLUGIN_PREFER_HTTPS=1
+  claude plugin marketplace add DietrichGebert/ponytail </dev/null || return 1
+  claude plugin install ponytail@ponytail --scope user --yes </dev/null || return 1
+  echo "ponytail plugin installed."
+}
+# Fail soft: an install failure (e.g. no network at boot) must not stop cloudcli.
+ensure_ponytail_plugin || echo "WARNING: ponytail plugin install deferred (will retry next boot)."
+
 # CloudCLI's codex model picker uses the gpt-5.x built-in fallback; litellm
 # aliases those names to deepseek-v4-flash (see litellm config.yaml), so any
 # model codex requests routes to deepseek — no per-model picker cache needed.
