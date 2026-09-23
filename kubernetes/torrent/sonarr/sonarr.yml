@@ -54,7 +54,10 @@ spec:
       containers:
       - name: sonarr
         resources:
-        image: linuxserver/sonarr
+        # pinned 2026-09-23: an unpinned `latest` drifted onto 4.0.20 on 2026-09-19 and
+        # triggered the reverse-proxy auth prompt. Bump the tag deliberately.
+        image: linuxserver/sonarr:4.0.20.3014-ls325
+        imagePullPolicy: IfNotPresent
         ports:
         - name: http
           containerPort: 8989
