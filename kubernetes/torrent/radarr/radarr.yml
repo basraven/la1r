@@ -1,4 +1,17 @@
 ---
+# REVERSE-PROXY AUTH: Radarr needs two settings that live in /config/config.xml on
+# the PVC and CANNOT be set from this manifest (linuxserver has no env var for them):
+#
+#   trustedNetworks = 10.244.0.0/16  -> pod CIDR. Lets Radarr trust Traefik's
+#                                       X-Forwarded-For and resolve the real client IP.
+#   allowedHosts    = radarr.bas,<in-cluster names>  -> host filter; the API rejects
+#                                       a save when it is empty and auth isn't "Enabled".
+#
+# Traefik always sends X-Forwarded-For. With an empty trustedNetworks the app logs
+# "Unknown proxy", discards the header, and treats EVERY request as remote -- so
+# AuthenticationRequired=DisabledForLocalAddresses silently stops working and the
+# UI shows a login page from the LAN. Both settings apply only after a restart.
+# Fix + verification: see "Reverse-proxy authentication" in ../_index.md
 apiVersion: apps/v1
 kind: Deployment
 metadata:
