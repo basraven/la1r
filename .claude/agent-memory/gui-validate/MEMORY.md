@@ -1,2 +1,5 @@
 - [Headlamp OIDC login loop](headlamp_oidc_issue.md) — Headlamp dashboard login loop: kube-apiserver needs OIDC flags to accept tokens
 - [CloudCLI auth + terminal](claudecodeui_auth_terminal.md) — claude.bas login wall blocks UI (single-user, no creds); xterm.js web-terminal panel is where codex would run
+- [Playwright MCP broken](playwright_mcp_chrome_missing.md) — MCP wants 'chrome' channel which isn't installed; drive bundled chromium via node executablePath instead
+- [seerr v3 login page](seerr_v3_login.md) — basflix.bas v3 layout, expected 401 console noise, transient login-error toast
+- [Single credential attempt](single_credential_attempt.md) — "one attempt" is a hard cap; set up all evidence capture BEFORE the single submit
