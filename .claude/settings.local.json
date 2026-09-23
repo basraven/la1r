@@ -33,7 +33,8 @@
       "Bash(kubectl describe:*)",
       "Bash(kubectl events:*)",
       "Bash(kubectl delete job *)",
-      "Bash(export KUBECONFIG=/home/basraven/.kube-la1r/config)"
+      "Bash(export KUBECONFIG=/home/basraven/.kube-la1r/config)",
+      "Bash(export KUBECONFIG=$HOME/.kube-la1r/config)"
     ]
   },
   "enableAllProjectMcpServers": true,
