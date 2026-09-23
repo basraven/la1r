@@ -1,4 +1,10 @@
 ---
+# NOTE: seerr v3+ runs as node:node (UID/GID 1000); the old fallenbagel/jellyseerr
+# image ran as root. /app/config is a hostPath PV, so if that volume is ever
+# recreated with root-owned files the app crash-loops on "EACCES ... /app/config/logs".
+# Fix by chowning the claim's contents from a root pod:
+#   chown -R 1000:1000 /cfg   (mount jellyseerr-config-claim at /cfg)
+# fsGroup does NOT help here -- kubelet applies no ownership recursion to hostPath.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -9,6 +15,7 @@ metadata:
     sablier.enable: "true"
     sablier.group: jellyfin
 spec:
+  replicas: 1
   strategy:
     type: Recreate
   selector:
@@ -41,17 +48,19 @@ spec:
       containers:
       - name: jellyseerr
         resources:
-        image: ghcr.io/fallenbagel/jellyseerr
+        # upstream renamed fallenbagel/jellyseerr -> seerr-team/seerr; the old
+        # path's `latest` is frozen at 2.7.3, so pin the tag deliberately here
+        image: ghcr.io/seerr-team/seerr:v3.4.1
+        imagePullPolicy: IfNotPresent
         ports:
         - name: http
           containerPort: 5055
         env:
         - name: TZ
           value: Europe/Amsterdam
-        - name: PGID
-          value: "1000"
-        - name: PUID
-          value: "1000"
+        # PUID/PGID removed 2026-09-23: seerr v3 runs as node:node (uid 1000) and
+        # ignores them -- they were a linuxserver-ism. Ownership of the config volume
+        # is what actually matters now; see the NOTE at the top of this file.
         - name: port
           value: "5055" # default 5055
         volumeMounts:
