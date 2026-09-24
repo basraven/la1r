@@ -37,6 +37,8 @@ spec:
     spec:
       serviceAccountName: headlamp
       automountServiceAccountToken: true
+      securityContext:
+        fsGroup: 1001
       containers:
       - name: headlamp
         image: ghcr.io/headlamp-k8s/headlamp:v0.30.0
@@ -45,7 +47,7 @@ spec:
         - /bin/sh
         - -c
         args:
-        - HOME=/tmp exec /headlamp/headlamp-server -in-cluster -html-static-dir /headlamp/frontend -oidc-client-id="$(cat /etc/headlamp-oidc/client-id)" -oidc-idp-issuer-url=https://auth.la1r.com/application/o/kubernetes-dashboard/ -oidc-scopes=openid,profile,email,offline_access -oidc-client-secret="$(cat /etc/headlamp-oidc/client-secret)"
+        - HOME=/tmp exec /headlamp/headlamp-server -in-cluster -html-static-dir /headlamp/frontend -oidc-client-id="$(cat /etc/headlamp-oidc/client-id)" -oidc-idp-issuer-url=https://auth.la1r.com/application/o/kubernetes-dashboard/ -oidc-scopes=openid,profile,email,offline_access -oidc-client-secret="$(cat /etc/headlamp-oidc/client-secret)" -kubeconfig=/etc/headlamp-kubeconfig/config
         ports:
         - containerPort: 4466
           name: http
@@ -55,6 +57,9 @@ spec:
           name: tmp-volume
         - mountPath: /etc/headlamp-oidc
           name: oidc-secret
+          readOnly: true
+        - mountPath: /etc/headlamp-kubeconfig
+          name: pcluster-kubeconfig
           readOnly: true
         securityContext:
           allowPrivilegeEscalation: false
@@ -92,6 +97,10 @@ spec:
       - name: oidc-secret
         secret:
           secretName: headlamp-oidc
+      - name: pcluster-kubeconfig
+        secret:
+          secretName: headlamp-pcluster-kubeconfig
+          defaultMode: 0400
 ---
 apiVersion: v1
 kind: Service
