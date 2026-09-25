@@ -128,6 +128,46 @@ install_chrome() {
   log "Google Chrome installed: $(google-chrome-stable --version 2>/dev/null)"
 }
 
+# ---- Playwright + Chromium (for CloudCLI's browser-use MCP) ----
+# cloudcli ships only playwright-core, so `require('playwright')` fails and every
+# browser session reports "Install Playwright and Chromium to use browser
+# sessions." The v8 image bakes playwright + Chromium under /opt (outside the
+# /home PVC, which shadows anything baked under /home), so the normal path here
+# is to link those baked copies into the PVC's global node_modules and browser
+# cache — instant and offline. Falls back to a real install if not baked.
+install_playwright() {
+  local pvc_nm="/home/basraven/.npm-global/lib/node_modules"
+  local img_nm="/usr/local/lib/node_modules"
+  local cache="$HOME/.cache/ms-playwright"
+
+  # 1. npm package: make `playwright` resolvable from the PVC's cloudcli install.
+  if [ -d "$img_nm/playwright" ]; then
+    mkdir -p "$pvc_nm"
+    [ -e "$pvc_nm/playwright" ] || ln -sfn "$img_nm/playwright" "$pvc_nm/playwright"
+  elif [ ! -e "$pvc_nm/playwright" ]; then
+    local ver
+    ver=$(node -p "try{require('$pvc_nm/@cloudcli-ai/cloudcli/node_modules/playwright-core/package.json').version}catch(e){''}" 2>/dev/null || true)
+    if [ -n "$ver" ]; then
+      log "Installing playwright@$ver for CloudCLI browser-use..."
+      npm install -g --unsafe-perm "playwright@$ver" >/dev/null 2>&1 || log "WARNING: playwright install failed"
+    fi
+  fi
+
+  # 2. Browser binaries: link the baked /opt/ms-playwright set into the cache the
+  #    runtime HOME expects, else fall back to downloading Chromium.
+  if [ -d /opt/ms-playwright ]; then
+    mkdir -p "$cache"
+    local d b
+    for d in /opt/ms-playwright/*/; do
+      [ -e "$d" ] || continue
+      b=$(basename "$d")
+      [ -e "$cache/$b" ] || ln -sfn "$d" "$cache/$b"
+    done
+  elif [ -x "$HOME/.npm-global/bin/playwright" ]; then
+    "$HOME/.npm-global/bin/playwright" install chromium >/dev/null 2>&1 || true
+  fi
+}
+
 # ---- VS Code (via APT) ----
 install_vscode() {
   command -v code &>/dev/null && return 0
@@ -169,5 +209,6 @@ install_gh
 install_windsurf
 install_vscode
 install_chrome
+install_playwright
 
 log "Installation check complete."

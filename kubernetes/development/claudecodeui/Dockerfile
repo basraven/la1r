@@ -74,6 +74,21 @@ RUN npm config set prefix /usr/local && \
     npm install -g @openai/codex --unsafe-perm && \
     npm install -g opencode-ai --unsafe-perm
 
+# Playwright + Chromium for CloudCLI's browser-use module (the "Browser Use" MCP
+# the agents drive). cloudcli ships only playwright-core, so `require('playwright')`
+# fails and every browser session reports "Install Playwright and Chromium".
+# The version is pinned to cloudcli's bundled playwright-core so the browser
+# revision matches. Browsers go to /opt (NOT the default ~/.cache): HOME is a PVC
+# mounted over /home at runtime, so anything baked under /home is shadowed — and
+# PLAYWRIGHT_BROWSERS_PATH is deliberately inline rather than a global ENV, because
+# a global value would break the poolbuyr repo's own Playwright (a different
+# browser revision) that shares the same HOME. install-tools.sh links these baked
+# copies into the PVC at boot so no re-download is needed.
+RUN PW_VERSION=$(node -p "require(require.resolve('playwright-core/package.json',{paths:['/usr/local/lib/node_modules/@cloudcli-ai/cloudcli']})).version") && \
+    npm install -g --unsafe-perm "playwright@${PW_VERSION}" && \
+    PLAYWRIGHT_BROWSERS_PATH=/opt/ms-playwright playwright install --with-deps chromium && \
+    chmod -R a+rX /opt/ms-playwright
+
 # Mark all directories as safe for Git
 RUN git config --global --add safe.directory '*'
 
