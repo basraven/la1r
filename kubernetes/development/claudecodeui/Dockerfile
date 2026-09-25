@@ -71,7 +71,8 @@ RUN npm config set prefix /usr/local && \
     npm install -g @cloudcli-ai/cloudcli --unsafe-perm && \
     npm install -g task-master-ai --unsafe-perm && \
     npm install -g @anthropic-ai/claude-code --unsafe-perm && \
-    npm install -g @openai/codex --unsafe-perm
+    npm install -g @openai/codex --unsafe-perm && \
+    npm install -g opencode-ai --unsafe-perm
 
 # Mark all directories as safe for Git
 RUN git config --global --add safe.directory '*'
