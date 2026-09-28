@@ -1,0 +1,39 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: opencode-build-image
+  namespace: development
+  labels:
+    app: opencode
+    contenttype: "build-job"
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      labels:
+        app: opencode
+        job: build-image
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: kaniko
+        image: gcr.io/kaniko-project/executor:latest
+        args:
+        - --dockerfile=Dockerfile
+        - --context=/workspace
+        - --destination=registry.registry.svc.cluster.local:5000/opencode:v1
+        - --skip-tls-verify-registry=registry.registry.svc.cluster.local:5000
+        - --cache=true
+        - --single-snapshot
+        volumeMounts:
+        - name: dockerfile
+          mountPath: /workspace/Dockerfile
+          subPath: Dockerfile
+      volumes:
+      - name: dockerfile
+        configMap:
+          name: opencode-dockerfile
+          items:
+          - key: Dockerfile
+            path: Dockerfile

@@ -1,0 +1,17 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: development
+resources:
+  - opencode.yml
+  - auth-middleware.yml
+  - container-build.yml
+configMapGenerator:
+- name: opencode-init
+  files:
+  - init.sh
+- name: opencode-dockerfile
+  files:
+  - Dockerfile
+
+generatorOptions:
+  disableNameSuffixHash: true
