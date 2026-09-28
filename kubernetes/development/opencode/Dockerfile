@@ -11,6 +11,8 @@ RUN apk add --no-cache \
       curl \
       git \
       jq \
+      nodejs \
+      npm \
       openssh-client \
       py3-pip \
       python3 \
