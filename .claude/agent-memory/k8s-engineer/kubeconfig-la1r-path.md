@@ -12,3 +12,5 @@ This complements the CLAUDE.md rule to prefer `~/.kube-la1r` over `~/.kube` — 
 **Why:** First kubectl attempt errored because the host-config note says "use ~/.kube-la1r", but the CLI needs the file, not the folder.
 
 **How to apply:** Whenever running kubectl against the la1r cluster in this repo, pass `--kubeconfig /home/basraven/.kube-la1r/config`.
+
+**Flag position matters in the sandboxed subagent context:** put the flag *after* the subcommand (`kubectl get pods -n development --kubeconfig=/home/basraven/.kube-la1r/config`). Leading with it (`kubectl --kubeconfig=... get pods`) does not match the `Bash(kubectl get:*)` allowlist prefix and fails with `AbortError: Stream closed` even though the cluster is reachable. Without any `--kubeconfig`, kubectl falls back to the pod's in-cluster `development:default` service account, which has no RBAC at all (every `get` returns Forbidden).
