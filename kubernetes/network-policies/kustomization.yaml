@@ -4,3 +4,7 @@ resources:
   - dns.yaml
   - security.yaml
   - monitoring.yaml
+  - baseline-apps.yaml
+  - gaming.yaml
+  - vpn.yaml
+  - registry.yaml

@@ -1,14 +1,12 @@
-# Network policies for the security namespace (authentik + vaultwarden).
-#
-# Ingress is limited to: same-namespace traffic (authentik <-> postgres/worker,
-# etc.), the ingress controllers (forward-auth calls and app routing), and the
-# node network (kubelet probes).
+# gaming namespace. The enshrouded LoadBalancer uses
+# externalTrafficPolicy: Local, so the real client source IP reaches the pod and
+# the game ports must be open from anywhere.
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: default-deny-ingress
-  namespace: security
+  namespace: gaming
 spec:
   podSelector: {}
   policyTypes:
@@ -18,7 +16,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: allow-ingress
-  namespace: security
+  namespace: gaming
 spec:
   podSelector: {}
   policyTypes:
@@ -37,3 +35,9 @@ spec:
               kubernetes.io/metadata.name: monitoring
         - ipBlock:
             cidr: 192.168.5.0/24
+    # Game server LoadBalancer ports (any source, ETP=Local).
+    - ports:
+        - protocol: TCP
+          port: 15637
+        - protocol: UDP
+          port: 27015
