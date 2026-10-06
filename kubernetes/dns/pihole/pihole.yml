@@ -1,30 +1,4 @@
 ---
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: pihole-config
-  namespace: dns
-data:
-  custom.list: |-
-    # Custom DNS entries for Kubernetes services
-    # This will be populated with your cluster services
-  setupVars.conf: |-
-    PIHOLE_INTERFACE=eth0
-    IPV4_ADDRESS=0.0.0.0/0
-    IPV6_ADDRESS=
-    PIHOLE_DNS_1=8.8.8.8
-    PIHOLE_DNS_2=8.8.4.4
-    QUERY_LOGGING=true
-    INSTALL_WEB_SERVER=true
-    INSTALL_WEB_INTERFACE=true
-    LIGHTTPD_ENABLED=true
-    CACHE_SIZE=10000
-    DNS_FQDN_REQUIRED=true
-    DNS_BOGUS_PRIV=true
-    DNSMASQ_LISTENING=single
-    WEBPASSWORD=
-    WEBTHEME=default-light
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -56,7 +30,7 @@ spec:
                 - jay-c
       containers:
       - name: pihole
-        image: pihole/pihole:2024.07.0
+        image: pihole/pihole:2026.09.0
         ports:
         - containerPort: 53
           protocol: TCP
@@ -68,37 +42,29 @@ spec:
           name: web
         - containerPort: 443
           name: web-ssl
+        # Pi-hole v6 configuration. FTLCONF_* variables map to keys in pihole.toml
+        # (FTLCONF_<section>_<setting>). See docs.pi-hole.net/docker/configuration.
         env:
         - name: TZ
           value: "Europe/Amsterdam"
-        - name: PIHOLE_SKIP_OS_CHECK
-          value: "true"
-        - name: FTLCONF_LOCAL_IPV4
-          value: "192.168.6.91"
-        - name: VIRTUAL_HOST
-          value: "pihole.bas,dns.bas"
-        - name: WEB_PORT
-          value: "80"
-        - name: CORS_HOSTS
-          value: "pihole.bas,dns.bas"
-        - name: ServerName
-          value: "pihole.bas"
-        - name: DNS_FQDN_REQUIRED
-          value: "true"
-        - name: DNS_BOGUS_PRIV
-          value: "true"
-        - name: DNSMASQ_LISTENING
-          value: "all"
-        - name: WEBTHEME
-          value: "default-light"
-        - name: WEBPASSWORD
+        - name: FTLCONF_webserver_api_password
           value: ""
-          # valueFrom:
-          #   secretKeyRef:
-          #     name: pihole-credentials
-          #     key: PIHOLE_PASSWORD
-        - name: RATE_LIMIT
-          value: "0/0"
+        - name: FTLCONF_webserver_port
+          value: "80,443s"
+        - name: FTLCONF_webserver_interface_theme
+          value: "default-light"
+        - name: FTLCONF_dns_listeningMode
+          value: "all"
+        - name: FTLCONF_dns_upstreams
+          value: "8.8.8.8;8.8.4.4"
+        - name: FTLCONF_dns_domainNeeded
+          value: "true"
+        - name: FTLCONF_dns_bogusPriv
+          value: "true"
+        # Required on the first v6 start so custom files in /etc/dnsmasq.d are
+        # migrated into the new configuration.
+        - name: FTLCONF_misc_etc_dnsmasq_d
+          value: "true"
         volumeMounts:
         - name: pihole-data
           mountPath: /etc/pihole
@@ -128,10 +94,6 @@ spec:
           initialDelaySeconds: 10
           periodSeconds: 10
       volumes:
-      - name: pihole-config-volume
-        configMap:
-          name: pihole-config
-          defaultMode: 0644
       - name: pihole-data
         persistentVolumeClaim:
           claimName: pihole-data-claim

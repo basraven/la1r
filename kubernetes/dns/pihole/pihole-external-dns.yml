@@ -67,17 +67,19 @@ spec:
                 - jay-c
       containers:
       - name: external-dns
-        image: registry.k8s.io/external-dns/external-dns:v0.14.2
+        image: registry.k8s.io/external-dns/external-dns:v0.22.0
         args:
+        # ExternalDNS v0.18+ requires the EndpointSlice source on clusters >= 1.33.
         - --source=service
         - --source=ingress
         - --policy=upsert-only
         - --registry=noop
         - --provider=pihole
+        # Pi-hole v6 API base; the provider appends /api/config/dns/...
         - --pihole-server=http://pihole:80
         - --domain-filter=bas
-        - --pihole-password=""
-        # Password flag removed as Pi-hole admin password is disabled
+        # No admin password is configured on Pi-hole, so no --pihole-password
+        # flag is passed (an empty password makes the provider skip auth).
         resources:
           requests:
             memory: "64Mi"
