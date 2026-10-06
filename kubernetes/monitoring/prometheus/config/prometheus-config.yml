@@ -75,6 +75,11 @@ scrape_configs:
     - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
       action: keep
       regex: "true"
+    # MetalLB v0.16+ serves metrics over HTTPS on 9120; it is scraped by the
+    # dedicated 'metallb' job below, so drop it from this plain-HTTP job.
+    - source_labels: [__meta_kubernetes_namespace]
+      action: drop
+      regex: metallb-system
     - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_port, __meta_kubernetes_pod_ip]
       action: replace
       regex: (.+);(.+)
@@ -82,6 +87,37 @@ scrape_configs:
       target_label: __address__
     - source_labels: [__meta_kubernetes_pod_node_name]
       target_label: hostname
+
+# MetalLB v0.16.0+ exposes metrics over HTTPS only (self-signed cert) on the
+# container port named metricshttps (9120). Scrape it with an explicit https
+# scheme and skip verification of the self-signed certificate.
+- job_name: 'metallb'
+  scheme: https
+  tls_config:
+    insecure_skip_verify: true
+  # MetalLB v0.16 metrics use native RBAC; authenticate with Prometheus's
+  # own ServiceAccount token (bound to prometheus-metallb-metrics ClusterRole).
+  authorization:
+    credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+  kubernetes_sd_configs:
+    - role: pod
+      namespaces:
+        names: [metallb-system]
+  relabel_configs:
+    - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+      action: keep
+      regex: "true"
+    - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_port, __meta_kubernetes_pod_ip]
+      action: replace
+      regex: (.+);(.+)
+      replacement: ${2}:${1}
+      target_label: __address__
+    - source_labels: [__meta_kubernetes_namespace]
+      target_label: namespace
+    - source_labels: [__meta_kubernetes_pod_name]
+      target_label: pod
+    - source_labels: [__meta_kubernetes_pod_container_name]
+      target_label: container
 
 - job_name: 'gatus'
   scrape_interval: 30s

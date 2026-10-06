@@ -1,5 +1,5 @@
 ---
 ufw_app_prometheus-exporters-app:
   title: "Prometheus host exporters"
-  description: "Ports for Prometheus to scrape hostNetwork exporters (node-exporter 9100, MetalLB speaker 7472)"
-  ports: "9100/tcp|7472/tcp"
+  description: "Ports for Prometheus to scrape hostNetwork exporters (node-exporter 9100, MetalLB controller/speaker 9120)"
+  ports: "9100/tcp|9120/tcp"

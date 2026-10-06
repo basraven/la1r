@@ -31,3 +31,29 @@ subjects:
   - kind: ServiceAccount
     name: prometheus
     namespace: monitoring
+---
+# Allows Prometheus to authenticate to MetalLB v0.16+ metrics, which are served
+# over HTTPS and protected by native RBAC (the server performs a
+# SubjectAccessReview against the non-resource URL /metrics).
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: prometheus-metallb-metrics
+rules:
+  - nonResourceURLs:
+      - /metrics
+    verbs:
+      - get
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: prometheus-metallb-metrics
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: prometheus-metallb-metrics
+subjects:
+  - kind: ServiceAccount
+    name: prometheus
+    namespace: monitoring

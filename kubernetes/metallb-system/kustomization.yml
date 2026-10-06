@@ -9,3 +9,42 @@ resources:
   - manifests/metallb-native.yaml
   - metallb-installation.yml
   # - cluster-admin.yml
+
+patches:
+  # MetalLB v0.16 serves metrics over HTTPS with native RBAC (no more
+  # kube-rbac-proxy). The vendored upstream config/native base omits the RBAC
+  # the metrics server needs to authenticate bearer tokens and authorize
+  # requests (the upstream Helm chart includes it), so add it here. Without
+  # this, /metrics fails with HTTP 500 "tokenreviews ... is forbidden".
+  - target:
+      kind: ClusterRole
+      name: metallb-system:controller
+    patch: |-
+      - op: add
+        path: /rules/-
+        value:
+          apiGroups: ["authentication.k8s.io"]
+          resources: ["tokenreviews"]
+          verbs: ["create"]
+      - op: add
+        path: /rules/-
+        value:
+          apiGroups: ["authorization.k8s.io"]
+          resources: ["subjectaccessreviews"]
+          verbs: ["create"]
+  - target:
+      kind: ClusterRole
+      name: metallb-system:speaker
+    patch: |-
+      - op: add
+        path: /rules/-
+        value:
+          apiGroups: ["authentication.k8s.io"]
+          resources: ["tokenreviews"]
+          verbs: ["create"]
+      - op: add
+        path: /rules/-
+        value:
+          apiGroups: ["authorization.k8s.io"]
+          resources: ["subjectaccessreviews"]
+          verbs: ["create"]
