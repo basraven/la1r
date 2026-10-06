@@ -47,8 +47,16 @@ spec:
         env:
         - name: TZ
           value: "Europe/Amsterdam"
+        # API password is read from the pihole-credentials Secret (key
+        # API_PASSWORD), created out-of-band like the repo's other secrets.
+        # Recreate it on rebuild:
+        #   kubectl create secret generic pihole-credentials -n dns \
+        #     --from-literal=API_PASSWORD="$(openssl rand -base64 24)"
         - name: FTLCONF_webserver_api_password
-          value: ""
+          valueFrom:
+            secretKeyRef:
+              name: pihole-credentials
+              key: API_PASSWORD
         - name: FTLCONF_webserver_port
           value: "80,443s"
         - name: FTLCONF_webserver_interface_theme

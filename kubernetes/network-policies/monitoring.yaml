@@ -1,0 +1,40 @@
+# Network policies for the monitoring namespace.
+#
+# Ingress is limited to: same-namespace traffic (prometheus <-> alertmanager,
+# grafana, etc.), the ingress controllers (UIs), the Argo backup workflows
+# (which push to ntfy and the pushgateway), and the node network (kubelet
+# probes).
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: monitoring
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress
+  namespace: monitoring
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector: {}
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: traefik
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: online
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: workflows
+        - ipBlock:
+            cidr: 192.168.5.0/24

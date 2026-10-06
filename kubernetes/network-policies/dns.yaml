@@ -1,0 +1,55 @@
+# Network policies for the dns namespace (Pi-hole).
+#
+# Goal: close the previously flat network so that arbitrary pods can no longer
+# reach the Pi-hole web UI / v6 API. DNS (53) stays open to everyone; the web
+# API is limited to the ingress controllers and in-namespace consumers, plus the
+# node network (kubelet probes and MetalLB LoadBalancer traffic are SNAT'd to
+# the node address).
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: dns
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: pihole
+  namespace: dns
+spec:
+  podSelector:
+    matchLabels:
+      app: pihole
+  policyTypes:
+    - Ingress
+  ingress:
+    # DNS from anywhere: LAN clients via the LoadBalancer, CoreDNS upstream,
+    # and any pod.
+    - ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # Web UI / API (80/443): ingress controllers (main + online) and
+    # in-namespace consumers (external-dns), plus the node network for kubelet
+    # probes and LoadBalancer traffic.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: traefik
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: online
+        - podSelector: {}
+        - ipBlock:
+            cidr: 192.168.5.0/24
+      ports:
+        - protocol: TCP
+          port: 80
+        - protocol: TCP
+          port: 443

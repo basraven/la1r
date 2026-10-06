@@ -78,8 +78,14 @@ spec:
         # Pi-hole v6 API base; the provider appends /api/config/dns/...
         - --pihole-server=http://pihole:80
         - --domain-filter=bas
-        # No admin password is configured on Pi-hole, so no --pihole-password
-        # flag is passed (an empty password makes the provider skip auth).
+        # Pi-hole v6 API password (set via FTLCONF_webserver_api_password on the
+        # Pi-hole deployment). The provider reads EXTERNAL_DNS_PIHOLE_PASSWORD.
+        env:
+        - name: EXTERNAL_DNS_PIHOLE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: pihole-credentials
+              key: API_PASSWORD
         resources:
           requests:
             memory: "64Mi"
