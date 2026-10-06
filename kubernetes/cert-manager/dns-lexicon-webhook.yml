@@ -200,7 +200,7 @@ spec:
       serviceAccountName: dns-lexicon-webhook
       containers:
         - name: dns-lexicon-webhook
-          image: "taxilian/cert-manager-dns-lexicon-webhook:latest"
+          image: "taxilian/cert-manager-dns-lexicon-webhook@sha256:5292faf83ac6ab8d12b2c222a5226648aa0b6c829ff4254c8b26902014b0e6d6"
           imagePullPolicy: IfNotPresent
           args:
             - --tls-cert-file=/tls/tls.crt
