@@ -59,7 +59,6 @@ spec:
         - name: prometheus
           containerPort: 8082
         args:
-          - --api.insecure
           - --accesslog
           - --metrics=true
           - --metrics.prometheus=true
@@ -125,6 +124,3 @@ spec:
   - name: https
     port: 443
     targetPort: 443
-  - name: admin
-    port: 8080
-    targetPort: 8080

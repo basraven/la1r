@@ -76,7 +76,6 @@ spec:
           failureThreshold: 1
         args:
           - --api.dashboard=true
-          - --api.insecure=true
           - --metrics=true
           - --metrics.prometheus=true
           - --metrics.prometheus.entryPoint=metrics
@@ -147,10 +146,6 @@ spec:
       protocol: TCP
       port: 443
       targetPort: 443
-    - name: admin
-      protocol: TCP
-      port: 8080
-      targetPort: 8080
     - name: jellyfin
       protocol: TCP
       port: 8096
