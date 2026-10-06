@@ -17,6 +17,8 @@ rules:
       - services
       - endpoints
       - secrets
+      - configmaps
+      - nodes
     verbs:
       - get
       - list
@@ -46,7 +48,6 @@ rules:
     verbs:
       - update
   - apiGroups:
-      - traefik.containo.us
       - traefik.io
     resources:
       - middlewares

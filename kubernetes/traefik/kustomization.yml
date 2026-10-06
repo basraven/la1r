@@ -4,7 +4,7 @@ namespace: traefik
 resources:
   - namespace.yml
   - priorityclass.yml
-  - traefik-crd1.yml
+  - traefik-crds.yml
   - traefik.yml
   - traefik-rbac.yml
   - auth-middleware.yml

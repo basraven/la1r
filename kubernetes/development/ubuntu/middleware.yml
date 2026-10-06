@@ -1,5 +1,5 @@
 ---
-apiVersion: traefik.containo.us/v1alpha1
+apiVersion: traefik.io/v1alpha1
 kind: Middleware
 metadata:
   name: sablier-ubuntu-xfce4
@@ -14,4 +14,4 @@ spec:
         showDetails: "true"
         theme: shuffle
       sablierUrl: http://sablier:10000
-      sessionDuration: 3hd
+      sessionDuration: 3h

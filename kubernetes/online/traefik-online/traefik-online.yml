@@ -48,7 +48,7 @@ spec:
             claimName: online-traefik-config-claim
       containers:
       - name: online-traefik-ingress-lb
-        image: traefik:v2.9
+        image: traefik:v3.7.13
         ports:
         - name: http
           containerPort: 80
