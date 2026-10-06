@@ -1,56 +1,51 @@
-# Pi-hole Kubernetes Deployment (la1r)
+# Pi-hole
 
-This directory contains all manifests, configuration, and documentation for running Pi-hole as a DNS filtering solution in the la1r Kubernetes cluster.
+DNS sinkhole + ad-blocker for the cluster and LAN, with external-dns
+integration (auto-creates records for Services/Ingresses).
 
-## Overview
-Pi-hole is deployed as a highly-available DNS resolver and ad-blocker for all clients in the cluster. It is exposed via Kubernetes Services and Ingress, with persistent storage, secure access, and automated DNS record management.
+Current version: **Pi-hole v6** (image `pihole/pihole:2026.09.0` — upgraded from
+v5 in 2026). v6 is a rewrite: single `pihole-FTL` binary with an embedded web
+server + REST API, TOML config (`/etc/pihole/pihole.toml`), native HTTPS and
+DoT/DoH-ready upstreams.
 
-## Key Components
+## Key changes since the v5 layout
+- Image `2024.07.0` (v5) → `2026.09.0` (v6).
+- Legacy v5 env vars (`WEBPASSWORD`, `VIRTUAL_HOST`, `WEB_PORT`,
+  `DNS_FQDN_REQUIRED`, `DNS_BOGUS_PRIV`, `DNSMASQ_LISTENING`, `WEBTHEME`,
+  `RATE_LIMIT`) replaced with v6 `FTLCONF_*` settings (see `pihole.yml`):
+  `FTLCONF_webserver_api_password`, `FTLCONF_webserver_port`,
+  `FTLCONF_webserver_interface_theme`, `FTLCONF_dns_listeningMode`,
+  `FTLCONF_dns_upstreams`, `FTLCONF_dns_domainNeeded`,
+  `FTLCONF_dns_bogusPriv`, `FTLCONF_misc_etc_dnsmasq_d`.
+- The v5 `setupVars.conf` ConfigMap (unmounted, dead) was removed.
+- On first v6 start the image migrates the existing `/etc/pihole` v5 data in
+  place (`migration_backup_v6/`); existing local DNS records are preserved.
 
-### 1. Deployment (`pihole.yml`)
-- **Deployment**: Runs the official `pihole/pihole:2024.07.0` container on a specific node (`jay-c`).
-- **ConfigMap**: Manages custom DNS entries and Pi-hole setup variables (e.g., upstream DNS, web theme, logging).
-- **Environment**: Uses secrets for sensitive values (e.g., web admin password via `pihole-credentials`).
-- **Probes**: Includes liveness/readiness probes for the web UI.
-- **Volumes**: Supports persistent storage for `/etc/pihole` and `/etc/dnsmasq.d` (see `pv/`).
+## Secrets
+- The web/API password is read from the **`pihole-credentials`** Secret (key
+  `API_PASSWORD`), referenced by name from `pihole.yml` and
+  `pihole-external-dns.yml`. Create/refresh it out-of-band (do **not** commit
+  the value):
+  ```
+  kubectl create secret generic pihole-credentials -n dns \
+    --from-literal=API_PASSWORD="$(openssl rand -base64 24)"
+  ```
 
-### 2. Services
-- **ClusterIP Service**: Exposes Pi-hole internally on ports 80/443 (web) and 53 (DNS TCP/UDP).
-- **LoadBalancer Service**: Exposes DNS on a fixed cluster IP (`192.168.6.91`) for LAN clients.
+## external-dns
+- `pihole-external-dns.yml` runs external-dns **v0.22.0** against the Pi-hole
+  v6 API (`--pihole-server=http://pihole:80`, provider adds `/api/...`),
+  authenticating with `EXTERNAL_DNS_PIHOLE_PASSWORD` from the same Secret.
 
-### 3. Certificate & Ingress
-- **Certificate**: Uses cert-manager to generate TLS certs for `dns.bas` and `pihole.bas` via the `la1r` ClusterIssuer.
-- **Ingress**: Exposes the Pi-hole web UI via Traefik, with HTTPS, custom middleware, and host rules for `dns.bas` and `pihole.bas`.
+## Access
+- Admin UI: `https://dns.bas/admin/` (behind authentik forward-auth).
+- DNS for LAN: `192.168.6.91:53`.
 
-### 4. Middleware (`pihole-middleware.yml`)
-- **Traefik Middleware**: Redirects root URL (`/`) to `/admin/` for the web UI.
+## Apply
+```
+kubectl apply -k kubernetes/dns/pihole/
+```
 
-### 5. External-DNS (`pihole-external-dns.yml`)
-- **Deployment**: Runs `external-dns` with the Pi-hole provider to auto-populate DNS records based on K8s Services and Ingresses.
-- **RBAC**: Grants access to required K8s resources.
-- **Secrets**: Reads Pi-hole admin password from `pihole-credentials`.
-
-### 6. Persistent Storage (`pv/`)
-- **PersistentVolume & Claim**: Local storage for Pi-hole data and dnsmasq config, ensuring settings and logs persist across restarts.
-- **Node Affinity**: Volumes are bound to the same node as the pod (`jay-c`).
-
-## Usage
-- **DNS**: Point clients to `192.168.6.91` for DNS, or use the internal ClusterIP for in-cluster services.
-- **Web UI**: Access via `https://dns.bas/admin/` or `https://pihole.bas/admin/` (with valid credentials).
-- **Management**: All config is managed via versioned manifests in this directory. Secrets should be created separately.
-
-## Security
-- **Web UI password**: Managed via Kubernetes Secret (`pihole-credentials`).
-- **TLS**: All web access is HTTPS with valid certificates.
-- **RBAC**: External-DNS is scoped to only what it needs.
-
-## Directory Structure
-- `pihole.yml` – Main deployment, services, configmap, ingress, certificate
-- `pihole-middleware.yml` – Traefik middleware for UI redirect
-- `pihole-external-dns.yml` – External-DNS deployment and RBAC
-- `pv/` – PersistentVolume and PersistentVolumeClaim resources
-- `kustomization.yml` – Kustomize entrypoint for this app
-
-## References
-- [Pi-hole documentation](https://docs.pi-hole.net/)
-- [External-DNS docs](https://github.com/kubernetes-sigs/external-dns)
+## See also
+- `kubernetes/network-policies/` — the dns namespace is default-deny; DNS 53 is
+  open to all, the web/API is restricted to the ingress controllers, monitoring
+  and in-namespace consumers.
