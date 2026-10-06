@@ -1,8 +1,8 @@
 # SEB: add this to bash_aliases: alias calicoctl="kubectl exec -i -n kube-system calicoctl -- /calicoctl"
-# Calico Version v3.20.1
-# https://docs.projectcalico.org/releases#v3.20.1
+# Calico Version v3.32.2
+# https://docs.tigera.io/calico/latest/release-notes/
 # This manifest includes the following component versions:
-#   calico/ctl:v3.20.1
+#   calico/ctl:v3.32.2
 
 apiVersion: v1
 kind: ServiceAccount
@@ -24,7 +24,7 @@ spec:
   serviceAccountName: calicoctl
   containers:
   - name: calicoctl
-    image: calico/ctl:v3.20.0
+    image: calico/ctl:v3.32.2
     command:
       - /calicoctl
     args:

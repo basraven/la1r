@@ -5,6 +5,11 @@ resources:
 
 - tigera-operator.yaml
 - calico-installation.yaml
+# NOTE: operator-crds.yaml is intentionally NOT listed above. Its CRDs exceed
+# the client-side apply annotation limit (installations.operator.tigera.io is
+# ~1.4MB), so it must be applied with server-side apply before the operator:
+#   kubectl apply --server-side --force-conflicts -f operator-crds.yaml
+#   kubectl apply -k kubernetes/calico/
 # patches:
 #   - target:
 #       kind: IPAMConfiguration
