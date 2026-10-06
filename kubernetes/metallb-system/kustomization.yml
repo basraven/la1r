@@ -3,6 +3,9 @@ kind: Kustomization
 namespace: metallb-system
 resources:
   # - namespace.yml
-  - github.com/metallb/metallb/config/native?ref=v0.14.8
+  # Vendored copy of github.com/metallb/metallb/config/native?ref=v0.16.1
+  # (rendered with kustomize build), committed so the cluster is rebuildable
+  # offline without fetching the upstream base at apply time.
+  - manifests/metallb-native.yaml
   - metallb-installation.yml
   # - cluster-admin.yml
