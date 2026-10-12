@@ -52,6 +52,47 @@ curl -s -o /dev/null -w '%{http_code}\n' -H 'X-Forwarded-For: 192.168.6.50' http
 curl -s -o /dev/null -w '%{http_code}\n' -H 'X-Forwarded-For: 8.8.8.8'      http://sonarr.torrent.svc.cluster.local/  # 401
 ```
 
+## Blocking executable / malware downloads (Sonarr / Radarr)
+
+Indexers (notably 1337x) carry fake pre-release "video" torrents that are really a
+single executable — e.g. `MobLand S02E05 1080p HD h264 ETHEL.exe` or
+`South Park S29E03 1080p WEB H264-MeGusta.exe`. Without protection Sonarr/Radarr grab
+them, qBittorrent downloads the `.exe`, Sonarr warns "No files found are eligible for
+import", and the same release is re-grabbed week after week.
+
+The fix is the built-in per-indexer **Advanced → Fail Downloads** option (Sonarr v4 /
+Radarr v6). Two built-in lists (not editable):
+
+| Option | Extensions |
+| --- | --- |
+| Executables | `.bat`, `.cmd`, `.exe`, `.sh` |
+| Potentially Dangerous | `.arj`, `.lnk`, `.lzh`, `.ps1`, `.scr`, `.vbs`, `.zipx` |
+
+With it enabled, once the download completes Sonarr/Radarr reject the file
+(`ImportRejectionReason.ExecutableFile`/`DangerousFile`), mark the download **failed**,
+remove it from qBittorrent, and **blocklist the release** — so it is never grabbed
+again. The decision is made by Sonarr/Radarr; qBittorrent just obeys.
+
+This lives in the app DB on the PVC (like `trustedNetworks` above), not in any manifest,
+so a wiped DB or a newly added indexer loses it. Re-apply with:
+
+```bash
+KUBECONFIG=~/.kube-la1r/config ./scripts/enable-fail-downloads.sh
+```
+
+The script sets `failDownloads=[0,1]` on every indexer in both apps (via the API with
+`?forceSave=true`, which skips the connection test that Jackett 400s on). It is
+idempotent. Equivalent UI path: Settings → Indexers → each indexer → Advanced →
+Fail Downloads → check Executables + Potentially Dangerous.
+
+Verify: `GET /api/v3/blocklist` shows the fake releases, and re-searching logs
+`BlocklistSpecification|... is blocklisted, rejecting`.
+
+> Caveat: on Sonarr v4 / Radarr v6 this check runs at import-time, so the `.exe` briefly
+> lands in `/torrent` before being removed and blocklisted. The true pre-download
+> rejection (`RejectTorrentFilesWithBlockedExtensionsWhileGrabbing`, which parses the
+> `.torrent` file list at grab time) only exists in Sonarr v5.
+
 ## References
 - [Jackett](https://github.com/Jackett/Jackett)
 - [Jellyfin](https://jellyfin.org/docs/)
